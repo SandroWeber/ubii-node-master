@@ -1,12 +1,11 @@
 import test from 'ava';
 
-const {
-  MasterNode,
-  ClientNodeWeb
-} = require('../../src/index.js');
+const {MasterNode} = require('../../src/index.js');
+
+const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
 
 (function () {
-  /*test.cb('register client', t => {
+  test.cb('register client', t => {
     let master = new MasterNode('localhost',
       9191,
       9192,
@@ -24,7 +23,7 @@ const {
         t.true(master.clientManager.clients.size > 0);
         t.end();
       });
-  });*/
+  });
 
   test.cb('register device', t => {
     let master = new MasterNode('localhost',

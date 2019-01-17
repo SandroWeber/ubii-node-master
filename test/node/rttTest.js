@@ -4,11 +4,11 @@ const {
 } = require('../../src/index.js');
 const {
     RttTestNode
-} = require('./../src/ubiiNodes/clientNodes/testNodes/rttTestNode');
+} = require('../files/testNodes/rttTestNode');
 const namida = require('@tum-far/namida');
 
 (function () {
-    test.cb('multiple local topicData RoundTripTime', t => {
+    /*test.cb('multiple local topicData RoundTripTime', t => {
         let master = new MasterNode('localhost', 8699, 8700, 8701, 8702);
 
         let activeRttNodes = 5;
@@ -53,5 +53,5 @@ const namida = require('@tum-far/namida');
         .then(()=>{
             rttNode4.startRttMeasurement();
         });
-    });
+    });*/
 })();

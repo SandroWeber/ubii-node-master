@@ -10,12 +10,13 @@ const {
 const namida = require("@tum-far/namida");
 
 class ServiceManager {
-  constructor(clientManager, deviceManager, topicDataHost, topicDataPort) {
+  constructor(clientManager, deviceManager, topicDataHost, topicDataPortZMQ, topicDataPortWS) {
     this.topicDataHost = topicDataHost;
-    this.topicDataPort = topicDataPort;
+    this.topicDataPortZMQ = topicDataPortZMQ;
+    this.topicDataPortWS = topicDataPortWS;
 
     this.services = new Map();
-    this.addService(new ClientRegistrationService(clientManager, topicDataHost, topicDataPort));
+    this.addService(new ClientRegistrationService(clientManager, topicDataHost, topicDataPortZMQ, topicDataPortWS));
     this.addService(new DeviceRegistrationService(clientManager, deviceManager));
     this.addService(new SubscribtionService(deviceManager));
   }

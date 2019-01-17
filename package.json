@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@tum-far/namida": "0.0.2",
-    "@tum-far/ubii-msg-formats": "0.3.0",
+    "@tum-far/ubii-msg-formats": "0.4.0",
     "@tum-far/ubii-msg-transport": "0.2.0",
     "@tum-far/ubii-topic-data": "0.0.11",
     "@tum-far/ubii-interactions": "0.0.3",
@@ -42,8 +42,12 @@
     "files": [
       "test/**/*.js",
       "!test/mocks/*",
-      "!test/files/*",
-      "!test/exclude/**/*"
+      "!test/files/**/*",
+      "!test/exclude/**/*",
+      "!test/clients/**/*",
+      "!test/devices/**/*",
+      "!test/services/**/*",
+      "!test/sessions/**/*"
     ]
   }
 }

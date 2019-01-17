@@ -68,15 +68,12 @@ class MasterNode {
     this.serviceManager = new ServiceManager(this.clientManager,
       this.deviceManager,
       topicDataServerHost.toString(),
-      this.connectionsManager.ports.topicDataZMQ.toString());
+      this.connectionsManager.ports.topicDataZMQ.toString(),
+      this.connectionsManager.ports.topicDataWS.toString());
 
     // Session manager component:
     this.sessionManager = new SessionManager();
   }
-
-  /*
-
-   */
 
   onServiceMessageZMQ(message) {
     // Create context.
@@ -93,7 +90,7 @@ class MasterNode {
       let request = this.serviceRequestTranslator.createMessageFromBuffer(message);
 
       // Process request.
-      let reply = this.serviceManager.zmqProcessRequest(request);
+      let reply = this.serviceManager.processRequest(request);
 
       // Return reply.
       return this.serviceReplyTranslator.createBufferFromPayload(reply);

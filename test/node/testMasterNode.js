@@ -1,12 +1,11 @@
 import test from 'ava';
 
-const {
-  MasterNode,
-  ClientNodeZMQ
-} = require('./../src/index.js');
+const {MasterNode} = require('../../src/index');
+
+const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
 (function () {
-  test.cb('register client', t => {
+  /*test.cb('register client', t => {
     let master = new MasterNode('localhost',
       8491,
       8492,
@@ -194,7 +193,7 @@ const {
         });
       });
     ;
-  });
+  });*/
 
   // todo:
   // multiple registrations with the same id
