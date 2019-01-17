@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import {SessionManager, Session} from '../../src/js/index.js'
+import {SessionManager, Session} from '../../../src/index.js'
 import {Cause, Effect, Interaction} from '@tum-far/ubii-interactions'
 import {RuntimeTopicData} from '@tum-far/ubii-topic-data'
 
@@ -300,6 +300,7 @@ test('100 generic sessions with 100 generic interactions each', async t => {
     let topicData = t.context.topicData;
 
     let sessionCount = 100;
+    let waitTimePerSession = 20;
     for (let i=0; i < sessionCount; i=i+1) {
         let session = sessionManager.createSession();
         setupGenericInteractions(session, 100, topicData);
@@ -310,27 +311,28 @@ test('100 generic sessions with 100 generic interactions each', async t => {
         t.is(session.status, Session.STATUS.RUNNING);
     });
 
-    await wait(sessionCount * 5);
+    await wait(sessionCount * waitTimePerSession);
+    
     // nothing published on input topics yet, ouput topics should all still be undefined
     sessionManager.sessions.forEach((session) => {
-        session.interactions.forEach((interaction) => {
-            t.is(interaction.state.counter > 0, true);
-            t.is(topicData.pull(getGenericTopicOutputString(session, interaction)), undefined);
+        session.interactionIOMappings.forEach((mapping) => {
+            t.is(mapping.interaction.state.counter > 0, true);
+            t.is(topicData.pull(getGenericTopicOutputString(session, mapping.interaction)), undefined);
         })
     });
 
     // set all input bools to true
     sessionManager.sessions.forEach((session) => {
-        session.interactions.forEach((interaction) => {
-            topicData.publish(getGenericTopicInputBool(session, interaction), true);
+        session.interactionIOMappings.forEach((mapping) => {
+            topicData.publish(getGenericTopicInputBool(session, mapping.interaction), true);
         })
     });
-    await wait(sessionCount * 5);
+    await wait(sessionCount * waitTimePerSession);
     // nothing published on input topics yet, counters and ouput topics should all still be at 0
     sessionManager.sessions.forEach((session) => {
-        session.interactions.forEach((interaction) => {
-            t.is(interaction.state.counter > 0, true);
-            t.is(topicData.pull(getGenericTopicOutputString(session, interaction)) !== '0', true);
+        session.interactionIOMappings.forEach((mapping) => {
+            t.is(mapping.interaction.state.counter > 0, true);
+            t.is(topicData.pull(getGenericTopicOutputString(session, mapping.interaction)) !== '0', true);
         })
     });
 

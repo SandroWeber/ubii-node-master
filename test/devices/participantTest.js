@@ -1,11 +1,11 @@
 import test from 'ava';
 import {
     Participant
-} from '../src/devices/participant.js';
+} from '../../src/index.js';
 import {
     ServerMock,
     TopicDataMock
-} from '../mocks/mocks.js';
+} from '../mocks/serverMockDevices';
 
 (function () {
 

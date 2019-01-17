@@ -1,11 +1,11 @@
 import test from 'ava';
 import {
     Watcher
-} from '../src/devices/watcher.js';
+} from '../../src/index.js';
 import {
     ServerMock,
     TopicDataMock
-} from '../mocks/mocks.js';
+} from '../mocks/serverMockDevices';
 
 (function () {
 

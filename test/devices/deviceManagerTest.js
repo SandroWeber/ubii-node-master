@@ -1,18 +1,18 @@
 import test from 'ava';
 import {
     DeviceManager
-} from '../src/index.js';
+} from '../../src/index.js';
 import {
     Participant
-} from '../src/devices/participant.js';
+} from '../../src/index.js';
 import {
     Watcher
-} from '../src/devices/watcher.js';
+} from '../../src/index.js';
 import {
     ServerMock,
     TopicDataMock,
     createDeviceSpecificationMock
-} from '../mocks/mocks.js';
+} from '../mocks/serverMockDevices';
 
 (function () {
 

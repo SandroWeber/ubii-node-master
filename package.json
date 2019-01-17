@@ -27,14 +27,23 @@
     ""
   ],
   "devDependencies": {
-    "ava": "^1.0.0-beta.3"
+    "ava": "^1.0.0-beta.3",
+    "sinon": "6.0.1"
   },
   "dependencies": {
     "@tum-far/namida": "0.0.2",
     "@tum-far/ubii-msg-formats": "0.3.0",
     "@tum-far/ubii-msg-transport": "0.2.0",
     "@tum-far/ubii-topic-data": "0.0.11",
+    "@tum-far/ubii-interactions": "0.0.3",
     "uuid": "^3.3.2"
-    //"mediator-js": "^0.11.0"
+  },
+  "ava": {
+    "files": [
+      "test/**/*.js",
+      "!test/mocks/*",
+      "!test/files/*",
+      "!test/exclude/**/*"
+    ]
   }
 }

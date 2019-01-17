@@ -2,11 +2,11 @@ import test from 'ava';
 import {
     ClientManager,
     Client
-} from '../src/index.js';
+} from '../../src/index.js';
 import {
     ServerMock,
     createClientSpecificationMock
-} from '../mocks/mocks.js';
+} from '../mocks/serverMock.js';
 
 (function () {
 

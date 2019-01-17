@@ -1,7 +1,6 @@
-const uid = require('uid');
-const sinon = require('../../node_modules/sinon/lib/sinon.js');
+const sinon = require('sinon');
 
-const Session = require('../../src/js/session.js');
+const {Session} = require('../../src/index');
 
 class MockSession extends Session {
   constructor() {
@@ -17,4 +16,4 @@ class MockSession extends Session {
   }
 }
 
-module.exports = MockSession;
+module.exports = {MockSession};

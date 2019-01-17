@@ -1,7 +1,7 @@
 import test from 'ava';
-import sinon from '../../node_modules/sinon/lib/sinon.js';
+import sinon from 'sinon';
 
-import {SessionManager, Session} from '../../src/js/index.js';
+import {SessionManager, Session} from '../../../src/index'
 
 
 /* utility functions */

@@ -2,10 +2,10 @@ import test from 'ava';
 const {
   ClientManagerMock,
   DeviceManagerMock
-} = require('./../mocks/mocks.js');
+} = require('./../mocks/serviceMocks');
 const {
   ServiceManager
-} = require('../src/serviceManager/serviceManager.js');
+} = require('../../src/index');
 
 (function () {
     // Preparation:

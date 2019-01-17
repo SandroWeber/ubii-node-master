@@ -1,12 +1,9 @@
 const {
-  UbiiNode
-} = require('./../ubiiNode.js');
-const {
   defaultTopicDataServerPortZMQ,
   defaultTopicDataServerPortWS,
   defaultServiceServerPortZMQ,
   defaultServiceServerPortREST
-} = require('./../constants.js');
+} = require('./constants.js');
 
 const {
   ServerConnectionsManager
@@ -16,23 +13,17 @@ const {
   RuntimeTopicData
 } = require('@tum-far/ubii-topic-data');
 const {
-  ZmqRouter,
-  ZmqReply,
-  WebsocketServer,
-  RESTServer
-} = require('@tum-far/ubii-msg-transport');
-const {
   ClientManager
-} = require('@tum-far/ubii-client-manager');
+} = require('../clients/clientManager');
 const {
   DeviceManager
-} = require('@tum-far/ubii-device-manager');
+} = require('../devices/deviceManager');
 const {
   ServiceManager
-} = require('@tum-far/ubii-services');
+} = require('../services/serviceManager');
 const {
   SessionManager
-} = require('@tum-far/ubii-session-manager');
+} = require('../sessions/sessionManager');
 const {
   ServiceRequestTranslator,
   ServiceReplyTranslator,
@@ -40,13 +31,12 @@ const {
 } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
 
-class MasterNode extends UbiiNode {
+class MasterNode {
   constructor(topicDataServerHost,
               topicDataServerPortZMQ = defaultTopicDataServerPortZMQ,
               topicDataServerPortWS = defaultTopicDataServerPortWS,
               serviceServerPortZMQ = defaultServiceServerPortZMQ,
               serviceServerPortREST = defaultServiceServerPortREST) {
-    super();
 
     // Translators:
     this.serviceReplyTranslator = new ServiceReplyTranslator();

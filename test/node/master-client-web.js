@@ -3,7 +3,7 @@ import test from 'ava';
 const {
   MasterNode,
   ClientNodeWeb
-} = require('./../src/index.js');
+} = require('../../src/index.js');
 
 (function () {
   /*test.cb('register client', t => {

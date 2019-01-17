@@ -1,7 +1,7 @@
 import test from 'ava';
 import {
     Client
-} from '../src/index.js';
+} from '../../src/index.js';
 
 (function () {
 

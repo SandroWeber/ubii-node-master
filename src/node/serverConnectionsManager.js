@@ -3,7 +3,7 @@ const {
   defaultTopicDataServerPortWS,
   defaultServiceServerPortZMQ,
   defaultServiceServerPortREST
-} = require('./../constants.js');
+} = require('./constants.js');
 
 const {
   ZmqRouter,

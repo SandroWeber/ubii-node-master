@@ -1,5 +1,5 @@
 const uuidv4 = require('uuid/v4');
-const sinon = require('../../node_modules/sinon/lib/sinon.js');
+const sinon = require('sinon');
 
 
 class MockInteraction {
@@ -12,4 +12,4 @@ class MockInteraction {
 
 }
 
-module.exports = MockInteraction;
+module.exports = {MockInteraction};

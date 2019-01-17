@@ -1,10 +1,10 @@
 import test from 'ava';
 const {
   ClientManagerMock
-} = require('../mocks/mocks.js');
+} = require('../mocks/serviceMocks');
 const {
   ClientRegistrationService
-} = require('../src/services/clientRegistrationService.js');
+} = require('../../src/index');
 
 (function () {
 

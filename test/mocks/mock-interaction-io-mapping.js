@@ -1,5 +1,5 @@
 const uuidv4 = require('uuid/v4');
-const MockInteraction = require('./mock-interaction');
+const {MockInteraction} = require('./mock-interaction');
 
 
 class MockInteractionIOMapping {
@@ -10,8 +10,6 @@ class MockInteractionIOMapping {
     this.mapInputs = new Map();
     this.mapOutputs = new Map();
   }
-
-
 }
 
-module.exports = MockInteractionIOMapping;
+module.exports = {MockInteractionIOMapping};

@@ -1,6 +1,6 @@
 const uuidv4 = require('uuid/v4');
 
-const InteractionIOMapping = require('./interaction-io-mapping');
+const InteractionIOMapping = require('./interactionIOMapping');
 
 class Session {
   constructor(id, interactionIOMappings) {
@@ -70,4 +70,4 @@ class Session {
 Session.PROCESS_MODES = Object.freeze({'PROMISE_RECURSIVECALLS': 1/*, 'SINGLE_THREAD':1, 'THREAD_POOL':2, 'INDIVIDUAL_THREADS':3*/});
 Session.STATUS = Object.freeze({'CREATED': 1, 'STARTED': 2, 'RUNNING': 3, 'PAUSED': 4, 'STOPPED': 5});
 
-module.exports = Session;
+module.exports = {Session};

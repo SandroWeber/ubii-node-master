@@ -1,7 +1,7 @@
 import test from 'ava';
 const {
     MasterNode
-} = require('./../src/index.js');
+} = require('../../src/index.js');
 const {
     RttTestNode
 } = require('./../src/ubiiNodes/clientNodes/testNodes/rttTestNode');

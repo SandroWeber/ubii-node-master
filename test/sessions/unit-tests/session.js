@@ -1,8 +1,8 @@
 import test from 'ava';
 
-import {Session} from '../../src/js/index.js'
+import {Session} from '../../../src/index.js'
 
-import MockInteractionIOMapping from '../mocks/mock-interaction-io-mapping.js'
+import {MockInteractionIOMapping} from '../../mocks/mock-interaction-io-mapping.js'
 
 
 let runProcessing = (session, milliseconds) => {
@@ -73,11 +73,11 @@ test('processing - promise with recursive calls, single interaction', async t =>
 
   session.addInteraction(interactionIOMappings[0].interaction);
 
-  t.is(interactionIOMappings[0].process.callCount, 0);
+  t.is(interactionIOMappings[0].interaction.process.callCount, 0);
 
   await runProcessing(session, 100);
 
-  t.is(interactionIOMappings[0].process.callCount > 0, true);
+  t.is(interactionIOMappings[0].interaction.process.callCount > 0, true);
 });
 
 test('processing - promise with recursive calls, multiple interactions', async t => {
