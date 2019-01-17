@@ -12,7 +12,6 @@ class DeviceRegistrationService extends Service {
   }
 
   reply(message) {
-    console.info(message);
     // Prepare the context.
     let context = this.prepareContext();
 

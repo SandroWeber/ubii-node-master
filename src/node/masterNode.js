@@ -33,10 +33,10 @@ const namida = require('@tum-far/namida');
 
 class MasterNode {
   constructor(topicDataServerHost,
-              topicDataServerPortZMQ = defaultTopicDataServerPortZMQ,
-              topicDataServerPortWS = defaultTopicDataServerPortWS,
-              serviceServerPortZMQ = defaultServiceServerPortZMQ,
-              serviceServerPortREST = defaultServiceServerPortREST) {
+    topicDataServerPortZMQ = defaultTopicDataServerPortZMQ,
+    topicDataServerPortWS = defaultTopicDataServerPortWS,
+    serviceServerPortZMQ = defaultServiceServerPortZMQ,
+    serviceServerPortREST = defaultServiceServerPortREST) {
 
     // Translators:
     this.serviceReplyTranslator = new ServiceReplyTranslator();
@@ -114,8 +114,6 @@ class MasterNode {
   }
 
   onServiceMessageREST(request, response) {
-
-    console.info('onServiceMessageREST');
     try {
       // Decode buffer.
       let message = this.serviceRequestTranslator.createMessageFromBuffer(request.body.buffer.data);
@@ -125,7 +123,7 @@ class MasterNode {
 
       // Return reply.
       let buffer = this.serviceReplyTranslator.createBufferFromPayload(reply);
-      response.json({buffer: buffer});
+      response.json({ buffer: buffer });
       return buffer;
     } catch (e) {
       // Create context.
@@ -205,7 +203,52 @@ class MasterNode {
   }
 
   onTopicDataMessageWS(message) {
+    // Create context.
+    let context = {
+      feedback: {
+        title: '',
+        message: '',
+        stack: ''
+      }
+    };
 
+    try {
+      // Decode buffer.
+      let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
+      console.info(topicDataMessage);
+
+      // Process message.
+      this.processTopicDataMessage(topicDataMessage.deviceIdentifier, topicDataMessage);
+    } catch (e) {
+      context.feedback.title = 'TopicData message publishing failed';
+      context.feedback.message = `TopicData message publishing failed with an error:`;
+      context.feedback.stack = '' + (e.stack || e);
+
+      namida.error(context.feedback.title,
+        context.feedback.message,
+        context.feedback.stack);
+
+      try {
+        // Send error:
+        this.topicDataServerZMQ.send(envelope, this.topicDataTranslator.createBufferFromPayload({
+          error: {
+            title: context.feedback.title,
+            message: context.feedback.message,
+            stack: context.feedback.stack
+          }
+        }));
+      } catch (e) {
+        context.feedback.title = 'TopicData error response sending failed';
+        context.feedback.message = `opicData error response sending failed with an error:`;
+        context.feedback.stack = '' + (e.stack || e);
+
+        namida.error(context.feedback.title,
+          context.feedback.message,
+          context.feedback.stack);
+      }
+    }
+
+    return message;
   }
 
   processTopicDataMessage(clientIdentifier, topicDataMessage) {

@@ -61,7 +61,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
 
     client.initialize()
       .then(() => {
-        return client.registerDevice('anotherAwesomeDeviceName', 1);
+        return client.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
         client.publish('anotherAwesomeDeviceName', 'awesomeTopic', 'quaternion', {
@@ -73,6 +73,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
       })
       .then(() => {
         setTimeout(() => {
+          console.info(master.topicData.storage);
           t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
           t.end();
         }, 1000);
