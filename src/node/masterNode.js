@@ -294,8 +294,8 @@ class MasterNode {
     if (!this.deviceManager.verifyParticipant(deviceIdentifier)) {
       // Update the context feedback.
       context.feedback.message = `There is no Participant registered with the id ${namida.style.messageHighlight(deviceIdentifier)}. ` +
-        `Subscribtion was rejected due to an unregistered device.`;
-      context.feedback.title = 'Subscribtion rejected';
+        `Subscription was rejected due to an unregistered device.`;
+      context.feedback.title = 'Subscription rejected';
 
       namida.logFailure(context.feedback.title, context.feedback.message);
 

@@ -8,7 +8,7 @@ const namida = require('@tum-far/namida');
 
 /**
  * Participants are representations of remote entities at the server that actively interact with the ubii system.
- * They participate in the ubii system by publishing data (they produce data) and/or consuming data via subscribtions (they consume data).
+ * They participate in the ubii system by publishing data (they produce data) and/or consuming data via subscriptions (they consume data).
  */
 class Participant extends Device {
     constructor(identifier, client, topicData) {
@@ -38,13 +38,14 @@ class Participant extends Device {
      */
     subscribe(topic) {
         if (this.subscriptionTokens.has(topic)) {
-            namida.logFailure(`Topic Data subscribtion rejected`,
+            namida.logFailure(`Topic Data subscription rejected`,
                 `Device (Participant) with id ${this.identifier} is already subscribed to this topic.`);
             return;
         }
 
         // subscribe
         let token = this.topicData.subscribe(topic, (topic, data) => {
+            console.info('participant.subscribeCallback()');
             let payload = {
                 deviceIdentifier: 'masterNode',
                 topicDataRecord:{
@@ -68,7 +69,7 @@ class Participant extends Device {
      */
     unsubscribe(topic) {
         if(this.subscriptionTokens.has(topic)){
-            namida.logFailure(`Topic Data unsubscribtion rejected`,
+            namida.logFailure(`Topic Data unsubscription rejected`,
                 `Device (Particpiant) with id ${this.identifier} is not subscribed to this topic.`);
             return;
         }

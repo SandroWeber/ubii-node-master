@@ -47,7 +47,7 @@ class Watcher extends Device {
      */
     subscribeAll(){
         if (this.subscriptionAllToken !== null && this.subscriptionAllToken !== undefined) {
-            logbook.logFail(`Topic Data subscribtion rejected`,
+            logbook.logFail(`Topic Data subscription rejected`,
                 `Device (Watcher) with id ${this.identifier} is already subscribed to all.`);
             return;
         }
