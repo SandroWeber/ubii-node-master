@@ -215,10 +215,10 @@ class MasterNode {
     try {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
-      console.info(topicDataMessage);
 
       // Process message.
-      this.processTopicDataMessage(topicDataMessage.deviceIdentifier, topicDataMessage);
+      let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceIdentifier).clientIdentifier;
+      this.processTopicDataMessage(clientID, topicDataMessage);
     } catch (e) {
       context.feedback.title = 'TopicData message publishing failed';
       context.feedback.message = `TopicData message publishing failed with an error:`;

@@ -144,6 +144,7 @@ class ClientNodeWeb {
    * @param {*} unsubscribeTopics
    */
   async subscribe(deviceName, subscribeTopics, unsubscribeTopics) {
+    //TODO: fix
     return new Promise((resolve, reject) => {
       // Create the serviceRequest.
       let serviceRequest = {
@@ -169,8 +170,6 @@ class ClientNodeWeb {
           }
         }
       };
-
-      this.addServiceRequest(serviceRequest);
     });
   }
 
