@@ -38,7 +38,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
 
     client.initialize()
       .then(() => {
-        return client.registerDevice('awesomeDeviceName', 1);
+        return client.registerDevice('awesomeDeviceName', 0);
       })
       .then(() => {
         t.true(master.deviceManager.participants.size > 0);
@@ -46,7 +46,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
       });
   });
 
-  /*test.cb('publish', t => {
+  test.cb('publish', t => {
     let master = new MasterNode('localhost',
       9391,
       9392,
@@ -79,7 +79,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
       });
   });
 
-  test.cb('subscribe then', t => {
+  /*test.cb('subscribe then', t => {
     let master = new MasterNode('localhost',
       9491,
       9492,

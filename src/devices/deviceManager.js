@@ -50,6 +50,7 @@ class DeviceManager {
    * @param {Object} participant
    */
   addParticipant(participant) {
+    console.info('### addParticipant ###\n' + participant);
     this.participants.set(participant.identifier, participant);
   }
 
