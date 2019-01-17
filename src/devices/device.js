@@ -2,7 +2,7 @@
  * Devices are representations of remote entities at the server that interact with the ubii system.
  */
 class Device {
-    constructor(identifier, clientIdentifier, topicData, server) {
+    constructor(identifier, client, topicData) {
         if (new.target === Device) {
             throw new TypeError("Cannot construct Device instances directly");
         }
@@ -12,9 +12,8 @@ class Device {
         }
 
         this.identifier = identifier;
-        this.clientIdentifier = clientIdentifier;
+        this.client = client;
         this.topicData = topicData;
-        this.server = server;     
         this.registrationDate = new Date();
         this.lastSignOfLife = null;
 
@@ -26,7 +25,7 @@ class Device {
      * @param {*} message 
      */
     sendMessageToRemote(message) {
-        this.server.send(this.clientIdentifier, message);
+        this.client.sendMessageToRemote(message);
     }
 
     /**

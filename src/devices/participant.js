@@ -11,8 +11,8 @@ const namida = require('@tum-far/namida');
  * They participate in the ubii system by publishing data (they produce data) and/or consuming data via subscribtions (they consume data).
  */
 class Participant extends Device {
-    constructor(identifier, clientIdentifier, topicData, server) {
-        super(identifier, clientIdentifier, topicData, server);
+    constructor(identifier, client, topicData) {
+        super(identifier, client, topicData);
 
         this.topicDataTranslator = new TopicDataTranslator();
 

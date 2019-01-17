@@ -13,7 +13,7 @@ const {SessionManager} = require('./sessions/sessionManager');
 const {ServiceManager} = require('./services/serviceManager');
 const {ClientRegistrationService} = require('./services/clientRegistrationService');
 const {DeviceRegistrationService} = require('./services/deviceRegistrationService');
-const {SubscribtionService} = require('./services/subscribtionService');
+const {SubscriptionService} = require('./services/subscriptionService');
 
 module.exports = {
     'MasterNode': MasterNode,
@@ -27,5 +27,5 @@ module.exports = {
     'ServiceManager': ServiceManager,
     'ClientRegistrationService': ClientRegistrationService,
     'DeviceRegistrationService': DeviceRegistrationService,
-    'SubscribtionService': SubscribtionService
+    'SubscriptionService': SubscriptionService
 }

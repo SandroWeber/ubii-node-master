@@ -73,14 +73,13 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
       })
       .then(() => {
         setTimeout(() => {
-          console.info(master.topicData.storage);
           t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
           t.end();
         }, 1000);
       });
   });
 
-  /*test.cb('subscribe then', t => {
+  test.cb('subscribe then', t => {
     let master = new MasterNode('localhost',
       9491,
       9492,
@@ -95,7 +94,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
 
     client.initialize()
       .then(() => {
-        return client.registerDevice('anotherAwesomeDeviceName', 1);
+        return client.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
         return client.subscribe('anotherAwesomeDeviceName', ['awesomeTopic'], []);
@@ -120,7 +119,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
       9594);
 
     await client.initialize();
-    await client.registerDevice('anotherAwesomeDeviceName', 1);
+    await client.registerDevice('anotherAwesomeDeviceName', 0);
     await client.subscribe('anotherAwesomeDeviceName', ['awesomeTopic'], []);
 
     t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
@@ -137,20 +136,19 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
 
     let client1 = new ClientNodeWeb('clientName2',
       'localhost',
-      9694,
-      () => {
-        t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
-        t.end();
-      },
-      () => {
-      });
+      9694);
+    /*client1.onTopicDataMessageReceived = (message) => {
+      console.info('########## onTopicDataMessageReceived');
+      t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
+      t.end();
+    };*/
     let client2 = new ClientNodeWeb('clientName',
       'localhost',
       9694);
 
     client1.initialize()
       .then(() => {
-        return client1.registerDevice('anotherAwesomeDeviceName2', 1);
+        return client1.registerDevice('anotherAwesomeDeviceName2', 0);
       })
       .then(() => {
         return client1.subscribe('anotherAwesomeDeviceName2', ['awesomeTopic'], []);
@@ -159,9 +157,10 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
         return client2.initialize();
       })
       .then(() => {
-        return client2.registerDevice('anotherAwesomeDeviceName', 1);
+        return client2.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
+        console.info('++++++++++++++ publish');
         client2.publish('anotherAwesomeDeviceName', 'awesomeTopic', 'quaternion', {
           x: 129.1,
           y: 576.005,
@@ -169,8 +168,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
           w: 79824678.78927348
         });
       });
-    ;
-  });*/
+  });
 
   // todo:
   // multiple registrations with the same id

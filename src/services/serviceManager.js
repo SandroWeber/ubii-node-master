@@ -5,8 +5,8 @@ const {
   DeviceRegistrationService
 } = require('../services/deviceRegistrationService.js');
 const {
-  SubscribtionService
-} = require('../services/subscribtionService.js');
+  SubscriptionService
+} = require('../services/subscriptionService.js');
 const namida = require("@tum-far/namida");
 
 class ServiceManager {
@@ -18,7 +18,7 @@ class ServiceManager {
     this.services = new Map();
     this.addService(new ClientRegistrationService(clientManager, topicDataHost, topicDataPortZMQ, topicDataPortWS));
     this.addService(new DeviceRegistrationService(clientManager, deviceManager));
-    this.addService(new SubscribtionService(deviceManager));
+    this.addService(new SubscriptionService(deviceManager));
   }
 
   addService(service) {

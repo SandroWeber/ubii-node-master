@@ -298,7 +298,7 @@ class DeviceManager {
     // Handle the registration of a participant.
     if (deviceSpecification.deviceType === 0) {
       currentDevice = new Participant(deviceIdentifier,
-        deviceSpecification.correspondingClientIdentifier,
+        this.clientManager.getClient(deviceSpecification.correspondingClientIdentifier),
         this.topicData,
         this.server);
       this.registerParticipant(currentDevice);
@@ -307,7 +307,7 @@ class DeviceManager {
     // Handle the registration of a watcher.
     if (deviceSpecification.deviceType === 1) {
       currentDevice = new Watcher(deviceIdentifier,
-        deviceSpecification.correspondingClientIdentifier,
+        this.clientManager.getClient(deviceSpecification.correspondingClientIdentifier),
         this.topicData,
         this.server);
       this.registerWatcher(currentDevice);

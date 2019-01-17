@@ -56,6 +56,7 @@ class ClientNodeWeb {
       clientSpecification.topicDataHost,
       parseInt(clientSpecification.topicDataPortWs),
       (message) => {
+        console.info('############# WebsocketClient message received');
         try {
           // Decode the buffer.
           let received = this.topicDataTranslator.createMessageFromBuffer(message);
@@ -144,32 +145,27 @@ class ClientNodeWeb {
    * @param {*} unsubscribeTopics
    */
   async subscribe(deviceName, subscribeTopics, unsubscribeTopics) {
-    //TODO: fix
     return new Promise((resolve, reject) => {
-      // Create the serviceRequest.
-      let serviceRequest = {
-        formulateRequest: () => {
-          let payload = {
-            topic: '',
-            subscribtion: {
-              deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
-              subscribeTopics: subscribeTopics,
-              unsubscribeTopics: unsubscribeTopics
-            }
-          };
+      let message = {
+        topic: '',
+        subscription: {
+          deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
+          subscribeTopics: subscribeTopics,
+          unsubscribeTopics: unsubscribeTopics
+        }
+      };
 
-          return this.serviceRequestTranslator.createBufferFromPayload(payload);
-        },
-        processReply: (reply) => {
+      this.serviceClient.send('/services', {buffer: this.serviceRequestTranslator.createBufferFromPayload(message)})
+        .then((reply) => {
+          let message = this.serviceReplyTranslator.createMessageFromBuffer(reply.buffer.data);
           // The reply should be a success.
-          if (reply.success !== undefined && reply.success !== null) {
+          if (message.success !== undefined && message.success !== null) {
             resolve();
           } else {
             // TODO: log error
             reject();
           }
-        }
-      };
+        });
     });
   }
 
@@ -193,11 +189,12 @@ class ClientNodeWeb {
 
     buffer = this.topicDataTranslator.createBufferFromPayload(payload);
 
+    console.info('+++++++ clientNodeWeb.topicDataClient.send() +++');
     this.topicDataClient.send(buffer);
   }
 
   onTopicDataMessageReceived(message) {
-
+    console.info('+++++ onTopicDataMessageReceived +++++++');
   }
 }
 

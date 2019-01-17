@@ -10,8 +10,8 @@ const{
  * They get all data by subscribing to all current and future topics automatically on registration.
  */
 class Watcher extends Device {
-    constructor(identifier, clientIdentifier, topicData, server) {
-        super(identifier, clientIdentifier, topicData, server);
+    constructor(identifier, client, topicData) {
+        super(identifier, client, topicData);
 
         this.topicDataTranslator = new TopicDataTranslator();
 

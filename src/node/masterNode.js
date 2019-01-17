@@ -171,8 +171,8 @@ class MasterNode {
       // Process message.
       this.processTopicDataMessage(envelope, topicDataMessage);
     } catch (e) {
-      context.feedback.title = 'TopicData message publishing failed';
-      context.feedback.message = `TopicData message publishing failed with an error:`;
+      context.feedback.title = 'TopicData message publishing failed (ZMQ)';
+      context.feedback.message = `TopicData message publishing failed (ZMQ) with an error:`;
       context.feedback.stack = '' + (e.stack || e);
 
       namida.error(context.feedback.title,
@@ -181,7 +181,7 @@ class MasterNode {
 
       try {
         // Send error:
-        this.topicDataServerZMQ.send(envelope, this.topicDataTranslator.createBufferFromPayload({
+        this.connectionsManager.connections.topicDataZMQ.send(envelope, this.topicDataTranslator.createBufferFromPayload({
           error: {
             title: context.feedback.title,
             message: context.feedback.message,
@@ -189,8 +189,8 @@ class MasterNode {
           }
         }));
       } catch (e) {
-        context.feedback.title = 'TopicData error response sending failed';
-        context.feedback.message = `opicData error response sending failed with an error:`;
+        context.feedback.title = 'TopicData error response sending failed (ZMQ)';
+        context.feedback.message = `opicData error response sending failed (ZMQ) with an error:`;
         context.feedback.stack = '' + (e.stack || e);
 
         namida.error(context.feedback.title,
@@ -203,6 +203,7 @@ class MasterNode {
   }
 
   onTopicDataMessageWS(message) {
+    console.info('++++++ masterNode.onTopicDataMessageWS()');
     // Create context.
     let context = {
       feedback: {
@@ -217,11 +218,12 @@ class MasterNode {
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
 
       // Process message.
-      let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceIdentifier).clientIdentifier;
+      let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceIdentifier).client.identifier;
+      console.info('++++++ masterNode.onTopicDataMessageWS() | clientID=' + clientID);
       this.processTopicDataMessage(clientID, topicDataMessage);
     } catch (e) {
-      context.feedback.title = 'TopicData message publishing failed';
-      context.feedback.message = `TopicData message publishing failed with an error:`;
+      context.feedback.title = 'TopicData message publishing failed (WS)';
+      context.feedback.message = `TopicData message publishing failed (WS) with an error:`;
       context.feedback.stack = '' + (e.stack || e);
 
       namida.error(context.feedback.title,
@@ -230,7 +232,9 @@ class MasterNode {
 
       try {
         // Send error:
-        this.topicDataServerZMQ.send(envelope, this.topicDataTranslator.createBufferFromPayload({
+        let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
+        let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceIdentifier).client.identifier;
+        this.connectionsManager.connections.topicDataWS.send(clientID, this.topicDataTranslator.createBufferFromPayload({
           error: {
             title: context.feedback.title,
             message: context.feedback.message,
@@ -238,8 +242,8 @@ class MasterNode {
           }
         }));
       } catch (e) {
-        context.feedback.title = 'TopicData error response sending failed';
-        context.feedback.message = `opicData error response sending failed with an error:`;
+        context.feedback.title = 'TopicData error response sending failed (WS)';
+        context.feedback.message = `opicData error response sending failed (WS) with an error:`;
         context.feedback.stack = '' + (e.stack || e);
 
         namida.error(context.feedback.title,
@@ -275,8 +279,7 @@ class MasterNode {
 
       namida.logFailure(context.feedback.title, context.feedback.message);
 
-
-      this.topicDataServerZMQ.send(clientIdentifier,
+      this.clientManager.getClient(clientIdentifier).server.send(clientIdentifier,
         this.topicDataTranslator.createBufferFromPayload({
           deviceIdentifier: deviceIdentifier,
           error: {
@@ -296,7 +299,7 @@ class MasterNode {
 
       namida.logFailure(context.feedback.title, context.feedback.message);
 
-      this.topicDataServerZMQ.send(clientIdentifier,
+      this.clientManager.getClient(clientIdentifier).server.send(clientIdentifier,
         this.topicDataTranslator.createBufferFromPayload({
           deviceIdentifier: deviceIdentifier,
           error: {
@@ -311,14 +314,16 @@ class MasterNode {
 
     // Get the current device.
     let currentParticipant = this.deviceManager.getParticipant(deviceIdentifier);
+    console.info('masterNode.processTopicDataMessage() | participant=' + currentParticipant.identifier);
 
     // Update device information.
     currentParticipant.updateLastSignOfLife();
 
     // Update client information.
-    this.clientManager.getClient(currentParticipant.clientIdentifier).updateLastSignOfLife();
-    currentParticipant.updateLastSignOfLife();
+    this.clientManager.getClient(currentParticipant.client.identifier).updateLastSignOfLife();
 
+    console.info('masterNode.processTopicDataMessage() | publishing:');
+    console.info(topicDataMessage);
     // Publish the data.
     currentParticipant.publish(topicDataMessage.topicDataRecord.topic,
       topicDataMessage.topicDataRecord.type,
@@ -328,4 +333,4 @@ class MasterNode {
 
 module.exports = {
   'MasterNode': MasterNode,
-}
+};
