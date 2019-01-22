@@ -56,7 +56,6 @@ class ClientNodeWeb {
       clientSpecification.topicDataHost,
       parseInt(clientSpecification.topicDataPortWs),
       (message) => {
-        console.info('############# WebsocketClient message received');
         try {
           // Decode the buffer.
           let received = this.topicDataTranslator.createMessageFromBuffer(message);
@@ -189,12 +188,10 @@ class ClientNodeWeb {
 
     buffer = this.topicDataTranslator.createBufferFromPayload(payload);
 
-    console.info('+++++++ clientNodeWeb.topicDataClient.send() +++');
     this.topicDataClient.send(buffer);
   }
 
   onTopicDataMessageReceived(message) {
-    console.info('+++++ onTopicDataMessageReceived +++++++');
   }
 }
 

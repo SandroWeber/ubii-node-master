@@ -134,15 +134,14 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
 
     t.deepEqual(master.topicData.storage, {});
 
-    let client1 = new ClientNodeWeb('clientName2',
+    let client1 = new ClientNodeWeb('clientName1',
       'localhost',
       9694);
-    /*client1.onTopicDataMessageReceived = (message) => {
-      console.info('########## onTopicDataMessageReceived');
+    client1.onTopicDataMessageReceived = (message) => {
       t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
       t.end();
-    };*/
-    let client2 = new ClientNodeWeb('clientName',
+    };
+    let client2 = new ClientNodeWeb('clientName2',
       'localhost',
       9694);
 
@@ -160,7 +159,6 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
         return client2.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
-        console.info('++++++++++++++ publish');
         client2.publish('anotherAwesomeDeviceName', 'awesomeTopic', 'quaternion', {
           x: 129.1,
           y: 576.005,

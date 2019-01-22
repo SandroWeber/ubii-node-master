@@ -45,7 +45,6 @@ class Participant extends Device {
 
         // subscribe
         let token = this.topicData.subscribe(topic, (topic, data) => {
-            console.info('participant.subscribeCallback()');
             let payload = {
                 deviceIdentifier: 'masterNode',
                 topicDataRecord:{

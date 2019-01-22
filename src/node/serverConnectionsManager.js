@@ -88,7 +88,12 @@ class ServerConnectionsManager {
   }
 
   send(clientID, message) {
-
+    let clientConnectionWS = this.connections.topicDataWS.clients.get(clientID);
+    if (clientConnectionWS) {
+      clientConnectionWS.send(message);
+    } else {
+      this.connections.topicDataZMQ.send(clientID, message);
+    }
   }
 
   ping(clientID, callback) {

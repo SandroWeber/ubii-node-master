@@ -203,7 +203,6 @@ class MasterNode {
   }
 
   onTopicDataMessageWS(message) {
-    console.info('++++++ masterNode.onTopicDataMessageWS()');
     // Create context.
     let context = {
       feedback: {
@@ -219,7 +218,6 @@ class MasterNode {
 
       // Process message.
       let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceIdentifier).client.identifier;
-      console.info('++++++ masterNode.onTopicDataMessageWS() | clientID=' + clientID);
       this.processTopicDataMessage(clientID, topicDataMessage);
     } catch (e) {
       context.feedback.title = 'TopicData message publishing failed (WS)';
@@ -234,7 +232,7 @@ class MasterNode {
         // Send error:
         let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
         let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceIdentifier).client.identifier;
-        this.connectionsManager.connections.topicDataWS.send(clientID, this.topicDataTranslator.createBufferFromPayload({
+        this.connectionsManager.send(clientID, this.topicDataTranslator.createBufferFromPayload({
           error: {
             title: context.feedback.title,
             message: context.feedback.message,
@@ -279,7 +277,7 @@ class MasterNode {
 
       namida.logFailure(context.feedback.title, context.feedback.message);
 
-      this.clientManager.getClient(clientIdentifier).server.send(clientIdentifier,
+      this.connectionsManager.send(clientIdentifier,
         this.topicDataTranslator.createBufferFromPayload({
           deviceIdentifier: deviceIdentifier,
           error: {
@@ -299,7 +297,7 @@ class MasterNode {
 
       namida.logFailure(context.feedback.title, context.feedback.message);
 
-      this.clientManager.getClient(clientIdentifier).server.send(clientIdentifier,
+      this.connectionsManager.send(clientIdentifier,
         this.topicDataTranslator.createBufferFromPayload({
           deviceIdentifier: deviceIdentifier,
           error: {
@@ -314,7 +312,6 @@ class MasterNode {
 
     // Get the current device.
     let currentParticipant = this.deviceManager.getParticipant(deviceIdentifier);
-    console.info('masterNode.processTopicDataMessage() | participant=' + currentParticipant.identifier);
 
     // Update device information.
     currentParticipant.updateLastSignOfLife();
@@ -322,8 +319,6 @@ class MasterNode {
     // Update client information.
     this.clientManager.getClient(currentParticipant.client.identifier).updateLastSignOfLife();
 
-    console.info('masterNode.processTopicDataMessage() | publishing:');
-    console.info(topicDataMessage);
     // Publish the data.
     currentParticipant.publish(topicDataMessage.topicDataRecord.topic,
       topicDataMessage.topicDataRecord.type,
