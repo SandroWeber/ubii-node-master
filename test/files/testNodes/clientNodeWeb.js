@@ -55,13 +55,13 @@ class ClientNodeWeb {
       clientSpecification.identifier,
       clientSpecification.topicDataHost,
       parseInt(clientSpecification.topicDataPortWs),
-      (message) => {
+      (messageBuffer) => {
         try {
           // Decode the buffer.
-          let received = this.topicDataTranslator.createMessageFromBuffer(message);
+          let message = this.topicDataTranslator.createMessageFromBuffer(messageBuffer);
 
           // Call callbacks.
-          this.onTopicDataMessageReceived(received);
+          this.onTopicDataMessageReceived(message);
         } catch (e) {
           (console.error || console.log).call(console, 'Ubii Message Translator createMessageFromBuffer failed with an error: ' + (e.stack || e));
         }

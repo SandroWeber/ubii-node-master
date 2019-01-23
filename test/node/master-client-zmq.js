@@ -5,7 +5,7 @@ const {MasterNode} = require('../../src/index');
 const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
 (function () {
-  /*test.cb('register client', t => {
+  test.cb('register client', t => {
     let master = new MasterNode('localhost',
       8491,
       8492,
@@ -46,7 +46,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
     client.initialize()
       .then(() => {
-        return client.registerDevice('awesomeDeviceName', 1);
+        return client.registerDevice('awesomeDeviceName', 0);
       })
       .then(() => {
         t.true(master.deviceManager.participants.size > 0);
@@ -73,7 +73,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
     client.initialize()
       .then(() => {
-        return client.registerDevice('anotherAwesomeDeviceName', 1);
+        return client.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
         client.publish('anotherAwesomeDeviceName', 'awesomeTopic', 'quaternion', {
@@ -110,7 +110,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
     client.initialize()
       .then(() => {
-        return client.registerDevice('anotherAwesomeDeviceName', 1);
+        return client.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
         return client.subscribe('anotherAwesomeDeviceName', ['awesomeTopic'], []);
@@ -138,8 +138,8 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
       () => {
       });
 
-    await client.initialize()
-    await client.registerDevice('anotherAwesomeDeviceName', 1);
+    await client.initialize();
+    await client.registerDevice('anotherAwesomeDeviceName', 0);
     await client.subscribe('anotherAwesomeDeviceName', ['awesomeTopic'], []);
 
     t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
@@ -173,7 +173,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
     client1.initialize()
       .then(() => {
-        return client1.registerDevice('anotherAwesomeDeviceName2', 1);
+        return client1.registerDevice('anotherAwesomeDeviceName2', 0);
       })
       .then(() => {
         return client1.subscribe('anotherAwesomeDeviceName2', ['awesomeTopic'], []);
@@ -182,7 +182,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
         return client2.initialize();
       })
       .then(() => {
-        return client2.registerDevice('anotherAwesomeDeviceName', 1);
+        return client2.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
         client2.publish('anotherAwesomeDeviceName', 'awesomeTopic', 'quaternion', {
@@ -193,7 +193,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
         });
       });
     ;
-  });*/
+  });
 
   // todo:
   // multiple registrations with the same id

@@ -85,7 +85,11 @@ class ClientNodeZMQ {
   }
 
   initializeTopicDataClient(clientSpecification) {
-    this.topicDataClient = new ZmqDealer(clientSpecification.identifier, clientSpecification.targetHost, clientSpecification.targetPort, (envelopes, message) => {
+    this.topicDataClient = new ZmqDealer(
+      clientSpecification.identifier,
+      clientSpecification.topicDataHost,
+      clientSpecification.topicDataPortZmq,
+      (envelopes, message) => {
       try {
         // Decode the buffer.
         let received = this.topicDataTranslator.createMessageFromBuffer(message);
@@ -239,7 +243,7 @@ class ClientNodeZMQ {
         formulateRequest: () => {
           let payload = {
             topic: '',
-            subscribtion: {
+            subscription: {
               deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
               subscribeTopics: subscribeTopics,
               unsubscribeTopics: unsubscribeTopics
