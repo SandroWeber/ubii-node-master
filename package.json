@@ -1,0 +1,53 @@
+{
+  "name": "@tum-far/ubii-nodejs-backend",
+  "version": "0.1.0",
+  "description": "",
+  "main": "src/index.js",
+  "license": "",
+  "repository": "https://gitlab.lrz.de/IN-FAR/Ubi-Interact/ubii-nodejs-backend",
+  "contributors": [
+    {
+      "name": "Sandro Weber",
+      "email": "webers@in.tum.de",
+      "url": "https://wiki.tum.de/pages/viewpage.action?pageId=51840433"
+    },
+    {
+      "name": "Daniel Dyrda",
+      "email": "dyrda@in.tum.de"
+    }
+  ],
+  "engines": {
+    "node": ">=4"
+  },
+  "scripts": {
+    "test": "ava -v -s --match=!*RoundTripTime*",
+    "test-rtt": "ava --match=*RoundTripTime*"
+  },
+  "keywords": [
+    ""
+  ],
+  "devDependencies": {
+    "ava": "^1.0.0-beta.3",
+    "sinon": "6.0.1"
+  },
+  "dependencies": {
+    "@tum-far/namida": "0.0.2",
+    "@tum-far/ubii-msg-formats": "0.4.3",
+    "@tum-far/ubii-msg-transport": "0.3.0",
+    "@tum-far/ubii-topic-data": "0.0.11",
+    "@tum-far/ubii-interactions": "0.0.3",
+    "uuid": "^3.3.2"
+  },
+  "ava": {
+    "files": [
+      "test/**/*.js",
+      "!test/mocks/*",
+      "!test/files/**/*",
+      "!test/exclude/**/*",
+      "!test/clients/**/*",
+      "!test/devices/**/*",
+      "!test/services/**/*",
+      "!test/sessions/**/*"
+    ]
+  }
+}
