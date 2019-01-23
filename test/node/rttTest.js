@@ -8,7 +8,7 @@ const {
 const namida = require('@tum-far/namida');
 
 (function () {
-    /*test.cb('multiple local topicData RoundTripTime', t => {
+    test.cb('multiple local topicData RoundTripTime', t => {
         let master = new MasterNode('localhost', 8699, 8700, 8701, 8702);
 
         let activeRttNodes = 5;
@@ -23,11 +23,11 @@ const namida = require('@tum-far/namida');
             }
         }
 
-        let rttNode0 = new RttTestNode('rttTest1', 'localhost', 8700, 'rtt0', onFinishCallback);
-        let rttNode1 = new RttTestNode('rttTest2', 'localhost', 8700, 'rtt1', onFinishCallback);
-        let rttNode2 = new RttTestNode('rttTest3', 'localhost', 8700, 'rtt2', onFinishCallback);
-        let rttNode3 = new RttTestNode('rttTest4', 'localhost', 8700, 'rtt3', onFinishCallback);
-        let rttNode4 = new RttTestNode('rttTest5', 'localhost', 8700, 'rtt4', onFinishCallback);
+        let rttNode0 = new RttTestNode('rttTest1', 'localhost', 8701, 'rtt0', onFinishCallback);
+        let rttNode1 = new RttTestNode('rttTest2', 'localhost', 8701, 'rtt1', onFinishCallback);
+        let rttNode2 = new RttTestNode('rttTest3', 'localhost', 8701, 'rtt2', onFinishCallback);
+        let rttNode3 = new RttTestNode('rttTest4', 'localhost', 8701, 'rtt3', onFinishCallback);
+        let rttNode4 = new RttTestNode('rttTest5', 'localhost', 8701, 'rtt4', onFinishCallback);
 
         rttNode0.initialize()
         .then(()=>{
@@ -53,5 +53,5 @@ const namida = require('@tum-far/namida');
         .then(()=>{
             rttNode4.startRttMeasurement();
         });
-    });*/
+    });
 })();
