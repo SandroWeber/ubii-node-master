@@ -25,10 +25,6 @@ class ClientNodeWeb {
     // Cache for specifications:
     this.clientSpecification = {};
     this.deviceSpecifications = new Map();
-
-    // Service requests
-    this.pendingServiceRequests = [];
-    this.activeServiceRequest = null;
   }
 
   /**
