@@ -3,9 +3,7 @@ const {
   WebsocketClient
 } = require('@tum-far/ubii-msg-transport');
 
-const ServiceRequestTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceRequestTranslator');
-const ServiceReplyTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceReplyTranslator');
-const TopicDataTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/topicDataTranslator');
+const { ProtobufTranslator } = require('@tum-far/ubii-msg-formats');
 
 class ClientNodeWeb {
   constructor(name,
@@ -17,9 +15,15 @@ class ClientNodeWeb {
     this.servicePort = servicePort;
 
     // Translators:
-    this.topicDataTranslator = new TopicDataTranslator();
+    /*this.topicDataTranslator = new TopicDataTranslator();
     this.serviceRequestTranslator = new ServiceRequestTranslator();
-    this.serviceReplyTranslator = new ServiceReplyTranslator();
+    this.serviceReplyTranslator = new ServiceReplyTranslator();*/
+    this.msgTypeServiceReply = 'ubii.service.ServiceReply';
+    this.msgTypeServiceRequest = 'ubii.service.ServiceRequest';
+    this.msgTypeTopicData = 'ubii.topicData.TopicData';
+    this.translatorServiceReply = new ProtobufTranslator(this.msgTypeServiceReply);
+    this.translatorServiceRequest = new ProtobufTranslator(this.msgTypeServiceRequest);
+    this.translatorTopicData = new ProtobufTranslator(this.msgTypeTopicData);
 
     // Cache for specifications:
     this.clientSpecification = {};
@@ -53,7 +57,7 @@ class ClientNodeWeb {
       (messageBuffer) => {
         try {
           // Decode the buffer.
-          let message = this.topicDataTranslator.createMessageFromBuffer(messageBuffer);
+          let message = this.translatorTopicData.createMessageFromBuffer(messageBuffer);
 
           // Call callbacks.
           this.onTopicDataMessageReceived(message);
@@ -86,9 +90,9 @@ class ClientNodeWeb {
         }
       };
 
-      this.serviceClient.send('/services', {buffer: this.serviceRequestTranslator.createBufferFromPayload(message)})
+      this.serviceClient.send('/services', {buffer: this.translatorServiceRequest.createBufferFromPayload(message)})
         .then((reply) => {
-          let message = this.serviceReplyTranslator.createMessageFromBuffer(reply.buffer.data);
+          let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
           if (message.clientSpecification !== undefined && message.clientSpecification !== null) {
             // Process the reply client specification.
 
@@ -116,9 +120,9 @@ class ClientNodeWeb {
         }
       };
 
-      this.serviceClient.send('/services', {buffer: this.serviceRequestTranslator.createBufferFromPayload(message)})
+      this.serviceClient.send('/services', {buffer: this.translatorServiceRequest.createBufferFromPayload(message)})
         .then((reply) => {
-          let message = this.serviceReplyTranslator.createMessageFromBuffer(reply.buffer.data);
+          let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
           // The reply should be a device specification.
           if (message.deviceSpecification !== undefined && message.deviceSpecification !== null) {
             // Process the reply client specification.
@@ -149,9 +153,9 @@ class ClientNodeWeb {
         }
       };
 
-      this.serviceClient.send('/services', {buffer: this.serviceRequestTranslator.createBufferFromPayload(message)})
+      this.serviceClient.send('/services', {buffer: this.translatorServiceRequest.createBufferFromPayload(message)})
         .then((reply) => {
-          let message = this.serviceReplyTranslator.createMessageFromBuffer(reply.buffer.data);
+          let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
           // The reply should be a success.
           if (message.success !== undefined && message.success !== null) {
             resolve();
@@ -181,7 +185,7 @@ class ClientNodeWeb {
     };
     payload.topicDataRecord[type] = value;
 
-    buffer = this.topicDataTranslator.createBufferFromPayload(payload);
+    buffer = this.translatorTopicData.createBufferFromPayload(payload);
 
     this.topicDataClient.send(buffer);
   }

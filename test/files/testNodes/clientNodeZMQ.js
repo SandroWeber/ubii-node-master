@@ -3,9 +3,7 @@ const {
   ZmqRequest
 } = require('@tum-far/ubii-msg-transport');
 
-const ServiceRequestTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceRequestTranslator');
-const ServiceReplyTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceReplyTranslator');
-const TopicDataTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/topicDataTranslator');
+const { ProtobufTranslator } = require('@tum-far/ubii-msg-formats');
 
 class ClientNodeZMQ {
   constructor(name,
@@ -21,9 +19,12 @@ class ClientNodeZMQ {
     this.onServiceMessageReceived = onServiceMessageReceived;
 
     // Translators:
-    this.topicDataTranslator = new TopicDataTranslator();
-    this.serviceRequestTranslator = new ServiceRequestTranslator();
-    this.serviceReplyTranslator = new ServiceReplyTranslator();
+    this.msgTypeServiceReply = 'ubii.service.ServiceReply';
+    this.msgTypeServiceRequest = 'ubii.service.ServiceRequest';
+    this.msgTypeTopicData = 'ubii.topicData.TopicData';
+    this.topicDataTranslator = new ProtobufTranslator(this.msgTypeTopicData);
+    this.serviceRequestTranslator = new ProtobufTranslator(this.msgTypeServiceRequest);
+    this.serviceReplyTranslator = new ProtobufTranslator(this.msgTypeServiceReply);
 
     // Cache for specifications:
     this.clientSpecification = {};

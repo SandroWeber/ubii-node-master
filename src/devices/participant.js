@@ -2,7 +2,7 @@ const {
     Device
 } = require('./device.js');
 
-const TopicDataTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/topicDataTranslator');
+const { ProtobufTranslator } = require('@tum-far/ubii-msg-formats');
 
 const namida = require('@tum-far/namida');
 
@@ -14,7 +14,8 @@ class Participant extends Device {
     constructor(identifier, client, topicData) {
         super(identifier, client, topicData);
 
-        this.topicDataTranslator = new TopicDataTranslator();
+        this.msgTypeTopicData = 'ubii.topicData.TopicData';
+        this.topicDataTranslator = new ProtobufTranslator(this.msgTypeTopicData);
 
         this.subscriptionTokens = new Map();
     }
