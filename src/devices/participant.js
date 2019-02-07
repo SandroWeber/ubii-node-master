@@ -1,9 +1,9 @@
 const {
     Device
 } = require('./device.js');
-const{
-    TopicDataTranslator
-} = require("@tum-far/ubii-msg-formats");
+
+const TopicDataTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/topicDataTranslator');
+
 const namida = require('@tum-far/namida');
 
 /**

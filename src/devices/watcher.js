@@ -1,9 +1,8 @@
 const {
     Device
 } = require('./device.js');
-const{
-    TopicDataTranslator
-} = require("@tum-far/ubii-msg-formats");
+
+const TopicDataTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/topicDataTranslator');
 
 /**
  * Watchers are representations of remote entities at the server that passively interact with the ubii system.

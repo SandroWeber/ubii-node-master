@@ -24,11 +24,11 @@ const {
 const {
   SessionManager
 } = require('../sessions/sessionManager');
-const {
-  ServiceRequestTranslator,
-  ServiceReplyTranslator,
-  TopicDataTranslator
-} = require('@tum-far/ubii-msg-formats');
+
+const ServiceRequestTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceRequestTranslator');
+const ServiceReplyTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceReplyTranslator');
+const TopicDataTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/topicDataTranslator');
+
 const namida = require('@tum-far/namida');
 
 class MasterNode {

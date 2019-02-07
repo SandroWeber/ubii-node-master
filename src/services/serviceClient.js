@@ -1,5 +1,6 @@
 const {ZmqRequest} = require('@tum-far/ubii-msg-transport');
-const {ServiceRequestTranslator} = require('@tum-far/ubii-msg-formats');
+
+const ServiceRequestTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceRequestTranslator');
 
 
 class ServiceClient {

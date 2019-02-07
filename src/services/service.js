@@ -1,6 +1,5 @@
-const {
-    ServiceReplyTranslator
-} = require('@tum-far/ubii-msg-formats');
+
+const ServiceReplyTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceReplyTranslator');
 
 class Service {
     constructor(topic) {
