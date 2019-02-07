@@ -56,7 +56,7 @@ class RttTestNode extends ClientNodeZMQ {
 
     async startRttMeasurement(){
         // Register the default device.
-        await this.registerDevice(this.defaultDeviceName, 1);
+        await this.registerDevice(this.defaultDeviceName, 0);
 
         // Subscribe to the rtt topic.
         await this.subscribe(this.defaultDeviceName, [this.rttTopic], []);
