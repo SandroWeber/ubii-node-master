@@ -7,7 +7,7 @@ const {
 
 const {
   ServerConnectionsManager
-} = require('./serverConnectionsManager.js');
+} = require('../network/serverConnectionsManager.js');
 
 const {
   RuntimeTopicData
@@ -116,16 +116,27 @@ class MasterNode {
 
   onServiceMessageREST(request, response) {
     try {
+      console.info(request.body);
+
       // Decode buffer.
-      let message = this.serviceRequestTranslator.createMessageFromBuffer(request.body.buffer.data);
+      // VARIANT A: PROTOBUF
+      //let message = this.serviceRequestTranslator.createMessageFromBuffer(JSON.parse(request.body.buffer));
+      // VARIANT B: JSON
+      let json = JSON.parse(request.body.message);
+      console.info(json);
+      let message = this.serviceRequestTranslator.createMessageFromPayload(json);
 
       // Process request.
       let reply = this.serviceManager.processRequest(message);
 
       // Return reply.
-      let buffer = this.serviceReplyTranslator.createBufferFromPayload(reply);
-      response.json({ buffer: buffer });
-      return buffer;
+      // VARIANT A: PROTOBUF
+      //let buffer = this.serviceReplyTranslator.createBufferFromPayload(reply);
+      //response.json({ buffer: buffer });
+      //return buffer;
+      // VARIANT B: JSON
+      response.json({ message: JSON.stringify(reply) });
+      return JSON.stringify(reply);
     } catch (e) {
       // Create context.
       let context = {

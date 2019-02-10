@@ -3,14 +3,15 @@ const {
   defaultTopicDataServerPortWS,
   defaultServiceServerPortZMQ,
   defaultServiceServerPortREST
-} = require('./constants.js');
+} = require('../node/constants.js');
 
 const {
   ZmqRouter,
-  ZmqReply,
-  WebsocketServer,
-  RESTServer
+  ZmqReply
 } = require('@tum-far/ubii-msg-transport');
+
+const WebsocketServer = require('./websocketServer');
+const RESTServer = require('./restServer');
 
 const ServiceRequestTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceRequestTranslator');
 const ServiceReplyTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceReplyTranslator');
@@ -61,7 +62,6 @@ class ServerConnectionsManager {
 
     // Websocket Topic Data Server Component:
     this.connections.topicDataWS = new WebsocketServer(
-      'server_ws',
       this.ports.topicDataWS,
       (message) => {}
     );
