@@ -5,7 +5,7 @@ const namida = require("@tum-far/namida");
 
 class SubscriptionService extends Service {
   constructor(deviceManager) {
-    super('subscription');
+    super('/services/topic_subscription');
 
     this.deviceManager = deviceManager;
   }

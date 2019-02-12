@@ -9,16 +9,24 @@ const {
 } = require('../services/subscriptionService.js');
 const namida = require("@tum-far/namida");
 
+const { ProtobufTranslator } = require('@tum-far/ubii-msg-formats');
+
 class ServiceManager {
   constructor(clientManager, deviceManager, topicDataHost, topicDataPortZMQ, topicDataPortWS) {
+    this.clientManager = clientManager;
+    this.deviceManager = deviceManager;
+
     this.topicDataHost = topicDataHost;
     this.topicDataPortZMQ = topicDataPortZMQ;
     this.topicDataPortWS = topicDataPortWS;
 
+    this.msgTypeServiceReply = 'ubii.service.ServiceReply';
+    this.serviceReplyTranslator = new ProtobufTranslator(this.msgTypeServiceReply);
+
     this.services = new Map();
-    this.addService(new ClientRegistrationService(clientManager, topicDataHost, topicDataPortZMQ, topicDataPortWS));
-    this.addService(new DeviceRegistrationService(clientManager, deviceManager));
-    this.addService(new SubscriptionService(deviceManager));
+    this.addService(new ClientRegistrationService(this.clientManager, this.topicDataHost, this.topicDataPortZMQ, this.topicDataPortWS));
+    this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
+    this.addService(new SubscriptionService(this.deviceManager));
   }
 
   addService(service) {
@@ -36,7 +44,18 @@ class ServiceManager {
   }
 
   processRequest(request) {
-    return this.services.get(request.type).reply(request[request.type]);
+    if (!request.topic) {
+      console.error('ServiceManager.processRequest() - request missing topic! request:\n' + request);
+      return this.serviceReplyTranslator.createBufferFromPayload({
+        error: {
+          title: 'Service request error',
+          message: 'Request does not contain a topic',
+          stack: JSON.stringify(request)
+        }
+      });
+    }
+
+    return this.services.get(request.topic).reply(request[request.type]);
   }
 
   getTopicList() {

@@ -5,7 +5,7 @@ const namida = require("@tum-far/namida");
 
 class ClientRegistrationService extends Service {
   constructor(clientManager, targetHost, targetPortZMQ, targetPortWS) {
-    super('clientRegistration');
+    super('/services/client_registration');
 
     this.targetHost = targetHost;
     this.targetPortZMQ = targetPortZMQ;
