@@ -25,7 +25,7 @@ const {
   SessionManager
 } = require('../sessions/sessionManager');
 
-const { ProtobufTranslator } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const namida = require('@tum-far/namida');
 
@@ -37,12 +37,9 @@ class MasterNode {
     serviceServerPortREST = defaultServiceServerPortREST) {
 
     // Translators:
-    this.msgTypeServiceReply = 'ubii.service.ServiceReply';
-    this.msgTypeServiceRequest = 'ubii.service.ServiceRequest';
-    this.msgTypeTopicData = 'ubii.topicData.TopicData';
-    this.topicDataTranslator = new ProtobufTranslator(this.msgTypeTopicData);
-    this.serviceRequestTranslator = new ProtobufTranslator(this.msgTypeServiceRequest);
-    this.serviceReplyTranslator = new ProtobufTranslator(this.msgTypeServiceReply);
+    this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
+    this.serviceRequestTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
+    this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();

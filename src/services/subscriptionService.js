@@ -3,9 +3,11 @@ const {
 } = require('./service.js');
 const namida = require("@tum-far/namida");
 
+const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+
 class SubscriptionService extends Service {
   constructor(deviceManager) {
-    super('/services/topic_subscription');
+    super(DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION);
 
     this.deviceManager = deviceManager;
   }

@@ -9,7 +9,7 @@ const {
 } = require('../services/subscriptionService.js');
 const namida = require("@tum-far/namida");
 
-const { ProtobufTranslator } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class ServiceManager {
   constructor(clientManager, deviceManager, topicDataHost, topicDataPortZMQ, topicDataPortWS) {
@@ -20,8 +20,7 @@ class ServiceManager {
     this.topicDataPortZMQ = topicDataPortZMQ;
     this.topicDataPortWS = topicDataPortWS;
 
-    this.msgTypeServiceReply = 'ubii.service.ServiceReply';
-    this.serviceReplyTranslator = new ProtobufTranslator(this.msgTypeServiceReply);
+    this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
     this.services = new Map();
     this.addService(new ClientRegistrationService(this.clientManager, this.topicDataHost, this.topicDataPortZMQ, this.topicDataPortWS));
