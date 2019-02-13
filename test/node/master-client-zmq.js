@@ -76,18 +76,21 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
         return client.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
+        console.info('############# PUBLISHING');
         client.publish('anotherAwesomeDeviceName', 'awesomeTopic', 'quaternion', {
           x: 129.1,
           y: 576.005,
           z: 100000.4,
           w: 79824678.78927348
         });
-      })
-      .then(() => {
+
         setTimeout(() => {
           t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
           t.end();
         }, 1000);
+      })
+      .then(() => {
+        console.info('############# WAITING');
       });
   });
 

@@ -82,7 +82,7 @@ class ServerConnectionsManager {
   }
 
   onTopicDataMessageWS(callback) {
-    this.connections.topicDataWS.onReceive = callback;
+    this.connections.topicDataWS.onMessageReceived(callback);
   }
 
   send(clientID, message) {

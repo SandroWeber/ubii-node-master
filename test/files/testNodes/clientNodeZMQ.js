@@ -3,7 +3,7 @@ const {
   ZmqRequest
 } = require('@tum-far/ubii-msg-transport');
 
-const { ProtobufTranslator } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class ClientNodeZMQ {
   constructor(name,
@@ -19,12 +19,9 @@ class ClientNodeZMQ {
     this.onServiceMessageReceived = onServiceMessageReceived;
 
     // Translators:
-    this.msgTypeServiceReply = 'ubii.service.ServiceReply';
-    this.msgTypeServiceRequest = 'ubii.service.ServiceRequest';
-    this.msgTypeTopicData = 'ubii.topicData.TopicData';
-    this.topicDataTranslator = new ProtobufTranslator(this.msgTypeTopicData);
-    this.serviceRequestTranslator = new ProtobufTranslator(this.msgTypeServiceRequest);
-    this.serviceReplyTranslator = new ProtobufTranslator(this.msgTypeServiceReply);
+    this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
+    this.serviceRequestTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
+    this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
     // Cache for specifications:
     this.clientSpecification = {};
@@ -165,6 +162,7 @@ class ClientNodeZMQ {
       let serviceRequest = {
         formulateRequest: () => {
           let payload = {
+            topic: DEFAULT_TOPICS.SERVICES.CLIENT_REGISTRATION,
             clientRegistration: {
               name: this.name,
               namespace: ''
@@ -204,6 +202,7 @@ class ClientNodeZMQ {
       let serviceRequest = {
         formulateRequest: () => {
           let payload = {
+            topic: DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
             deviceRegistration: {
               name: deviceName,
               deviceType: deviceType,
@@ -242,7 +241,7 @@ class ClientNodeZMQ {
       let serviceRequest = {
         formulateRequest: () => {
           let payload = {
-            topic: '',
+            topic: DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
             subscription: {
               deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
               subscribeTopics: subscribeTopics,
