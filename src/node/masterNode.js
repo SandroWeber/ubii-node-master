@@ -161,7 +161,6 @@ class MasterNode {
   }
 
   onTopicDataMessageZMQ(envelope, message) {
-    console.info('master.onTopicDataMessageZMQ() - ' + envelope);
     // Create context.
     let context = {
       feedback: {

@@ -40,7 +40,7 @@ class DeviceRegistrationService extends Service {
 
     // Create a new device specification.
     let deviceSpecification = this.deviceManager.createDeviceSpecificationWithNewUuid(
-      message.name,
+      message.device.name,
       message.namespace,
       message.deviceType,
       correspondingClientIdentifier,

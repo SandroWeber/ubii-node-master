@@ -102,7 +102,10 @@ class ClientNodeWeb {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
       deviceRegistration: {
-        name: deviceName,
+        device: {
+          name: deviceName,
+          clientId: this.clientSpecification.identifier
+        },
         deviceType: deviceType,
         correspondingClientIdentifier: this.clientSpecification.identifier,
       }

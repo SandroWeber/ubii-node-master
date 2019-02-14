@@ -76,7 +76,6 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
         return client.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
-        console.info('############# PUBLISHING');
         client.publish('anotherAwesomeDeviceName', 'awesomeTopic', 'quaternion', {
           x: 129.1,
           y: 576.005,
@@ -89,9 +88,6 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
           t.end();
         }, 1000);
       })
-      .then(() => {
-        console.info('############# WAITING');
-      });
   });
 
   test.cb('subscribe then', t => {

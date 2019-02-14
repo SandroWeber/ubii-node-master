@@ -204,7 +204,10 @@ class ClientNodeZMQ {
           let payload = {
             topic: DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
             deviceRegistration: {
-              name: deviceName,
+              device: {
+                name: deviceName,
+                clientId: this.clientSpecification.identifier
+              },
               deviceType: deviceType,
               correspondingClientIdentifier: this.clientSpecification.identifier,
             }
@@ -276,8 +279,6 @@ class ClientNodeZMQ {
   publish(deviceName, topic, type, value) {
     let payload, buffer;
 
-    console.info('ZMQ client publish()');
-    console.info(this.deviceSpecifications);
     payload = {
       deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
       topicDataRecord: {
