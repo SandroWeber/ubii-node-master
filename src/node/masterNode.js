@@ -113,14 +113,11 @@ class MasterNode {
 
   onServiceMessageREST(request, response) {
     try {
-      console.info(request.body);
-
       // Decode buffer.
       // VARIANT A: PROTOBUF
       //let message = this.serviceRequestTranslator.createMessageFromBuffer(JSON.parse(request.body.buffer));
       // VARIANT B: JSON
       let json = JSON.parse(request.body.message);
-      console.info(json);
       let message = this.serviceRequestTranslator.createMessageFromPayload(json);
 
       // Process request.

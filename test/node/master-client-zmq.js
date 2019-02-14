@@ -82,13 +82,12 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
           z: 100000.4,
           w: 79824678.78927348
         });
-      })
-      .then(() => {
+
         setTimeout(() => {
           t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
           t.end();
         }, 1000);
-      });
+      })
   });
 
   test.cb('subscribe then', t => {

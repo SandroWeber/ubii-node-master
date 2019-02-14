@@ -3,7 +3,7 @@ const {
   WebsocketClient
 } = require('@tum-far/ubii-msg-transport');
 
-const { ProtobufTranslator } = require('@tum-far/ubii-msg-formats');
+const {ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS} = require('@tum-far/ubii-msg-formats');
 
 class ClientNodeWeb {
   constructor(name,
@@ -15,15 +15,9 @@ class ClientNodeWeb {
     this.servicePort = servicePort;
 
     // Translators:
-    /*this.topicDataTranslator = new TopicDataTranslator();
-    this.serviceRequestTranslator = new ServiceRequestTranslator();
-    this.serviceReplyTranslator = new ServiceReplyTranslator();*/
-    this.msgTypeServiceReply = 'ubii.service.ServiceReply';
-    this.msgTypeServiceRequest = 'ubii.service.ServiceRequest';
-    this.msgTypeTopicData = 'ubii.topicData.TopicData';
-    this.translatorServiceReply = new ProtobufTranslator(this.msgTypeServiceReply);
-    this.translatorServiceRequest = new ProtobufTranslator(this.msgTypeServiceRequest);
-    this.translatorTopicData = new ProtobufTranslator(this.msgTypeTopicData);
+    this.translatorServiceReply = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
+    this.translatorServiceRequest = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
+    this.translatorTopicData = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
 
     // Cache for specifications:
     this.clientSpecification = {};
@@ -40,15 +34,15 @@ class ClientNodeWeb {
       this.registerClient()
         .then(() => {
           this.initializeTopicDataClient(this.clientSpecification);
-          resolve();
+          return resolve();
         })
         .catch((error) => {
-          console.warn(error);
-          reject();
+          console.error(error);
+          return reject();
         });
     });
   }
-  
+
   initializeTopicDataClient(clientSpecification) {
     this.topicDataClient = new WebsocketClient(
       clientSpecification.identifier,
@@ -82,27 +76,21 @@ class ClientNodeWeb {
    * Register this client at the masterNode.
    */
   async registerClient() {
-    return new Promise((resolve, reject) => {
-      let message = {
-        clientRegistration: {
-          name: this.name,
-          namespace: ''
+    let message = {
+      topic: DEFAULT_TOPICS.SERVICES.CLIENT_REGISTRATION,
+      clientRegistration: {
+        name: this.name,
+        namespace: ''
+      }
+    };
+
+    return this.callService('/services', message).then(
+      (reply) => {
+        if (reply.clientSpecification !== undefined && reply.clientSpecification !== null) {
+          this.clientSpecification = reply.clientSpecification;
         }
-      };
-
-      this.serviceClient.send('/services', {buffer: this.translatorServiceRequest.createBufferFromPayload(message)})
-        .then((reply) => {
-          let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
-          if (message.clientSpecification !== undefined && message.clientSpecification !== null) {
-            // Process the reply client specification.
-
-            // Cache the client specification.
-            this.clientSpecification = message.clientSpecification;
-
-            resolve();
-          }
-        });
-    });
+      }
+    );
   }
 
   /**
@@ -111,29 +99,29 @@ class ClientNodeWeb {
    * @param {*} deviceType
    */
   async registerDevice(deviceName, deviceType) {
-    return new Promise((resolve, reject) => {
-      let message = {
-        deviceRegistration: {
+    let message = {
+      topic: DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
+      deviceRegistration: {
+        device: {
           name: deviceName,
-          deviceType: deviceType,
-          correspondingClientIdentifier: this.clientSpecification.identifier,
-        }
-      };
+          clientId: this.clientSpecification.identifier
+        },
+        deviceType: deviceType,
+        correspondingClientIdentifier: this.clientSpecification.identifier,
+      }
+    };
 
-      this.serviceClient.send('/services', {buffer: this.translatorServiceRequest.createBufferFromPayload(message)})
-        .then((reply) => {
-          let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
-          // The reply should be a device specification.
-          if (message.deviceSpecification !== undefined && message.deviceSpecification !== null) {
-            // Process the reply client specification.
-            this.deviceSpecifications.set(message.deviceSpecification.name, message.deviceSpecification);
-            resolve();
-          } else {
-            // TODO: log error
-            reject();
-          }
-        });
-    });
+    return this.callService('/services', message).then(
+      (reply) => {
+        if (reply.deviceSpecification !== undefined && reply.deviceSpecification !== null) {
+          // Process the reply client specification.
+          this.deviceSpecifications.set(reply.deviceSpecification.name, reply.deviceSpecification);
+        }
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
   }
 
   /**
@@ -143,15 +131,30 @@ class ClientNodeWeb {
    * @param {*} unsubscribeTopics
    */
   async subscribe(deviceName, subscribeTopics, unsubscribeTopics) {
-    return new Promise((resolve, reject) => {
-      let message = {
-        topic: '',
-        subscription: {
-          deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
-          subscribeTopics: subscribeTopics,
-          unsubscribeTopics: unsubscribeTopics
+    let message = {
+      topic: DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
+      subscription: {
+        deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
+        subscribeTopics: subscribeTopics,
+        unsubscribeTopics: unsubscribeTopics
+      }
+    };
+
+    return this.callService('/services', message).then(
+      (reply) => {
+        if (reply.success !== undefined && reply.success !== null) {
+          console.info('subscribe successful (' + deviceName + ' -> ' + subscribeTopics + ')');
+        } else {
+          console.error('subscribe failed (' + deviceName + ' -> ' + subscribeTopics + ')\n' +
+            reply);
         }
-      };
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
+
+    return new Promise((resolve, reject) => {
 
       this.serviceClient.send('/services', {buffer: this.translatorServiceRequest.createBufferFromPayload(message)})
         .then((reply) => {
@@ -163,6 +166,37 @@ class ClientNodeWeb {
             // TODO: log error
             reject();
           }
+        });
+    });
+  }
+
+  /**
+   * Call a service specified by the topic with a message and callback.
+   * @param {String} topic The topic relating to the service to be called
+   * @param {Object} message An object representing the protobuf message to be sent
+   * @param {Function} callback The function to be called with the reply
+   */
+  callService(topic, message) {
+    return new Promise((resolve, reject) => {
+      //TODO: just send JSON?
+      // VARIANT A: PROTOBUF
+      //let buffer = this.translatorServiceRequest.createBufferFromPayload(message);
+      //console.info(buffer);
+      //this.serviceClient.send('/services', {buffer: JSON.stringify(buffer)})
+      // VARIANT B: JSON
+      this.serviceClient.send(topic, {message: JSON.stringify(message)}).then(
+        (reply) => {
+          // VARIANT A: PROTOBUF
+          //let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
+          // VARIANT B: JSON
+          let json = JSON.parse(reply.message);
+          let message = this.translatorServiceReply.createMessageFromPayload(json);
+
+          return resolve(message);
+        },
+        (error) => {
+          console.error(error);
+          return reject();
         });
     });
   }

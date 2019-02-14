@@ -44,7 +44,8 @@ class ServiceManager {
 
   processRequest(request) {
     if (!request.topic) {
-      console.error('ServiceManager.processRequest() - request missing topic! request:\n' + request);
+      console.error('ServiceManager.processRequest() - request missing topic! request:');
+      console.error(request);
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
           title: 'Service request error',
