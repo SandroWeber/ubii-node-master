@@ -13,9 +13,7 @@ const {
 const WebsocketServer = require('./websocketServer');
 const RESTServer = require('./restServer');
 
-const ServiceRequestTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceRequestTranslator');
-const ServiceReplyTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/serviceReplyTranslator');
-const TopicDataTranslator = require('@tum-far/ubii-msg-formats/src/js/messageTranslator/topicDataTranslator');
+const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
 
 class ServerConnectionsManager {
   constructor(portTopicDataZMQ = defaultTopicDataServerPortZMQ,
@@ -30,9 +28,9 @@ class ServerConnectionsManager {
     };
 
     // Translators:
-    this.serviceReplyTranslator = new ServiceReplyTranslator();
-    this.serviceRequestTranslator = new ServiceRequestTranslator();
-    this.topicDataTranslator = new TopicDataTranslator();
+    this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
+    this.serviceRequestTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
+    this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
 
     this.openConnections();
   }

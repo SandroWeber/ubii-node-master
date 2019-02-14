@@ -1,7 +1,7 @@
 const RESTServer = require('./restServer');
 const WebsocketServer = require('./websocketServer');
 
-const { ProtobufTranslator } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class ServerNodeWeb {
   constructor(portServices,
@@ -14,13 +14,9 @@ class ServerNodeWeb {
     };
 
     // Translators:
-    //TODO: define message format constants in ubii-msg-formats
-    this.msgTypeServiceReply = 'ubii.service.ServiceReply';
-    this.msgTypeServiceRequest = 'ubii.service.ServiceRequest';
-    this.msgTypeTopicData = 'ubii.topicData.TopicData';
-    this.translatorServiceReply = new ProtobufTranslator(this.msgTypeServiceReply);
-    this.translatorServiceRequest = new ProtobufTranslator(this.msgTypeServiceRequest);
-    this.translatorTopicData = new ProtobufTranslator(this.msgTypeTopicData);
+    this.translatorServiceReply = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
+    this.translatorServiceRequest = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
+    this.translatorTopicData = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
 
     // Cache for specifications:
     this.deviceSpecifications = new Map();

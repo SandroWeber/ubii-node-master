@@ -1,4 +1,3 @@
-const {ProtobufTranslator} = require('@tum-far/ubii-msg-formats');
 
 class Service {
   constructor(topic) {
@@ -11,9 +10,6 @@ class Service {
     }
 
     this.topic = topic;
-
-    this.msgTypeServiceReply = 'ubii.service.ServiceReply';
-    this.serviceReplyTranslator = new ProtobufTranslator(this.msgTypeServiceReply);
   }
 
   prepareContext() {

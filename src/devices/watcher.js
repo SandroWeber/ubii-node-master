@@ -2,7 +2,7 @@ const {
   Device
 } = require('./device.js');
 
-const {ProtobufTranslator} = require('@tum-far/ubii-msg-formats');
+const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
 
 /**
  * Watchers are representations of remote entities at the server that passively interact with the ubii system.
@@ -12,8 +12,7 @@ class Watcher extends Device {
   constructor(identifier, client, topicData) {
     super(identifier, client, topicData);
 
-    this.msgTypeTopicData = 'ubii.topicData.TopicData';
-    this.topicDataTranslator = new ProtobufTranslator(this.msgTypeTopicData);
+    this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
 
     this.subscriptionAllToken = null;
   }

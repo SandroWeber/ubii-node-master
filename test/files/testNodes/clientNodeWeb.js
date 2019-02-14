@@ -31,23 +31,25 @@ class ClientNodeWeb {
     return new Promise((resolve, reject) => {
       this.serviceClient = new RESTClient(this.serviceHost, this.servicePort);
 
-      this.registerClient()
-        .then(() => {
-          this.initializeTopicDataClient(this.clientSpecification);
-          return resolve();
-        })
-        .catch((error) => {
-          console.error(error);
-          return reject();
-        });
+      this.getServerConfig().then(() => {
+        this.registerClient()
+          .then(() => {
+            this.initializeTopicDataClient(this.serverSpecification);
+            return resolve();
+          })
+          .catch((error) => {
+            console.error(error);
+            return reject();
+          });
+      });
     });
   }
 
-  initializeTopicDataClient(clientSpecification) {
+  initializeTopicDataClient(serverSpecification) {
     this.topicDataClient = new WebsocketClient(
-      clientSpecification.identifier,
-      clientSpecification.topicDataHost,
-      parseInt(clientSpecification.topicDataPortWs),
+      this.name,
+      serverSpecification.ip,
+      parseInt(serverSpecification.portTopicDataWs),
       (messageBuffer) => {
         try {
           // Decode the buffer.
@@ -72,6 +74,24 @@ class ClientNodeWeb {
     return true;
   }
 
+  async getServerConfig() {
+    let message = {
+      topic: DEFAULT_TOPICS.SERVICES.SERVER_CONFIG
+    };
+
+    return this.callService('/services', message).then(
+      (reply) => {
+        if (reply.serverSpecification !== undefined && reply.serverSpecification !== null) {
+          // Process the reply client specification.
+          this.serverSpecification = reply.serverSpecification;
+        }
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
+  }
+
   /**
    * Register this client at the masterNode.
    */
@@ -79,8 +99,7 @@ class ClientNodeWeb {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.CLIENT_REGISTRATION,
       clientRegistration: {
-        name: this.name,
-        namespace: ''
+        name: this.name
       }
     };
 
@@ -88,6 +107,8 @@ class ClientNodeWeb {
       (reply) => {
         if (reply.clientSpecification !== undefined && reply.clientSpecification !== null) {
           this.clientSpecification = reply.clientSpecification;
+          console.info('client.registerClient() - reply');
+          console.info(this.clientSpecification);
         }
       }
     );
@@ -102,12 +123,9 @@ class ClientNodeWeb {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
       deviceRegistration: {
-        device: {
-          name: deviceName,
-          clientId: this.clientSpecification.identifier
-        },
-        deviceType: deviceType,
-        correspondingClientIdentifier: this.clientSpecification.identifier,
+        name: deviceName,
+        clientId: this.clientSpecification.id,
+        deviceType: deviceType
       }
     };
 
@@ -115,7 +133,7 @@ class ClientNodeWeb {
       (reply) => {
         if (reply.deviceSpecification !== undefined && reply.deviceSpecification !== null) {
           // Process the reply client specification.
-          this.deviceSpecifications.set(reply.deviceSpecification.name, reply.deviceSpecification);
+          this.deviceSpecifications.set(reply.deviceSpecification.id, reply.deviceSpecification);
         }
       },
       (error) => {
@@ -130,22 +148,21 @@ class ClientNodeWeb {
    * @param {*} subscribeTopics
    * @param {*} unsubscribeTopics
    */
-  async subscribe(deviceName, subscribeTopics, unsubscribeTopics) {
+  async subscribe(topic) {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
-      subscription: {
-        deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
-        subscribeTopics: subscribeTopics,
-        unsubscribeTopics: unsubscribeTopics
+      topicSubscription: {
+        clientID: this.clientSpecification.id,
+        topic: topic
       }
     };
 
     return this.callService('/services', message).then(
       (reply) => {
         if (reply.success !== undefined && reply.success !== null) {
-          console.info('subscribe successful (' + deviceName + ' -> ' + subscribeTopics + ')');
+          console.info('subscribe successful (' + topic + ')');
         } else {
-          console.error('subscribe failed (' + deviceName + ' -> ' + subscribeTopics + ')\n' +
+          console.error('subscribe failed (' + topic + ')\n' +
             reply);
         }
       },
@@ -191,6 +208,8 @@ class ClientNodeWeb {
           // VARIANT B: JSON
           let json = JSON.parse(reply.message);
           let message = this.translatorServiceReply.createMessageFromPayload(json);
+          //console.info('client.callService() - reply');
+          //console.info(message);
 
           return resolve(message);
         },
@@ -212,7 +231,7 @@ class ClientNodeWeb {
     let payload, buffer;
 
     payload = {
-      deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
+      deviceId: this.deviceSpecifications.get(deviceName).identifier,
       topicDataRecord: {
         topic: topic
       }

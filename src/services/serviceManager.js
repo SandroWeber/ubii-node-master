@@ -1,31 +1,28 @@
-const {
-  ClientRegistrationService
-} = require('../services/clientRegistrationService.js');
-const {
-  DeviceRegistrationService
-} = require('../services/deviceRegistrationService.js');
-const {
-  SubscriptionService
-} = require('../services/subscriptionService.js');
+const {ClientRegistrationService} = require('../services/clientRegistrationService.js');
+const {DeviceRegistrationService} = require('../services/deviceRegistrationService.js');
+const {SubscriptionService} = require('../services/subscriptionService.js');
+const {ServerConfigService} = require('../services/serverConfigService.js');
 const namida = require("@tum-far/namida");
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class ServiceManager {
-  constructor(clientManager, deviceManager, topicDataHost, topicDataPortZMQ, topicDataPortWS) {
+  constructor(clientManager, deviceManager, connectionManager, host) {
     this.clientManager = clientManager;
     this.deviceManager = deviceManager;
+    this.connectionManager = connectionManager;
 
-    this.topicDataHost = topicDataHost;
-    this.topicDataPortZMQ = topicDataPortZMQ;
-    this.topicDataPortWS = topicDataPortWS;
+    this.host = host;
 
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
     this.services = new Map();
-    this.addService(new ClientRegistrationService(this.clientManager, this.topicDataHost, this.topicDataPortZMQ, this.topicDataPortWS));
+    this.addService(new ClientRegistrationService(this.clientManager, this.host,
+      this.connectionManager.ports.topicDataZMQ,
+      this.connectionManager.ports.topicDataWS));
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
     this.addService(new SubscriptionService(this.deviceManager));
+    this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.host, connectionManager));
   }
 
   addService(service) {

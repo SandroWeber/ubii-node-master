@@ -167,13 +167,12 @@ class DeviceManager {
    * @param {*} deviceType The type of the device. See the ubii-msg-formats repository for more information.
    * @param {String} correspondingClientIdentifier Universally unique identifier of the corresponding Client.
    */
-  createDeviceSpecificationWithNewUuid(name, namespace, deviceType, correspondingClientIdentifier) {
+  createDeviceSpecificationWithNewUuid(name, namespace, correspondingClientIdentifier) {
     return {
+      id: this.createDeviceUuid(),
       name: name,
       namespace: namespace,
-      identifier: this.createDeviceUuid(),
-      deviceType: deviceType,
-      correspondingClientIdentifier: correspondingClientIdentifier
+      clientId: correspondingClientIdentifier
     };
   }
 
@@ -189,8 +188,8 @@ class DeviceManager {
     // Prepare some variables.
     let payload = {};
     let currentDevice = {};
-    let deviceIdentifier = deviceSpecification.identifier;
-    let clientIdentifier = deviceSpecification.correspondingClientIdentifier;
+    let deviceIdentifier = deviceSpecification.id;
+    let clientIdentifier = deviceSpecification.clientId;
 
     // Check the context.
     if (context.feedback === undefined) {

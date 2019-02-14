@@ -63,8 +63,10 @@ class MasterNode {
       this.connectionsManager.connections.topicDataZMQ);
 
     // Service Manager Component:
-    this.serviceManager = new ServiceManager(this.clientManager,
+    this.serviceManager = new ServiceManager(
+      this.clientManager,
       this.deviceManager,
+      this.connectionsManager,
       topicDataServerHost.toString(),
       this.connectionsManager.ports.topicDataZMQ.toString(),
       this.connectionsManager.ports.topicDataWS.toString());
@@ -221,9 +223,13 @@ class MasterNode {
     try {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
+      console.info('onTopicDataMessageWS');
+      console.info(topicDataMessage);
 
       // Process message.
-      let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceIdentifier).client.identifier;
+      let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
+      console.info(clientID);
+
       this.processTopicDataMessage(clientID, topicDataMessage);
     } catch (e) {
       context.feedback.title = 'TopicData message publishing failed (WS)';
@@ -237,7 +243,7 @@ class MasterNode {
       try {
         // Send error:
         let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
-        let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceIdentifier).client.identifier;
+        let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
         this.connectionsManager.send(clientID, this.topicDataTranslator.createBufferFromPayload({
           error: {
             title: context.feedback.title,
