@@ -2,7 +2,7 @@ const {
     Device
 } = require('./device.js');
 
-const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+//const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const namida = require('@tum-far/namida');
 
@@ -14,9 +14,9 @@ class Participant extends Device {
     constructor(identifier, client, topicData) {
         super(identifier, client, topicData);
 
-        this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
+        //this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
 
-        this.subscriptionTokens = new Map();
+        //this.subscriptionTokens = new Map();
     }
 
     /**
@@ -36,7 +36,7 @@ class Participant extends Device {
      * Subscribe to a topic at the topicData
      * @param {String} topic 
      */
-    subscribe(topic) {
+    /*subscribe(topic) {
         if (this.subscriptionTokens.has(topic)) {
             namida.logFailure(`Topic Data subscription rejected`,
                 `Device (Participant) with id ${this.identifier} is already subscribed to this topic.`);
@@ -60,13 +60,13 @@ class Participant extends Device {
 
         // save token
         this.subscriptionTokens.set(topic, token);
-    }
+    }*/
 
     /**
      * Unsubscribes from a topic at the topicData.
      * @param {String} topic 
      */
-    unsubscribe(topic) {
+    /*unsubscribe(topic) {
         if(this.subscriptionTokens.has(topic)){
             namida.logFailure(`Topic Data unsubscription rejected`,
                 `Device (Particpiant) with id ${this.identifier} is not subscribed to this topic.`);
@@ -78,7 +78,7 @@ class Participant extends Device {
 
         // unsubscribe
         this.topicData.unsubscribe(token);
-    }
+    }*/
 
     /**
      * Deactivate the client: clear all intervalls, unsubsribe from all topics, ...

@@ -59,6 +59,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
       'localhost',
       9394);
 
+    let deviceID;
     client.initialize()
       .then(() => {
         return client.registerDevice('anotherAwesomeDeviceName', 0);
@@ -72,6 +73,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
         });
       })
       .then(() => {
+        console.info('######### test outcome');
         setTimeout(() => {
           t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
           t.end();
@@ -97,7 +99,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
         return client.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
-        return client.subscribe('anotherAwesomeDeviceName', ['awesomeTopic'], []);
+        return client.subscribe('awesomeTopic');
       })
       .then(() => {
         t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);

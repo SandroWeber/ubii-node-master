@@ -9,8 +9,9 @@ const REJECT_REGISTRATION_FEEDBACK_TITLE = 'Client registration rejected';
 const ACCEPT_REGISTRATION_FEEDBACK_TITLE = 'Client registration accepted';
 
 class ClientManager {
-  constructor(server) {
+  constructor(server, topicData) {
     this.server = server;
+    this.topicData = topicData;
     this.clients = new Map();
 
     namida.log('Client Manager Ready', 'The Client Manager is initialized and ready to work.');
@@ -185,7 +186,8 @@ class ClientManager {
     currentClient = new Client(clientSpecification.id,
       clientSpecification.name,
       clientSpecification.namespace,
-      this.server);
+      this.server,
+      this.topicData);
     this.registerClient(currentClient);
 
     // Ouput the feedback on the server console.
@@ -204,4 +206,4 @@ class ClientManager {
 
 module.exports = {
   'ClientManager': ClientManager
-}
+};

@@ -22,6 +22,8 @@ class ClientNodeWeb {
     // Cache for specifications:
     this.clientSpecification = {};
     this.deviceSpecifications = new Map();
+
+    this.topicDataCallbacks = new Map();
   }
 
   /**
@@ -107,8 +109,6 @@ class ClientNodeWeb {
       (reply) => {
         if (reply.clientSpecification !== undefined && reply.clientSpecification !== null) {
           this.clientSpecification = reply.clientSpecification;
-          console.info('client.registerClient() - reply');
-          console.info(this.clientSpecification);
         }
       }
     );
@@ -133,7 +133,9 @@ class ClientNodeWeb {
       (reply) => {
         if (reply.deviceSpecification !== undefined && reply.deviceSpecification !== null) {
           // Process the reply client specification.
-          this.deviceSpecifications.set(reply.deviceSpecification.id, reply.deviceSpecification);
+          this.deviceSpecifications.set(reply.deviceSpecification.name, reply.deviceSpecification);
+
+          return reply.deviceSpecification.id;
         }
       },
       (error) => {
@@ -143,26 +145,32 @@ class ClientNodeWeb {
   }
 
   /**
-   * Subscribe and unsubscribe to the specified topics.
-   * @param {*} deviceName
-   * @param {*} subscribeTopics
-   * @param {*} unsubscribeTopics
+   * Subscribe to the specified topic and register callback on topic message received.
+   * @param {*} topic
+   * @param {*} callback
    */
-  async subscribe(topic) {
+  async subscribe(topic, callback) {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
       topicSubscription: {
         clientID: this.clientSpecification.id,
-        topic: topic
+        subscribeTopics: [topic]
       }
     };
 
     return this.callService('/services', message).then(
       (reply) => {
         if (reply.success !== undefined && reply.success !== null) {
-          console.info('subscribe successful (' + topic + ')');
+          console.info('ClientNodeWeb - subscribe successful (' + topic + ')');
+
+          let callbacks = this.topicDataCallbacks.get(topic);
+          if (callbacks && callbacks.length > 0) {
+            callbacks.push(callback);
+          } else {
+            this.topicDataCallbacks.set(topic, [callback]);
+          }
         } else {
-          console.error('subscribe failed (' + topic + ')\n' +
+          console.error('ClientNodeWeb - subscribe failed (' + topic + ')\n' +
             reply);
         }
       },
@@ -171,7 +179,7 @@ class ClientNodeWeb {
       }
     );
 
-    return new Promise((resolve, reject) => {
+    /*return new Promise((resolve, reject) => {
 
       this.serviceClient.send('/services', {buffer: this.translatorServiceRequest.createBufferFromPayload(message)})
         .then((reply) => {
@@ -184,7 +192,7 @@ class ClientNodeWeb {
             reject();
           }
         });
-    });
+    });*/
   }
 
   /**
@@ -231,7 +239,7 @@ class ClientNodeWeb {
     let payload, buffer;
 
     payload = {
-      deviceId: this.deviceSpecifications.get(deviceName).identifier,
+      deviceId: this.deviceSpecifications.get(deviceName).id,
       topicDataRecord: {
         topic: topic
       }
@@ -244,6 +252,10 @@ class ClientNodeWeb {
   }
 
   onTopicDataMessageReceived(message) {
+    if (message.topicDataRecord && message.topicDataRecord.topic) {
+      let callbacks = this.topicDataCallbacks.get(message.topicDataRecord.topic);
+      callbacks.forEach((cb) => {cb(message.topicDataRecord[message.topicDataRecord.type])})
+    }
   }
 }
 

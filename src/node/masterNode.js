@@ -55,7 +55,7 @@ class MasterNode {
     this.connectionsManager.onTopicDataMessageZMQ((...params) => this.onTopicDataMessageZMQ(...params));
 
     // Client Manager Component:
-    this.clientManager = new ClientManager(this.connectionsManager);
+    this.clientManager = new ClientManager(this.connectionsManager, this.topicData);
 
     // Device Manager Component:
     this.deviceManager = new DeviceManager(this.clientManager,
@@ -120,10 +120,12 @@ class MasterNode {
       //let message = this.serviceRequestTranslator.createMessageFromBuffer(JSON.parse(request.body.buffer));
       // VARIANT B: JSON
       let json = JSON.parse(request.body.message);
-      let message = this.serviceRequestTranslator.createMessageFromPayload(json);
+      let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(json);
 
       // Process request.
-      let reply = this.serviceManager.processRequest(message);
+      let reply = this.serviceManager.processRequest(requestMessage);
+      //console.info('onServiceMessageREST() - reply');
+      //console.info(reply);
 
       // Return reply.
       // VARIANT A: PROTOBUF
@@ -210,7 +212,7 @@ class MasterNode {
     return message;
   }
 
-  onTopicDataMessageWS(message) {
+  onTopicDataMessageWS(clientID, message) {
     // Create context.
     let context = {
       feedback: {
@@ -220,15 +222,16 @@ class MasterNode {
       }
     };
 
+    if (!this.clientManager.verifyClient(clientID)) {
+      console.error('Topic data received from unregistered client with ID ' + clientID);
+    }
+
     try {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
-      console.info('onTopicDataMessageWS');
-      console.info(topicDataMessage);
 
       // Process message.
       let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
-      console.info(clientID);
 
       this.processTopicDataMessage(clientID, topicDataMessage);
     } catch (e) {
@@ -276,7 +279,7 @@ class MasterNode {
     };
 
     // Extract the relevant information.
-    let deviceIdentifier = topicDataMessage.deviceIdentifier;
+    let deviceIdentifier = topicDataMessage.deviceId;
 
     // Verification process:
 

@@ -21,7 +21,7 @@ class ServiceManager {
       this.connectionManager.ports.topicDataZMQ,
       this.connectionManager.ports.topicDataWS));
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
-    this.addService(new SubscriptionService(this.deviceManager));
+    this.addService(new SubscriptionService(this.clientManager));
     this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.host, connectionManager));
   }
 

@@ -6,23 +6,24 @@ const namida = require("@tum-far/namida");
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class SubscriptionService extends Service {
-  constructor(deviceManager) {
+  constructor(clientManager) {
     super(DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION);
 
-    this.deviceManager = deviceManager;
+    this.clientManager = clientManager;
   }
 
   reply(message) {
+    console.info(message);
     // Prepare the context.
     let context = this.prepareContext();
 
     // Extract the relevant information.
-    let deviceIdentifier = message.deviceIdentifier;
+    let clientID = message.clientID;
 
     // Verify the device and act accordingly.
-    if (!this.deviceManager.verifyParticipant(deviceIdentifier)) {
+    if (!this.clientManager.verifyClient(clientID)) {
       // Update the context feedback.
-      context.feedback.message = `There is no Participant registered with the id ${namida.style.messageHighlight(deviceIdentifier)}. ` +
+      context.feedback.message = `There is no client registered with the id ${namida.style.messageHighlight(clientID)}. ` +
         `Subscription was rejected due to an unregistered device.`;
       context.feedback.title = 'Subscription rejected';
 
@@ -37,18 +38,19 @@ class SubscriptionService extends Service {
       });
     }
 
-    let currentParticipant = this.deviceManager.getParticipant(deviceIdentifier);
+    let client = this.clientManager.getClient(clientID);
 
     // Update device information
-    currentParticipant.updateLastSignOfLife();
+    client.updateLastSignOfLife();
 
     // Process subscribe topics and unsubscribe topics
-    message.subscribeTopics.forEach(subscribeTopic => {
-      currentParticipant.subscribe(subscribeTopic);
+    console.info(message.subscribeTopics);
+    message.subscribeTopics && message.subscribeTopics.forEach(subscribeTopic => {
+      client.subscribe(subscribeTopic);
     });
 
-    message.unsubscribeTopics.forEach(unsubscribeTopic => {
-      currentParticipant.unsubscribe(unsubscribeTopic);
+    message.unsubscribeTopics && message.unsubscribeTopics.forEach(unsubscribeTopic => {
+      client.unsubscribe(unsubscribeTopic);
     });
 
     // Reply with success message
