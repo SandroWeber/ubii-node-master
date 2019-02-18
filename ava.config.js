@@ -1,7 +1,7 @@
 export default {
   "files": [
     //"test/**/*.js",
-    "test/node/master-client-web.js",
+    "test/node/master-client-zmq.js",
     "!test/mocks/*",
     "!test/files/**/*",
     "!test/exclude/**/*",

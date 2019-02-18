@@ -7,11 +7,11 @@ const {ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS} = require('@tum-far/ubii-m
 
 class ClientNodeWeb {
   constructor(name,
-              serviceHost,
+              serverHost,
               servicePort) {
     // Properties:
     this.name = name;
-    this.serviceHost = serviceHost;
+    this.serverHost = serverHost;
     this.servicePort = servicePort;
 
     // Translators:
@@ -31,7 +31,7 @@ class ClientNodeWeb {
    */
   async initialize() {
     return new Promise((resolve, reject) => {
-      this.serviceClient = new RESTClient(this.serviceHost, this.servicePort);
+      this.serviceClient = new RESTClient(this.serverHost, this.servicePort);
 
       this.getServerConfig().then(() => {
         this.registerClient()
@@ -50,7 +50,7 @@ class ClientNodeWeb {
   initializeTopicDataClient(serverSpecification) {
     this.topicDataClient = new WebsocketClient(
       this.clientSpecification.id,
-      serverSpecification.ip,
+      this.serverHost,
       parseInt(serverSpecification.portTopicDataWs),
       (messageBuffer) => {
         try {
@@ -193,7 +193,6 @@ class ClientNodeWeb {
    * Call a service specified by the topic with a message and callback.
    * @param {String} topic The topic relating to the service to be called
    * @param {Object} message An object representing the protobuf message to be sent
-   * @param {Function} callback The function to be called with the reply
    */
   callService(topic, message) {
     return new Promise((resolve, reject) => {

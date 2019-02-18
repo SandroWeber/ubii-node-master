@@ -8,15 +8,11 @@ const { ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii
 class ClientNodeZMQ {
   constructor(name,
               serviceHost,
-              servicePort,
-              onTopicDataMessageReceived = (message) => {},
-              onServiceMessageReceived = (message) => {}) {
+              servicePort) {
     // Properties:
     this.name = name;
-    this.serviceHost = serviceHost;
+    this.host = serviceHost;
     this.servicePort = servicePort;
-    this.onTopicDataMessageReceived = onTopicDataMessageReceived;
-    this.onServiceMessageReceived = onServiceMessageReceived;
 
     // Translators:
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
@@ -30,6 +26,8 @@ class ClientNodeZMQ {
     // Service requests
     this.pendingServiceRequests = [];
     this.activeServiceRequest = null;
+
+    this.topicDataCallbacks = new Map();
   }
 
   /**
@@ -65,7 +63,7 @@ class ClientNodeZMQ {
 
   initializeServiceClient(automatedServiceRequestProcessingCallback) {
     // Initialize the service client.
-    this.serviceClient = new ZmqRequest(this.serviceHost, this.servicePort, (message) => {
+    this.serviceClient = new ZmqRequest(this.host, this.servicePort, (message) => {
       try {
         // Decode the received service reply buffer.
         let received = this.serviceReplyTranslator.createMessageFromBuffer(message);
@@ -290,6 +288,37 @@ class ClientNodeZMQ {
     buffer = this.topicDataTranslator.createBufferFromPayload(payload);
 
     this.topicDataClient.send(buffer);
+  }
+
+  /**
+   * Call a service specified by the topic with a message and callback.
+   * @param {String} topic The topic relating to the service to be called
+   * @param {Object} message An object representing the protobuf message to be sent
+   * @param {Function} callback The function to be called with the reply
+   */
+  callService(topic, message, callback) {
+    return new Promise((resolve, reject) => {
+      //TODO: just send JSON?
+      // VARIANT A: PROTOBUF
+      //let buffer = this.translatorServiceRequest.createBufferFromPayload(message);
+      //console.info(buffer);
+      //this.serviceClient.send('/services', {buffer: JSON.stringify(buffer)})
+      // VARIANT B: JSON
+      this.serviceClient.send(topic, {message: JSON.stringify(message)}).then(
+        (reply) => {
+          // VARIANT A: PROTOBUF
+          //let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
+          // VARIANT B: JSON
+          let json = JSON.parse(reply.message);
+          let message = this.translatorServiceReply.createMessageFromPayload(json);
+
+          return resolve(message);
+        },
+        (error) => {
+          console.error(error);
+          return reject();
+        });
+    });
   }
 }
 
