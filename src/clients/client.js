@@ -154,12 +154,17 @@ class Client {
 
     // subscribe
     let token = this.topicData.subscribe(topic, (topic, data) => {
+      console.info('### subscribe callback for client ' + this.name + ' - topic ' + topic);
+      console.info(data);
       let payload = {
         topicDataRecord: {
           topic: topic
         }
       };
-      payload.topicDataRecord[data.type] = data.value;
+      //TODO: data.constructor.name.toLowerCase() is a hack, needs topic data format info implemented in ubii-topic-data
+      let type = data.constructor.name.toLowerCase();
+      console.info(type);
+      payload.topicDataRecord[type] = data;
 
       let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
 

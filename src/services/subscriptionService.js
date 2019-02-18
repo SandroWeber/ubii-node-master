@@ -13,7 +13,6 @@ class SubscriptionService extends Service {
   }
 
   reply(message) {
-    console.info(message);
     // Prepare the context.
     let context = this.prepareContext();
 
@@ -44,7 +43,6 @@ class SubscriptionService extends Service {
     client.updateLastSignOfLife();
 
     // Process subscribe topics and unsubscribe topics
-    console.info(message.subscribeTopics);
     message.subscribeTopics && message.subscribeTopics.forEach(subscribeTopic => {
       client.subscribe(subscribeTopic);
     });
@@ -65,4 +63,4 @@ class SubscriptionService extends Service {
 
 module.exports = {
   'SubscriptionService': SubscriptionService,
-}
+};

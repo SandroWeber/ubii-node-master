@@ -224,14 +224,18 @@ class MasterNode {
 
     if (!this.clientManager.verifyClient(clientID)) {
       console.error('Topic data received from unregistered client with ID ' + clientID);
+      return;
     }
+
+    let client = this.clientManager.getClient(clientID);
+    client.updateLastSignOfLife();
 
     try {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
 
       // Process message.
-      let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
+      //let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
 
       this.processTopicDataMessage(clientID, topicDataMessage);
     } catch (e) {
@@ -245,8 +249,8 @@ class MasterNode {
 
       try {
         // Send error:
-        let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
-        let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
+        //let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
+        //let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
         this.connectionsManager.send(clientID, this.topicDataTranslator.createBufferFromPayload({
           error: {
             title: context.feedback.title,
@@ -269,75 +273,8 @@ class MasterNode {
   }
 
   processTopicDataMessage(clientIdentifier, topicDataMessage) {
-    // Prepare the context.
-    let context = {
-      feedback: {
-        title: '',
-        message: '',
-        stack: ''
-      }
-    };
-
-    // Extract the relevant information.
-    let deviceIdentifier = topicDataMessage.deviceId;
-
-    // Verification process:
-
-    // Verify the client and act accordingly.
-    if (!this.clientManager.verifyClient(clientIdentifier.toString())) {
-      // Update the context feedback.
-      context.feedback.message = `There is no Client registered with the id ${namida.style.messageHighlight(clientIdentifier)}. ` +
-        `Message processing was aborted due to an unregistered client.`;
-      context.feedback.title = 'Message processing aborted';
-
-      namida.logFailure(context.feedback.title, context.feedback.message);
-
-      this.connectionsManager.send(clientIdentifier,
-        this.topicDataTranslator.createBufferFromPayload({
-          deviceIdentifier: deviceIdentifier,
-          error: {
-            title: context.feedback.title,
-            message: context.feedback.message,
-            stack: context.feedback.stack
-          }
-        }));
-    }
-
-    // Verify the device and act accordingly.
-    if (!this.deviceManager.verifyParticipant(deviceIdentifier)) {
-      // Update the context feedback.
-      context.feedback.message = `There is no Participant registered with the id ${namida.style.messageHighlight(deviceIdentifier)}. ` +
-        `Subscription was rejected due to an unregistered device.`;
-      context.feedback.title = 'Subscription rejected';
-
-      namida.logFailure(context.feedback.title, context.feedback.message);
-
-      this.connectionsManager.send(clientIdentifier,
-        this.topicDataTranslator.createBufferFromPayload({
-          deviceIdentifier: deviceIdentifier,
-          error: {
-            title: context.feedback.title,
-            message: context.feedback.message,
-            stack: context.feedback.stack
-          }
-        }));
-    }
-
-    // Publication process:
-
-    // Get the current device.
-    let currentParticipant = this.deviceManager.getParticipant(deviceIdentifier);
-
-    // Update device information.
-    currentParticipant.updateLastSignOfLife();
-
-    // Update client information.
-    this.clientManager.getClient(currentParticipant.client.identifier).updateLastSignOfLife();
-
-    // Publish the data.
-    currentParticipant.publish(topicDataMessage.topicDataRecord.topic,
-      topicDataMessage.topicDataRecord.type,
-      topicDataMessage.topicDataRecord[topicDataMessage.topicDataRecord.type]);
+    let record = topicDataMessage.topicDataRecord;
+    this.topicData.publish(record.topic, record[record.type]);
   }
 }
 

@@ -16,7 +16,7 @@ class ClientNodeWeb {
 
     // Translators:
     this.translatorServiceReply = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
-    this.translatorServiceRequest = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
+    //this.translatorServiceRequest = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
     this.translatorTopicData = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
 
     // Cache for specifications:
@@ -49,7 +49,7 @@ class ClientNodeWeb {
 
   initializeTopicDataClient(serverSpecification) {
     this.topicDataClient = new WebsocketClient(
-      this.name,
+      this.clientSpecification.id,
       serverSpecification.ip,
       parseInt(serverSpecification.portTopicDataWs),
       (messageBuffer) => {
@@ -58,7 +58,7 @@ class ClientNodeWeb {
           let message = this.translatorTopicData.createMessageFromBuffer(messageBuffer);
 
           // Call callbacks.
-          this.onTopicDataMessageReceived(message);
+          this._onTopicDataMessageReceived(message);
         } catch (e) {
           (console.error || console.log).call(console, 'Ubii Message Translator createMessageFromBuffer failed with an error: ' + (e.stack || e));
         }
@@ -69,11 +69,7 @@ class ClientNodeWeb {
    * Is this client already initialized?
    */
   isInitialized() {
-    // Check if both clients are initialized.
-    if (this.serviceClient === undefined || this.topicDataClient === undefined) {
-      return false;
-    }
-    return true;
+    return (this.serviceClient !== undefined && this.topicDataClient !== undefined);
   }
 
   async getServerConfig() {
@@ -161,8 +157,6 @@ class ClientNodeWeb {
     return this.callService('/services', message).then(
       (reply) => {
         if (reply.success !== undefined && reply.success !== null) {
-          console.info('ClientNodeWeb - subscribe successful (' + topic + ')');
-
           let callbacks = this.topicDataCallbacks.get(topic);
           if (callbacks && callbacks.length > 0) {
             callbacks.push(callback);
@@ -216,8 +210,6 @@ class ClientNodeWeb {
           // VARIANT B: JSON
           let json = JSON.parse(reply.message);
           let message = this.translatorServiceReply.createMessageFromPayload(json);
-          //console.info('client.callService() - reply');
-          //console.info(message);
 
           return resolve(message);
         },
@@ -251,7 +243,7 @@ class ClientNodeWeb {
     this.topicDataClient.send(buffer);
   }
 
-  onTopicDataMessageReceived(message) {
+  _onTopicDataMessageReceived(message) {
     if (message.topicDataRecord && message.topicDataRecord.topic) {
       let callbacks = this.topicDataCallbacks.get(message.topicDataRecord.topic);
       callbacks.forEach((cb) => {cb(message.topicDataRecord[message.topicDataRecord.type])})
