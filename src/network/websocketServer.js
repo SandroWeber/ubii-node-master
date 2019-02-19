@@ -62,7 +62,7 @@ class WebsocketServer {
     this.clients.set(clientID, websocket);
 
     websocket.on('message', (message) => {
-      this._onMessage(message);
+      this._onMessage(clientID, message);
     });
 
     websocket.on('close', () => {
@@ -70,7 +70,7 @@ class WebsocketServer {
     });
   }
 
-  _onMessage(message) {
+  _onMessage(clientID, message) {
     /*if (message.toString() === PONG_MESSAGE) {
      // Check if callback for pong device
      if (this.waitingPongCallbacks.has(request.origin.toString())) {
@@ -87,9 +87,9 @@ class WebsocketServer {
 
     if (!this.processMessage) {
       console.warn('[' + new Date() + '] WebsocketServer.onMessageReceived() has not been set!' +
-        '\nMessage received:\n' + message);
+        '\nClient ID:\n' + clientID + '\nMessage received:\n' + message);
     } else {
-      this.processMessage(message);
+      this.processMessage(clientID, message);
     }
   }
 

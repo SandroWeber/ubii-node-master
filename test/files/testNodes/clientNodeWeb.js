@@ -7,21 +7,23 @@ const {ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS} = require('@tum-far/ubii-m
 
 class ClientNodeWeb {
   constructor(name,
-              serviceHost,
+              serverHost,
               servicePort) {
     // Properties:
     this.name = name;
-    this.serviceHost = serviceHost;
+    this.serverHost = serverHost;
     this.servicePort = servicePort;
 
     // Translators:
     this.translatorServiceReply = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
-    this.translatorServiceRequest = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
+    //this.translatorServiceRequest = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
     this.translatorTopicData = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
 
     // Cache for specifications:
     this.clientSpecification = {};
     this.deviceSpecifications = new Map();
+
+    this.topicDataCallbacks = new Map();
   }
 
   /**
@@ -29,32 +31,34 @@ class ClientNodeWeb {
    */
   async initialize() {
     return new Promise((resolve, reject) => {
-      this.serviceClient = new RESTClient(this.serviceHost, this.servicePort);
+      this.serviceClient = new RESTClient(this.serverHost, this.servicePort);
 
-      this.registerClient()
-        .then(() => {
-          this.initializeTopicDataClient(this.clientSpecification);
-          return resolve();
-        })
-        .catch((error) => {
-          console.error(error);
-          return reject();
-        });
+      this.getServerConfig().then(() => {
+        this.registerClient()
+          .then(() => {
+            this.initializeTopicDataClient(this.serverSpecification);
+            return resolve();
+          })
+          .catch((error) => {
+            console.error(error);
+            return reject();
+          });
+      });
     });
   }
 
-  initializeTopicDataClient(clientSpecification) {
+  initializeTopicDataClient(serverSpecification) {
     this.topicDataClient = new WebsocketClient(
-      clientSpecification.identifier,
-      clientSpecification.topicDataHost,
-      parseInt(clientSpecification.topicDataPortWs),
+      this.clientSpecification.id,
+      this.serverHost,
+      parseInt(serverSpecification.portTopicDataWs),
       (messageBuffer) => {
         try {
           // Decode the buffer.
           let message = this.translatorTopicData.createMessageFromBuffer(messageBuffer);
 
           // Call callbacks.
-          this.onTopicDataMessageReceived(message);
+          this._onTopicDataMessageReceived(message);
         } catch (e) {
           (console.error || console.log).call(console, 'Ubii Message Translator createMessageFromBuffer failed with an error: ' + (e.stack || e));
         }
@@ -65,11 +69,25 @@ class ClientNodeWeb {
    * Is this client already initialized?
    */
   isInitialized() {
-    // Check if both clients are initialized.
-    if (this.serviceClient === undefined || this.topicDataClient === undefined) {
-      return false;
-    }
-    return true;
+    return (this.serviceClient !== undefined && this.topicDataClient !== undefined);
+  }
+
+  async getServerConfig() {
+    let message = {
+      topic: DEFAULT_TOPICS.SERVICES.SERVER_CONFIG
+    };
+
+    return this.callService('/services', message).then(
+      (reply) => {
+        if (reply.serverSpecification !== undefined && reply.serverSpecification !== null) {
+          // Process the reply client specification.
+          this.serverSpecification = reply.serverSpecification;
+        }
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
   }
 
   /**
@@ -79,8 +97,7 @@ class ClientNodeWeb {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.CLIENT_REGISTRATION,
       clientRegistration: {
-        name: this.name,
-        namespace: ''
+        name: this.name
       }
     };
 
@@ -102,12 +119,9 @@ class ClientNodeWeb {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
       deviceRegistration: {
-        device: {
-          name: deviceName,
-          clientId: this.clientSpecification.identifier
-        },
-        deviceType: deviceType,
-        correspondingClientIdentifier: this.clientSpecification.identifier,
+        name: deviceName,
+        clientId: this.clientSpecification.id,
+        deviceType: deviceType
       }
     };
 
@@ -116,6 +130,8 @@ class ClientNodeWeb {
         if (reply.deviceSpecification !== undefined && reply.deviceSpecification !== null) {
           // Process the reply client specification.
           this.deviceSpecifications.set(reply.deviceSpecification.name, reply.deviceSpecification);
+
+          return reply.deviceSpecification.id;
         }
       },
       (error) => {
@@ -125,27 +141,30 @@ class ClientNodeWeb {
   }
 
   /**
-   * Subscribe and unsubscribe to the specified topics.
-   * @param {*} deviceName
-   * @param {*} subscribeTopics
-   * @param {*} unsubscribeTopics
+   * Subscribe to the specified topic and register callback on topic message received.
+   * @param {*} topic
+   * @param {*} callback
    */
-  async subscribe(deviceName, subscribeTopics, unsubscribeTopics) {
+  async subscribe(topic, callback) {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
-      subscription: {
-        deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
-        subscribeTopics: subscribeTopics,
-        unsubscribeTopics: unsubscribeTopics
+      topicSubscription: {
+        clientID: this.clientSpecification.id,
+        subscribeTopics: [topic]
       }
     };
 
     return this.callService('/services', message).then(
       (reply) => {
         if (reply.success !== undefined && reply.success !== null) {
-          console.info('subscribe successful (' + deviceName + ' -> ' + subscribeTopics + ')');
+          let callbacks = this.topicDataCallbacks.get(topic);
+          if (callbacks && callbacks.length > 0) {
+            callbacks.push(callback);
+          } else {
+            this.topicDataCallbacks.set(topic, [callback]);
+          }
         } else {
-          console.error('subscribe failed (' + deviceName + ' -> ' + subscribeTopics + ')\n' +
+          console.error('ClientNodeWeb - subscribe failed (' + topic + ')\n' +
             reply);
         }
       },
@@ -154,7 +173,7 @@ class ClientNodeWeb {
       }
     );
 
-    return new Promise((resolve, reject) => {
+    /*return new Promise((resolve, reject) => {
 
       this.serviceClient.send('/services', {buffer: this.translatorServiceRequest.createBufferFromPayload(message)})
         .then((reply) => {
@@ -167,14 +186,13 @@ class ClientNodeWeb {
             reject();
           }
         });
-    });
+    });*/
   }
 
   /**
    * Call a service specified by the topic with a message and callback.
    * @param {String} topic The topic relating to the service to be called
    * @param {Object} message An object representing the protobuf message to be sent
-   * @param {Function} callback The function to be called with the reply
    */
   callService(topic, message) {
     return new Promise((resolve, reject) => {
@@ -212,7 +230,7 @@ class ClientNodeWeb {
     let payload, buffer;
 
     payload = {
-      deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
+      deviceId: this.deviceSpecifications.get(deviceName).id,
       topicDataRecord: {
         topic: topic
       }
@@ -224,7 +242,11 @@ class ClientNodeWeb {
     this.topicDataClient.send(buffer);
   }
 
-  onTopicDataMessageReceived(message) {
+  _onTopicDataMessageReceived(message) {
+    if (message.topicDataRecord && message.topicDataRecord.topic) {
+      let callbacks = this.topicDataCallbacks.get(message.topicDataRecord.topic);
+      callbacks.forEach((cb) => {cb(message.topicDataRecord[message.topicDataRecord.type])})
+    }
   }
 }
 

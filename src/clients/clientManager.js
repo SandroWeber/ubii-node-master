@@ -9,8 +9,9 @@ const REJECT_REGISTRATION_FEEDBACK_TITLE = 'Client registration rejected';
 const ACCEPT_REGISTRATION_FEEDBACK_TITLE = 'Client registration accepted';
 
 class ClientManager {
-  constructor(server) {
+  constructor(server, topicData) {
     this.server = server;
+    this.topicData = topicData;
     this.clients = new Map();
 
     namida.log('Client Manager Ready', 'The Client Manager is initialized and ready to work.');
@@ -92,14 +93,11 @@ class ClientManager {
    * @param {String} targetHost Target host of the client connection.
    * @param {String} targetPort Target port of the client connection.
    */
-  createClientSpecification(name, namespace, identifier, targetHost, targetPortZMQ, targetPortWS) {
+  createClientSpecification(name, namespace, identifier) {
     return {
       name: name,
       namespace: namespace,
-      identifier: identifier,
-      topicDataHost: targetHost,
-      topicDataPortZmq: targetPortZMQ,
-      topicDataPortWs: targetPortWS
+      id: identifier
     };
   }
 
@@ -110,13 +108,11 @@ class ClientManager {
    * @param {*} targetHost Target host of the client connection.
    * @param {*} targetPort Target port of the client connection.
    */
-  createClientSpecificationWithNewUuid(name, namespace, targetHost, targetPortZMQ, targetPortWS) {
-    return this.createClientSpecification(name,
+  createClientSpecificationWithNewUuid(name, namespace) {
+    return this.createClientSpecification(
+      name,
       namespace,
-      this.createClientUuid(namespace).toString(),
-      targetHost,
-      targetPortZMQ,
-      targetPortWS);
+      this.createClientUuid(namespace).toString());
   }
 
   /**
@@ -129,7 +125,7 @@ class ClientManager {
     // Prepare some variables.
     let payload = {};
     let currentClient = {};
-    let clientIdentifier = clientSpecification.identifier;
+    let clientIdentifier = clientSpecification.id;
 
     // Check the context
     if (context.feedback === undefined) {
@@ -187,10 +183,11 @@ class ClientManager {
     // Normal registration steps:
 
     // Create a new client based on the client specification and register it.
-    currentClient = new Client(clientSpecification.identifier,
+    currentClient = new Client(clientSpecification.id,
       clientSpecification.name,
       clientSpecification.namespace,
-      this.server);
+      this.server,
+      this.topicData);
     this.registerClient(currentClient);
 
     // Ouput the feedback on the server console.
@@ -209,4 +206,4 @@ class ClientManager {
 
 module.exports = {
   'ClientManager': ClientManager
-}
+};

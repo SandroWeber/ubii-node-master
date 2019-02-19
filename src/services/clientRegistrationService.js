@@ -22,10 +22,7 @@ class ClientRegistrationService extends Service {
     // Create a new client specification.
     let clientSpecification = this.clientManager.createClientSpecificationWithNewUuid(
       message.name,
-      message.namespace,
-      this.targetHost,
-      this.targetPortZMQ,
-      this.targetPortWS
+      message.namespace
     );
 
     // Process the registration of the sepcified client at the client manager and return the result

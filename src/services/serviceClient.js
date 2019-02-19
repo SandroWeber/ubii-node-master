@@ -1,6 +1,6 @@
 const {ZmqRequest} = require('@tum-far/ubii-msg-transport');
 
-const { ProtobufTranslator } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 
 class ServiceClient {
@@ -14,8 +14,7 @@ class ServiceClient {
 
     this.services = new Map();
 
-    this.msgTypeServiceRequest = 'ubii.service.ServiceRequest';
-    this.serviceRequestTranslator = new ProtobufTranslator(this.msgTypeServiceRequest);
+    this.serviceRequestTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
   }
 
   addService(service) {

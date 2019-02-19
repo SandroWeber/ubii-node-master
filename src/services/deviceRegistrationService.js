@@ -14,22 +14,19 @@ class DeviceRegistrationService extends Service {
   }
 
   reply(message) {
-    // Prepare the context.
     let context = this.prepareContext();
 
-    // Extract the relevant information.
-    let correspondingClientIdentifier = message.correspondingClientIdentifier;
-
     // Verify the device and act accordingly.
-    if (!this.clientManager.verifyClient(correspondingClientIdentifier)) {
+    if (!this.clientManager.verifyClient(message.clientId)) {
+      // Prepare the context.
       // Update the context feedback.
-      context.feedback.message = `There is no Client registered with the id ${namida.style.messageHighlight(correspondingClientIdentifier)}. ` +
+      context.feedback.message = `There is no Client registered with the id ${namida.style.messageHighlight(message.clientId)}. ` +
         `Message processing was aborted due to an unregistered client.`;
       context.feedback.title = 'Message processing aborted';
 
       namida.logFailure(context.feedback.title, context.feedback.message);
 
-      return this.serviceReplyTranslator.createBufferFromPayload({
+      return this.serviceReplyTranslator.createMessageFromPayload({
         error: {
           title: context.feedback.title,
           message: context.feedback.message,
@@ -40,10 +37,10 @@ class DeviceRegistrationService extends Service {
 
     // Create a new device specification.
     let deviceSpecification = this.deviceManager.createDeviceSpecificationWithNewUuid(
-      message.device.name,
+      message.name,
       message.namespace,
       message.deviceType,
-      correspondingClientIdentifier,
+      message.clientId,
     );
 
     // Process the registration of the sepcified device at the device manager and return the result
