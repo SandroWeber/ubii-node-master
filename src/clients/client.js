@@ -155,20 +155,29 @@ class Client {
     // subscribe
     let token = this.topicData.subscribe(topic, (topic, data) => {
       console.info('### subscribe callback for client ' + this.name + ' - topic ' + topic);
-      console.info(data);
       let payload = {
+        deviceId: 'unused',
         topicDataRecord: {
           topic: topic
         }
       };
       //TODO: data.constructor.name.toLowerCase() is a hack, needs topic data format info implemented in ubii-topic-data
       let type = data.constructor.name.toLowerCase();
-      console.info(type);
       payload.topicDataRecord[type] = data;
+      console.info(payload);
 
-      let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
+      try {
+        let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
+        console.info(buffer);
+        console.info(buffer.length);
+        let messageTest = this.topicDataTranslator.createMessageFromBuffer(buffer);
+        console.info(messageTest);
 
-      this.sendMessageToRemote(buffer);
+        this.sendMessageToRemote(buffer);
+      } catch (error) {
+        console.error(error);
+      }
+
     });
 
     // save token
