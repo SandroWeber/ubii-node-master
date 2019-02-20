@@ -1,7 +1,5 @@
-const {
-  RESTClient,
-  WebsocketClient
-} = require('@tum-far/ubii-msg-transport');
+const RESTClient = require('./restClient');
+const WebsocketClient = require('./websocketClient');
 
 const {ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS} = require('@tum-far/ubii-msg-formats');
 

@@ -5,10 +5,8 @@ const {
   defaultServiceServerPortREST
 } = require('../node/constants.js');
 
-const {
-  ZmqRouter,
-  ZmqReply
-} = require('@tum-far/ubii-msg-transport');
+const ZmqReply = require('./zmqReply');
+const ZmqRouter = require('./zmqRouter');
 
 const WebsocketServer = require('./websocketServer');
 const RESTServer = require('./restServer');
