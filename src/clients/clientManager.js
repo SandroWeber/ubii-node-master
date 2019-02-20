@@ -90,7 +90,7 @@ class ClientManager {
    * @param {String} identifier Universally unique identifier of a Client.
    * @param {String} name Display name of the client.
    * @param {String} namespace Namespace of the client.
-   * @param {String} targetHost Target host of the client connection.
+   * @param {String} targetHost Target serverHost of the client connection.
    * @param {String} targetPort Target port of the client connection.
    */
   createClientSpecification(name, namespace, identifier) {
@@ -105,7 +105,7 @@ class ClientManager {
    * Create a new client specification with the passed parameters and a new Universally Unique Identifier (UUID) as id.
    * @param {*} name Display name of the client.
    * @param {*} namespace
-   * @param {*} targetHost Target host of the client connection.
+   * @param {*} targetHost Target serverHost of the client connection.
    * @param {*} targetPort Target port of the client connection.
    */
   createClientSpecificationWithNewUuid(name, namespace) {

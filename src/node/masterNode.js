@@ -76,15 +76,6 @@ class MasterNode {
   }
 
   onServiceMessageZMQ(message) {
-    // Create context.
-    let context = {
-      feedback: {
-        title: '',
-        message: '',
-        stack: ''
-      }
-    };
-
     try {
       // Decode buffer.
       let request = this.serviceRequestTranslator.createMessageFromBuffer(message);
@@ -95,6 +86,15 @@ class MasterNode {
       // Return reply.
       return this.serviceReplyTranslator.createBufferFromPayload(reply);
     } catch (e) {
+      // Create context.
+      let context = {
+        feedback: {
+          title: '',
+          message: '',
+          stack: ''
+        }
+      };
+
       context.feedback.title = 'Ubii service request processing failed';
       context.feedback.message = `Ubii service request processing failed with an error:`;
       context.feedback.stack = '' + (e.stack || e);
@@ -124,8 +124,6 @@ class MasterNode {
 
       // Process request.
       let reply = this.serviceManager.processRequest(requestMessage);
-      //console.info('onServiceMessageREST() - reply');
-      //console.info(reply);
 
       // Return reply.
       // VARIANT A: PROTOBUF

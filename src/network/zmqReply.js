@@ -31,7 +31,8 @@ class ZmqReply {
 
     // add callbacks
     this.socket.on('message', (request) => {
-      this.socket.send('' + this.onReceive(request));
+      let replyBuffer = this.onReceive(request);
+      this.socket.send(replyBuffer);
     });
 
     // bind

@@ -22,7 +22,7 @@ class WebsocketClient {
                 onReceive = (message) => {},
                 autoconnect = true) {
         this.identity = identity;
-        this.host = host;
+        this.serverHost = host;
         this.port = port;
         this.onReceive = onReceive;
 
@@ -36,7 +36,7 @@ class WebsocketClient {
      */
     start() {
         // init
-        this.websocket = new WebSocket(`ws://${this.host}:${this.port}?clientID=${this.identity}`, {
+        this.websocket = new WebSocket(`ws://${this.serverHost}:${this.port}?clientID=${this.identity}`, {
             rejectUnauthorized: false
         });
 
