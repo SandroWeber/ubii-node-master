@@ -2,7 +2,7 @@ const zmq = require('zeromq');
 const {
   PING_MESSAGE,
   PONG_MESSAGE
-} = require('../../constants.js');
+} = require('../../../src/network/constants.js');
 
 class ZmqDealer {
 
@@ -22,7 +22,7 @@ class ZmqDealer {
               },
               autoConnect = true) {
     this.identity = identity;
-    this.host = host;
+    this.serverHost = host;
     this.port = port;
     this.onReceive = onReceive;
 
@@ -53,7 +53,7 @@ class ZmqDealer {
     });
 
     // connect
-    this.socket.connect('tcp://' + this.host + ':' + this.port);
+    this.socket.connect('tcp://' + this.serverHost + ':' + this.port);
   }
 
   /**

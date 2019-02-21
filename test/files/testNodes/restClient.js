@@ -13,7 +13,7 @@ class RESTClient {
   constructor(host = 'localhost',
               port = 5555,
               autoConnect = true) {
-    this.host = host;
+    this.serverHost = host;
     this.port = port;
 
     if (autoConnect) {
@@ -25,7 +25,7 @@ class RESTClient {
   }
 
   send(route, message) {
-    let url = 'http://' + this.host + ':' + this.port + route;
+    let url = 'http://' + this.serverHost + ':' + this.port + route;
 
     return new Promise((resolve, reject) => {
       axios.post(url, message)

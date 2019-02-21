@@ -13,14 +13,14 @@ class SubscriptionService extends Service {
   }
 
   reply(message) {
-    // Prepare the context.
-    let context = this.prepareContext();
-
     // Extract the relevant information.
-    let clientID = message.clientID;
+    let clientID = message.clientId;
 
     // Verify the device and act accordingly.
     if (!this.clientManager.verifyClient(clientID)) {
+      // Prepare the context.
+      let context = this.prepareContext();
+
       // Update the context feedback.
       context.feedback.message = `There is no client registered with the id ${namida.style.messageHighlight(clientID)}. ` +
         `Subscription was rejected due to an unregistered device.`;

@@ -7,7 +7,7 @@ class ServerConfigService extends Service {
 
     this.id = id;
     this.name = name;
-    this.host = host;
+    this.serverHost = host;
     this.connectionManager = connectionManager;
 
     this.translatorServiceReply = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
@@ -18,7 +18,7 @@ class ServerConfigService extends Service {
       serverSpecification: {
         id: this.id,
         name: this.name,
-        ip: this.host,
+        ip: this.serverHost,
         portServiceZmq: this.connectionManager.ports.serviceZMQ.toString(),
         portServiceRest: this.connectionManager.ports.serviceREST.toString(),
         portTopicDataZmq: this.connectionManager.ports.topicDataZMQ.toString(),

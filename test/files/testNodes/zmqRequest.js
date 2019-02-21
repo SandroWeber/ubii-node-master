@@ -15,7 +15,7 @@ class ZmqRequest {
               onReceive = (reply) => {
               },
               autoConnect = true) {
-    this.host = host;
+    this.serverHost = host;
     this.port = port;
     this.onReceive = onReceive;
 
@@ -31,12 +31,12 @@ class ZmqRequest {
     this.socket = zmq.socket('req');
 
     // add callbacks
-    this.socket.on("message", (message) => {
+    this.socket.on('message', (message) => {
       this.onReceive(message);
     });
 
     // connect
-    this.socket.connect('tcp://' + this.host + ':' + this.port);
+    this.socket.connect('tcp://' + this.serverHost + ':' + this.port);
   }
 
   send(message) {

@@ -59,7 +59,6 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
       'localhost',
       9394);
 
-    let deviceID;
     client.initialize()
       .then(() => {
         return client.registerDevice('anotherAwesomeDeviceName', 0);

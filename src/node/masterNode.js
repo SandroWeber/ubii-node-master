@@ -76,15 +76,6 @@ class MasterNode {
   }
 
   onServiceMessageZMQ(message) {
-    // Create context.
-    let context = {
-      feedback: {
-        title: '',
-        message: '',
-        stack: ''
-      }
-    };
-
     try {
       // Decode buffer.
       let request = this.serviceRequestTranslator.createMessageFromBuffer(message);
@@ -95,6 +86,15 @@ class MasterNode {
       // Return reply.
       return this.serviceReplyTranslator.createBufferFromPayload(reply);
     } catch (e) {
+      // Create context.
+      let context = {
+        feedback: {
+          title: '',
+          message: '',
+          stack: ''
+        }
+      };
+
       context.feedback.title = 'Ubii service request processing failed';
       context.feedback.message = `Ubii service request processing failed with an error:`;
       context.feedback.stack = '' + (e.stack || e);
@@ -124,8 +124,6 @@ class MasterNode {
 
       // Process request.
       let reply = this.serviceManager.processRequest(requestMessage);
-      //console.info('onServiceMessageREST() - reply');
-      //console.info(reply);
 
       // Return reply.
       // VARIANT A: PROTOBUF
@@ -165,15 +163,6 @@ class MasterNode {
   }
 
   onTopicDataMessageZMQ(envelope, message) {
-    // Create context.
-    let context = {
-      feedback: {
-        title: '',
-        message: '',
-        stack: ''
-      }
-    };
-
     try {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
@@ -181,6 +170,15 @@ class MasterNode {
       // Process message.
       this.processTopicDataMessage(envelope, topicDataMessage);
     } catch (e) {
+      // Create context.
+      let context = {
+        feedback: {
+          title: '',
+          message: '',
+          stack: ''
+        }
+      };
+
       context.feedback.title = 'TopicData message publishing failed (ZMQ)';
       context.feedback.message = `TopicData message publishing failed (ZMQ) with an error:`;
       context.feedback.stack = '' + (e.stack || e);
@@ -213,14 +211,6 @@ class MasterNode {
   }
 
   onTopicDataMessageWS(clientID, message) {
-    // Create context.
-    let context = {
-      feedback: {
-        title: '',
-        message: '',
-        stack: ''
-      }
-    };
 
     if (!this.clientManager.verifyClient(clientID)) {
       console.error('Topic data received from unregistered client with ID ' + clientID);
@@ -239,6 +229,15 @@ class MasterNode {
 
       this.processTopicDataMessage(clientID, topicDataMessage);
     } catch (e) {
+      // Create context.
+      let context = {
+        feedback: {
+          title: '',
+          message: '',
+          stack: ''
+        }
+      };
+
       context.feedback.title = 'TopicData message publishing failed (WS)';
       context.feedback.message = `TopicData message publishing failed (WS) with an error:`;
       context.feedback.stack = '' + (e.stack || e);
@@ -260,7 +259,7 @@ class MasterNode {
         }));
       } catch (e) {
         context.feedback.title = 'TopicData error response sending failed (WS)';
-        context.feedback.message = `opicData error response sending failed (WS) with an error:`;
+        context.feedback.message = 'TopicData error response sending failed (WS) with an error:';
         context.feedback.stack = '' + (e.stack || e);
 
         namida.error(context.feedback.title,

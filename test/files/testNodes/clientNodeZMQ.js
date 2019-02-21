@@ -1,17 +1,15 @@
-const {
-  ZmqDealer,
-  ZmqRequest
-} = require('@tum-far/ubii-msg-transport');
+const ZmqDealer = require('./zmqDealer');
+const ZmqRequest = require('./zmqRequest');
 
-const { ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const {ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS} = require('@tum-far/ubii-msg-formats');
 
 class ClientNodeZMQ {
   constructor(name,
-              serviceHost,
+              serverHost,
               servicePort) {
     // Properties:
     this.name = name;
-    this.host = serviceHost;
+    this.serverHost = serverHost;
     this.servicePort = servicePort;
 
     // Translators:
@@ -35,158 +33,100 @@ class ClientNodeZMQ {
    */
   async initialize() {
     return new Promise((resolve, reject) => {
-      this.initializeServiceClient((received) => {
-        if (this.activeServiceRequest !== null) {
-          // Resolve currently active service request.
-          this.activeServiceRequest.processReply(received);
+      this.initializeServiceClient();
 
-          // Process next pending service request.
-          this.processNextServiceRequest();
-        }
-
-        // The reply is an error. Process the received error.
-        if (received.error !== undefined && received.error !== null) {
-          console.log(received.error.title + ' /// ' + received.error.message + ' /// ' + received.error.stack);
-        }
+      this.getServerConfig().then(() => {
+        this.registerClient()
+          .then(() => {
+            this.initializeTopicDataClient(this.serverSpecification);
+            return resolve();
+          })
+          .catch((error) => {
+            console.error(error);
+            return reject();
+          });
       });
-      resolve();
-    })
-      .then(() => {
-        // Automatically register the client.
-        return this.registerClient();
-      })
-      .then(() => {
-        // Initialize the topicDataClient accroding to the clientspecification.
-        this.initializeTopicDataClient(this.clientSpecification);
-      });
+    });
   }
 
-  initializeServiceClient(automatedServiceRequestProcessingCallback) {
+  initializeServiceClient() {
     // Initialize the service client.
-    this.serviceClient = new ZmqRequest(this.host, this.servicePort, (message) => {
+    this.serviceClient = new ZmqRequest(this.serverHost, this.servicePort, (messageBuffer) => {
       try {
-        // Decode the received service reply buffer.
-        let received = this.serviceReplyTranslator.createMessageFromBuffer(message);
+        if (this.activeServiceRequest !== null) {
+          // Resolve currently active service request.
+          this.activeServiceRequest.processReply(messageBuffer);
 
-        // Check the service reply if it should be processed automatically:
-        automatedServiceRequestProcessingCallback(received);
-
-        // Call the registered callback method with the received service reply message.
-        this.onServiceMessageReceived(received);
+          // Process next pending service request.
+          this._processNextServiceRequest();
+        }
       } catch (e) {
         (console.error || console.log).call(console, 'Ubii client service reply processing failed with an error: ' + (e.stack || e));
       }
     });
   }
 
-  initializeTopicDataClient(clientSpecification) {
+  initializeTopicDataClient(serverSpecification) {
     this.topicDataClient = new ZmqDealer(
-      clientSpecification.identifier,
-      clientSpecification.topicDataHost,
-      clientSpecification.topicDataPortZmq,
-      (envelopes, message) => {
-      try {
-        // Decode the buffer.
-        let received = this.topicDataTranslator.createMessageFromBuffer(message);
+      this.clientSpecification.id,
+      this.serverHost,
+      parseInt(serverSpecification.portTopicDataZmq),
+      (envelopes, messageBuffer) => {
+        try {
+          // Decode the buffer.
+          let received = this.topicDataTranslator.createMessageFromBuffer(messageBuffer);
 
-        // Call callbacks.
-        this.onTopicDataMessageReceived(received);
-      } catch (e) {
-        (console.error || console.log).call(console, 'Ubii Message Translator createMessageFromBuffer failed with an error: ' + (e.stack || e));
-      }
-    });
+          // Call callbacks.
+          this._onTopicDataMessageReceived(received);
+        } catch (e) {
+          (console.error || console.log).call(console, 'Ubii Message Translator createMessageFromBuffer failed with an error: ' + (e.stack || e));
+        }
+      });
   }
 
   /**
    * Is this client already initialized?
    */
   isInitialized() {
-    // Check if both clients are initialized.
-    if (this.serviceClient === undefined || this.topicDataClient === undefined) {
-      return false;
-    }
-    return true;
+    return (this.serviceClient !== undefined && this.topicDataClient !== undefined);
   }
 
-  /**
-   * Add the specified serviceRequest to the pending service requests list.
-   * @param {*} serviceRequest
-   */
-  addServiceRequest(serviceRequest) {
-    let startProcess = false;
+  async getServerConfig() {
+    let message = {
+      topic: DEFAULT_TOPICS.SERVICES.SERVER_CONFIG
+    };
 
-    // Should we invoke the process?
-    // If there is an active service request this is not necessary because it will process the next perning
-    // service request automatically when its response is received.
-    if (this.activeServiceRequest === null) {
-      startProcess = true;
-    }
-
-    // Push the serviceRequest.
-    this.pendingServiceRequests.push(serviceRequest);
-
-    // Invoke the service request process if necessary.
-    if (startProcess) {
-      this.processNextServiceRequest();
-    }
-  }
-
-  /**
-   * Start the processing of the next pending service request if there is one.
-   * Resets the activeServiceRequest otherwise.
-   */
-  processNextServiceRequest() {
-    if (this.pendingServiceRequests.length > 0) {
-      // There is a pending service request: Start the processing of this request.
-
-      // Set the active service request to the next pending service request.
-      this.activeServiceRequest = this.pendingServiceRequests.shift();
-
-      // Send the request to the server.
-      this.serviceClient.send(this.activeServiceRequest.formulateRequest());
-    } else {
-      // There are no pending service requests: Reset active service request.
-
-      this.activeServiceRequest = null;
-    }
+    return this.callService(message).then(
+      (reply) => {
+        if (reply.serverSpecification !== undefined && reply.serverSpecification !== null) {
+          // Process the reply client specification.
+          this.serverSpecification = reply.serverSpecification;
+        }
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
   }
 
   /**
    * Register this client at the masterNode.
    */
   async registerClient() {
-    return new Promise((resolve, reject) => {
-      // Create the serviceRequest.
-      let serviceRequest = {
-        formulateRequest: () => {
-          let payload = {
-            topic: DEFAULT_TOPICS.SERVICES.CLIENT_REGISTRATION,
-            clientRegistration: {
-              name: this.name,
-              namespace: ''
-            }
-          };
+    let message = {
+      topic: DEFAULT_TOPICS.SERVICES.CLIENT_REGISTRATION,
+      clientRegistration: {
+        name: this.name
+      }
+    };
 
-          return this.serviceRequestTranslator.createBufferFromPayload(payload);
-        },
-        processReply: (reply) => {
-          // The reply should be a client specification.
-          if (reply.clientSpecification !== undefined && reply.clientSpecification !== null) {
-            // Process the reply client specification.
-
-            // Cache the client specification.
-            this.clientSpecification = reply.clientSpecification;
-
-            resolve();
-          } else {
-            // TODO: log error
-            reject();
-          }
+    return this.callService(message).then(
+      (reply) => {
+        if (reply.clientSpecification !== undefined && reply.clientSpecification !== null) {
+          this.clientSpecification = reply.clientSpecification;
         }
-      };
-
-      this.addServiceRequest(serviceRequest);
-    });
+      }
+    );
   }
 
   /**
@@ -195,39 +135,28 @@ class ClientNodeZMQ {
    * @param {*} deviceType
    */
   async registerDevice(deviceName, deviceType) {
-    return new Promise((resolve, reject) => {
-      // Create the serviceRequest.
-      let serviceRequest = {
-        formulateRequest: () => {
-          let payload = {
-            topic: DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
-            deviceRegistration: {
-              device: {
-                name: deviceName,
-                clientId: this.clientSpecification.identifier
-              },
-              deviceType: deviceType,
-              correspondingClientIdentifier: this.clientSpecification.identifier,
-            }
-          };
+    let message = {
+      topic: DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
+      deviceRegistration: {
+        name: deviceName,
+        clientId: this.clientSpecification.id,
+        deviceType: deviceType
+      }
+    };
 
-          return this.serviceRequestTranslator.createBufferFromPayload(payload);
-        },
-        processReply: (reply) => {
-          // The reply should be a device specification.
-          if (reply.deviceSpecification !== undefined && reply.deviceSpecification !== null) {
-            // Process the reply client specification.
-            this.deviceSpecifications.set(reply.deviceSpecification.name, reply.deviceSpecification);
-            resolve();
-          } else {
-            // TODO: log error
-            reject();
-          }
+    return this.callService(message).then(
+      (reply) => {
+        if (reply.deviceSpecification !== undefined && reply.deviceSpecification !== null) {
+          // Process the reply client specification.
+          this.deviceSpecifications.set(reply.deviceSpecification.name, reply.deviceSpecification);
+
+          return reply.deviceSpecification.id;
         }
-      };
-
-      this.addServiceRequest(serviceRequest);
-    });
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
   }
 
   /**
@@ -236,35 +165,33 @@ class ClientNodeZMQ {
    * @param {*} subscribeTopics
    * @param {*} unsubscribeTopics
    */
-  async subscribe(deviceName, subscribeTopics, unsubscribeTopics) {
-    return new Promise((resolve, reject) => {
-      // Create the serviceRequest.
-      let serviceRequest = {
-        formulateRequest: () => {
-          let payload = {
-            topic: DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
-            subscription: {
-              deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
-              subscribeTopics: subscribeTopics,
-              unsubscribeTopics: unsubscribeTopics
-            }
-          };
+  async subscribe(topic, callback) {
+    let message = {
+      topic: DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
+      topicSubscription: {
+        clientId: this.clientSpecification.id,
+        subscribeTopics: [topic]
+      }
+    };
 
-          return this.serviceRequestTranslator.createBufferFromPayload(payload);
-        },
-        processReply: (reply) => {
-          // The reply should be a success.
-          if (reply.success !== undefined && reply.success !== null) {
-            resolve();
+    return this.callService(message).then(
+      (reply) => {
+        if (reply.success !== undefined && reply.success !== null) {
+          let callbacks = this.topicDataCallbacks.get(topic);
+          if (callbacks && callbacks.length > 0) {
+            callbacks.push(callback);
           } else {
-            // TODO: log error
-            reject();
+            this.topicDataCallbacks.set(topic, [callback]);
           }
+        } else {
+          console.error('ClientNodeZMQ - subscribe failed (' + topic + ')\n' +
+            reply);
         }
-      };
-
-      this.addServiceRequest(serviceRequest);
-    });
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
   }
 
   /**
@@ -278,7 +205,7 @@ class ClientNodeZMQ {
     let payload, buffer;
 
     payload = {
-      deviceIdentifier: this.deviceSpecifications.get(deviceName).identifier,
+      deviceId: this.deviceSpecifications.get(deviceName).id,
       topicDataRecord: {
         topic: topic
       }
@@ -296,29 +223,73 @@ class ClientNodeZMQ {
    * @param {Object} message An object representing the protobuf message to be sent
    * @param {Function} callback The function to be called with the reply
    */
-  callService(topic, message, callback) {
+  callService(message) {
     return new Promise((resolve, reject) => {
-      //TODO: just send JSON?
-      // VARIANT A: PROTOBUF
-      //let buffer = this.translatorServiceRequest.createBufferFromPayload(message);
-      //console.info(buffer);
-      //this.serviceClient.send('/services', {buffer: JSON.stringify(buffer)})
-      // VARIANT B: JSON
-      this.serviceClient.send(topic, {message: JSON.stringify(message)}).then(
-        (reply) => {
-          // VARIANT A: PROTOBUF
-          //let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
-          // VARIANT B: JSON
-          let json = JSON.parse(reply.message);
-          let message = this.translatorServiceReply.createMessageFromPayload(json);
-
-          return resolve(message);
+      // Create the serviceRequest.
+      let serviceRequest = {
+        formulateRequest: () => {
+          return this.serviceRequestTranslator.createBufferFromPayload(message);
         },
-        (error) => {
-          console.error(error);
-          return reject();
-        });
+        processReply: (reply) => {
+          let message = this.serviceReplyTranslator.createMessageFromBuffer(reply);
+          resolve(message);
+        }
+      };
+
+      this._addServiceRequest(serviceRequest);
     });
+  }
+
+  /**
+   * Add the specified serviceRequest to the pending service requests list.
+   * @param {*} serviceRequest
+   */
+  _addServiceRequest(serviceRequest) {
+    let startProcess = false;
+
+    // Should we invoke the process?
+    // If there is an active service request this is not necessary because it will process the next perning
+    // service request automatically when its response is received.
+    if (this.activeServiceRequest === null) {
+      startProcess = true;
+    }
+
+    // Push the serviceRequest.
+    this.pendingServiceRequests.push(serviceRequest);
+
+    // Invoke the service request process if necessary.
+    if (startProcess) {
+      this._processNextServiceRequest();
+    }
+  }
+
+  /**
+   * Start the processing of the next pending service request if there is one.
+   * Resets the activeServiceRequest otherwise.
+   */
+  _processNextServiceRequest() {
+    if (this.pendingServiceRequests.length > 0) {
+      // There is a pending service request: Start the processing of this request.
+
+      // Set the active service request to the next pending service request.
+      this.activeServiceRequest = this.pendingServiceRequests.shift();
+
+      // Send the request to the server.
+      this.serviceClient.send(this.activeServiceRequest.formulateRequest());
+    } else {
+      // There are no pending service requests: Reset active service request.
+
+      this.activeServiceRequest = null;
+    }
+  }
+
+  _onTopicDataMessageReceived(message) {
+    if (message.topicDataRecord && message.topicDataRecord.topic) {
+      let callbacks = this.topicDataCallbacks.get(message.topicDataRecord.topic);
+      callbacks.forEach((cb) => {
+        cb(message.topicDataRecord[message.topicDataRecord.type])
+      })
+    }
   }
 }
 

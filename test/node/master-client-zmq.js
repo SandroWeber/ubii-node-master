@@ -14,11 +14,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
     let client = new ClientNodeZMQ('clientName',
       'localhost',
-      8493,
-      () => {
-      },
-      () => {
-      });
+      8493);
 
     client.initialize()
       .then(() => {
@@ -38,11 +34,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
     let client = new ClientNodeZMQ('clientName',
       'localhost',
-      8593,
-      () => {
-      },
-      () => {
-      });
+      8593);
 
     client.initialize()
       .then(() => {
@@ -65,11 +57,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
     let client = new ClientNodeZMQ('clientName',
       'localhost',
-      8693,
-      () => {
-      },
-      () => {
-      });
+      8693);
 
     client.initialize()
       .then(() => {
@@ -82,7 +70,8 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
           z: 100000.4,
           w: 79824678.78927348
         });
-
+      })
+      .then(() => {
         setTimeout(() => {
           t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
           t.end();
@@ -101,18 +90,14 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
     let client = new ClientNodeZMQ('clientName',
       'localhost',
-      8793,
-      () => {
-      },
-      () => {
-      });
+      8793);
 
     client.initialize()
       .then(() => {
         return client.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
-        return client.subscribe('anotherAwesomeDeviceName', ['awesomeTopic'], []);
+        return client.subscribe('awesomeTopic');
       })
       .then(() => {
         t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
@@ -131,15 +116,11 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
     let client = new ClientNodeZMQ('clientName',
       'localhost',
-      8893,
-      () => {
-      },
-      () => {
-      });
+      8893);
 
     await client.initialize();
     await client.registerDevice('anotherAwesomeDeviceName', 0);
-    await client.subscribe('anotherAwesomeDeviceName', ['awesomeTopic'], []);
+    await client.subscribe('awesomeTopic');
 
     t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
   });
@@ -155,27 +136,31 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
     let client1 = new ClientNodeZMQ('clientName2',
       'localhost',
-      8993,
-      () => {
-        t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
-        t.end();
-      },
-      () => {
-      });
+      8993);
     let client2 = new ClientNodeZMQ('clientName',
       'localhost',
-      8993,
-      () => {
-      },
-      () => {
-      });
+      8993);
+
+    let quaternion = {
+      x: 129.1,
+      y: 576.005,
+      z: 100000.4,
+      w: 79824678.78927348
+    };
 
     client1.initialize()
       .then(() => {
         return client1.registerDevice('anotherAwesomeDeviceName2', 0);
       })
       .then(() => {
-        return client1.subscribe('anotherAwesomeDeviceName2', ['awesomeTopic'], []);
+        return client1.subscribe('awesomeTopic', (message) => {
+          t.is(message.x, quaternion.x);
+          t.is(message.y, quaternion.y);
+          t.is(message.z, quaternion.z);
+          t.is(message.w, quaternion.w);
+          t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
+          t.end();
+        });
       })
       .then(() => {
         return client2.initialize();
@@ -184,12 +169,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
         return client2.registerDevice('anotherAwesomeDeviceName', 0);
       })
       .then(() => {
-        client2.publish('anotherAwesomeDeviceName', 'awesomeTopic', 'quaternion', {
-          x: 129.1,
-          y: 576.005,
-          z: 100000.4,
-          w: 79824678.78927348
-        });
+        client2.publish('anotherAwesomeDeviceName', 'awesomeTopic', 'quaternion', quaternion);
       });
     ;
   });

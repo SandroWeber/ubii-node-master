@@ -12,17 +12,17 @@ class ServiceManager {
     this.deviceManager = deviceManager;
     this.connectionManager = connectionManager;
 
-    this.host = host;
+    this.serverHost = host;
 
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
     this.services = new Map();
-    this.addService(new ClientRegistrationService(this.clientManager, this.host,
+    this.addService(new ClientRegistrationService(this.clientManager, this.serverHost,
       this.connectionManager.ports.topicDataZMQ,
       this.connectionManager.ports.topicDataWS));
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
     this.addService(new SubscriptionService(this.clientManager));
-    this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.host, connectionManager));
+    this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.serverHost, connectionManager));
   }
 
   addService(service) {

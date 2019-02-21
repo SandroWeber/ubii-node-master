@@ -75,7 +75,7 @@ class ClientNodeWeb {
       topic: DEFAULT_TOPICS.SERVICES.SERVER_CONFIG
     };
 
-    return this.callService('/services', message).then(
+    return this.callService(message).then(
       (reply) => {
         if (reply.serverSpecification !== undefined && reply.serverSpecification !== null) {
           // Process the reply client specification.
@@ -99,7 +99,7 @@ class ClientNodeWeb {
       }
     };
 
-    return this.callService('/services', message).then(
+    return this.callService(message).then(
       (reply) => {
         if (reply.clientSpecification !== undefined && reply.clientSpecification !== null) {
           this.clientSpecification = reply.clientSpecification;
@@ -123,7 +123,7 @@ class ClientNodeWeb {
       }
     };
 
-    return this.callService('/services', message).then(
+    return this.callService(message).then(
       (reply) => {
         if (reply.deviceSpecification !== undefined && reply.deviceSpecification !== null) {
           // Process the reply client specification.
@@ -147,12 +147,12 @@ class ClientNodeWeb {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
       topicSubscription: {
-        clientID: this.clientSpecification.id,
+        clientId: this.clientSpecification.id,
         subscribeTopics: [topic]
       }
     };
 
-    return this.callService('/services', message).then(
+    return this.callService(message).then(
       (reply) => {
         if (reply.success !== undefined && reply.success !== null) {
           let callbacks = this.topicDataCallbacks.get(topic);
@@ -170,51 +170,6 @@ class ClientNodeWeb {
         console.error(error);
       }
     );
-
-    /*return new Promise((resolve, reject) => {
-
-      this.serviceClient.send('/services', {buffer: this.translatorServiceRequest.createBufferFromPayload(message)})
-        .then((reply) => {
-          let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
-          // The reply should be a success.
-          if (message.success !== undefined && message.success !== null) {
-            resolve();
-          } else {
-            // TODO: log error
-            reject();
-          }
-        });
-    });*/
-  }
-
-  /**
-   * Call a service specified by the topic with a message and callback.
-   * @param {String} topic The topic relating to the service to be called
-   * @param {Object} message An object representing the protobuf message to be sent
-   */
-  callService(topic, message) {
-    return new Promise((resolve, reject) => {
-      //TODO: just send JSON?
-      // VARIANT A: PROTOBUF
-      //let buffer = this.translatorServiceRequest.createBufferFromPayload(message);
-      //console.info(buffer);
-      //this.serviceClient.send('/services', {buffer: JSON.stringify(buffer)})
-      // VARIANT B: JSON
-      this.serviceClient.send(topic, {message: JSON.stringify(message)}).then(
-        (reply) => {
-          // VARIANT A: PROTOBUF
-          //let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
-          // VARIANT B: JSON
-          let json = JSON.parse(reply.message);
-          let message = this.translatorServiceReply.createMessageFromPayload(json);
-
-          return resolve(message);
-        },
-        (error) => {
-          console.error(error);
-          return reject();
-        });
-    });
   }
 
   /**
@@ -240,10 +195,41 @@ class ClientNodeWeb {
     this.topicDataClient.send(buffer);
   }
 
+  /**
+   * Call a service specified by the topic with a message and callback.
+   * @param {Object} message An object representing the protobuf message (ubii.services.ServiceRequest) to be sent
+   */
+  callService(message) {
+    return new Promise((resolve, reject) => {
+      //TODO: just send JSON?
+      // VARIANT A: PROTOBUF
+      //let buffer = this.translatorServiceRequest.createBufferFromPayload(message);
+      //console.info(buffer);
+      //this.serviceClient.send('/services', {buffer: JSON.stringify(buffer)})
+      // VARIANT B: JSON
+      this.serviceClient.send('/services', {message: JSON.stringify(message)}).then(
+        (reply) => {
+          // VARIANT A: PROTOBUF
+          //let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
+          // VARIANT B: JSON
+          let json = JSON.parse(reply.message);
+          let message = this.translatorServiceReply.createMessageFromPayload(json);
+
+          return resolve(message);
+        },
+        (error) => {
+          console.error(error);
+          return reject();
+        });
+    });
+  }
+
   _onTopicDataMessageReceived(message) {
     if (message.topicDataRecord && message.topicDataRecord.topic) {
       let callbacks = this.topicDataCallbacks.get(message.topicDataRecord.topic);
-      callbacks.forEach((cb) => {cb(message.topicDataRecord[message.topicDataRecord.type])})
+      callbacks.forEach((cb) => {
+        cb(message.topicDataRecord[message.topicDataRecord.type])
+      })
     }
   }
 }
