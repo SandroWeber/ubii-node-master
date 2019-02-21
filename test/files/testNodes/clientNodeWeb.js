@@ -147,7 +147,7 @@ class ClientNodeWeb {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
       topicSubscription: {
-        clientID: this.clientSpecification.id,
+        clientId: this.clientSpecification.id,
         subscribeTopics: [topic]
       }
     };

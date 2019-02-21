@@ -163,15 +163,6 @@ class MasterNode {
   }
 
   onTopicDataMessageZMQ(envelope, message) {
-    // Create context.
-    let context = {
-      feedback: {
-        title: '',
-        message: '',
-        stack: ''
-      }
-    };
-
     try {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
@@ -179,6 +170,15 @@ class MasterNode {
       // Process message.
       this.processTopicDataMessage(envelope, topicDataMessage);
     } catch (e) {
+      // Create context.
+      let context = {
+        feedback: {
+          title: '',
+          message: '',
+          stack: ''
+        }
+      };
+
       context.feedback.title = 'TopicData message publishing failed (ZMQ)';
       context.feedback.message = `TopicData message publishing failed (ZMQ) with an error:`;
       context.feedback.stack = '' + (e.stack || e);

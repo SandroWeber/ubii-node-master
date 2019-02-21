@@ -70,7 +70,7 @@ class ClientNodeZMQ {
     this.topicDataClient = new ZmqDealer(
       this.clientSpecification.id,
       this.serverHost,
-      parseInt(serverSpecification.portTopicDataWs),
+      parseInt(serverSpecification.portTopicDataZmq),
       (envelopes, messageBuffer) => {
         try {
           // Decode the buffer.
@@ -169,7 +169,7 @@ class ClientNodeZMQ {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
       topicSubscription: {
-        clientID: this.clientSpecification.id,
+        clientId: this.clientSpecification.id,
         subscribeTopics: [topic]
       }
     };
@@ -184,7 +184,7 @@ class ClientNodeZMQ {
             this.topicDataCallbacks.set(topic, [callback]);
           }
         } else {
-          console.error('ClientNodeWeb - subscribe failed (' + topic + ')\n' +
+          console.error('ClientNodeZMQ - subscribe failed (' + topic + ')\n' +
             reply);
         }
       },
