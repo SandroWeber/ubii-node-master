@@ -211,14 +211,6 @@ class MasterNode {
   }
 
   onTopicDataMessageWS(clientID, message) {
-    // Create context.
-    let context = {
-      feedback: {
-        title: '',
-        message: '',
-        stack: ''
-      }
-    };
 
     if (!this.clientManager.verifyClient(clientID)) {
       console.error('Topic data received from unregistered client with ID ' + clientID);
@@ -237,6 +229,15 @@ class MasterNode {
 
       this.processTopicDataMessage(clientID, topicDataMessage);
     } catch (e) {
+      // Create context.
+      let context = {
+        feedback: {
+          title: '',
+          message: '',
+          stack: ''
+        }
+      };
+
       context.feedback.title = 'TopicData message publishing failed (WS)';
       context.feedback.message = `TopicData message publishing failed (WS) with an error:`;
       context.feedback.stack = '' + (e.stack || e);
@@ -258,7 +259,7 @@ class MasterNode {
         }));
       } catch (e) {
         context.feedback.title = 'TopicData error response sending failed (WS)';
-        context.feedback.message = `opicData error response sending failed (WS) with an error:`;
+        context.feedback.message = 'TopicData error response sending failed (WS) with an error:';
         context.feedback.stack = '' + (e.stack || e);
 
         namida.error(context.feedback.title,
