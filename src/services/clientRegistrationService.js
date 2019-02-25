@@ -1,17 +1,13 @@
 const {
   Service
 } = require('./service.js');
-const namida = require("@tum-far/namida");
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class ClientRegistrationService extends Service {
-  constructor(clientManager, targetHost, targetPortZMQ, targetPortWS) {
+  constructor(clientManager) {
     super(DEFAULT_TOPICS.SERVICES.CLIENT_REGISTRATION);
 
-    this.targetHost = targetHost;
-    this.targetPortZMQ = targetPortZMQ;
-    this.targetPortWS = targetPortWS;
     this.clientManager = clientManager;
   }
 

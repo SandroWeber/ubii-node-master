@@ -1,19 +1,20 @@
 const uuidv4 = require('uuid/v4');
-
-const InteractionIOMapping = require('./interactionIOMapping');
+const {Interaction} = require('@tum-far/ubii-interactions');
 
 class Session {
-  constructor(id, interactionIOMappings) {
-    this.id = id ? id : uuidv4();
+  constructor({id = uuidv4(), name = '', interactions = [], ioMappings = []}) {
+    this.id = id;
+    this.name = name;
     this.status = Session.STATUS.CREATED;
     this.processMode = Session.PROCESS_MODES.PROMISE_RECURSIVECALLS;
-    this.processing = false;
+    this.isProcessing = false;
 
-    this.interactionIOMappings = interactionIOMappings ? interactionIOMappings : [];
+    this.interactions = interactions;
+    this.ioMappings = ioMappings;
   }
 
   start() {
-    if (this.processing) {
+    if (this.isProcessing) {
       return;
     }
 
@@ -24,25 +25,25 @@ class Session {
   }
 
   stop() {
-    this.processing = false;
+    this.isProcessing = false;
     this.status = Session.STATUS.STOPPED;
   }
 
   processInteractionsPromiseRecursive() {
-    this.processing = true;
+    this.isProcessing = true;
     this.status = Session.STATUS.RUNNING;
 
-    let recursiveProcessingCall = (i) => {
-      if (!this.processing) return;
+    let recursiveisProcessingCall = (i) => {
+      if (!this.isProcessing) return;
 
-      let interaction = this.interactionIOMappings[i % this.interactionIOMappings.length].interaction;
+      let interaction = this.interactions[i % this.interactions.length];
       if (interaction) interaction.process();
-      setTimeout(() => {recursiveProcessingCall(i+1);}, 0);
+      setTimeout(() => {recursiveisProcessingCall(i+1);}, 0);
     };
 
     return new Promise((resolve, reject) => {
       try {
-        recursiveProcessingCall(0);
+        recursiveisProcessingCall(0);
       }
       catch (e) {
         reject(e);
@@ -53,15 +54,15 @@ class Session {
   }
 
   addInteraction(interaction) {
-    if (!this.interactionIOMappings.some((element) => {return element.interaction.id === interaction.id;})) {
-      this.interactionIOMappings.push(new InteractionIOMapping(uuidv4(), interaction));
+    if (!this.interactions.some((element) => {return element.id === interaction.id;})) {
+      this.interactions.push(new Interaction(uuidv4(), interaction));
     }
   }
 
   removeInteraction(interactionID) {
-    this.interactionIOMappings.forEach((element, index) => {
-      if (element.interaction.id === interactionID) {
-        this.interactionIOMappings.splice(index, 1);
+    this.interactions.forEach((element, index) => {
+      if (element.id === interactionID) {
+        this.interactions.splice(index, 1);
       }
     });
   }

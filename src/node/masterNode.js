@@ -62,17 +62,17 @@ class MasterNode {
       this.topicData,
       this.connectionsManager.connections.topicDataZMQ);
 
+    // Session manager component:
+    this.sessionManager = new SessionManager();
+
     // Service Manager Component:
     this.serviceManager = new ServiceManager(
       this.clientManager,
       this.deviceManager,
       this.connectionsManager,
-      topicDataServerHost.toString(),
-      this.connectionsManager.ports.topicDataZMQ.toString(),
-      this.connectionsManager.ports.topicDataWS.toString());
-
-    // Session manager component:
-    this.sessionManager = new SessionManager();
+      this.topicData,
+      this.sessionManager,
+      topicDataServerHost.toString());
   }
 
   onServiceMessageZMQ(message) {
