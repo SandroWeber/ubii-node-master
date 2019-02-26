@@ -199,7 +199,7 @@ class ClientManager {
 
     // Return the clientSpecification payload
     payload = {
-      clientSpecification: clientSpecification
+      client: clientSpecification
     };
     return payload;
   }

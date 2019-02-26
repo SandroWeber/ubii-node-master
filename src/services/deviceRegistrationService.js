@@ -3,7 +3,7 @@ const {
 } = require('./service.js');
 const namida = require("@tum-far/namida");
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class DeviceRegistrationService extends Service {
   constructor(clientManager, deviceManager) {
@@ -11,6 +11,8 @@ class DeviceRegistrationService extends Service {
 
     this.clientManager = clientManager;
     this.deviceManager = deviceManager;
+
+    this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
   }
 
   reply(message) {

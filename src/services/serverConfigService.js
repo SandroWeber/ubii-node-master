@@ -15,7 +15,7 @@ class ServerConfigService extends Service {
 
   reply() {
     return this.translatorServiceReply.createMessageFromPayload({
-      serverSpecification: {
+      server: {
         id: this.id,
         name: this.name,
         ip: this.serverHost,

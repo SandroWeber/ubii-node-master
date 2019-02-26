@@ -77,9 +77,9 @@ class ClientNodeWeb {
 
     return this.callService(message).then(
       (reply) => {
-        if (reply.serverSpecification !== undefined && reply.serverSpecification !== null) {
+        if (reply.server !== undefined && reply.server !== null) {
           // Process the reply client specification.
-          this.serverSpecification = reply.serverSpecification;
+          this.serverSpecification = reply.server;
         }
       },
       (error) => {
@@ -94,15 +94,15 @@ class ClientNodeWeb {
   async registerClient() {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.CLIENT_REGISTRATION,
-      clientRegistration: {
+      client: {
         name: this.name
       }
     };
 
     return this.callService(message).then(
       (reply) => {
-        if (reply.clientSpecification !== undefined && reply.clientSpecification !== null) {
-          this.clientSpecification = reply.clientSpecification;
+        if (reply.client !== undefined && reply.client !== null) {
+          this.clientSpecification = reply.client;
         }
       }
     );
@@ -116,7 +116,7 @@ class ClientNodeWeb {
   async registerDevice(deviceName, deviceType) {
     let message = {
       topic: DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
-      deviceRegistration: {
+      device: {
         name: deviceName,
         clientId: this.clientSpecification.id,
         deviceType: deviceType
@@ -125,11 +125,11 @@ class ClientNodeWeb {
 
     return this.callService(message).then(
       (reply) => {
-        if (reply.deviceSpecification !== undefined && reply.deviceSpecification !== null) {
+        if (reply.device !== undefined && reply.device !== null) {
           // Process the reply client specification.
-          this.deviceSpecifications.set(reply.deviceSpecification.name, reply.deviceSpecification);
+          this.deviceSpecifications.set(reply.device.name, reply.device);
 
-          return reply.deviceSpecification.id;
+          return reply.device.id;
         }
       },
       (error) => {
