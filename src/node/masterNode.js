@@ -163,12 +163,21 @@ class MasterNode {
   }
 
   onTopicDataMessageZMQ(envelope, message) {
+    let clientID = envelope.toString();
+    if (!this.clientManager.verifyClient(clientID)) {
+      console.error('Topic data received from unregistered client with ID ' + clientID);
+      return;
+    }
+
+    let client = this.clientManager.getClient(clientID);
+    client.updateLastSignOfLife();
+
     try {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
 
       // Process message.
-      this.processTopicDataMessage(envelope, topicDataMessage);
+      this.processTopicDataMessage(topicDataMessage);
     } catch (e) {
       // Create context.
       let context = {
@@ -189,7 +198,7 @@ class MasterNode {
 
       try {
         // Send error:
-        this.connectionsManager.connections.topicDataZMQ.send(envelope, this.topicDataTranslator.createBufferFromPayload({
+        this.connectionsManager.connections.topicDataZMQ.send(clientID, this.topicDataTranslator.createBufferFromPayload({
           error: {
             title: context.feedback.title,
             message: context.feedback.message,
@@ -211,7 +220,6 @@ class MasterNode {
   }
 
   onTopicDataMessageWS(clientID, message) {
-
     if (!this.clientManager.verifyClient(clientID)) {
       console.error('Topic data received from unregistered client with ID ' + clientID);
       return;
@@ -227,7 +235,7 @@ class MasterNode {
       // Process message.
       //let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
 
-      this.processTopicDataMessage(clientID, topicDataMessage);
+      this.processTopicDataMessage(topicDataMessage);
     } catch (e) {
       // Create context.
       let context = {
@@ -271,7 +279,7 @@ class MasterNode {
     return message;
   }
 
-  processTopicDataMessage(clientIdentifier, topicDataMessage) {
+  processTopicDataMessage(topicDataMessage) {
     let record = topicDataMessage.topicDataRecord;
     this.topicData.publish(record.topic, record[record.type]);
   }
