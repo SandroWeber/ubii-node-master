@@ -40,6 +40,7 @@ class ClientManager {
    * @param {Object} client Client object.
    */
   addClient(client) {
+    console.info('added client with ID ' + client.identifier);
     this.clients.set(client.identifier, client);
   }
 
@@ -198,7 +199,7 @@ class ClientManager {
 
     // Return the clientSpecification payload
     payload = {
-      clientSpecification: clientSpecification
+      client: clientSpecification
     };
     return payload;
   }

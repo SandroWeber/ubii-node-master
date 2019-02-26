@@ -322,7 +322,7 @@ class DeviceManager {
 
     // Return the deviceSpecification payload.
     payload = {
-      deviceSpecification: deviceSpecification
+      device: deviceSpecification
     };
     return payload;
   }

@@ -33,9 +33,9 @@
   },
   "dependencies": {
     "@tum-far/namida": "0.0.2",
-    "@tum-far/ubii-msg-formats": "0.8.5",
+    "@tum-far/ubii-msg-formats": "0.8.10",
     "@tum-far/ubii-topic-data": "0.1.0",
-    "@tum-far/ubii-interactions": "0.0.3",
+    "@tum-far/ubii-interactions": "0.1.1",
     "body-parser": "1.18.3",
     "express": "4.16.4",
     "uuid": "3.3.2",

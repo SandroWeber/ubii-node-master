@@ -5,8 +5,8 @@ class SessionManager {
     this.sessions = [];
   }
 
-  createSession() {
-    let session = new Session();
+  createSession(specifications) {
+    let session = new Session(specifications);
     this.addSession(session);
 
     return session;
@@ -39,6 +39,10 @@ class SessionManager {
 
   startSession(id) {
     this.sessions.find((session) => {return session.id === id;}).start();
+  }
+
+  stopSession(id) {
+    this.sessions.find((session) => {return session.id === id;}).stop();
   }
 
   startAllSessions() {

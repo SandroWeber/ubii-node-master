@@ -1,28 +1,32 @@
-const {ClientRegistrationService} = require('../services/clientRegistrationService.js');
-const {DeviceRegistrationService} = require('../services/deviceRegistrationService.js');
-const {SubscriptionService} = require('../services/subscriptionService.js');
-const {ServerConfigService} = require('../services/serverConfigService.js');
+const {ClientRegistrationService} = require('./clientRegistrationService.js');
+const {DeviceRegistrationService} = require('./deviceRegistrationService.js');
+const {SubscriptionService} = require('./subscriptionService.js');
+const {ServerConfigService} = require('./serverConfigService.js');
+const {TopicListService} = require('./topicListService');
+const {SessionRegistrationService} = require('./sessionRegistrationService');
 const namida = require("@tum-far/namida");
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class ServiceManager {
-  constructor(clientManager, deviceManager, connectionManager, host) {
+  constructor(clientManager, deviceManager, connectionManager, topicData, sessionManager, host) {
     this.clientManager = clientManager;
     this.deviceManager = deviceManager;
     this.connectionManager = connectionManager;
+    this.topicData = topicData;
+    this.sessionManager = sessionManager;
 
     this.serverHost = host;
 
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
     this.services = new Map();
-    this.addService(new ClientRegistrationService(this.clientManager, this.serverHost,
-      this.connectionManager.ports.topicDataZMQ,
-      this.connectionManager.ports.topicDataWS));
+    this.addService(new ClientRegistrationService(this.clientManager));
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
     this.addService(new SubscriptionService(this.clientManager));
     this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.serverHost, connectionManager));
+    this.addService(new TopicListService(this.topicData, this));
+    this.addService(new SessionRegistrationService(this.sessionManager));
   }
 
   addService(service) {
