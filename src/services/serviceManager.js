@@ -4,6 +4,8 @@ const {SubscriptionService} = require('./subscriptionService.js');
 const {ServerConfigService} = require('./serverConfigService.js');
 const {TopicListService} = require('./topicListService');
 const {SessionRegistrationService} = require('./sessionRegistrationService');
+const {SessionStartService} = require('./sessionStartService');
+const {SessionStopService} = require('./sessionStopService');
 const namida = require("@tum-far/namida");
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
@@ -27,6 +29,8 @@ class ServiceManager {
     this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.serverHost, connectionManager));
     this.addService(new TopicListService(this.topicData, this));
     this.addService(new SessionRegistrationService(this.sessionManager));
+    this.addService(new SessionStartService(this.sessionManager));
+    this.addService(new SessionStopService(this.sessionManager));
   }
 
   addService(service) {

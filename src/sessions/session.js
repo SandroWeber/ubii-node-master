@@ -84,6 +84,18 @@ class Session {
       }
     });
   }
+
+  toProtobuf() {
+    let protobufInteractions = this.interactions.map((interaction) => {
+      return interaction.toProtobuf();
+    });
+    return {
+      id: this.id,
+      name: this.name,
+      interactions: protobufInteractions,
+      ioMappings: this.ioMappings
+    }
+  }
 }
 
 Session.PROCESS_MODES = Object.freeze({'PROMISE_RECURSIVECALLS': 1/*, 'SINGLE_THREAD':1, 'THREAD_POOL':2, 'INDIVIDUAL_THREADS':3*/});

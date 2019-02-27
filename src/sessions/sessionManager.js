@@ -38,11 +38,23 @@ class SessionManager {
   }
 
   startSession(id) {
-    this.sessions.find((session) => {return session.id === id;}).start();
+    let session = this.sessions.find((session) => {return session.id === id;});
+    if (session) {
+      session.start();
+      return true;
+    } else {
+      return false;
+    }
   }
 
   stopSession(id) {
-    this.sessions.find((session) => {return session.id === id;}).stop();
+    let session = this.sessions.find((session) => {return session.id === id;});
+    if (session) {
+      session.stop();
+      return true;
+    } else {
+      return false;
+    }
   }
 
   startAllSessions() {

@@ -13,7 +13,9 @@ class SessionRegistrationService extends Service {
 
   reply(message) {
     console.info(message);
-    return this.sessionManager.createSession(message);
+    let session = this.sessionManager.createSession(message);
+
+    return {session: session.toProtobuf()};
   }
 }
 
