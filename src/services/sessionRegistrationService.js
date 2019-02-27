@@ -12,6 +12,7 @@ class SessionRegistrationService extends Service {
   }
 
   reply(message) {
+    console.info(message);
     return this.sessionManager.createSession(message);
   }
 }

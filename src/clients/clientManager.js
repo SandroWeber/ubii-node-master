@@ -3,7 +3,7 @@ const {
   Client
 } = require('./client.js');
 const namida = require('@tum-far/namida');
-const uuidv4 = require("uuid/v4");
+const uuidv4 = require('uuid/v4');
 
 const REJECT_REGISTRATION_FEEDBACK_TITLE = 'Client registration rejected';
 const ACCEPT_REGISTRATION_FEEDBACK_TITLE = 'Client registration accepted';
