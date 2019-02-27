@@ -25,7 +25,11 @@ class Session {
 
     this.status = Session.STATUS.STARTED;
     if (this.processMode === Session.PROCESS_MODES.PROMISE_RECURSIVECALLS) {
-      this.processInteractionsPromiseRecursive();
+      this.processInteractionsPromiseRecursive()
+        .then(
+          (resolved) => {console.info(resolved);},
+          (rejected) => {console.info(rejected);}
+        );
     }
   }
 
@@ -42,7 +46,10 @@ class Session {
       if (!this.isProcessing) return;
 
       let interaction = this.interactions[i % this.interactions.length];
-      if (interaction) interaction.process();
+      if (interaction) {
+        interaction.process();
+        console.info('interaction ' + interaction.id + 'process() called');
+      }
       setTimeout(() => {recursiveisProcessingCall(i+1);}, 0);
     };
 
@@ -50,8 +57,8 @@ class Session {
       try {
         recursiveisProcessingCall(0);
       }
-      catch (e) {
-        reject(e);
+      catch (error) {
+        reject(error);
       }
 
       resolve('processInteractionsPromiseRecursive() resolved');
