@@ -1,12 +1,13 @@
 const {Session} = require('./session.js');
 
 class SessionManager {
-  constructor() {
+  constructor(topicData) {
+    this.topicData = topicData;
     this.sessions = [];
   }
 
   createSession(specifications) {
-    let session = new Session(specifications);
+    let session = new Session(specifications, this.topicData);
     this.addSession(session);
 
     return session;

@@ -170,7 +170,6 @@ class Client {
       } catch (error) {
         console.error(error);
       }
-
     });
 
     // save token

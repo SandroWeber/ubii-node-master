@@ -2,18 +2,21 @@ const uuidv4 = require('uuid/v4');
 const {Interaction} = require('@tum-far/ubii-interactions');
 
 class Session {
-  constructor({id = uuidv4(), name = '', interactions = [], ioMappings = []}) {
+  constructor({id = uuidv4(), name = '', interactions = [], ioMappings = []}, topicData) {
     this.id = id;
     this.name = name;
     this.status = Session.STATUS.CREATED;
     this.processMode = Session.PROCESS_MODES.PROMISE_RECURSIVECALLS;
     this.isProcessing = false;
-
     this.interactions = [];
     interactions.forEach((interactionSpecs) => {
-      this.addInteraction(new Interaction(interactionSpecs));
+      let interaction = new Interaction(interactionSpecs);
+      interaction.setTopicData(topicData);
+      this.addInteraction(interaction);
     });
     this.ioMappings = ioMappings;
+
+    this.topicData = topicData;
   }
 
   start() {
@@ -48,7 +51,6 @@ class Session {
       let interaction = this.interactions[i % this.interactions.length];
       if (interaction) {
         interaction.process();
-        console.info('interaction ' + interaction.id + 'process() called');
       }
       setTimeout(() => {recursiveisProcessingCall(i+1);}, 0);
     };
@@ -84,10 +86,22 @@ class Session {
       let interaction = this.interactions.find((interaction) => {
         return interaction.id === mapping.interactionId;
       });
+
+      if (!interaction) {
+        console.info('Session.applyIOMappings() - no interaction with ID ' + mapping.interactionId);
+        return;
+      }
+
       if (mapping.interactionInput && interaction.hasInput(mapping.interactionInput.internalName)) {
-        interaction.connectInput(mapping.interactionInput.internalName, mapping.topic);
+        if (!interaction.connectInput(mapping.interactionInput.internalName, mapping.topic)) {
+          console.info('Session.applyIOMappings() - connectInput() failed for interaction ' + interaction.id +
+            ': ' + mapping.interactionInput.internalName + ' -> ' + mapping.topic);
+        }
       } else if (mapping.interactionOutput && interaction.hasOutput(mapping.interactionOutput.internalName)) {
-        interaction.connectOutput(mapping.interactionOutput.internalName, mapping.topic);
+        if (!interaction.connectOutput(mapping.interactionOutput.internalName, mapping.topic)) {
+          console.info('Session.applyIOMappings() - connectOutput() failed for interaction ' + interaction.id +
+            ': ' + mapping.interactionOutput.internalName + ' -> ' + mapping.topic);
+        }
       }
     });
   }

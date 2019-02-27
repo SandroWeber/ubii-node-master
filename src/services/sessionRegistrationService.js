@@ -12,7 +12,6 @@ class SessionRegistrationService extends Service {
   }
 
   reply(message) {
-    console.info(message);
     let session = this.sessionManager.createSession(message);
 
     return {session: session.toProtobuf()};
@@ -20,5 +19,5 @@ class SessionRegistrationService extends Service {
 }
 
 module.exports = {
-  'SessionRegistrationService': SessionRegistrationService,
+  'SessionRegistrationService': SessionRegistrationService
 };
