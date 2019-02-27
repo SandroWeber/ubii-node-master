@@ -281,7 +281,7 @@ class MasterNode {
 
   processTopicDataMessage(topicDataMessage) {
     let record = topicDataMessage.topicDataRecord;
-    this.topicData.publish(record.topic, record[record.type]);
+    this.topicData.publish(record.topic, record[record.type], record.type);
   }
 }
 

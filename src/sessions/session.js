@@ -30,7 +30,7 @@ class Session {
     if (this.processMode === Session.PROCESS_MODES.PROMISE_RECURSIVECALLS) {
       this.processInteractionsPromiseRecursive()
         .then(
-          (resolved) => {console.info(resolved);},
+          () => {},
           (rejected) => {console.info(rejected);}
         );
     }
@@ -98,7 +98,12 @@ class Session {
             ': ' + mapping.interactionInput.internalName + ' -> ' + mapping.topic);
         }
       } else if (mapping.interactionOutput && interaction.hasOutput(mapping.interactionOutput.internalName)) {
-        if (!interaction.connectOutput(mapping.interactionOutput.internalName, mapping.topic)) {
+        //TODO: still looks a bit "hacky", maybe include type info in protobuf
+        let formatArray = mapping.interactionOutput.messageFormat.split('.');
+        let type = formatArray[formatArray.length-1];  // remove namespacing
+        type = type.charAt(0).toLowerCase() + type.slice(1);  // make first letter lowercase
+
+        if (!interaction.connectOutput(mapping.interactionOutput.internalName, mapping.topic, type)) {
           console.info('Session.applyIOMappings() - connectOutput() failed for interaction ' + interaction.id +
             ': ' + mapping.interactionOutput.internalName + ' -> ' + mapping.topic);
         }
