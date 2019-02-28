@@ -1,12 +1,13 @@
 const {Session} = require('./session.js');
 
 class SessionManager {
-  constructor() {
+  constructor(topicData) {
+    this.topicData = topicData;
     this.sessions = [];
   }
 
   createSession(specifications) {
-    let session = new Session(specifications);
+    let session = new Session(specifications, this.topicData);
     this.addSession(session);
 
     return session;
@@ -38,11 +39,23 @@ class SessionManager {
   }
 
   startSession(id) {
-    this.sessions.find((session) => {return session.id === id;}).start();
+    let session = this.sessions.find((session) => {return session.id === id;});
+    if (session) {
+      session.start();
+      return true;
+    } else {
+      return false;
+    }
   }
 
   stopSession(id) {
-    this.sessions.find((session) => {return session.id === id;}).stop();
+    let session = this.sessions.find((session) => {return session.id === id;});
+    if (session) {
+      session.stop();
+      return true;
+    } else {
+      return false;
+    }
   }
 
   startAllSessions() {

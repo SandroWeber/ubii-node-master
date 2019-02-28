@@ -63,7 +63,7 @@ class MasterNode {
       this.connectionsManager.connections.topicDataZMQ);
 
     // Session manager component:
-    this.sessionManager = new SessionManager();
+    this.sessionManager = new SessionManager(this.topicData);
 
     // Service Manager Component:
     this.serviceManager = new ServiceManager(
@@ -281,7 +281,7 @@ class MasterNode {
 
   processTopicDataMessage(topicDataMessage) {
     let record = topicDataMessage.topicDataRecord;
-    this.topicData.publish(record.topic, record[record.type]);
+    this.topicData.publish(record.topic, record[record.type], record.type);
   }
 }
 
