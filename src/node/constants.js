@@ -1,6 +1,6 @@
 module.exports = {
-  'defaultTopicDataServerPortZMQ': 8492,
-  'defaultTopicDataServerPortWS': 8493,
-  'defaultServiceServerPortZMQ': 8581,
-  'defaultServiceServerPortREST': 8582,
+  'defaultServiceServerPortZMQ': 8101,
+  'defaultServiceServerPortREST': 8102,
+  'defaultTopicDataServerPortZMQ': 8103,
+  'defaultTopicDataServerPortWS': 8104,
 };
