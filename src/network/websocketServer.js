@@ -103,9 +103,16 @@ class WebsocketServer {
    * @param {(string|Buffer)} payload
    */
   send(toClientId, message) {
-    this.clients.get(toClientId).send(message, (error) => {
-      if (error !== undefined) console.warn(error);
-    });
+    let client = this.clients.get(toClientId);
+    if (client && client.readyState === WebSocket.OPEN) {
+      client.send(message, (error) => {
+        if (error !== undefined) console.warn(error);
+      });
+    }
+  }
+
+  hasClient(clientID) {
+    return this.clients.get(clientID);
   }
 
   /**

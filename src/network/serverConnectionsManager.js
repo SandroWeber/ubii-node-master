@@ -82,9 +82,8 @@ class ServerConnectionsManager {
   }
 
   send(clientID, message) {
-    let clientConnectionWS = this.connections.topicDataWS.clients.get(clientID);
-    if (clientConnectionWS) {
-      clientConnectionWS.send(message);
+    if (this.connections.topicDataWS.hasClient(clientID)) {
+      this.connections.topicDataWS.send(clientID, message);
     } else {
       this.connections.topicDataZMQ.send(clientID, message);
     }
