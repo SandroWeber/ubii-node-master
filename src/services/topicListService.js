@@ -17,8 +17,9 @@ class TopicListService extends Service {
     let dataTopics = this.topicData.getAllTopicsWithData().map(entry => entry.topic);
 
     return {
-      serviceTopics: serviceTopics,
-      dataTopics: dataTopics
+      stringList: {
+        list: serviceTopics.concat(dataTopics)
+      }
     };
   }
 }
