@@ -120,7 +120,7 @@ class Session {
       name: this.name,
       interactions: protobufInteractions,
       ioMappings: this.ioMappings
-    }
+    };
   }
 }
 

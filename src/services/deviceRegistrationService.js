@@ -38,15 +38,15 @@ class DeviceRegistrationService extends Service {
     }
 
     // Create a new device specification.
-    let deviceSpecification = this.deviceManager.createDeviceSpecificationWithNewUuid(
+    /*let deviceSpecification = this.deviceManager.createDeviceSpecificationWithNewUuid(
       message.name,
       message.namespace,
       message.deviceType,
       message.clientId,
-    );
+    );*/
 
     // Process the registration of the sepcified device at the device manager and return the result
-    return this.deviceManager.processDeviceRegistration(deviceSpecification, context);
+    return this.serviceReplyTranslator.createMessageFromPayload(this.deviceManager.processDeviceRegistration(message, context));
   }
 }
 

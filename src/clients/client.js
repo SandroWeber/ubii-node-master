@@ -180,7 +180,7 @@ class Client {
   unsubscribe(topic) {
     if (this.subscriptionTokens.has(topic)) {
       namida.logFailure(`Topic Data unsubscription rejected`,
-        `Device (Particpiant) with id ${this.identifier} is not subscribed to this topic.`);
+        `Client with ID ${this.identifier} is not subscribed to this topic.`);
       return;
     }
 
@@ -189,6 +189,12 @@ class Client {
 
     // unsubscribe
     this.topicData.unsubscribe(token);
+  }
+
+  unsubscribeAll(){
+    for(let token in this.subscriptionTokens){
+      this.topicData.unsubscribe(token);
+    }
   }
 }
 
