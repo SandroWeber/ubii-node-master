@@ -116,23 +116,31 @@ class MasterNode {
   onServiceMessageREST(request, response) {
     try {
       // Decode buffer.
+      console.info(request.body.length);
+      console.info(request.body);
       // VARIANT A: PROTOBUF
-      //let message = this.serviceRequestTranslator.createMessageFromBuffer(JSON.parse(request.body.buffer));
+      let requestBuffer = new Uint8Array(request.body);
+      let requestMessage = this.serviceRequestTranslator.createMessageFromBuffer(requestBuffer);
+      console.info('### onServiceMessageREST - request ###');
+      console.info(requestMessage);
+      console.info(requestBuffer.length);
+      console.info(requestBuffer);
       // VARIANT B: JSON
-      let json = JSON.parse(request.body.message);
-      let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(json);
+      /*let json = JSON.parse(request.body.message);
+      let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(json);*/
 
       // Process request.
       let reply = this.serviceManager.processRequest(requestMessage);
+      console.info('### onServiceMessageREST - response ###');
       console.info(reply);
 
       // Return reply.
       // VARIANT A: PROTOBUF
-      let buffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
-      console.info(buffer.length);
-      console.info(buffer);
-      response.send(buffer);
-      return buffer;
+      let replyBuffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
+      console.info(replyBuffer.length);
+      console.info(replyBuffer);
+      response.send(replyBuffer);
+      return replyBuffer;
 
       // VARIANT B: JSON
       /*response.json({ message: JSON.stringify(reply) });

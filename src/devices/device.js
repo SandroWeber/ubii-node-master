@@ -50,6 +50,7 @@ class Device {
   }
 
   toProtobuf() {
+    console.info(this.components);
     return {
       id: this.id,
       name: this.name,
