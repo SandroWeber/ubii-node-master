@@ -54,7 +54,7 @@ class Device {
       id: this.id,
       name: this.name,
       deviceType: this.deviceType,
-      components: this.components,
+      //components: this.components,
       clientId: this.clientId
     };
   }

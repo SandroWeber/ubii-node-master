@@ -124,15 +124,19 @@ class MasterNode {
 
       // Process request.
       let reply = this.serviceManager.processRequest(requestMessage);
+      console.info(reply);
 
       // Return reply.
       // VARIANT A: PROTOBUF
-      //let buffer = this.serviceReplyTranslator.createBufferFromPayload(reply);
-      //response.json({ buffer: buffer });
-      //return buffer;
+      let buffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
+      console.info(buffer.length);
+      console.info(buffer);
+      response.send(buffer);
+      return buffer;
+
       // VARIANT B: JSON
-      response.json({ message: JSON.stringify(reply) });
-      return JSON.stringify(reply);
+      /*response.json({ message: JSON.stringify(reply) });
+      return JSON.stringify(reply);*/
     } catch (e) {
       // Create context.
       let context = {
