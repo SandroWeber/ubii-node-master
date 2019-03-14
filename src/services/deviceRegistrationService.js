@@ -38,7 +38,7 @@ class DeviceRegistrationService extends Service {
     }
 
     // Process the registration of the sepcified device at the device manager and return the result
-    return this.serviceReplyTranslator.createMessageFromPayload(this.deviceManager.processDeviceRegistration(message, context));
+    return {device: this.deviceManager.processDeviceRegistration(message, context).toProtobuf()};
   }
 }
 

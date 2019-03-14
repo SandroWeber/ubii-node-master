@@ -116,35 +116,31 @@ class MasterNode {
   onServiceMessageREST(request, response) {
     try {
       // Decode buffer.
-      console.info(request.body.length);
-      console.info(request.body);
       // VARIANT A: PROTOBUF
-      let requestBuffer = new Uint8Array(request.body);
+      /*let requestBuffer = new Uint8Array(request.body);
       let requestMessage = this.serviceRequestTranslator.createMessageFromBuffer(requestBuffer);
       console.info('### onServiceMessageREST - request ###');
       console.info(requestMessage);
       console.info(requestBuffer.length);
-      console.info(requestBuffer);
+      console.info(requestBuffer);*/
+
       // VARIANT B: JSON
-      /*let json = JSON.parse(request.body.message);
-      let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(json);*/
+      let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
 
       // Process request.
       let reply = this.serviceManager.processRequest(requestMessage);
-      console.info('### onServiceMessageREST - response ###');
-      console.info(reply);
 
       // Return reply.
       // VARIANT A: PROTOBUF
-      let replyBuffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
+      /*let replyBuffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
       console.info(replyBuffer.length);
       console.info(replyBuffer);
       response.send(replyBuffer);
-      return replyBuffer;
+      return replyBuffer;*/
 
       // VARIANT B: JSON
-      /*response.json({ message: JSON.stringify(reply) });
-      return JSON.stringify(reply);*/
+      response.json(reply);
+      return reply;
     } catch (e) {
       // Create context.
       let context = {

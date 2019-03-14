@@ -315,7 +315,7 @@ class DeviceManager {
     currentDevice.updateInformation();
 
     // Return the deviceSpecification payload.
-    return {device: currentDevice.toProtobuf()};
+    return currentDevice;
   }
 }
 
