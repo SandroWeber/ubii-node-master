@@ -1,11 +1,10 @@
 const uuidv4 = require('uuid/v4');
-const { proto } = require('@tum-far/ubii-msg-formats');
 
 /**
  * Devices are representations of remote entities at the server that interact with the ubii system.
  */
 class Device {
-  constructor({id = uuidv4(), name = '', deviceType = undefined, components = [], clientId = undefined}, client) {
+  constructor({id, name = '', deviceType = undefined, components = [], clientId = undefined}, client) {
     if (new.target === Device) {
       throw new TypeError("Cannot construct Device instances directly");
     }
@@ -14,7 +13,7 @@ class Device {
       throw new TypeError("Must override deactivate");
     }
 
-    this.id = id;
+    this.id = id ? id : uuidv4();
     this.name = name;
     this.deviceType = deviceType;
     this.components = components;

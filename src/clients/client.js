@@ -5,8 +5,9 @@ const {
   SIGN_OF_LIFE_DELTA_TIME
 } = require('./constants');
 const namida = require('@tum-far/namida');
+const uuidv4 = require('uuid/v4');
 
-var clientStateEnum = Object.freeze({
+let clientStateEnum = Object.freeze({
   "active": "active",
   "standby": "standby",
   "inactive": "inactive"
@@ -15,10 +16,11 @@ var clientStateEnum = Object.freeze({
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class Client {
-  constructor(identifier, name, namespace, server, topicData) {
-    this.identifier = identifier;
+  constructor({id, name = '', devices = []}, server, topicData) {
+    this.id = id ? id : uuidv4();
     this.name = name;
-    this.namespace = namespace;
+    this.devices = devices;
+
     this.server = server;
     this.topicData = topicData;
 
@@ -56,7 +58,7 @@ class Client {
    * @param {*} message
    */
   sendMessageToRemote(message) {
-    this.server.send(this.identifier, message);
+    this.server.send(this.id, message);
   }
 
   /**
@@ -64,7 +66,7 @@ class Client {
    * @param {Function} onPongCallback Function called when the pong message is received.
    */
   pingRemote(onPongCallback) {
-    this.server.ping(this.identifier, onPongCallback);
+    this.server.ping(this.id, onPongCallback);
   }
 
   /**
@@ -90,7 +92,7 @@ class Client {
         this.updateLastSignOfLife();
       } catch (e) {
         namida.error('UpdateLastSignOfLife failed',
-          `UpdateLastSignOfLife of client with id ${this.identifier} failed with an error.`,
+          `UpdateLastSignOfLife of client with id ${this.id} failed with an error.`,
           '' + (e.stack || e));
       }
     }
@@ -112,14 +114,14 @@ class Client {
           // The client has the state inactive.
           if (this.state !== clientStateEnum.inactive) {
             namida.log(`Client State has changed`,
-              `Client with id ${this.identifier} is not available and is now in an inactive state.`);
+              `Client with id ${this.id} is not available and is now in an inactive state.`);
           }
           this.state = clientStateEnum.inactive;
         } else {
           // The client has the state standby.
           if (this.state !== clientStateEnum.standby) {
             namida.log(`Client State has changed`,
-              `Client with id ${this.identifier} is not available and is now in an standby state.`);
+              `Client with id ${this.id} is not available and is now in an standby state.`);
           }
           this.state = clientStateEnum.standby;
         }
@@ -127,7 +129,7 @@ class Client {
         // The client has the state active.
         if (this.state !== clientStateEnum.active) {
           namida.log(`Client State has changed`,
-            `Client with id ${this.identifier} is available again and is now in an active state.`);
+            `Client with id ${this.id} is available again and is now in an active state.`);
         }
         this.state = clientStateEnum.active;
       }
@@ -148,7 +150,7 @@ class Client {
   subscribe(topic) {
     if (this.subscriptionTokens.has(topic)) {
       namida.logFailure(`Topic Data subscription rejected`,
-        `Client with id ${this.identifier} is already subscribed to this topic.`);
+        `Client with id ${this.id} is already subscribed to this topic.`);
       return;
     }
 
@@ -180,7 +182,7 @@ class Client {
   unsubscribe(topic) {
     if (this.subscriptionTokens.has(topic)) {
       namida.logFailure(`Topic Data unsubscription rejected`,
-        `Client with ID ${this.identifier} is not subscribed to this topic.`);
+        `Client with ID ${this.id} is not subscribed to this topic.`);
       return;
     }
 
@@ -191,9 +193,17 @@ class Client {
     this.topicData.unsubscribe(token);
   }
 
-  unsubscribeAll(){
+  unsubscribeAll() {
     for(let token in this.subscriptionTokens){
       this.topicData.unsubscribe(token);
+    }
+  }
+
+  toProtobuf() {
+    return {
+      id: this.id,
+      name: this.name,
+      devices: this.devices
     }
   }
 }

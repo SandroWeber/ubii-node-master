@@ -28,13 +28,13 @@ class SubscriptionService extends Service {
 
       namida.logFailure(context.feedback.title, context.feedback.message);
 
-      return this.serviceReplyTranslator.createBufferFromPayload({
+      return {
         error: {
           title: context.feedback.title,
           message: context.feedback.message,
           stack: context.feedback.stack
         }
-      });
+      };
     }
 
     let client = this.clientManager.getClient(clientID);

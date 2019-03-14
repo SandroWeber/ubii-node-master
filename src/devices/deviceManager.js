@@ -184,8 +184,6 @@ class DeviceManager {
    */
   processDeviceRegistration(deviceSpecification, context) {
     // Prepare some variables.
-    let payload = {};
-    let currentDevice = {};
     let deviceID = deviceSpecification.id;
     let clientID = deviceSpecification.clientId;
 
@@ -205,19 +203,12 @@ class DeviceManager {
         context.feedback.message = `The Device with id ${namida.style.messageHighlight(deviceID)} ` +
           'is already registered as participant.';
         context.feedback.title = REJECT_REGISTRATION_FEEDBBACK_TITLE;
+        context.success = false;
 
         // Ouput the feedback on the server console.
         namida.logFailure(context.feedback.title, context.feedback.message);
 
-        // Return an error message payload.
-        payload = {
-          error: {
-            title: context.feedback.title,
-            message: context.feedback.message,
-            stack: context.feedback.stack
-          }
-        };
-        return payload;
+        return undefined;
       } else {
         // -> REregistering is possible: Prepare the registration.
 
@@ -252,19 +243,12 @@ class DeviceManager {
         context.feedback.message = `The Device with id ${namida.style.messageHighlight(deviceID)} ` +
           'is already registered as watcher.';
         context.feedback.title = REJECT_REGISTRATION_FEEDBBACK_TITLE;
+        context.success = false;
 
         // Ouput the feedback on the server console.
         namida.logFailure(context.feedback.title, context.feedback.message);
 
-        // Return an error message payload.
-        payload = {
-          error: {
-            title: context.feedback.title,
-            message: context.feedback.message,
-            stack: context.feedback.stack
-          }
-        };
-        return payload;
+        return undefined;
       } else {
         // -> REregistering is possible: Prepare the registration.
 
@@ -273,6 +257,7 @@ class DeviceManager {
           'initialized because it is already registered but the corresponding client was reregistered since ' +
           'the last sign of life of this device.';
         context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
+        context.success = true;
 
         // Ouput the feedback on the server console.
         namida.logWarn(context.feedback.title, context.feedback.message);
@@ -280,14 +265,11 @@ class DeviceManager {
         // Prepare the reregistration.
         this.removeParticipant(deviceID);
 
-        // Update the feedback.
-        context.feedback.message = `Watcher with id ${namida.style.messageHighlight(clientID)} reregistered.`;
-        context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
-
         // Continue with the normal registration process...
       }
     }
 
+    let currentDevice = {};
     // Handle the registration of a participant.
     if (deviceSpecification.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
       currentDevice = new Participant(deviceSpecification,
@@ -307,6 +289,7 @@ class DeviceManager {
     // Update the feedback to the default registartion feedback.
     context.feedback.message = `New Device with id ${namida.style.messageHighlight(currentDevice.id)} registered.`;
     context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
+    context.success = true;
 
     // Ouput the feedback on the server console.
     namida.logSuccess(context.feedback.title, context.feedback.message);
