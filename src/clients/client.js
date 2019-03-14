@@ -16,8 +16,8 @@ var clientStateEnum = Object.freeze({
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class Client {
-  constructor({id = uuidv4(), name = '', devices = []}, server, topicData) {
-    this.id = id;
+  constructor({id, name = '', devices = []}, server, topicData) {
+    this.id = id ? id : uuidv4();
     this.name = name;
     this.devices = devices;
 
