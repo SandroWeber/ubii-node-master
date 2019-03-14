@@ -5,6 +5,7 @@ const {
   SIGN_OF_LIFE_DELTA_TIME
 } = require('./constants');
 const namida = require('@tum-far/namida');
+const uuidv4 = require('uuid/v4');
 
 var clientStateEnum = Object.freeze({
   "active": "active",
@@ -15,10 +16,11 @@ var clientStateEnum = Object.freeze({
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class Client {
-  constructor(identifier, name, namespace, server, topicData) {
-    this.identifier = identifier;
+  constructor({id = uuidv4(), name = '', devices = []}, server, topicData) {
+    this.id = id;
     this.name = name;
-    this.namespace = namespace;
+    this.devices = devices;
+
     this.server = server;
     this.topicData = topicData;
 
@@ -191,9 +193,17 @@ class Client {
     this.topicData.unsubscribe(token);
   }
 
-  unsubscribeAll(){
+  unsubscribeAll() {
     for(let token in this.subscriptionTokens){
       this.topicData.unsubscribe(token);
+    }
+  }
+
+  toProtobuf() {
+    return {
+      id: this.id,
+      name: this.name,
+      devices: this.devices
     }
   }
 }

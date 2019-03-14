@@ -1,5 +1,4 @@
 const uuidv4 = require('uuid/v4');
-const { proto } = require('@tum-far/ubii-msg-formats');
 
 /**
  * Devices are representations of remote entities at the server that interact with the ubii system.

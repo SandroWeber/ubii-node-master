@@ -40,8 +40,8 @@ class ClientManager {
    * @param {Object} client Client object.
    */
   addClient(client) {
-    console.info('added client with ID ' + client.identifier);
-    this.clients.set(client.identifier, client);
+    console.info('added client with ID ' + client.id);
+    this.clients.set(client.id, client);
   }
 
   /**
@@ -79,44 +79,6 @@ class ClientManager {
   }
 
   /**
-   * Create a new client universally unique identifier (client UUID).
-   * @returns {String} The newly created universally unique identifier (client UUID).
-   */
-  createClientUuid() {
-    return uuidv4();
-  }
-
-  /**
-   * Create a new client specification with the specified parameters.
-   * @param {String} identifier Universally unique identifier of a Client.
-   * @param {String} name Display name of the client.
-   * @param {String} namespace Namespace of the client.
-   * @param {String} targetHost Target serverHost of the client connection.
-   * @param {String} targetPort Target port of the client connection.
-   */
-  createClientSpecification(name, namespace, identifier) {
-    return {
-      name: name,
-      namespace: namespace,
-      id: identifier
-    };
-  }
-
-  /**
-   * Create a new client specification with the passed parameters and a new Universally Unique Identifier (UUID) as id.
-   * @param {*} name Display name of the client.
-   * @param {*} namespace
-   * @param {*} targetHost Target serverHost of the client connection.
-   * @param {*} targetPort Target port of the client connection.
-   */
-  createClientSpecificationWithNewUuid(name, namespace) {
-    return this.createClientSpecification(
-      name,
-      namespace,
-      this.createClientUuid(namespace).toString());
-  }
-
-  /**
    * Process the registration of the specified client at the client manager.
    * @param {Object} clientSpecification
    * @param {*} context Context for the feedback.
@@ -124,7 +86,6 @@ class ClientManager {
    */
   processClientRegistration(clientSpecification, context) {
     // Prepare some variables.
-    let payload = {};
     let currentClient = {};
     let clientIdentifier = clientSpecification.id;
 
@@ -132,10 +93,6 @@ class ClientManager {
     if (context.feedback === undefined) {
       context.feedback = {};
     }
-
-    // Update the feedback to the default registartion feedback.
-    context.feedback.message = `New Client with id ${namida.style.messageHighlight(clientIdentifier)} registered.`;
-    context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
 
     // Check if a client with the specified id is already registered...
     if (this.hasClient(clientIdentifier)) {
@@ -147,19 +104,12 @@ class ClientManager {
         context.feedback.message = `Client with id ${namida.style.messageHighlight(clientIdentifier)} ` +
           `is already registered and active.`;
         context.feedback.title = REJECT_REGISTRATION_FEEDBACK_TITLE;
+        context.success = false;
 
         // Ouput the feedback on the server console.
         namida.logFailure(context.feedback.title, context.feedback.message);
 
-        // Return an error message payload.
-        payload = {
-          error: {
-            title: context.feedback.title,
-            message: context.feedback.message,
-            stack: context.feedback.stack
-          }
-        };
-        return payload
+        return undefined;
       } else {
         // => REregistering is possible: Prepare the registration.
 
@@ -177,6 +127,7 @@ class ClientManager {
         // Update the feedback.
         context.feedback.message = `Client with id ${namida.style.messageHighlight(clientIdentifier)} reregistered.`;
         context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
+        context.success = true;
 
         // Continue with the normal registration process...
       }
@@ -184,24 +135,21 @@ class ClientManager {
     // Normal registration steps:
 
     // Create a new client based on the client specification and register it.
-    currentClient = new Client(clientSpecification.id,
-      clientSpecification.name,
-      clientSpecification.namespace,
-      this.server,
-      this.topicData);
+    currentClient = new Client(clientSpecification, this.server, this.topicData);
     this.registerClient(currentClient);
-
-    // Ouput the feedback on the server console.
-    namida.logSuccess(context.feedback.title, context.feedback.message);
 
     // Update the client information.
     currentClient.updateInformation();
 
+    // Update the feedback to the default registartion feedback.
+    context.feedback.message = `New Client with id ${namida.style.messageHighlight(clientIdentifier)} registered.`;
+    context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
+    context.success = true;
+    // Ouput the feedback on the server console.
+    namida.logSuccess(context.feedback.title, context.feedback.message);
+
     // Return the clientSpecification payload
-    payload = {
-      client: clientSpecification
-    };
-    return payload;
+    return currentClient;
   }
 }
 

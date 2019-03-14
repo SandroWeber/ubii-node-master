@@ -18,7 +18,8 @@ class Service {
         title: '',
         message: '',
         stack: ''
-      }
+      },
+      success: false
     }
   }
 }
