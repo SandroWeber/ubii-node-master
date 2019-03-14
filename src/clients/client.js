@@ -7,7 +7,7 @@ const {
 const namida = require('@tum-far/namida');
 const uuidv4 = require('uuid/v4');
 
-var clientStateEnum = Object.freeze({
+let clientStateEnum = Object.freeze({
   "active": "active",
   "standby": "standby",
   "inactive": "inactive"
