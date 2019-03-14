@@ -1,11 +1,8 @@
-const {
-  Participant
-} = require('./../devices/participant.js');
-const {
-  Watcher
-} = require('./../devices/watcher.js');
-const uuidv4 = require("uuid/v4");
 const namida = require('@tum-far/namida');
+
+const {proto} = require('@tum-far/ubii-msg-formats');
+const {Participant} = require('./../devices/participant.js');
+const {Watcher} = require('./../devices/watcher.js');
 
 const REJECT_REGISTRATION_FEEDBBACK_TITLE = 'Device registration rejected';
 const ACCEPT_REGISTRATION_FEEDBACK_TITLE = 'Device registration accepted';
@@ -50,7 +47,7 @@ class DeviceManager {
    * @param {Object} participant
    */
   addParticipant(participant) {
-    this.participants.set(participant.identifier, participant);
+    this.participants.set(participant.id, participant);
   }
 
   /**
@@ -109,7 +106,7 @@ class DeviceManager {
    * @param {Object} watcher
    */
   addWatcher(watcher) {
-    this.watchers.set(watcher.identifier, watcher);
+    this.watchers.set(watcher.id, watcher);
   }
 
   /**
@@ -156,9 +153,9 @@ class DeviceManager {
    * Creates and returns a new Universally Unique Identifier (UUID).
    * @returns {String} The newly created Universally Unique Identifier (UUID).
    */
-  createDeviceUuid() {
+  /*createDeviceUuid() {
     return uuidv4();
-  }
+  }*/
 
   /**
    * Create a new device specification with the passed parameters and a new Universally Unique Identifier (UUID) as identifier.
@@ -167,7 +164,7 @@ class DeviceManager {
    * @param {*} deviceType The type of the device. See the ubii-msg-formats repository for more information.
    * @param {String} correspondingClientIdentifier Universally unique identifier of the corresponding Client.
    */
-  createDeviceSpecificationWithNewUuid(name, namespace, deviceType, correspondingClientIdentifier) {
+  /*createDeviceSpecificationWithNewUuid(name, namespace, deviceType, correspondingClientIdentifier) {
     return {
       id: this.createDeviceUuid(),
       name: name,
@@ -175,7 +172,7 @@ class DeviceManager {
       deviceType: deviceType,
       clientId: correspondingClientIdentifier
     };
-  }
+  }*/
 
   // Message and request process methods:
 
@@ -197,12 +194,8 @@ class DeviceManager {
       context.feedback = {};
     }
 
-    // Update the feedback to the default registartion feedback.
-    context.feedback.message = `New Device with id ${namida.style.messageHighlight(deviceID)} registered.`;
-    context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
-
     // Check if the device is already registered as participant...
-    if (this.hasParticipant(deviceID)) {
+    if (deviceID && this.hasParticipant(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (this.clientManager.getClient(clientID).registrationDate < this.getParticipant(deviceID).lastSignOfLife
         || deviceSpecification.deviceType !== 'PARTICIPANT') {
@@ -210,7 +203,7 @@ class DeviceManager {
 
         // Update the context feedback.
         context.feedback.message = `The Device with id ${namida.style.messageHighlight(deviceID)} ` +
-          `is already registered as participant.`;
+          'is already registered as participant.';
         context.feedback.title = REJECT_REGISTRATION_FEEDBBACK_TITLE;
 
         // Ouput the feedback on the server console.
@@ -230,8 +223,8 @@ class DeviceManager {
 
         // Update the context feedback.
         context.feedback.message = `Reregistration of Participant with id ${namida.style.messageHighlight(deviceID)} ` +
-          `initialized because it is already registered but the corresponding client was reregistered since ` +
-          `the last sign of life of this device.`;
+          'initialized because it is already registered but the corresponding client was reregistered since ' +
+          'the last sign of life of this device.';
         context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
 
         // Ouput the feedback on the server console.
@@ -249,7 +242,7 @@ class DeviceManager {
     }
 
     // ... or watcher.
-    if (this.hasWatcher(deviceID)) {
+    if (deviceID && this.hasWatcher(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (this.clientManager.getClient(clientID).registrationDate < this.getWatcher(deviceID).lastSignOfLife
         || deviceSpecification.deviceType !== 'WATCHER') {
@@ -257,7 +250,7 @@ class DeviceManager {
 
         // Update the context feedback.
         context.feedback.message = `The Device with id ${namida.style.messageHighlight(deviceID)} ` +
-          `is already registered as watcher.`;
+          'is already registered as watcher.';
         context.feedback.title = REJECT_REGISTRATION_FEEDBBACK_TITLE;
 
         // Ouput the feedback on the server console.
@@ -271,14 +264,14 @@ class DeviceManager {
             stack: context.feedback.stack
           }
         };
-        return payload
+        return payload;
       } else {
         // -> REregistering is possible: Prepare the registration.
 
         // Update the context feedback.
         context.feedback.message = `Reregistration of Watcher with id ${namida.style.messageHighlight(deviceID)} ` +
-          `initialized because it is already registered but the corresponding client was reregistered since ` +
-          `the last sign of life of this device.`;
+          'initialized because it is already registered but the corresponding client was reregistered since ' +
+          'the last sign of life of this device.';
         context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
 
         // Ouput the feedback on the server console.
@@ -296,20 +289,24 @@ class DeviceManager {
     }
 
     // Handle the registration of a participant.
-    if (deviceSpecification.deviceType === 0) {
-      currentDevice = new Participant(deviceID,
+    if (deviceSpecification.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
+      currentDevice = new Participant(deviceSpecification,
         this.clientManager.getClient(clientID),
         this.topicData);
       this.registerParticipant(currentDevice);
     }
 
     // Handle the registration of a watcher.
-    if (deviceSpecification.deviceType === 1) {
-      currentDevice = new Watcher(deviceID,
+    if (deviceSpecification.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
+      currentDevice = new Watcher(deviceSpecification,
         this.clientManager.getClient(clientID),
         this.topicData);
       this.registerWatcher(currentDevice);
     }
+
+    // Update the feedback to the default registartion feedback.
+    context.feedback.message = `New Device with id ${namida.style.messageHighlight(currentDevice.id)} registered.`;
+    context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
 
     // Ouput the feedback on the server console.
     namida.logSuccess(context.feedback.title, context.feedback.message);
@@ -317,17 +314,11 @@ class DeviceManager {
     // Update the device information.
     currentDevice.updateInformation();
 
-    // Prepare the deviceSpecification TODO: Fix this hack
-    //deviceSpecification.deviceType = deviceSpecification.deviceType.toString();
-
     // Return the deviceSpecification payload.
-    payload = {
-      device: deviceSpecification
-    };
-    return payload;
+    return currentDevice;
   }
 }
 
 module.exports = {
   'DeviceManager': DeviceManager,
-}
+};

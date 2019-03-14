@@ -118,9 +118,9 @@ class Session {
     return {
       id: this.id,
       name: this.name,
-      interactions: protobufInteractions,
-      ioMappings: this.ioMappings
-    }
+      //interactions: protobufInteractions,
+      //ioMappings: this.ioMappings
+    };
   }
 }
 

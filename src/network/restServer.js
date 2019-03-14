@@ -30,6 +30,14 @@ class RESTServer {
     });
 
     this.app.use(bodyParser.urlencoded({ extended: true }));
+
+    // VARIANT A: PROTOBUF
+    /*this.app.use(bodyParser.raw({
+      type: 'application/octet-stream',
+      limit: '10mb'
+    }));*/
+
+    /// VARIANT B: JSON
     this.app.use(bodyParser.json());
 
     this.server = this.app.listen(this.port, () => {
