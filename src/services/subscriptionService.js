@@ -15,6 +15,7 @@ class SubscriptionService extends Service {
   reply(message) {
     // Extract the relevant information.
     let clientID = message.clientId;
+    console.info('SubscriptionService.reply() - clientID ' + clientID);
 
     // Verify the device and act accordingly.
     if (!this.clientManager.verifyClient(clientID)) {
@@ -28,13 +29,13 @@ class SubscriptionService extends Service {
 
       namida.logFailure(context.feedback.title, context.feedback.message);
 
-      return this.serviceReplyTranslator.createBufferFromPayload({
+      return {
         error: {
           title: context.feedback.title,
           message: context.feedback.message,
           stack: context.feedback.stack
         }
-      });
+      };
     }
 
     let client = this.clientManager.getClient(clientID);
