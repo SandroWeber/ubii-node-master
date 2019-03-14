@@ -15,7 +15,6 @@ class SubscriptionService extends Service {
   reply(message) {
     // Extract the relevant information.
     let clientID = message.clientId;
-    console.info('SubscriptionService.reply() - clientID ' + clientID);
 
     // Verify the device and act accordingly.
     if (!this.clientManager.verifyClient(clientID)) {

@@ -3,7 +3,7 @@ const {
 } = require('./service.js');
 const namida = require("@tum-far/namida");
 
-const { ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class DeviceRegistrationService extends Service {
   constructor(clientManager, deviceManager) {
@@ -11,8 +11,6 @@ class DeviceRegistrationService extends Service {
 
     this.clientManager = clientManager;
     this.deviceManager = deviceManager;
-
-    this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
   }
 
   reply(message) {
@@ -28,17 +26,29 @@ class DeviceRegistrationService extends Service {
 
       namida.logFailure(context.feedback.title, context.feedback.message);
 
-      return this.serviceReplyTranslator.createMessageFromPayload({
+      return {
         error: {
           title: context.feedback.title,
           message: context.feedback.message,
           stack: context.feedback.stack
         }
-      });
+      };
     }
 
-    // Process the registration of the sepcified device at the device manager and return the result
-    return {device: this.deviceManager.processDeviceRegistration(message, context).toProtobuf()};
+    // Process the registration of the sepcified device at the device manager
+    let device = this.deviceManager.processDeviceRegistration(message, context);
+
+    if (context.success) {
+      return {device: device.toProtobuf()};
+    } else {
+      return {
+        error: {
+          title: context.feedback.title,
+          message: context.feedback.message,
+          stack: context.feedback.stack
+        }
+      };
+    }
   }
 }
 
