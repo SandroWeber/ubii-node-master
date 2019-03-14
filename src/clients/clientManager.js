@@ -40,7 +40,6 @@ class ClientManager {
    * @param {Object} client Client object.
    */
   addClient(client) {
-    console.info('added client with ID ' + client.id);
     this.clients.set(client.id, client);
   }
 
@@ -86,7 +85,6 @@ class ClientManager {
    */
   processClientRegistration(clientSpecification, context) {
     // Prepare some variables.
-    let currentClient = {};
     let clientIdentifier = clientSpecification.id;
 
     // Check the context
@@ -95,7 +93,7 @@ class ClientManager {
     }
 
     // Check if a client with the specified id is already registered...
-    if (this.hasClient(clientIdentifier)) {
+    if (clientIdentifier && this.hasClient(clientIdentifier)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (this.getClient(clientIdentifier).getState() === clientStateEnum.active) {
         // => REregistering is not an option: Reject the registration.
@@ -135,14 +133,14 @@ class ClientManager {
     // Normal registration steps:
 
     // Create a new client based on the client specification and register it.
-    currentClient = new Client(clientSpecification, this.server, this.topicData);
+    let currentClient = new Client(clientSpecification, this.server, this.topicData);
     this.registerClient(currentClient);
 
     // Update the client information.
     currentClient.updateInformation();
 
     // Update the feedback to the default registartion feedback.
-    context.feedback.message = `New Client with id ${namida.style.messageHighlight(clientIdentifier)} registered.`;
+    context.feedback.message = `New Client with id ${namida.style.messageHighlight(currentClient.id)} registered.`;
     context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
     context.success = true;
     // Ouput the feedback on the server console.
