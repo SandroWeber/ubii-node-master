@@ -79,9 +79,6 @@ class MasterNode {
       this.topicData,
       this.sessionManager,
       topicDataServerHost.toString());
-
-    this.interactionDatabase = InteractionDatabase;
-    this.sessionDatabase = SessionDatabase;
   }
 
   onServiceMessageZMQ(message) {

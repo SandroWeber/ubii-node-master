@@ -14,7 +14,6 @@ class InteractionDatabase {
 
     this.interactions = [];
     this.loadInteractionFiles();
-    console.info('########## new InteractionDatabase');
   }
 
   loadInteractionFiles() {
