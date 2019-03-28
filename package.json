@@ -20,6 +20,7 @@
     "node": ">=4"
   },
   "scripts": {
+    "start": "node scripts/startBackend.js",
     "test": "ava -v -s --match=!*RoundTripTime*",
     "test-rtt": "ava --match=*RoundTripTime*"
   },
