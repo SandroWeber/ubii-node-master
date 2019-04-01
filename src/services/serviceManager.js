@@ -1,5 +1,10 @@
 const {ClientRegistrationService} = require('./clientRegistrationService.js');
 const {DeviceRegistrationService} = require('./deviceRegistrationService.js');
+const {InteractionDeleteService} = require('./interactionDeleteService.js');
+const {InteractionGetListService} = require('./interactionGetListService.js');
+const {InteractionGetService} = require('./interactionGetService.js');
+const {InteractionRegistrationService} = require('./interactionRegistrationService.js');
+const {InteractionReplaceService} = require('./interactionReplaceService.js');
 const {SubscriptionService} = require('./subscriptionService.js');
 const {ServerConfigService} = require('./serverConfigService.js');
 const {TopicListService} = require('./topicListService');
@@ -25,6 +30,11 @@ class ServiceManager {
     this.services = new Map();
     this.addService(new ClientRegistrationService(this.clientManager));
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
+    this.addService(new InteractionDeleteService());
+    this.addService(new InteractionGetListService());
+    this.addService(new InteractionGetService());
+    this.addService(new InteractionRegistrationService());
+    this.addService(new InteractionReplaceService());
     this.addService(new SubscriptionService(this.clientManager));
     this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.serverHost, connectionManager));
     this.addService(new TopicListService(this.topicData, this));

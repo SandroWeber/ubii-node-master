@@ -26,14 +26,28 @@ class InteractionDatabase {
     return Array.from(this.interactions);
   }
 
-  deleteInteraction(id) {
-    let interaction = this.interactions.get(id);
+  registerInteraction(specs) {
+    if (this.interactions.has(specs.id)) {
+      throw 'Interaction with ID ' + specs.id + ' could not be registered, ID already exists'
+    }
 
+    if (!this.verifySpecification(specs)) {
+      throw 'Interaction with ID ' + specs.id + ' could not be registered, invalid specs'
+    }
+
+    let interaction = new Interaction(specs);
+    this.interactions.set(interaction.id, interaction);
+    this.saveInteractionToFile(interaction);
+
+    return interaction;
+  }
+
+  deleteInteraction(id) {
     try {
       this.interactions.delete(id);
       this.deleteInteractionFile(id);
     } catch (error) {
-      console.info(error);
+      throw error;
     }
   }
 
@@ -82,7 +96,13 @@ class InteractionDatabase {
   }
 
   saveInteractionToFile(interaction) {
-    let path = this.directory + '/' + interaction.name + '.interaction';
+    let path;
+    if (interaction.name !== '') {
+      path = this.directory + '/' + interaction.name + '.interaction';
+    } else {
+      path = this.directory + '/' + interaction.id + '.interaction';
+    }
+
     let specs = interaction.toProtobuf();
     if (this.verifySpecification(specs)) {
       fs.writeFile(path, JSON.stringify(specs, null, 4), {flag: 'wx'}, (err) => {

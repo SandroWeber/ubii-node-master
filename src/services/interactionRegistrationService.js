@@ -12,10 +12,18 @@ class InteractionRegistrationService extends Service {
     super(DEFAULT_TOPICS.SERVICES.INTERACTION_REGISTRATION);
   }
 
-  reply(message) {
-    let interaction = new Interaction(message);
-
-    InteractionDatabase.saveInteractionToFile(interaction);
+  reply(interactionSpecs) {
+    let interaction;
+    try {
+      interaction = InteractionDatabase.registerInteraction(interactionSpecs);
+    } catch (error) {
+      return {
+        error: {
+          title: 'InteractionRegistrationService Error',
+          message: error
+        }
+      };
+    }
 
     return {interaction: interaction.toProtobuf()};
   }
