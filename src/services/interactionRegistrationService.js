@@ -8,10 +8,8 @@ const InteractionDatabase = require('../storage/interactionDatabase');
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class InteractionRegistrationService extends Service {
-  constructor(sessionManager) {
+  constructor() {
     super(DEFAULT_TOPICS.SERVICES.INTERACTION_REGISTRATION);
-
-    this.sessionManager = sessionManager;
   }
 
   reply(message) {
