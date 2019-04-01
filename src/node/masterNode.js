@@ -24,6 +24,12 @@ const {
 const {
   SessionManager
 } = require('../sessions/sessionManager');
+const {
+  InteractionDatabase
+} = require('../storage/interactionDatabase');
+const {
+  SessionDatabase
+} = require('../storage/sessionDatabase');
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
