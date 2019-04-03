@@ -2,8 +2,8 @@ const uuidv4 = require('uuid/v4');
 const {Interaction} = require('@tum-far/ubii-interactions');
 
 class Session {
-  constructor({id = uuidv4(), name = '', interactions = [], ioMappings = []}, topicData) {
-    this.id = id;
+  constructor({id, name = '', interactions = [], ioMappings = []}, topicData) {
+    this.id = id ? id : uuidv4();
     this.name = name;
     this.status = Session.STATUS.CREATED;
     this.processMode = Session.PROCESS_MODES.PROMISE_RECURSIVECALLS;
@@ -120,7 +120,7 @@ class Session {
       name: this.name,
       interactions: protobufInteractions,
       ioMappings: this.ioMappings
-    }
+    };
   }
 }
 

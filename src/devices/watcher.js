@@ -1,7 +1,6 @@
-const {
-  Device
-} = require('./device.js');
+const uuidv4 = require('uuid/v4');
 
+const {Device} = require('./device.js');
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
 
 /**
@@ -9,9 +8,11 @@ const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
  * They get all data by subscribing to all current and future topics automatically on registration.
  */
 class Watcher extends Device {
-  constructor(identifier, client, topicData) {
-    super(identifier, client, topicData);
+  constructor({id = uuidv4(), name = '', deviceType = undefined, components = [], clientId = undefined},
+              client, topicData) {
+    super({id: id, name: name, deviceType: deviceType, components: components, clientId: clientId}, client);
 
+    this.topicData = topicData;
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
 
     this.subscriptionAllToken = null;

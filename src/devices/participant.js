@@ -1,21 +1,18 @@
-const {
-    Device
-} = require('./device.js');
-
-//const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
-
+const uuidv4 = require('uuid/v4');
 const namida = require('@tum-far/namida');
+
+const {Device} = require('./device.js');
 
 /**
  * Participants are representations of remote entities at the server that actively interact with the ubii system.
  * They participate in the ubii system by publishing data (they produce data) and/or consuming data via subscriptions (they consume data).
  */
 class Participant extends Device {
-    constructor(identifier, client, topicData) {
-        super(identifier, client, topicData);
+    constructor({id = uuidv4(), name = '', deviceType = undefined, components = [], clientId = undefined},
+                client, topicData) {
+        super({id: id, name: name, deviceType: deviceType, components: components, clientId: clientId}, client);
 
-        //this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
-
+        this.topicData = topicData;
         //this.subscriptionTokens = new Map();
     }
 

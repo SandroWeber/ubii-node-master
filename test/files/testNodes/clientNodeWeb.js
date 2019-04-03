@@ -207,13 +207,12 @@ class ClientNodeWeb {
       //console.info(buffer);
       //this.serviceClient.send('/services', {buffer: JSON.stringify(buffer)})
       // VARIANT B: JSON
-      this.serviceClient.send('/services', {message: JSON.stringify(message)}).then(
+      this.serviceClient.send('/services', message).then(
         (reply) => {
           // VARIANT A: PROTOBUF
           //let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
           // VARIANT B: JSON
-          let json = JSON.parse(reply.message);
-          let message = this.translatorServiceReply.createMessageFromPayload(json);
+          let message = this.translatorServiceReply.createMessageFromPayload(reply);
 
           return resolve(message);
         },

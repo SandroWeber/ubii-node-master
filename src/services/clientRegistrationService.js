@@ -15,14 +15,20 @@ class ClientRegistrationService extends Service {
     // Prepare the context.
     let context = this.prepareContext();
 
-    // Create a new client specification.
-    let clientSpecification = this.clientManager.createClientSpecificationWithNewUuid(
-      message.name,
-      message.namespace
-    );
+    // Process the registration of the sepcified client at the client manager
+    let client = this.clientManager.processClientRegistration(message, context);
 
-    // Process the registration of the sepcified client at the client manager and return the result
-    return this.clientManager.processClientRegistration(clientSpecification, context);
+    if (context.success) {
+      return {client: client.toProtobuf()};
+    } else {
+      return {
+        error: {
+          title: context.feedback.title,
+          message: context.feedback.message,
+          stack: context.feedback.stack
+        }
+      };
+    }
   }
 }
 
