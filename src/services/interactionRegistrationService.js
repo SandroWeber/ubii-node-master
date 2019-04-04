@@ -20,7 +20,7 @@ class InteractionRegistrationService extends Service {
       return {
         error: {
           title: 'InteractionRegistrationService Error',
-          message: error
+          message: error.toString()
         }
       };
     }
