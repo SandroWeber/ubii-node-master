@@ -30,7 +30,7 @@ class InteractionRegistrationService extends Service {
 
       return {
         success: {
-          title: 'InteractionDatabase Success',
+          title: 'InteractionRegistrationService Success',
           message: 'Regstered all ' + interactionSpecs.length + ' interactions.'
         }
       };
