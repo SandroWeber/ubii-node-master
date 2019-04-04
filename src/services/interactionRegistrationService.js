@@ -13,6 +13,29 @@ class InteractionRegistrationService extends Service {
   }
 
   reply(interactionSpecs) {
+    if (Array.isArray(interactionSpecs)) {
+      interactionSpecs.forEach((spec) => {
+        let interaction;
+        try {
+          interaction = InteractionDatabase.registerInteraction(interactionSpecs);
+        } catch (error) {
+          return {
+            error: {
+              title: 'InteractionRegistrationService Error',
+              message: error.toString()
+            }
+          };
+        }
+      });
+
+      return {
+        success: {
+          title: 'InteractionDatabase Success',
+          message: 'Regstered all ' + interactionSpecs.length + ' interactions.'
+        }
+      };
+    }
+
     let interaction;
     try {
       interaction = InteractionDatabase.registerInteraction(interactionSpecs);
