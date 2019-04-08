@@ -13,6 +13,15 @@ class InteractionRegistrationService extends Service {
   }
 
   reply(interactionSpecs) {
+    if (typeof interactionSpecs === 'undefined') {
+      return {
+        error: {
+          title: 'InteractionRegistrationService Error',
+          message: 'Interaction specifications are undefined.'
+        }
+      };
+    }
+
     let interaction;
     try {
       interaction = InteractionDatabase.registerInteraction(interactionSpecs);
