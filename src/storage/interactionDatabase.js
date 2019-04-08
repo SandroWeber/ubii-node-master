@@ -23,7 +23,7 @@ class InteractionDatabase {
   }
 
   getInteractionList() {
-    return Array.from(this.interactions);
+    return Array.from(this.interactions.values());
   }
 
   registerInteraction(specs) {

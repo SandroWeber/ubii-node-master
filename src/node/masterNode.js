@@ -25,8 +25,7 @@ const {
   SessionManager
 } = require('../sessions/sessionManager');
 
-const { ProtobufTranslator, ProtobufUtils, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
-const bla = require('../../node_modules/@tum-far/ubii-msg-formats/dist/js/protobuf.js');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const namida = require('@tum-far/namida');
 
@@ -127,18 +126,6 @@ class MasterNode {
 
       // VARIANT B: JSON
       let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
-
-      let serviceRequest = bla.ubii.services.ServiceRequest;
-      let proto_msg = serviceRequest.fromObject(request.body);
-      let buffer = this.serviceRequestTranslator.createBufferFromPayload(proto_msg);
-      let msg = this.serviceRequestTranslator.createMessageFromBuffer(buffer);
-
-      console.info('##### onServiceMessageREST - request:');
-      console.info(request.body);
-      console.info('### onServiceMessageREST - msg:');
-      console.info(msg);
-      console.info('# onServiceMessageREST - type:');
-      console.info(msg.type);
 
       // Process request.
       let reply = this.serviceManager.processRequest(requestMessage);

@@ -3,6 +3,8 @@ import sinon from 'sinon';
 
 import {SessionManager, Session} from '../../../src/index'
 
+import MockTopicData from '../../mocks/mock-topicdata.js';
+
 
 /* utility functions */
 
@@ -25,7 +27,8 @@ let getRandomSession = (sessionManager) => {
 /* test setup */
 
 test.beforeEach(t => {
-  t.context.sessionManager = new SessionManager();
+  t.context.topicData = new MockTopicData();
+  t.context.sessionManager = new SessionManager(t.context.topicData);
 });
 
 
@@ -49,7 +52,7 @@ test('addSession', t => {
 
   let numberOfSessions = 16;
   for (let i = 0; i < numberOfSessions; i = i + 1) {
-    let session = new Session();
+    let session = new Session({});
     sessionManager.addSession(session);
   }
   t.is(sessionManager.sessions.length, numberOfSessions);
