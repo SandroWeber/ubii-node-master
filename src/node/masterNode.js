@@ -133,6 +133,13 @@ class MasterNode {
       // VARIANT B: JSON
       let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
 
+      console.info('##### onServiceMessageREST - request:');
+      console.info(request.body);
+      console.info('# onServiceMessageREST - requestMessage:');
+      console.info(requestMessage);
+      console.info('# onServiceMessageREST - type:');
+      console.info(requestMessage.type);
+
       // Process request.
       let reply = this.serviceManager.processRequest(requestMessage);
 
