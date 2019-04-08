@@ -9,7 +9,8 @@ export default {
     "!test/clients/**/*",
     "!test/devices/**/*",
     "!test/services/**/*",
-    "!test/sessions/**/*"
+    "test/sessions/**/*",
+    "!test/sessions/testUtility.js"
   ],
   "cache": false,
   "failFast": false,

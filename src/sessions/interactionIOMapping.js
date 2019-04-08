@@ -1,6 +1,6 @@
 const uuidv4 = require('uuid/v4');
 
-const {Interaction} = require('@tum-far/ubii-interactions');
+const {Interaction} = require('interaction');
 
 class InteractionIOMapping {
   constructor(id, interaction, mapInputs, mapOutputs) {

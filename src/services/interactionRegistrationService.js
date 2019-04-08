@@ -1,8 +1,4 @@
-const {Interaction} = require('@tum-far/ubii-interactions');
-
-const {
-  Service
-} = require('./service.js');
+const {Service} = require('./service.js');
 const InteractionDatabase = require('../storage/interactionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
@@ -13,11 +9,20 @@ class InteractionRegistrationService extends Service {
   }
 
   reply(interactionSpecs) {
+    if (typeof interactionSpecs === 'undefined') {
+      return {
+        error: {
+          title: 'InteractionRegistrationService Error',
+          message: 'Interaction specifications are undefined.'
+        }
+      };
+    }
+
     if (Array.isArray(interactionSpecs)) {
       interactionSpecs.forEach((spec) => {
         let interaction;
         try {
-          interaction = InteractionDatabase.registerInteraction(interactionSpecs);
+          interaction = InteractionDatabase.registerInteraction(spec);
         } catch (error) {
           return {
             error: {

@@ -7,7 +7,7 @@ class SessionManager {
   }
 
   createSession(specifications) {
-    let session = new Session(specifications, this.topicData);
+    let session = new Session(specifications || {}, this.topicData);
     this.addSession(session);
 
     return session;
