@@ -3,7 +3,7 @@ const shelljs = require('shelljs');
 
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
 
-const {Interaction} = require('@tum-far/ubii-interactions');
+const {Interaction} = require('../sessions/interaction');
 
 class InteractionDatabase {
   constructor() {

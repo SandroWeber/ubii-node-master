@@ -1,4 +1,4 @@
-const {Interaction} = require('@tum-far/ubii-interactions');
+const {Interaction} = require('../sessions/interaction');
 
 const {
   Service
