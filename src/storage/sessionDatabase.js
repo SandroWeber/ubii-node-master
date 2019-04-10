@@ -3,7 +3,6 @@ const shelljs = require('shelljs');
 
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
 
-const {Session} = require('../sessions/session');
 
 class SessionDatabase {
   constructor() {
@@ -12,8 +11,16 @@ class SessionDatabase {
       shelljs.mkdir('-p', this.directory);
     }
 
-    this.sessions = [];
+    this.sessionSpecs = new Map();
     this.loadSessionFiles();
+  }
+
+  hasSessionSpecsByID(id) {
+    return this.sessionSpecs.has(id);
+  }
+
+  getSessionSpecsByID(id) {
+    return this.sessionSpecs.get(id);
   }
 
   loadSessionFiles() {
@@ -28,14 +35,19 @@ class SessionDatabase {
     });
   }
 
-  saveSessionToFile(session) {
-    let path = this.directory + '/' + session.name + '.session';
+  saveSessionSpecsToFile(specs) {
+    let path;
+    if (specs.name !== '') {
+      path = this.directory + '/' + specs.name + '.interaction';
+    } else {
+      path = this.directory + '/' + specs.id + '.interaction';
+    }
 
-    let specs = session.toProtobuf();
     if (this.verifySpecification(specs)) {
-      fs.writeFile(path, JSON.stringify(specs, null, 4), { flag: 'wx' }, (err) => {
-        if (err) {
-          console.info('SessionDatabase - session already esists:\n' + err);
+      fs.writeFile(path, JSON.stringify(specs, null, 4), { flag: 'wx' }, (error) => {
+        if (error) {
+          console.info('SessionDatabase - session already esists:\n' + error);
+          throw error;
         }
       });
     }
@@ -51,11 +63,10 @@ class SessionDatabase {
         console.info('InteractionDatabase - invalid specifications:\n' + specs);
       }
 
-      if (this.sessions.some((session) => {return session.id === specs.id;})) {
+      if (this.sessionSpecs.has(specs.id)) {
         console.info('InteractionDatabase - interaction from file ' + path + ' has conflicting ID ' + specs.id);
       } else {
-        let session = new Session(specs);
-        this.sessions.push(session);
+        this.sessionSpecs.set(specs.id, specs);
       }
     });
   }

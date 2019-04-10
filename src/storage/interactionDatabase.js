@@ -12,22 +12,22 @@ class InteractionDatabase {
       shelljs.mkdir('-p', this.directory);
     }
 
-    this.interactions = new Map();
+    this.interactionSpecs = new Map();
     this.interactionFilepaths = new Map();
 
     this.loadInteractionFiles();
   }
 
   getInteraction(id) {
-    return this.interactions.get(id);
+    return this.interactionSpecs.get(id);
   }
 
   getInteractionList() {
-    return Array.from(this.interactions.values());
+    return Array.from(this.interactionSpecs.values());
   }
 
   registerInteraction(specs) {
-    if (this.interactions.has(specs.id)) {
+    if (this.interactionSpecs.has(specs.id)) {
       throw 'Interaction with ID ' + specs.id + ' could not be registered, ID already exists'
     }
 
@@ -36,35 +36,35 @@ class InteractionDatabase {
     }
 
     let interaction = new Interaction(specs);
-    this.interactions.set(interaction.id, interaction);
-    this.saveInteractionToFile(interaction);
+    let interactionSpecs = interaction.toProtobuf();
+    this.interactionSpecs.set(interaction.id, interactionSpecs);
+    this.saveInteractionSpecsToFile(interactionSpecs);
 
     return interaction;
   }
 
   deleteInteraction(id) {
     try {
-      this.interactions.delete(id);
+      this.interactionSpecs.delete(id);
       this.deleteInteractionFile(id);
     } catch (error) {
       throw error;
     }
   }
 
-  updateInteraction(specs) {
+  updateInteractionSpecs(specs) {
     if (!this.verifySpecification(specs)) {
       throw 'interaction specification could not be verified';
     }
 
-    let interaction = this.interactions.get(specs.id);
+    let interaction = this.interactionSpecs.get(specs.id);
     if (typeof interaction === 'undefined') {
       throw 'interaction with ID ' + specs.id + ' could not be found';
     }
 
-    let interaction = new Interaction(specs);
-    this.interactions.set(specs.id, interaction);
+    this.interactionSpecs.set(specs.id, specs);
     this.deleteInteractionFile(specs.id);
-    this.saveInteractionToFile(interaction);
+    this.saveInteractionSpecsToFile(specs);
   }
 
   loadInteractionFiles() {
@@ -74,36 +74,34 @@ class InteractionDatabase {
       }
 
       files.forEach((file) => {
-        this.loadInteractionFromFile(this.directory + '/' + file);
+        this.loadInteractionSpecsFromFile(this.directory + '/' + file);
       });
     });
   }
 
-  loadInteractionFromFile(path) {
+  loadInteractionSpecsFromFile(path) {
     fs.readFile(path, (err, data) => {
       if (err) throw err;
 
       let specs = JSON.parse(data);
 
-      if (this.interactions.has(specs.id)) {
+      if (this.interactionSpecs.has(specs.id)) {
         console.info('InteractionDatabase - interaction from file ' + path + ' has conflicting ID ' + specs.id);
       } else {
-        let interaction = new Interaction(specs);
-        this.interactions.set(interaction.id, interaction);
-        this.interactionFilepaths.set(interaction.id, path);
+        this.interactionSpecs.set(specs.id, specs);
+        this.interactionFilepaths.set(specs.id, path);
       }
     });
   }
 
-  saveInteractionToFile(interaction) {
+  saveInteractionSpecsToFile(specs) {
     let path;
-    if (interaction.name !== '') {
-      path = this.directory + '/' + interaction.name + '.interaction';
+    if (specs.name !== '') {
+      path = this.directory + '/' + specs.name + '.interaction';
     } else {
-      path = this.directory + '/' + interaction.id + '.interaction';
+      path = this.directory + '/' + specs.id + '.interaction';
     }
 
-    let specs = interaction.toProtobuf();
     if (this.verifySpecification(specs)) {
       fs.writeFile(path, JSON.stringify(specs, null, 4), {flag: 'wx'}, (err) => {
         if (err) throw err;

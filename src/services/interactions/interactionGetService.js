@@ -1,5 +1,5 @@
-const {Service} = require('./service.js');
-const InteractionDatabase = require('../storage/interactionDatabase');
+const {Service} = require('./../service.js');
+const InteractionDatabase = require('../../storage/interactionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
