@@ -19,6 +19,7 @@ class InteractionRegistrationService extends Service {
     }
 
     if (Array.isArray(interactionSpecs)) {
+      console.info('InteractionRegistrationService() - got a list of interactions');
       interactionSpecs.forEach((spec) => {
         try {
           InteractionDatabase.registerInteraction(spec);
@@ -40,6 +41,7 @@ class InteractionRegistrationService extends Service {
       };
     }
 
+    console.info('InteractionRegistrationService() - got a single interaction');
     let interaction;
     try {
       interaction = InteractionDatabase.registerInteraction(interactionSpecs);
