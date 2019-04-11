@@ -35,10 +35,14 @@ class InteractionDatabase {
       throw 'Interaction with ID ' + specs.id + ' could not be registered, invalid specs'
     }
 
-    let interaction = new Interaction(specs);
-    let interactionSpecs = interaction.toProtobuf();
-    this.interactionSpecs.set(interaction.id, interactionSpecs);
-    this.saveInteractionSpecsToFile(interactionSpecs);
+    try {
+      let interaction = new Interaction(specs);
+      let interactionSpecs = interaction.toProtobuf();
+      this.interactionSpecs.set(interaction.id, interactionSpecs);
+      this.saveInteractionSpecsToFile(interactionSpecs);
+    } catch (error) {
+      throw error;
+    }
 
     return interaction;
   }
@@ -62,9 +66,13 @@ class InteractionDatabase {
       throw 'interaction with ID ' + specs.id + ' could not be found';
     }
 
-    this.interactionSpecs.set(specs.id, specs);
-    this.deleteInteractionFile(specs.id);
-    this.saveInteractionSpecsToFile(specs);
+    try {
+      this.interactionSpecs.set(specs.id, specs);
+      this.deleteInteractionFile(specs.id);
+      this.saveInteractionSpecsToFile(specs);
+    } catch (error) {
+      throw error;
+    }
   }
 
   loadInteractionFiles() {
@@ -95,17 +103,20 @@ class InteractionDatabase {
   }
 
   saveInteractionSpecsToFile(specs) {
-    let path;
-    if (specs.name !== '') {
-      path = this.directory + '/' + specs.name + '.interaction';
-    } else {
-      path = this.directory + '/' + specs.id + '.interaction';
+    let path = this.directory + '/';
+    if (specs.name && specs.name.length > 0) {
+      path += specs.name + '_';
     }
+    path += specs.id + '.interaction';
 
     if (this.verifySpecification(specs)) {
-      fs.writeFile(path, JSON.stringify(specs, null, 4), {flag: 'wx'}, (err) => {
-        if (err) throw err;
-      });
+      try {
+        fs.writeFile(path, JSON.stringify(specs, null, 4), {flag: 'wx'}, (err) => {
+          if (err) throw err;
+        });
+      } catch (error) {
+        if (error) throw error;
+      }
     }
   }
 

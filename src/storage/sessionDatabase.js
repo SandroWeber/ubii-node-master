@@ -36,12 +36,11 @@ class SessionDatabase {
   }
 
   saveSessionSpecsToFile(specs) {
-    let path;
-    if (specs.name !== '') {
-      path = this.directory + '/' + specs.name + '.interaction';
-    } else {
-      path = this.directory + '/' + specs.id + '.interaction';
+    let path = this.directory + '/';
+    if (specs.name && specs.name.length > 0) {
+      path += specs.name + '_';
     }
+    path += specs.id + '.session';
 
     if (this.verifySpecification(specs)) {
       fs.writeFile(path, JSON.stringify(specs, null, 4), { flag: 'wx' }, (error) => {

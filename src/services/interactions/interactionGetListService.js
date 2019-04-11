@@ -19,9 +19,7 @@ class InteractionGetListService extends Service {
       };
     } else {
       return {
-        interactionList: interactions.map((interaction) => {
-          return interaction && interaction.toProtobuf();
-        })
+        interactionList: interactions
       };
     }
   }
