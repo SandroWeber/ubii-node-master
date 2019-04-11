@@ -1,5 +1,5 @@
-const {Service} = require('./service.js');
-const InteractionDatabase = require('../storage/interactionDatabase');
+const {Service} = require('./../service.js');
+const InteractionDatabase = require('../../storage/interactionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
@@ -19,12 +19,12 @@ class InteractionReplaceService extends Service {
     }
 
     try {
-      InteractionDatabase.updateInteraction(interactionMessage);
+      InteractionDatabase.updateInteractionSpecs(interactionMessage);
     } catch (error) {
       return {
         error: {
           title: 'InteractionGetService Error',
-          message: error
+          message: error.toString()
         }
       };
     }
