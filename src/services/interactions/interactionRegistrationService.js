@@ -19,10 +19,10 @@ class InteractionRegistrationService extends Service {
     }
 
     if (Array.isArray(interactionSpecs)) {
-      console.info('InteractionRegistrationService() - got a list of interactions');
+      let newInteractions = [];
       interactionSpecs.forEach((spec) => {
         try {
-          InteractionDatabase.registerInteraction(spec);
+          newInteractions.push(InteractionDatabase.registerInteraction(spec));
         } catch (error) {
           return {
             error: {
@@ -34,14 +34,10 @@ class InteractionRegistrationService extends Service {
       });
 
       return {
-        success: {
-          title: 'InteractionRegistrationService Success',
-          message: 'Regstered all ' + interactionSpecs.length + ' interactions.'
-        }
+        interactionList: newInteractions.map((interaction) => {return interaction.toProtobuf()})
       };
     }
 
-    console.info('InteractionRegistrationService() - got a single interaction');
     let interaction;
     try {
       interaction = InteractionDatabase.registerInteraction(interactionSpecs);

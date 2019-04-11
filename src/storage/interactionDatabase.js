@@ -29,7 +29,6 @@ class InteractionDatabase {
   }
 
   registerInteraction(specs) {
-    console.info('registerInteraction');
     if (this.interactionSpecs.has(specs.id)) {
       throw 'Interaction with ID ' + specs.id + ' could not be registered, ID already exists'
     }
@@ -42,7 +41,6 @@ class InteractionDatabase {
       let interaction = new Interaction(specs);
       let interactionSpecs = interaction.toProtobuf();
       this.interactionSpecs.set(interactionSpecs.id, interactionSpecs);
-      console.info('registerInteraction - before saveInteractionSpecsToFile')
       this.saveInteractionSpecsToFile(interactionSpecs);
     } catch (error) {
       throw error;
@@ -61,7 +59,6 @@ class InteractionDatabase {
   }
 
   updateInteractionSpecs(specs) {
-    console.info('updateInteractionSpecs');
     if (!this.verifySpecification(specs)) {
       throw 'interaction specification could not be verified';
     }
@@ -113,14 +110,24 @@ class InteractionDatabase {
       path += specs.name + '_';
     }
     path += specs.id + '.interaction';
-    console.info('saveInteractionSpecsToFile() - path ' + path);
 
     if (this.verifySpecification(specs)) {
       try {
-        fs.writeFile(path, JSON.stringify(specs, null, 4), {flag: 'wx'});
+        fs.writeFileSync(path, JSON.stringify(specs, null, 4), {flag: 'wx'});
         this.interactionFilepaths.set(specs.id, path);
       } catch (error) {
-        console.info('###############');
+        if (error) throw error;
+      }
+    } else {
+      throw 'Invalid interaction specifications';
+    }
+  }
+
+  replaceInteractionSpecsFile(specs) {
+    if (this.verifySpecification(specs)) {
+      try {
+        fs.writeFileSync(this.interactionFilepaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
+      } catch (error) {
         if (error) throw error;
       }
     } else {

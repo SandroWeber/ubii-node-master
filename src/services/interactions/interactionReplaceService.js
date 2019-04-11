@@ -19,7 +19,7 @@ class InteractionReplaceService extends Service {
     }
 
     try {
-      InteractionDatabase.updateInteractionSpecs(interactionMessage);
+      InteractionDatabase.replaceInteractionSpecsFile(interactionMessage);
     } catch (error) {
       return {
         error: {
