@@ -117,8 +117,11 @@ class InteractionDatabase {
           if (err) throw err;
         });
       } catch (error) {
+        console.info('###############');
         if (error) throw error;
       }
+    } else {
+      throw 'Invalid interaction specifications';
     }
   }
 
