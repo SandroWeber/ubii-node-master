@@ -3,10 +3,12 @@ const shelljs = require('shelljs');
 
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
 
+const {BASE_FOLDER_DB} = require('./storageConstants');
+
 
 class SessionDatabase {
   constructor() {
-    this.directory = process.env['HOME'] + '/.opt/ubii/db/sessions';
+    this.directory = BASE_FOLDER_DB + '/sessions';
     if (!fs.existsSync(this.directory)){
       shelljs.mkdir('-p', this.directory);
     }

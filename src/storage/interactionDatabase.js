@@ -4,10 +4,12 @@ const shelljs = require('shelljs');
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
 
 const {Interaction} = require('../sessions/interaction');
+const {BASE_FOLDER_DB} = require('./storageConstants');
+
 
 class InteractionDatabase {
   constructor() {
-    this.directory = process.env['HOME'] + '/.opt/ubii/db/interactions';
+    this.directory = BASE_FOLDER_DB + '/interactions';
     if (!fs.existsSync(this.directory)) {
       shelljs.mkdir('-p', this.directory);
     }
