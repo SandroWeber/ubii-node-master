@@ -7,12 +7,12 @@ class SessionManager {
     this.sessions = [];
   }
 
-  createSession(specifications) {
-    if (this.getSession(specifications.id) || SessionDatabase.getSessionSpecsByID(specifications.id)) {
+  createSession(specifications = {}) {
+    if (specifications.id && (this.getSession(specifications.id) || SessionDatabase.getSessionSpecsByID(specifications.id))) {
       throw 'Session with ID ' + specifications.id + ' already exists.';
     }
 
-    let session = new Session(specifications || {}, this.topicData);
+    let session = new Session(specifications, this.topicData);
     this.addSession(session);
 
     return session;
