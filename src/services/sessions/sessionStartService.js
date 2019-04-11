@@ -11,6 +11,15 @@ class SessionStartService extends Service {
   }
 
   reply(message) {
+    if (typeof message === 'undefined') {
+      return {
+        error: {
+          title: 'SessionStartService Error',
+          message: 'No session specifications given'
+        }
+      }
+    }
+
     // check session manager for existing session by ID
     if (this.sessionManager.getSession(message.id)) {
       try {

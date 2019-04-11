@@ -40,7 +40,7 @@ class InteractionDatabase {
     try {
       let interaction = new Interaction(specs);
       let interactionSpecs = interaction.toProtobuf();
-      this.interactionSpecs.set(interaction.id, interactionSpecs);
+      this.interactionSpecs.set(interactionSpecs.id, interactionSpecs);
       this.saveInteractionSpecsToFile(interactionSpecs);
     } catch (error) {
       throw error;
@@ -113,22 +113,32 @@ class InteractionDatabase {
 
     if (this.verifySpecification(specs)) {
       try {
-        fs.writeFile(path, JSON.stringify(specs, null, 4), {flag: 'wx'}, (err) => {
-          if (err) throw err;
-        });
+        fs.writeFileSync(path, JSON.stringify(specs, null, 4), {flag: 'wx'});
+        this.interactionFilepaths.set(specs.id, path);
       } catch (error) {
         if (error) throw error;
       }
+    } else {
+      throw 'Invalid interaction specifications';
+    }
+  }
+
+  replaceInteractionSpecsFile(specs) {
+    if (this.verifySpecification(specs)) {
+      try {
+        fs.writeFileSync(this.interactionFilepaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
+      } catch (error) {
+        if (error) throw error;
+      }
+    } else {
+      throw 'Invalid interaction specifications';
     }
   }
 
   deleteInteractionFile(id) {
     let path = this.interactionFilepaths.get(id);
     if (typeof path !== 'undefined') {
-      fs.unlinkSync(path, (err) => {
-        if (err) throw err;
-        console.info('interaction at ' + path + ' deleted');
-      });
+      fs.unlinkSync(path);
     }
   }
 
