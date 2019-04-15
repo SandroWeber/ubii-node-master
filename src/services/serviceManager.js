@@ -1,16 +1,16 @@
 const {ClientRegistrationService} = require('./clientRegistrationService.js');
 const {DeviceRegistrationService} = require('./deviceRegistrationService.js');
-const {InteractionDeleteService} = require('./interactionDeleteService.js');
-const {InteractionGetListService} = require('./interactionGetListService.js');
-const {InteractionGetService} = require('./interactionGetService.js');
-const {InteractionRegistrationService} = require('./interactionRegistrationService.js');
-const {InteractionReplaceService} = require('./interactionReplaceService.js');
+const {InteractionDeleteService} = require('./interactions/interactionDeleteService.js');
+const {InteractionGetListService} = require('./interactions/interactionGetListService.js');
+const {InteractionGetService} = require('./interactions/interactionGetService.js');
+const {InteractionRegistrationService} = require('./interactions/interactionRegistrationService.js');
+const {InteractionReplaceService} = require('./interactions/interactionReplaceService.js');
 const {SubscriptionService} = require('./subscriptionService.js');
 const {ServerConfigService} = require('./serverConfigService.js');
 const {TopicListService} = require('./topicListService');
-const {SessionRegistrationService} = require('./sessionRegistrationService');
-const {SessionStartService} = require('./sessionStartService');
-const {SessionStopService} = require('./sessionStopService');
+const {SessionRegistrationService} = require('./sessions/sessionRegistrationService');
+const {SessionStartService} = require('./sessions/sessionStartService');
+const {SessionStopService} = require('./sessions/sessionStopService');
 const namida = require("@tum-far/namida");
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');

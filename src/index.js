@@ -9,6 +9,7 @@ const {Participant} = require('./devices/participant');
 
 const {Session} = require('./sessions/session');
 const {SessionManager} = require('./sessions/sessionManager');
+const {Interaction} = require('./sessions/interaction');
 
 const {ServiceManager} = require('./services/serviceManager');
 const {ClientRegistrationService} = require('./services/clientRegistrationService');
@@ -24,8 +25,9 @@ module.exports = {
     'Participant': Participant,
     'Session': Session,
     'SessionManager': SessionManager,
+    'Interaction': Interaction,
     'ServiceManager': ServiceManager,
     'ClientRegistrationService': ClientRegistrationService,
     'DeviceRegistrationService': DeviceRegistrationService,
     'SubscriptionService': SubscriptionService
-}
+};

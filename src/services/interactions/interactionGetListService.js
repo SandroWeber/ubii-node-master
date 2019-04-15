@@ -1,5 +1,5 @@
-const {Service} = require('./service.js');
-const InteractionDatabase = require('../storage/interactionDatabase');
+const {Service} = require('./../service.js');
+const InteractionDatabase = require('../../storage/interactionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
@@ -18,7 +18,9 @@ class InteractionGetListService extends Service {
         }
       };
     } else {
-      return {interactionList: interactions.map((interaction) => {return interaction.toProtobuf()})};
+      return {
+        interactionList: interactions
+      };
     }
   }
 }

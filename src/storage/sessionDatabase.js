@@ -3,17 +3,26 @@ const shelljs = require('shelljs');
 
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
 
-const {Session} = require('../sessions/session');
+const {BASE_FOLDER_DB} = require('./storageConstants');
+
 
 class SessionDatabase {
   constructor() {
-    this.directory = process.env['HOME'] + '/.opt/ubii/db/sessions';
+    this.directory = BASE_FOLDER_DB + '/sessions';
     if (!fs.existsSync(this.directory)){
       shelljs.mkdir('-p', this.directory);
     }
 
-    this.sessions = [];
+    this.sessionSpecs = new Map();
     this.loadSessionFiles();
+  }
+
+  hasSessionSpecsByID(id) {
+    return this.sessionSpecs.has(id);
+  }
+
+  getSessionSpecsByID(id) {
+    return this.sessionSpecs.get(id);
   }
 
   loadSessionFiles() {
@@ -28,14 +37,18 @@ class SessionDatabase {
     });
   }
 
-  saveSessionToFile(session) {
-    let path = this.directory + '/' + session.name + '.session';
+  saveSessionSpecsToFile(specs) {
+    let path = this.directory + '/';
+    if (specs.name && specs.name.length > 0) {
+      path += specs.name + '_';
+    }
+    path += specs.id + '.session';
 
-    let specs = session.toProtobuf();
     if (this.verifySpecification(specs)) {
-      fs.writeFile(path, JSON.stringify(specs, null, 4), { flag: 'wx' }, (err) => {
-        if (err) {
-          console.info('SessionDatabase - session already esists:\n' + err);
+      fs.writeFile(path, JSON.stringify(specs, null, 4), { flag: 'wx' }, (error) => {
+        if (error) {
+          console.info('SessionDatabase - session already esists:\n' + error);
+          throw error;
         }
       });
     }
@@ -51,11 +64,10 @@ class SessionDatabase {
         console.info('InteractionDatabase - invalid specifications:\n' + specs);
       }
 
-      if (this.sessions.some((session) => {return session.id === specs.id;})) {
+      if (this.sessionSpecs.has(specs.id)) {
         console.info('InteractionDatabase - interaction from file ' + path + ' has conflicting ID ' + specs.id);
       } else {
-        let session = new Session(specs);
-        this.sessions.push(session);
+        this.sessionSpecs.set(specs.id, specs);
       }
     });
   }
