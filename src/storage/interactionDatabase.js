@@ -42,11 +42,11 @@ class InteractionDatabase {
       let interactionSpecs = interaction.toProtobuf();
       this.interactionSpecs.set(interactionSpecs.id, interactionSpecs);
       this.saveInteractionSpecsToFile(interactionSpecs);
+      
+      return interaction;
     } catch (error) {
       throw error;
     }
-
-    return interaction;
   }
 
   deleteInteraction(id) {
