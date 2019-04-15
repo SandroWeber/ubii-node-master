@@ -19,7 +19,7 @@ class InteractionReplaceService extends Service {
     }
 
     try {
-      InteractionDatabase.replaceInteractionSpecsFile(interactionMessage);
+      InteractionDatabase.updateInteractionSpecs(interactionMessage);
     } catch (error) {
       return {
         error: {
@@ -28,6 +28,13 @@ class InteractionReplaceService extends Service {
         }
       };
     }
+
+    return {
+      success: {
+        title: 'InteractionReplaceService',
+        message: 'Successfully replaced interaction with ID ' + interactionMessage.id
+      }
+    };
   }
 }
 
