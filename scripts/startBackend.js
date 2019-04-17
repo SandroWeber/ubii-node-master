@@ -16,12 +16,11 @@ const {
       ', Websocket service: ' + topicDataServerPortWS);
 
     let master = new MasterNode(
-      'localhost',
       topicDataServerPortZMQ,
       topicDataServerPortWS,
       serviceServerPortZMQ,
       serviceServerPortREST);
   } else {
-    let master = new MasterNode('localhost');
+    let master = new MasterNode();
   }
 })();

@@ -30,7 +30,7 @@ const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
 
 class MasterNode {
-  constructor(topicDataServerHost,
+  constructor(
     topicDataServerPortZMQ = defaultTopicDataServerPortZMQ,
     topicDataServerPortWS = defaultTopicDataServerPortWS,
     serviceServerPortZMQ = defaultServiceServerPortZMQ,
@@ -71,8 +71,7 @@ class MasterNode {
       this.deviceManager,
       this.connectionsManager,
       this.topicData,
-      this.sessionManager,
-      topicDataServerHost.toString());
+      this.sessionManager);
   }
 
   onServiceMessageZMQ(message) {
