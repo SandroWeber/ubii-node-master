@@ -6,7 +6,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
 
 (function () {
   test.cb('register client', t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       8491,
       8492,
       8493,
@@ -26,7 +26,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
   });
 
   test.cb('register device', t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       8591,
       8592,
       8593,
@@ -47,7 +47,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
   });
 
   test.cb('publish', t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       8691,
       8692,
       8693,
@@ -80,7 +80,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
   });
 
   test.cb('subscribe then', t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       8791,
       8792,
       8793,
@@ -106,7 +106,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
   });
 
   test('subscribe await', async t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       8891,
       8892,
       8893,
@@ -126,7 +126,7 @@ const {ClientNodeZMQ} = require('../files/testNodes/clientNodeZMQ');
   });
 
   test.cb('subscribe & publish', t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       8991,
       8992,
       8993,

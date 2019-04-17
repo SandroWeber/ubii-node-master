@@ -6,7 +6,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
 
 (function () {
   test.cb('register client', t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       9191,
       9192,
       9193,
@@ -26,7 +26,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
   });
 
   test.cb('register device', t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       9291,
       9292,
       9293,
@@ -47,7 +47,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
   });
 
   test.cb('publish', t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       9391,
       9392,
       9393,
@@ -80,7 +80,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
   });
 
   test.cb('subscribe then', t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       9491,
       9492,
       9493,
@@ -106,7 +106,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
   });
 
   test('subscribe await', async t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       9591,
       9592,
       9593,
@@ -126,7 +126,7 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
   });
 
   test.cb('subscribe & publish', t => {
-    let master = new MasterNode('localhost',
+    let master = new MasterNode(
       9691,
       9692,
       9693,
