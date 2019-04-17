@@ -16,14 +16,12 @@ const namida = require("@tum-far/namida");
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class ServiceManager {
-  constructor(clientManager, deviceManager, connectionManager, topicData, sessionManager, host) {
+  constructor(clientManager, deviceManager, connectionManager, topicData, sessionManager) {
     this.clientManager = clientManager;
     this.deviceManager = deviceManager;
     this.connectionManager = connectionManager;
     this.topicData = topicData;
     this.sessionManager = sessionManager;
-
-    this.serverHost = host;
 
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
@@ -36,7 +34,7 @@ class ServiceManager {
     this.addService(new InteractionRegistrationService());
     this.addService(new InteractionReplaceService());
     this.addService(new SubscriptionService(this.clientManager));
-    this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.serverHost, connectionManager));
+    this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', connectionManager));
     this.addService(new TopicListService(this.topicData, this));
     this.addService(new SessionRegistrationService(this.sessionManager));
     this.addService(new SessionStartService(this.sessionManager));
