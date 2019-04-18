@@ -1,7 +1,3 @@
-# Windows preparation step before "npm install"
-npm install -g windows-build-tools
-
-
 # ubii-nodejs-backend
 
 ## Project setup
