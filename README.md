@@ -9,6 +9,10 @@ npm install -g windows-build-tools
 ```
 from admin shell, see: https://www.npmjs.com/package/zeromq
 
+if it complains about not being able to find v140 of build tools, try
+```
+npm install --vs2015 -g windows-build-tools
+```
 
 ### install dependencies
 
