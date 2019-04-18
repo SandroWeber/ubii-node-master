@@ -44,7 +44,6 @@ class ServerConnectionsManager {
     };
 
     let ifaces = os.networkInterfaces();
-    console.info(ifaces);
     Object.keys(ifaces).forEach((ifname) => {
       ifaces[ifname].forEach((iface) => {
         if (iface.family === 'IPv4' && !iface.internal) {
