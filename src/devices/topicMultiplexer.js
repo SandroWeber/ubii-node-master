@@ -21,6 +21,7 @@ class TopicMultiplexer {
       let entry = this.topicData.pull(topic);
       if (entry && entry.type !== undefined && entry.data !== undefined) {
         let record = { topic: topic };
+        record.type = entry.type;
         record[entry.type] = entry.data;
         topicDataRecords.push(record);
       }

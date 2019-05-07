@@ -5,8 +5,6 @@ export default {
     "test/node/master-client-zmq.js",
     "test/devices/**/*",
     "test/sessions/**/*",
-    //"test/clients/**/*",
-    //"test/services/**/*",
     "!test/files/**/*",
     "!test/mocks/*",
     "!test/sessions/testUtility.js"
