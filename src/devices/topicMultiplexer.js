@@ -1,11 +1,11 @@
 const uuidv4 = require('uuid/v4');
 
 class TopicMultiplexer {
-  constructor({ id = undefined, name = '', messageFormat = '', topicRegExp = '' }, topicData = undefined) {
+  constructor({ id = undefined, name = '', dataType = '', topicRegExp = '' }, topicData = undefined) {
 
     this.id = id ? id : uuidv4();
     this.name = name;
-    this.messageFormat = messageFormat;
+    this.dataType = dataType;
     this.topicRegExp = topicRegExp;
 
     this.topicData = topicData;
@@ -19,7 +19,7 @@ class TopicMultiplexer {
     let topicDataRecords = [];
     this.topicList.forEach((topic) => {
       let entry = this.topicData.pull(topic);
-      if (entry && entry.type !== undefined && entry.data !== undefined) {
+      if (entry && entry.type !== this.dataType && entry.data !== undefined) {
         let record = { topic: topic };
         record.type = entry.type;
         record[entry.type] = entry.data;
@@ -27,7 +27,7 @@ class TopicMultiplexer {
       }
     });
 
-    return { topicDataRecordList: topicDataRecords };
+    return topicDataRecords;
   }
 
   updateTopicList() {
@@ -43,7 +43,7 @@ class TopicMultiplexer {
     return {
       id: this.id,
       name: this.name,
-      messageFormat: this.messageFormat,
+      dataType: this.dataType,
       topicRegExp: this.topicRegExp
     };
   }

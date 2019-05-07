@@ -51,7 +51,6 @@ const {
   });
 
   test('updateTopicList', t => {
-    let topicdata = t.context.topicData;
     t.context.publishAllTopics();
 
 
@@ -68,17 +67,16 @@ const {
   });
 
   test('get - simple selector', t => {
-    let topicdata = t.context.topicData;
     t.context.publishAllTopics();
 
     let topicSelector = 'category_A';
     let mux = new TopicMultiplexer(
       { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicRegExp: topicSelector },
       t.context.topicData);
-    let topicData = mux.get();
+    let topicDataList = mux.get();
 
-    t.is(topicData.topicDataRecordList.length, t.context.topicsCategoryA.length);
-    topicData.topicDataRecordList.forEach((topicDataRecord) => {
+    t.is(topicDataList.length, t.context.topicsCategoryA.length);
+    topicDataList.forEach((topicDataRecord) => {
       t.true(t.context.topicsCategoryA.includes(topicDataRecord.topic));
 
       let index = t.context.topicsCategoryA.indexOf(topicDataRecord.topic);
@@ -87,14 +85,13 @@ const {
   });
 
   test('get - complex selector', t => {
-    let topicdata = t.context.topicData;
     t.context.publishAllTopics();
 
     let topicSelector = '[0-9]+\/category_A\/';
     let mux = new TopicMultiplexer(
       { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicRegExp: topicSelector },
       t.context.topicData);
-    let topicData = mux.get();
+    let topicDataList = mux.get();
 
     let correctTopics = [];
     let regexp = new RegExp(topicSelector);
@@ -109,8 +106,8 @@ const {
       }
     });
 
-    t.is(topicData.topicDataRecordList.length, correctTopics.length);
-    topicData.topicDataRecordList.forEach((topicDataRecord) => {
+    t.is(topicDataList.length, correctTopics.length);
+    topicDataList.forEach((topicDataRecord) => {
       t.true(t.context.topicsCategoryA.includes(topicDataRecord.topic));
 
       let index = t.context.topicsCategoryA.indexOf(topicDataRecord.topic);
