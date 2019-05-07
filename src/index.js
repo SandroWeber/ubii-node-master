@@ -6,6 +6,7 @@ const {ClientManager} = require('./clients/clientManager');
 const {DeviceManager} = require('./devices/deviceManager');
 const {Watcher} = require('./devices/watcher');
 const {Participant} = require('./devices/participant');
+const {TopicMultiplexer} = require('./devices/topicMultiplexer');
 
 const {Session} = require('./sessions/session');
 const {SessionManager} = require('./sessions/sessionManager');
@@ -23,6 +24,7 @@ module.exports = {
     'DeviceManager': DeviceManager,
     'Watcher': Watcher,
     'Participant': Participant,
+    'TopicMultiplexer': TopicMultiplexer,
     'Session': Session,
     'SessionManager': SessionManager,
     'Interaction': Interaction,

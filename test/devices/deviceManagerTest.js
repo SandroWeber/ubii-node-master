@@ -13,6 +13,8 @@ import {
     TopicDataMock,
     createDeviceSpecificationMock
 } from '../mocks/serverMockDevices';
+import {ClientMock} from '../mocks/clientMock';
+import {ClientManagerMock} from '../mocks/clientManagerMock';
 
 (function () {
 
@@ -20,16 +22,16 @@ import {
 
     let addDummyEntriesToDeviceManager = function(context) {
         context.deviceManager.participants.set('00000000-0000-0000-0000-000000000000', 
-            new Participant('00000000-0000-0000-0000-000000000000',
-                'dummyId',
-                context.topicDataMock,
-                context.serverMock));
+            new Participant(
+                {id:'00000000-0000-0000-0000-000000000000', name: 'dummyId'},
+                context.clientMock,
+                context.topicDataMock));
 
         context.deviceManager.watchers.set('11111111-1111-1111-1111-111111111111', 
-            new Watcher('11111111-1111-1111-1111-111111111111',
-                'dummyId',
-                context.topicDataMock,
-                context.serverMock));
+            new Watcher(
+                {id:'11111111-1111-1111-1111-111111111111', name: 'dummyId'},
+                context.clientMock,
+                context.topicDataMock));
     };
 
     // Preparation:
@@ -37,7 +39,8 @@ import {
     test.beforeEach(t => {
         t.context.topicDataMock = new TopicDataMock();
         t.context.serverMock = new ServerMock();
-        t.context.deviceManager = new DeviceManager(null, t.context.topicDataMock, t.context.serverMock);
+        t.context.clientMock = new ClientMock();
+        t.context.deviceManager = new DeviceManager(new ClientManagerMock(), t.context.topicDataMock, t.context.serverMock);
     });
 
     // Test cases:
@@ -51,22 +54,17 @@ import {
     });
 
     test('addParticipant', t => {
-        t.context.deviceManager.addParticipant(new Participant('00000000-0000-0000-0000-000000000000',
-                'dummyId',
-                t.context.topicDataMock,
-                t.context.serverMock));
+        let participant = new Participant({}, t.context.clientMock, t.context.topicDataMock);
+        t.context.deviceManager.addParticipant(participant);
 
-        t.true(t.context.deviceManager.participants.has('00000000-0000-0000-0000-000000000000'));
+        t.true(t.context.deviceManager.participants.has(participant.id));
     });
 
     test('getParticipant', t => {
-        let dummy = new Participant('00000000-0000-0000-0000-000000000000',
-            'dummyId',
-            t.context.topicDataMock,
-            t.context.serverMock);
-        t.context.deviceManager.participants.set('00000000-0000-0000-0000-000000000000', dummy);
+        let dummy = new Participant({}, t.context.clientMock, t.context.topicDataMock);
+        t.context.deviceManager.addParticipant(dummy);
 
-        let returnedParticipant = t.context.deviceManager.getParticipant('00000000-0000-0000-0000-000000000000');
+        let returnedParticipant = t.context.deviceManager.getParticipant(dummy.id);
 
         t.deepEqual(dummy, returnedParticipant);
     });
@@ -80,38 +78,36 @@ import {
     });
 
     test('registerParticipant', t => {
-        t.context.deviceManager.registerParticipant(new Participant('00000000-0000-0000-0000-000000000000',
-                'dummyId',
-                t.context.topicDataMock,
-                t.context.serverMock));
+        let dummy = new Participant({}, t.context.clientMock, t.context.topicDataMock);
+        t.context.deviceManager.registerParticipant(dummy);
 
-        t.true(t.context.deviceManager.participants.has('00000000-0000-0000-0000-000000000000'));
+        t.true(t.context.deviceManager.participants.has(dummy.id));
     });
 
     test('verifyParticipant', t => {
-        addDummyEntriesToDeviceManager(t.context);
+        let dummy = new Participant({}, t.context.clientMock, t.context.topicDataMock);
+        t.context.deviceManager.addParticipant(dummy);
 
-        t.true(t.context.deviceManager.verifyParticipant('00000000-0000-0000-0000-000000000000'));
+        t.true(t.context.deviceManager.verifyParticipant(dummy.id));
     });
 
     test('basic participants map operations', t => {
         t.notThrows(()=>{
-            let dummyParticipant = new Participant('00000000-0000-0000-0000-000000000000',
-                'dummyId',
-                t.context.topicDataMock,
-                t.context.serverMock);
+            let dummyParticipant = new Participant({},
+                t.context.clientMock,
+                t.context.topicDataMock);
 
             t.context.deviceManager.addParticipant(dummyParticipant);
 
-            t.true(t.context.deviceManager.hasParticipant('00000000-0000-0000-0000-000000000000'));
+            t.true(t.context.deviceManager.hasParticipant(dummyParticipant.id));
 
-            let returnedParticipant = t.context.deviceManager.getParticipant('00000000-0000-0000-0000-000000000000');
+            let returnedParticipant = t.context.deviceManager.getParticipant(dummyParticipant.id);
 
             t.deepEqual(dummyParticipant, returnedParticipant);
 
-            t.context.deviceManager.removeParticipant('00000000-0000-0000-0000-000000000000');
+            t.context.deviceManager.removeParticipant(dummyParticipant.id);
 
-            t.true(!t.context.deviceManager.hasParticipant('00000000-0000-0000-0000-000000000000'));
+            t.false(t.context.deviceManager.hasParticipant(dummyParticipant.id));
         });
     });
 
@@ -124,19 +120,19 @@ import {
     });
 
     test('addWatcher', t => {
-        t.context.deviceManager.addWatcher(new Watcher('11111111-1111-1111-1111-111111111111',
-                'dummyId',
-                t.context.topicDataMock,
-                t.context.serverMock));
+        let watcher = new Watcher({},
+            t.context.clientMock,
+            t.context.topicDataMock)
+        t.context.deviceManager.addWatcher(watcher);
 
-        t.true(t.context.deviceManager.watchers.has('11111111-1111-1111-1111-111111111111'));
+        t.true(t.context.deviceManager.watchers.has(watcher.id));
     });
 
     test('getWatcher', t => {
-        let dummy = new Watcher('11111111-1111-1111-1111-111111111111',
-            'dummyId',
-            t.context.topicDataMock,
-            t.context.serverMock);
+        let dummy = new Watcher(
+            {id: '11111111-1111-1111-1111-111111111111', name: 'dummyId'},
+            t.context.clientMock,
+            t.context.topicDataMock);
         t.context.deviceManager.watchers.set('11111111-1111-1111-1111-111111111111', dummy);
 
         let returnedWatcher = t.context.deviceManager.getWatcher('11111111-1111-1111-1111-111111111111');
@@ -153,10 +149,10 @@ import {
     });
 
     test('registerWatcher', t => {
-        t.context.deviceManager.registerWatcher(new Watcher('11111111-1111-1111-1111-111111111111',
-                'dummyId',
-                t.context.topicDataMock,
-                t.context.serverMock));
+        t.context.deviceManager.registerWatcher(new Watcher({id:'11111111-1111-1111-1111-111111111111',
+                name: 'dummyId'},
+                t.context.clientMock,
+                t.context.topicDataMock));
 
         t.true(t.context.deviceManager.watchers.has('11111111-1111-1111-1111-111111111111'));
     });
@@ -169,10 +165,10 @@ import {
 
     test('basic watchers map operations', t => {
         t.notThrows(()=>{
-            let dummyWatcher = new Watcher('11111111-1111-1111-1111-111111111111',
-                'dummyId',
-                t.context.topicDataMock,
-                t.context.serverMock)
+            let dummyWatcher = new Watcher(
+                {id:'11111111-1111-1111-1111-111111111111', name: 'dummyId'},
+                t.context.clientMock,
+                t.context.topicDataMock)
 
             t.context.deviceManager.addWatcher(dummyWatcher);
 
@@ -190,18 +186,12 @@ import {
 
     // General test cases:
 
-    test('createDeviceUuid', t => {
-        t.notThrows(()=>{
-           t.context.deviceManager.createDeviceUuid();
-        });
-    });
-
     test('processDeviceRegistration', t => {
         let deviceRegistration = createDeviceSpecificationMock('uniqueId', 0);
 
         let result = t.context.deviceManager.processDeviceRegistration(deviceRegistration, {});
 
         t.is(result.error, undefined);
-        t.is(result.deviceSpecification.id, 'uniqueId');
+        t.is(result.id, 'uniqueId');
     });
 })();

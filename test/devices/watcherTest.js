@@ -16,7 +16,7 @@ import {
 
     test('create Watcher', t => {
         t.notThrows(() => {
-            let watcher = new Watcher();
+            let watcher = new Watcher({}, undefined, t.context.topicDataMock);
         });
     });
 })();
