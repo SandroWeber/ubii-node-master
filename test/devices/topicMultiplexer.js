@@ -80,7 +80,7 @@ const {
       t.true(t.context.topicsCategoryA.includes(topicDataRecord.topic));
 
       let index = t.context.topicsCategoryA.indexOf(topicDataRecord.topic);
-      t.deepEqual(topicDataRecord[topicDataRecord.type], {x: index, y: index});
+      t.deepEqual(topicDataRecord.data, {x: index, y: index});
     });
   });
 
@@ -111,7 +111,7 @@ const {
       t.true(t.context.topicsCategoryA.includes(topicDataRecord.topic));
 
       let index = t.context.topicsCategoryA.indexOf(topicDataRecord.topic);
-      t.deepEqual(topicDataRecord[topicDataRecord.type], {x: index, y: index});
+      t.deepEqual(topicDataRecord.data, {x: index, y: index});
     });
   });
 })();
