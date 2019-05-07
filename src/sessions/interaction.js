@@ -79,6 +79,21 @@ class Interaction {
     delete this.outputProxy[internalName];
   }
 
+  connectMultiplexer(internalName, multiplexer) {
+    Object.defineProperty(this.inputProxy, internalName,
+      {
+        // input is read-only
+        get: () => {
+          return multiplexer.get();
+        },
+        configurable: true
+      });
+  }
+
+  disconnectMultiplexer(internalName) {
+    delete this.inputProxy[internalName];
+  }
+
   connectIO(mappings) {
     mappings.forEach((mapping) => {
       if (mapping.interactionId !== this.id || !mapping.topic) return;

@@ -13,6 +13,11 @@ class TopicMultiplexer {
     this.topicSelectorRegExp = new RegExp(this.topicRegExp);
   }
 
+  /**
+   * Get the list of topics + their respective data based on the regular expression defined for this multiplexer.
+   * 
+   * @return {Array} List of {topic, data} objects for all topic data where regexp.test(topic) === true
+   */
   get() {
     this.updateTopicList();
 
