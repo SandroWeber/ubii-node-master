@@ -4,8 +4,8 @@ const uuidv4 = require('uuid/v4');
 /**
  * A class able to gather a list of topic data with unknown length, for example as input for an interaction.
  * 
- * Topics are selected based on a regular expression given by `topicSelector`.
- * Optionally `identityMatchPattern` can be provided as a regular expression. When generating the topic data list, 
+ * Topics are selected based on a regular expression given by the string `topicSelector`.
+ * Optionally `identityMatchPattern` can be provided as a regular expression string. When generating the topic data list, 
  * it will match against each input topic and extract some identity string. The result will be added to the list entry as `identity`.
  */
 class TopicMultiplexer {
