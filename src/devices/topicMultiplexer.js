@@ -28,6 +28,8 @@ class TopicMultiplexer {
   /**
    * Get the list of topics + their respective data based on the regular expression defined for this multiplexer.
    * 
+   * If `identityMatchPattern` was specified, list entries will include the field identity.
+   * 
    * @return {Array} List of {topic, data, [optional] identity} objects for all topic data that match the topic selector. 
    */
   get() {

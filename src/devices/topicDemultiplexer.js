@@ -6,6 +6,7 @@ class TopicDemultiplexer {
     this.id = id ? id : uuidv4();
     this.name = name;
     this.dataType = dataType;
+    this.outputTopicFormat = outputTopicFormat;
 
     this.topicData = topicData;
   }
@@ -14,6 +15,10 @@ class TopicDemultiplexer {
    * 
    */
   push(topicDataList) {
+    topicDataList.forEach((entry) => {
+      let outputTopic = outputTopicFormat.format(...entry.formatParams);
+      this.topicData.publish(outputTopic, entry.data, this.dataType);
+    });
   }
 
   toProtobuf() {
