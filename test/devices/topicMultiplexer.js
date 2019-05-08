@@ -44,7 +44,7 @@ const {
     let mux;
     t.notThrows(() => {
       mux = new TopicMultiplexer(
-        { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicRegExp: topicSelector },
+        { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
         t.context.topicData);
     });
     t.true(mux.id.length > 0);
@@ -56,7 +56,7 @@ const {
 
     let topicSelector = 'category_A';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicRegExp: topicSelector },
+      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
       t.context.topicData);
     mux.updateTopicList();
 
@@ -71,7 +71,7 @@ const {
 
     let topicSelector = 'category_A';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicRegExp: topicSelector },
+      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
       t.context.topicData);
     let topicDataList = mux.get();
 
@@ -89,7 +89,7 @@ const {
 
     let topicSelector = '[0-9]+\/category_A\/';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicRegExp: topicSelector },
+      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
       t.context.topicData);
     let topicDataList = mux.get();
 
@@ -112,6 +112,24 @@ const {
 
       let index = t.context.topicsCategoryA.indexOf(topicDataRecord.topic);
       t.deepEqual(topicDataRecord.data, {x: index, y: index});
+    });
+  });
+
+  test('get - identity extraction via pattern match', t => {
+    t.context.publishAllTopics();
+
+    let topicSelector = '[0-9]+\/category_A\/';
+    let identityMatchPattern = '\/[0-9]+\/';
+    let mux = new TopicMultiplexer(
+      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector, identityMatchPattern: identityMatchPattern },
+      t.context.topicData);
+    let topicDataList = mux.get();
+
+    let confirmedIdentities = t.context.topicsCategoryA.map((topic) => {
+      return topic.match(new RegExp(identityMatchPattern))[0];
+    });
+    topicDataList.forEach((record, index) => {
+      t.is(record.identity, confirmedIdentities[index]);
     });
   });
 })();
