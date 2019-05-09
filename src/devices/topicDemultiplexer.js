@@ -1,5 +1,12 @@
 const uuidv4 = require('uuid/v4');
+const printf = require('printf');
 
+/**
+ * Used to publish a list of data to topics that adhere to a certain format.
+ * 
+ * `outputTopicFormat` is used to specify the topic for each list entry. Use printf format: "/publish/to/%s/this/topic/%s", where the parameters are
+ * provided in an array `outputTopicParams` for each list entry when calling push()
+ */
 class TopicDemultiplexer {
   constructor({ id = undefined, name = '', dataType = '', outputTopicFormat = '' }, topicData = undefined) {
 
@@ -12,17 +19,26 @@ class TopicDemultiplexer {
   }
 
   /**
-   * 
+   * Publish a list of entries: {data : data to publish, outputTopicParams: array of string params used to format outputTopicFormat}
    */
   push(topicDataList) {
     topicDataList.forEach((entry) => {
-      let outputTopic = outputTopicFormat.format(...entry.formatParams);
-      this.topicData.publish(outputTopic, entry.data, this.dataType);
+      try {
+        let outputTopic = printf(this.outputTopicFormat, ...entry.outputTopicParams);
+        this.topicData.publish(outputTopic, entry.data, this.dataType);
+      } catch (error) {
+        throw error;
+      }
     });
   }
 
   toProtobuf() {
-    return {};
+    return {
+      id: this.id,
+      name: this.name,
+      dataType: this.dataType,
+      outputTopicFormat: this.outputTopicFormat
+    };
   }
 }
 
