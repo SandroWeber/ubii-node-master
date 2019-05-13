@@ -9,7 +9,8 @@ const {Device} = require('./device.js');
  */
 class Participant extends Device {
     constructor({id = uuidv4(), name = '', deviceType = undefined, components = [], clientId = undefined},
-                client, topicData) {
+                client, 
+                topicData) {
         super({id: id, name: name, deviceType: deviceType, components: components, clientId: clientId}, client);
 
         this.topicData = topicData;

@@ -16,7 +16,7 @@ import {
     
     test('create Participant', t => {
         t.notThrows(() => {
-            let participant = new Participant();
+            let participant = new Participant({}, undefined, t.context.topicDataMock);
         });
     });
 })();

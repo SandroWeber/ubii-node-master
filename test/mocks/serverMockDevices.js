@@ -64,7 +64,7 @@ class TopicDataMock {
 
 let createDeviceSpecificationMock = function(id, deviceType){
     return {
-        correspondingClientId: 'clientId',
+        clientId: 'clientId',
         name: 'displayName',
         namespace: 'namespace',
         id: id,
