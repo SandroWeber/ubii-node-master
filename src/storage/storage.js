@@ -6,7 +6,7 @@ const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
 const {BASE_FOLDER_DB} = require('./storageConstants');
 
 
-export default class Storage {
+class Storage {
   constructor(subFolder) {
     this.subFolder = subFolder;
     this.directory = BASE_FOLDER_DB + '/' + this.subFolder;
@@ -143,3 +143,5 @@ export default class Storage {
     return result;
   }
 }
+
+module.exports = Storage;
