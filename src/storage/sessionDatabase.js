@@ -47,7 +47,7 @@ class SessionDatabase {
     if (this.verifySpecification(specs)) {
       fs.writeFile(path, JSON.stringify(specs, null, 4), { flag: 'wx' }, (error) => {
         if (error) {
-          console.info('SessionDatabase - session already esists:\n' + error);
+          console.info('SessionDatabase - session already exists:\n' + error);
           throw error;
         }
       });
