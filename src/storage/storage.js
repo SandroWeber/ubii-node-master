@@ -36,7 +36,7 @@ export default class Storage {
 
     try {
       this.specifications.set(specification.id, specification);
-      this.saveInteractionSpecsToFile(specification);
+      this.saveSpecificationToFile(specification);
     } catch (error) {
       throw error;
     }
@@ -45,7 +45,7 @@ export default class Storage {
   deleteSpecification(id) {
     try {
       this.specifications.delete(id);
-      this.deleteInteractionFile(id);
+      this.deleteSpecificationFile(id);
     } catch (error) {
       throw error;
     }
@@ -59,8 +59,8 @@ export default class Storage {
 
     try {
       this.specifications.set(specification.id, specification);
-      this.deleteInteractionFile(specification.id);
-      this.saveInteractionSpecsToFile(specification);
+      this.deleteSpecificationFile(specification.id);
+      this.saveSpecificationToFile(specification);
     } catch (error) {
       throw error;
     }
@@ -93,7 +93,7 @@ export default class Storage {
     });
   }
 
-  saveInteractionSpecsToFile(specs) {
+  saveSpecificationToFile(specs) {
     let path = this.directory + '/';
     if (specs.name && specs.name.length > 0) {
       path += specs.name + '_';
@@ -112,7 +112,7 @@ export default class Storage {
     }
   }
 
-  replaceInteractionSpecsFile(specs) {
+  replaceSpecificationFile(specs) {
     if (this.verifySpecification(specs)) {
       try {
         fs.writeFileSync(this.filePaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
@@ -124,7 +124,7 @@ export default class Storage {
     }
   }
 
-  deleteInteractionFile(id) {
+  deleteSpecificationFile(id) {
     let path = this.filePaths.get(id);
     if (typeof path !== 'undefined') {
       fs.unlinkSync(path);
