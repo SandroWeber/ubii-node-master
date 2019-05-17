@@ -7,51 +7,44 @@ const {Interaction} = require('../sessions/interaction');
 const {BASE_FOLDER_DB} = require('./storageConstants');
 
 
-class Storage {
-  constructor() {
-    this.directory = BASE_FOLDER_DB + '/interactions';
+export default class Storage {
+  constructor(subfolder) {
+    this.subfolder = subfolder;
+    this.directory = BASE_FOLDER_DB + '/' + this.subfolder;
     if (!fs.existsSync(this.directory)) {
       shelljs.mkdir('-p', this.directory);
     }
 
-    this.interactionSpecs = new Map();
-    this.interactionFilepaths = new Map();
+    this.specifications = new Map();
+    this.filepaths = new Map();
 
     this.loadInteractionFiles();
   }
 
-  getInteraction(id) {
-    return this.interactionSpecs.get(id);
+  getSpecification(id) {
+    return this.specifications.get(id);
   }
 
-  getInteractionList() {
-    return Array.from(this.interactionSpecs.values());
+  getSpecificationList() {
+    return Array.from(this.specifications.values());
   }
 
-  registerInteraction(specs) {
-    if (this.interactionSpecs.has(specs.id)) {
-      throw 'Interaction with ID ' + specs.id + ' could not be registered, ID already exists'
-    }
-
-    if (!this.verifySpecification(specs)) {
-      throw 'Interaction with ID ' + specs.id + ' could not be registered, invalid specs'
+  addSpecification(specification) {
+    if (this.specifications.has(specification.id)) {
+      throw 'Specification with ID ' + specification.id + ' could not be added, ID already exists.'
     }
 
     try {
-      let interaction = new Interaction(specs);
-      let interactionSpecs = interaction.toProtobuf();
-      this.interactionSpecs.set(interactionSpecs.id, interactionSpecs);
-      this.saveInteractionSpecsToFile(interactionSpecs);
-                
-      return interaction;
+      this.specifications.set(specification.id, specification);
+      this.saveInteractionSpecsToFile(specification);
     } catch (error) {
       throw error;
     }
   }
 
-  deleteInteraction(id) {
+  deleteSpecification(id) {
     try {
-      this.interactionSpecs.delete(id);
+      this.specifications.delete(id);
       this.deleteInteractionFile(id);
     } catch (error) {
       throw error;
@@ -63,13 +56,13 @@ class Storage {
       throw 'interaction specification could not be verified';
     }
 
-    let interaction = this.interactionSpecs.get(specs.id);
+    let interaction = this.specifications.get(specs.id);
     if (typeof interaction === 'undefined') {
       throw 'interaction with ID ' + specs.id + ' could not be found';
     }
 
     try {
-      this.interactionSpecs.set(specs.id, specs);
+      this.specifications.set(specs.id, specs);
       this.deleteInteractionFile(specs.id);
       this.saveInteractionSpecsToFile(specs);
     } catch (error) {
@@ -95,11 +88,11 @@ class Storage {
 
       let specs = JSON.parse(data);
 
-      if (this.interactionSpecs.has(specs.id)) {
+      if (this.specifications.has(specs.id)) {
         console.info('InteractionDatabase - interaction from file ' + path + ' has conflicting ID ' + specs.id);
       } else {
-        this.interactionSpecs.set(specs.id, specs);
-        this.interactionFilepaths.set(specs.id, path);
+        this.specifications.set(specs.id, specs);
+        this.filepaths.set(specs.id, path);
       }
     });
   }
@@ -114,7 +107,7 @@ class Storage {
     if (this.verifySpecification(specs)) {
       try {
         fs.writeFileSync(path, JSON.stringify(specs, null, 4), {flag: 'wx'});
-        this.interactionFilepaths.set(specs.id, path);
+        this.filepaths.set(specs.id, path);
       } catch (error) {
         if (error) throw error;
       }
@@ -126,7 +119,7 @@ class Storage {
   replaceInteractionSpecsFile(specs) {
     if (this.verifySpecification(specs)) {
       try {
-        fs.writeFileSync(this.interactionFilepaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
+        fs.writeFileSync(this.filepaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
       } catch (error) {
         if (error) throw error;
       }
@@ -136,7 +129,7 @@ class Storage {
   }
 
   deleteInteractionFile(id) {
-    let path = this.interactionFilepaths.get(id);
+    let path = this.filepaths.get(id);
     if (typeof path !== 'undefined') {
       fs.unlinkSync(path);
     }
@@ -155,5 +148,3 @@ class Storage {
     return result;
   }
 }
-
-module.exports = new InteractionDatabase();
