@@ -8,17 +8,17 @@ const {BASE_FOLDER_DB} = require('./storageConstants');
 
 
 export default class Storage {
-  constructor(subfolder) {
-    this.subfolder = subfolder;
-    this.directory = BASE_FOLDER_DB + '/' + this.subfolder;
+  constructor(subFolder) {
+    this.subFolder = subFolder;
+    this.directory = BASE_FOLDER_DB + '/' + this.subFolder;
     if (!fs.existsSync(this.directory)) {
       shelljs.mkdir('-p', this.directory);
     }
 
     this.specifications = new Map();
-    this.filepaths = new Map();
+    this.filePaths = new Map();
 
-    this.loadInteractionFiles();
+    this.loadSpecificationFiles();
   }
 
   getSpecification(id) {
@@ -51,48 +51,44 @@ export default class Storage {
     }
   }
 
-  updateInteractionSpecs(specs) {
-    if (!this.verifySpecification(specs)) {
-      throw 'interaction specification could not be verified';
-    }
-
-    let interaction = this.specifications.get(specs.id);
-    if (typeof interaction === 'undefined') {
-      throw 'interaction with ID ' + specs.id + ' could not be found';
+  updateSpecification(specification) {
+    let localSpecification = this.specifications.get(specification.id);
+    if (typeof localSpecification === 'undefined') {
+      throw 'Specification with ID ' + specification.id + ' could not be found';
     }
 
     try {
-      this.specifications.set(specs.id, specs);
-      this.deleteInteractionFile(specs.id);
-      this.saveInteractionSpecsToFile(specs);
+      this.specifications.set(specification.id, specification);
+      this.deleteInteractionFile(specification.id);
+      this.saveInteractionSpecsToFile(specification);
     } catch (error) {
       throw error;
     }
   }
 
-  loadInteractionFiles() {
+  loadSpecificationFiles() {
     fs.readdir(this.directory, (err, files) => {
       if (err) {
-        return console.info('InteractionDatabase - Unable to scan directory: ' + err);
+        return console.info('Storage - Unable to scan directory: ' + err);
       }
 
       files.forEach((file) => {
-        this.loadInteractionSpecsFromFile(this.directory + '/' + file);
+        this.loadSpecificationsFromFile(this.directory + '/' + file);
       });
     });
   }
 
-  loadInteractionSpecsFromFile(path) {
+  loadSpecificationsFromFile(path) {
     fs.readFile(path, (err, data) => {
       if (err) throw err;
 
       let specs = JSON.parse(data);
 
       if (this.specifications.has(specs.id)) {
-        console.info('InteractionDatabase - interaction from file ' + path + ' has conflicting ID ' + specs.id);
+        console.info('Storage - interaction from file ' + path + ' has conflicting ID ' + specs.id);
       } else {
         this.specifications.set(specs.id, specs);
-        this.filepaths.set(specs.id, path);
+        this.filePaths.set(specs.id, path);
       }
     });
   }
@@ -107,7 +103,7 @@ export default class Storage {
     if (this.verifySpecification(specs)) {
       try {
         fs.writeFileSync(path, JSON.stringify(specs, null, 4), {flag: 'wx'});
-        this.filepaths.set(specs.id, path);
+        this.filePaths.set(specs.id, path);
       } catch (error) {
         if (error) throw error;
       }
@@ -119,7 +115,7 @@ export default class Storage {
   replaceInteractionSpecsFile(specs) {
     if (this.verifySpecification(specs)) {
       try {
-        fs.writeFileSync(this.filepaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
+        fs.writeFileSync(this.filePaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
       } catch (error) {
         if (error) throw error;
       }
@@ -129,7 +125,7 @@ export default class Storage {
   }
 
   deleteInteractionFile(id) {
-    let path = this.filepaths.get(id);
+    let path = this.filePaths.get(id);
     if (typeof path !== 'undefined') {
       fs.unlinkSync(path);
     }
