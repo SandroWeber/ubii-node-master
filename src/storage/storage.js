@@ -20,15 +20,15 @@ class Storage {
     this.loadSpecificationFiles();
   }
 
-  getSpecification(id) {
+  getSpecification(id) { //
     return this.specifications.get(id);
   }
 
-  getSpecificationList() {
+  getSpecificationList() { //
     return Array.from(this.specifications.values());
   }
 
-  addSpecification(specification) {
+  addSpecification(specification) { // fr[her register]
     if (this.specifications.has(specification.id)) {
       throw 'Specification with ID ' + specification.id + ' could not be added, ID already exists.'
     }
@@ -41,7 +41,7 @@ class Storage {
     }
   }
 
-  deleteSpecification(id) {
+  deleteSpecification(id) { //
     try {
       this.specifications.delete(id);
       this.deleteSpecificationFile(id);
@@ -50,7 +50,7 @@ class Storage {
     }
   }
 
-  updateSpecification(specification) {
+  updateSpecification(specification) {//
     let localSpecification = this.specifications.get(specification.id);
     if (typeof localSpecification === 'undefined') {
       throw 'Specification with ID ' + specification.id + ' could not be found';
@@ -128,19 +128,6 @@ class Storage {
     if (typeof path !== 'undefined') {
       fs.unlinkSync(path);
     }
-  }
-
-  verifySpecification(specs) {
-    let translator = new ProtobufTranslator(MSG_TYPES.INTERACTION);
-    let result = false;
-    try {
-      result = translator.verify(specs);
-    }
-    catch (error) {
-      result = false;
-    }
-
-    return result;
   }
 }
 
