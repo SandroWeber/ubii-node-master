@@ -11,7 +11,7 @@ class InteractionDatabase extends Storage{
   }
 
   getInteractionList() {
-    return this.getSpecificationList(id);
+    return this.getSpecificationList();
   }
 
   addInteraction(specification) {
