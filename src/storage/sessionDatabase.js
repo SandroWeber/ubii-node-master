@@ -70,15 +70,12 @@ class SessionDatabase extends Storage{
    */
   verifySpecification(specification) {
     let translator = new ProtobufTranslator(MSG_TYPES.SESSION);
-    let result = false;
     try {
-      result = translator.verify(specification);
+      return translator.verify(specification);
     }
     catch (error) {
-      result = false;
+      return false;
     }
-
-    return result;
   }
 }
 
