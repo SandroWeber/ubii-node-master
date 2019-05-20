@@ -77,6 +77,10 @@ class Storage {
     });
   }
 
+  /**
+   * Loads a specification from the file with the specified path and adds it to the local specifications.
+   * @param {String} path Path to the specification file.
+   */
   loadSpecificationFromFile(path) {
     fs.readFile(path, (err, data) => {
       if (err) throw err;
