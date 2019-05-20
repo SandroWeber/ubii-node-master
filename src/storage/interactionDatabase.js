@@ -19,7 +19,16 @@ class InteractionDatabase extends Storage{
       throw 'Interaction with ID ' + specification.id + ' could not be registered, invalid specs'
     }
 
-    this.addSpecification(specification);
+    try {
+      let interaction = new Interaction(specs);
+      let interactionSpecification = interaction.toProtobuf();
+      
+      this.addSpecification(interactionSpecification);
+                
+      return interaction;
+    } catch (error) {
+      throw error;
+    }
   }
 
   deleteInteraction(id) {

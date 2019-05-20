@@ -34,7 +34,7 @@ class Storage {
 
   /**
    * Add a new specification to the specifications list.
-   * @param {Object} specification The specification requires a name and id property.
+   * @param {Object} specification The specification in protobuf format. It requires a name and id property.
    */
   addSpecification(specification) {
     if (this.specifications.has(specification.id)) {
