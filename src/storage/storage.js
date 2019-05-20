@@ -61,6 +61,10 @@ class Storage {
     }
   }
 
+  /**
+   * Update a specification that is already present in the specifications list with a new value.
+   * @param {Object} specification The specification requires a name and id property.
+   */
   updateSpecification(specification) {//
     let localSpecification = this.specifications.get(specification.id);
     if (typeof localSpecification === 'undefined') {
