@@ -7,7 +7,7 @@ const {BASE_FOLDER_DB} = require('./storageConstants');
 
 
 class Storage {
-  constructor(subFolder) {
+  constructor(subFolder, fileEnding) {
     this.subFolder = subFolder;
     this.directory = BASE_FOLDER_DB + '/' + this.subFolder;
     if (!fs.existsSync(this.directory)) {
@@ -17,7 +17,7 @@ class Storage {
     this.specifications = new Map();
     this.filePaths = new Map();
 
-    this.loadSpecificationFiles();
+    this.loadAllSpecificationFiles();
   }
 
   getSpecification(id) { //
@@ -65,26 +65,26 @@ class Storage {
     }
   }
 
-  loadSpecificationFiles() {
+  loadAllSpecificationFiles() {
     fs.readdir(this.directory, (err, files) => {
       if (err) {
         return console.info('Storage - Unable to scan directory: ' + err);
       }
 
       files.forEach((file) => {
-        this.loadSpecificationsFromFile(this.directory + '/' + file);
+        this.loadSpecificationFromFile(this.directory + '/' + file);
       });
     });
   }
 
-  loadSpecificationsFromFile(path) {
+  loadSpecificationFromFile(path) {
     fs.readFile(path, (err, data) => {
       if (err) throw err;
 
       let specs = JSON.parse(data);
 
       if (this.specifications.has(specs.id)) {
-        console.info('Storage - interaction from file ' + path + ' has conflicting ID ' + specs.id);
+        console.info('Storage - specification from file ' + path + ' has conflicting ID ' + specs.id);
       } else {
         this.specifications.set(specs.id, specs);
         this.filePaths.set(specs.id, path);
@@ -93,21 +93,19 @@ class Storage {
   }
 
   saveSpecificationToFile(specs) {
+    // Build complete path.
     let path = this.directory + '/';
     if (specs.name && specs.name.length > 0) {
       path += specs.name + '_';
     }
-    path += specs.id + '.interaction';
+    path += specs.id + '.'+this.fileEnding;
 
-    if (this.verifySpecification(specs)) {
-      try {
-        fs.writeFileSync(path, JSON.stringify(specs, null, 4), {flag: 'wx'});
-        this.filePaths.set(specs.id, path);
-      } catch (error) {
-        if (error) throw error;
-      }
-    } else {
-      throw 'Invalid interaction specifications';
+    // Write to file and store path.
+    try {
+      fs.writeFileSync(path, JSON.stringify(specs, null, 4), {flag: 'wx'});
+      this.filePaths.set(specs.id, path);
+    } catch (error) {
+      if (error) throw error;
     }
   }
 
