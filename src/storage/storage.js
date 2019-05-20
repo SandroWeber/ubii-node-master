@@ -21,14 +21,14 @@ class Storage {
    * Get the specification with the specified id.
    * @param {String} id 
    */
-  getSpecification(id) { //
+  getSpecification(id) {
     return this.specifications.get(id);
   }
 
   /**
    * Get an array of all specifications.
    */
-  getSpecificationList() { //
+  getSpecificationList() {
     return Array.from(this.specifications.values());
   }
 
@@ -36,7 +36,7 @@ class Storage {
    * Add a new specification to the specifications list.
    * @param {Object} specification The specification requires a name and id property.
    */
-  addSpecification(specification) { // fr[her register]
+  addSpecification(specification) {
     if (this.specifications.has(specification.id)) {
       throw 'Specification with ID ' + specification.id + ' could not be added, ID already exists.'
     }
@@ -53,7 +53,7 @@ class Storage {
    * Delete the specification with the specified id from the specifications list.
    * @param {String} id 
    */
-  deleteSpecification(id) { //
+  deleteSpecification(id) {
     try {
       this.specifications.delete(id);
       this.deleteSpecificationFile(id);
@@ -66,7 +66,7 @@ class Storage {
    * Update a specification that is already present in the specifications list with a new value.
    * @param {Object} specification The specification requires a name and id property.
    */
-  updateSpecification(specification) {//
+  updateSpecification(specification) {
     let localSpecification = this.specifications.get(specification.id);
     if (typeof localSpecification === 'undefined') {
       throw 'Specification with ID ' + specification.id + ' could not be found';
