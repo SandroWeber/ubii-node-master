@@ -113,6 +113,10 @@ class Storage {
     }
   }
 
+  /**
+   * Replaces a specification file with the path stored with regard to the is of the specification with a new specification file.
+   * @param {Object} specs The specification requires a name and id property.
+   */
   replaceSpecificationFile(specs) {
     try {
       fs.writeFileSync(this.filePaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
