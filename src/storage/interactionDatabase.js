@@ -45,13 +45,17 @@ class InteractionDatabase extends Storage{
   }
 
   /**
-   * Delete the specification with the specified id from the specifications list.
+   * Delete the interaction specification with the specified id from the specifications list.
    * @param {String} id 
    */
   deleteInteraction(id) {
     this.deleteSpecification(id);
   }
 
+  /**
+   * Update a interaction specification that is already present in the specifications list with a new value.
+   * @param {Object} specification The specification requires a name and id property.
+   */
   updateInteractionSpecs(specification) {
     if (!this.verifySpecification(specification)) {
       throw 'interaction specification could not be verified';
@@ -60,6 +64,10 @@ class InteractionDatabase extends Storage{
     this.updateSpecification(specification);
   }
 
+  /**
+   * Verifies the specified specification.
+   * @param {*} specification 
+   */
   verifySpecification(specification) {
     let translator = new ProtobufTranslator(MSG_TYPES.INTERACTION);
     let result = false;
