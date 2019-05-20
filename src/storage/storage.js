@@ -92,6 +92,10 @@ class Storage {
     });
   }
 
+  /**
+   * Saves a specification to a file with the corresponding path. The path is then stored in the filePaths map.
+   * @param {Object} specs The specification requires a name and id property.
+   */
   saveSpecificationToFile(specs) {
     // Build complete path.
     let path = this.directory + '/';
