@@ -118,20 +118,20 @@ class Storage {
 
   /**
    * Saves a specification to a file with the corresponding path. The path is then stored in the filePaths map.
-   * @param {Object} specs The specification requires a name and id property.
+   * @param {Object} specification The specification requires a name and id property.
    */
-  saveSpecificationToFile(specs) {
+  saveSpecificationToFile(specification) {
     // Build complete path.
     let path = this.directory + '/';
-    if (specs.name && specs.name.length > 0) {
-      path += specs.name + '_';
+    if (specification.name && specification.name.length > 0) {
+      path += specification.name + '_';
     }
-    path += specs.id + '.'+this.fileEnding;
+    path += specification.id + '.'+this.fileEnding;
 
     // Write to file and store path.
     try {
-      fs.writeFileSync(path, JSON.stringify(specs, null, 4), {flag: 'wx'});
-      this.filePaths.set(specs.id, path);
+      fs.writeFileSync(path, JSON.stringify(specification, null, 4), {flag: 'wx'});
+      this.filePaths.set(specification.id, path);
     } catch (error) {
       if (error) throw error;
     }
@@ -139,11 +139,11 @@ class Storage {
 
   /**
    * Replaces a specification file with the path stored with regard to the is of the specification with a new specification file.
-   * @param {Object} specs The specification requires a name and id property.
+   * @param {Object} specification The specification requires a name and id property.
    */
-  replaceSpecificationFile(specs) {
+  replaceSpecificationFile(specification) {
     try {
-      fs.writeFileSync(this.filePaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
+      fs.writeFileSync(this.filePaths.get(specification.id), JSON.stringify(specification, null, 4), {flag: 'w'});
     } catch (error) {
       if (error) throw error;
     }
