@@ -7,6 +7,10 @@ class InteractionDatabase extends Storage{
     super('interactions', 'interaction');
   }
 
+  /**
+   * Get the interaction with the specified id.
+   * @param {String} id 
+   */
   getInteraction(id) {
     return this.getSpecification(id);
   }
