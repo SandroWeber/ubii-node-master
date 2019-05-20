@@ -70,15 +70,12 @@ class InteractionDatabase extends Storage{
    */
   verifySpecification(specification) {
     let translator = new ProtobufTranslator(MSG_TYPES.INTERACTION);
-    let result = false;
     try {
-      result = translator.verify(specification);
+      return translator.verify(specification);
     }
     catch (error) {
-      result = false;
+      return false;
     }
-
-    return result;
   }
 }
 
