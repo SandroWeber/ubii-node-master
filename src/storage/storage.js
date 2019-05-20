@@ -65,6 +65,9 @@ class Storage {
     }
   }
 
+  /**
+   * Load all specification files that are present in the sub-folder specified for this storage.
+   */
   loadAllSpecificationFiles() {
     fs.readdir(this.directory, (err, files) => {
       if (err) {
@@ -78,7 +81,7 @@ class Storage {
   }
 
   /**
-   * Loads a specification from the file with the specified path and adds it to the local specifications.
+   * Load a specification from the file with the specified path and adds it to the local specifications.
    * @param {String} path Path to the specification file.
    */
   loadSpecificationFromFile(path) {
