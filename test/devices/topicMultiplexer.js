@@ -53,7 +53,6 @@ const {
   test('updateTopicList', t => {
     t.context.publishAllTopics();
 
-
     let topicSelector = 'category_A';
     let mux = new TopicMultiplexer(
       { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
@@ -64,6 +63,22 @@ const {
     mux.topicList.forEach((topic) => {
       t.true(t.context.topicsCategoryA.includes(topic));
     });
+  });
+
+  test('addTopic', t => {
+    let topicSelector = 'category_A';
+    let mux = new TopicMultiplexer(
+      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
+      t.context.topicData);
+
+    let invalidTopic = '/my/invalid/topic/category';
+    mux.addTopic(invalidTopic);
+    t.is(mux.topicList.length, 0);
+
+    let validTopic = '/my/valid/topic/category_A';
+    mux.addTopic(validTopic);
+    t.is(mux.topicList.length, 1);
+    t.true(mux.topicList.indexOf(validTopic) !== -1);
   });
 
   test('get - simple selector', t => {
@@ -131,5 +146,22 @@ const {
     topicDataList.forEach((record, index) => {
       t.is(record.identity, confirmedIdentities[index]);
     });
+  });
+
+  test('add matching topics on event "newTopic"', t => {
+    let topicSelector = '[0-9]+\/category_A\/';
+    let identityMatchPattern = '\/[0-9]+\/';
+    let mux = new TopicMultiplexer(
+      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector, identityMatchPattern: identityMatchPattern },
+      t.context.topicData);
+
+    let invalidTopic = '/category_A/invalid/topic';
+    t.context.topicData.events.emit('newTopic', invalidTopic);
+    t.is(mux.topicList.length, 0);
+
+    let validTopic = '/12345/category_A/invalid/topic';
+    t.context.topicData.events.emit('newTopic', validTopic);
+    t.is(mux.topicList.length, 1);
+    t.true(mux.topicList.indexOf(validTopic) !== -1);
   });
 })();

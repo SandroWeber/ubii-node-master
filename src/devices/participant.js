@@ -3,6 +3,8 @@ const namida = require('@tum-far/namida');
 
 const {Device} = require('./device.js');
 
+const {proto} = require('@tum-far/ubii-msg-formats');
+
 /**
  * Participants are representations of remote entities at the server that actively interact with the ubii system.
  * They participate in the ubii system by publishing data (they produce data) and/or consuming data via subscriptions (they consume data).
@@ -15,6 +17,13 @@ class Participant extends Device {
 
         this.topicData = topicData;
         //this.subscriptionTokens = new Map();
+
+        // emit events for new topics being published
+        components.forEach((component) => {
+            if (component.ioType === proto.ubii.devices.Component.IOType.INPUT) {
+                topicData.events.emit('newTopic', component.topic);
+            }
+        });
     }
 
     /**
