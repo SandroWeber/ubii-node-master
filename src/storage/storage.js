@@ -125,6 +125,10 @@ class Storage {
     }
   }
 
+  /**
+   * Deletes the file associated with the specified id.
+   * @param {String} id Id of a stored specification.
+   */
   deleteSpecificationFile(id) {
     let path = this.filePaths.get(id);
     if (typeof path !== 'undefined') {
