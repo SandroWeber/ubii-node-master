@@ -1,10 +1,6 @@
 const fs = require('fs');
 const shelljs = require('shelljs');
-
-const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
-
 const {BASE_FOLDER_DB} = require('./storageConstants');
-
 
 class Storage {
   constructor(subFolder, fileEnding) {
