@@ -22,7 +22,7 @@ class InteractionRegistrationService extends Service {
       let newInteractions = [];
       interactionSpecs.forEach((spec) => {
         try {
-          newInteractions.push(InteractionDatabase.registerInteraction(spec));
+          newInteractions.push(InteractionDatabase.addInteraction(spec));
         } catch (error) {
           return {
             error: {
@@ -40,7 +40,7 @@ class InteractionRegistrationService extends Service {
 
     let interaction;
     try {
-      interaction = InteractionDatabase.registerInteraction(interactionSpecs);
+      interaction = InteractionDatabase.addInteraction(interactionSpecs);
     } catch (error) {
       return {
         error: {
