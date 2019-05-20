@@ -1,152 +1,78 @@
-const fs = require('fs');
-const shelljs = require('shelljs');
-
+const {Session} = require('../sessions/session');
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
+const Storage = require('./storage.js');
 
-const {Interaction} = require('../sessions/interaction');
-const {BASE_FOLDER_DB} = require('./storageConstants');
-
-
-class InteractionDatabase {
+class SessionDatabase extends Storage{
   constructor() {
-    this.directory = BASE_FOLDER_DB + '/interactions';
-    if (!fs.existsSync(this.directory)) {
-      shelljs.mkdir('-p', this.directory);
-    }
-
-    this.interactionSpecs = new Map();
-    this.interactionFilepaths = new Map();
-
-    this.loadInteractionFiles();
+    super('sessions', 'session');
   }
 
-  getInteraction(id) {
-    return this.interactionSpecs.get(id);
+  /**
+   * Get the session with the specified id.
+   * @param {String} id 
+   */
+  getSession(id) {
+    return this.getSpecification(id);
   }
 
-  getInteractionList() {
-    return Array.from(this.interactionSpecs.values());
+  /**
+   * Get an array of all specifications.
+   */
+  getSessionList() {
+    return this.getSpecificationList();
   }
 
-  registerInteraction(specs) {
-    if (this.interactionSpecs.has(specs.id)) {
-      throw 'Interaction with ID ' + specs.id + ' could not be registered, ID already exists'
-    }
-
-    if (!this.verifySpecification(specs)) {
-      throw 'Interaction with ID ' + specs.id + ' could not be registered, invalid specs'
+  /**
+   * Add a new session protobuf specification based on the specified specification to the specifications list. Returns the corresponding session.
+   * @param {Object} specification The specification in protobuf format. It requires a name and id property.
+   * @returns Returns an session that corresponds to the specified specification.
+   */
+  addSession(specification) {
+    if (!this.verifySpecification(specification)) {
+      throw 'Session with ID ' + specification.id + ' could not be registered, invalid specs'
     }
 
     try {
-      let interaction = new Interaction(specs);
-      let interactionSpecs = interaction.toProtobuf();
-      this.interactionSpecs.set(interactionSpecs.id, interactionSpecs);
-      this.saveInteractionSpecsToFile(interactionSpecs);
-                
-      return interaction;
+      let session = new Session(specification);
+      let sessionSpecification = session.toProtobuf();
+
+      this.addSpecification(sessionSpecification);
+
+      return session;
     } catch (error) {
       throw error;
     }
   }
 
-  deleteInteraction(id) {
-    try {
-      this.interactionSpecs.delete(id);
-      this.deleteInteractionFile(id);
-    } catch (error) {
-      throw error;
-    }
+  /**
+   * Delete the session specification with the specified id from the specifications list.
+   * @param {String} id 
+   */
+  deleteSession(id) {
+    this.deleteSpecification(id);
   }
 
-  updateInteractionSpecs(specs) {
-    if (!this.verifySpecification(specs)) {
-      throw 'interaction specification could not be verified';
+  /**
+   * Update a session specification that is already present in the specifications list with a new value.
+   * @param {Object} specification The specification requires a name and id property.
+   */
+  updateSessionSpecs(specification) {
+    if (!this.verifySpecification(specification)) {
+      throw 'session specification could not be verified';
     }
 
-    let interaction = this.interactionSpecs.get(specs.id);
-    if (typeof interaction === 'undefined') {
-      throw 'interaction with ID ' + specs.id + ' could not be found';
-    }
-
-    try {
-      this.interactionSpecs.set(specs.id, specs);
-      this.deleteInteractionFile(specs.id);
-      this.saveInteractionSpecsToFile(specs);
-    } catch (error) {
-      throw error;
-    }
+    this.updateSpecification(specification);
   }
 
-  loadInteractionFiles() {
-    fs.readdir(this.directory, (err, files) => {
-      if (err) {
-        return console.info('InteractionDatabase - Unable to scan directory: ' + err);
-      }
-
-      files.forEach((file) => {
-        this.loadInteractionSpecsFromFile(this.directory + '/' + file);
-      });
-    });
-  }
-
-  loadInteractionSpecsFromFile(path) {
-    fs.readFile(path, (err, data) => {
-      if (err) throw err;
-
-      let specs = JSON.parse(data);
-
-      if (this.interactionSpecs.has(specs.id)) {
-        console.info('InteractionDatabase - interaction from file ' + path + ' has conflicting ID ' + specs.id);
-      } else {
-        this.interactionSpecs.set(specs.id, specs);
-        this.interactionFilepaths.set(specs.id, path);
-      }
-    });
-  }
-
-  saveInteractionSpecsToFile(specs) {
-    let path = this.directory + '/';
-    if (specs.name && specs.name.length > 0) {
-      path += specs.name + '_';
-    }
-    path += specs.id + '.interaction';
-
-    if (this.verifySpecification(specs)) {
-      try {
-        fs.writeFileSync(path, JSON.stringify(specs, null, 4), {flag: 'wx'});
-        this.interactionFilepaths.set(specs.id, path);
-      } catch (error) {
-        if (error) throw error;
-      }
-    } else {
-      throw 'Invalid interaction specifications';
-    }
-  }
-
-  replaceInteractionSpecsFile(specs) {
-    if (this.verifySpecification(specs)) {
-      try {
-        fs.writeFileSync(this.interactionFilepaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
-      } catch (error) {
-        if (error) throw error;
-      }
-    } else {
-      throw 'Invalid interaction specifications';
-    }
-  }
-
-  deleteInteractionFile(id) {
-    let path = this.interactionFilepaths.get(id);
-    if (typeof path !== 'undefined') {
-      fs.unlinkSync(path);
-    }
-  }
-
-  verifySpecification(specs) {
-    let translator = new ProtobufTranslator(MSG_TYPES.INTERACTION);
+  /**
+   * Verifies the specified specification.
+   * @param {*} specification 
+   */
+  verifySpecification(specification) {
+    let translator = new ProtobufTranslator(MSG_TYPES.SESSION);
     let result = false;
     try {
-      result = translator.verify(specs);
+      result = translator.verify(specification);
     }
     catch (error) {
       result = false;
@@ -156,4 +82,4 @@ class InteractionDatabase {
   }
 }
 
-module.exports = new InteractionDatabase();
+module.exports = new SessionDatabase();
