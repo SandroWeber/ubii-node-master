@@ -31,6 +31,10 @@ class Storage {
     return Array.from(this.specifications.values());
   }
 
+  /**
+   * Add a new specification to the specifications list.
+   * @param {Object} specification The specification requires a name and id property.
+   */
   addSpecification(specification) { // fr[her register]
     if (this.specifications.has(specification.id)) {
       throw 'Specification with ID ' + specification.id + ' could not be added, ID already exists.'
@@ -44,6 +48,10 @@ class Storage {
     }
   }
 
+  /**
+   * Delete the specification with the specified id from the specifications list.
+   * @param {String} id 
+   */
   deleteSpecification(id) { //
     try {
       this.specifications.delete(id);
