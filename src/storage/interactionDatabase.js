@@ -44,6 +44,10 @@ class InteractionDatabase extends Storage{
     }
   }
 
+  /**
+   * Delete the specification with the specified id from the specifications list.
+   * @param {String} id 
+   */
   deleteInteraction(id) {
     this.deleteSpecification(id);
   }
