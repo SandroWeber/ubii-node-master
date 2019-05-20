@@ -15,10 +15,18 @@ class InteractionDatabase extends Storage{
     return this.getSpecification(id);
   }
 
+  /**
+   * Get an array of all specifications.
+   */
   getInteractionList() {
     return this.getSpecificationList();
   }
 
+  /**
+   * Add a new interaction protobuf specification based on the specified specification to the specifications list. Returns the corresponding interaction.
+   * @param {Object} specification The specification in protobuf format. It requires a name and id property.
+   * @returns Returns an interaction that corresponds to the specified specification.
+   */
   addInteraction(specification) {
     if (!this.verifySpecification(specification)) {
       throw 'Interaction with ID ' + specification.id + ' could not be registered, invalid specs'
