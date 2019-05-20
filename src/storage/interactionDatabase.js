@@ -21,11 +21,11 @@ class InteractionDatabase extends Storage{
     }
 
     try {
-      let interaction = new Interaction(specs);
+      let interaction = new Interaction(specification);
       let interactionSpecification = interaction.toProtobuf();
-      
+
       this.addSpecification(interactionSpecification);
-                
+
       return interaction;
     } catch (error) {
       throw error;
