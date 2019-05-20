@@ -5,6 +5,7 @@ const {BASE_FOLDER_DB} = require('./storageConstants');
 class Storage {
   constructor(subFolder, fileEnding) {
     this.subFolder = subFolder;
+    this.fileEnding = fileEnding;
     this.directory = BASE_FOLDER_DB + '/' + this.subFolder;
     if (!fs.existsSync(this.directory)) {
       shelljs.mkdir('-p', this.directory);
