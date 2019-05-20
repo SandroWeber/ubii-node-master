@@ -1,31 +1,18 @@
-const fs = require('fs');
-const shelljs = require('shelljs');
-
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
-
 const {Interaction} = require('../sessions/interaction');
-const {BASE_FOLDER_DB} = require('./storageConstants');
+const Storage = require('./storage.js');
 
-
-class InteractionDatabase {
+class InteractionDatabase extends Storage{
   constructor() {
-    this.directory = BASE_FOLDER_DB + '/interactions';
-    if (!fs.existsSync(this.directory)) {
-      shelljs.mkdir('-p', this.directory);
-    }
-
-    this.interactionSpecs = new Map();
-    this.interactionFilepaths = new Map();
-
-    this.loadInteractionFiles();
+    super('interactions', 'interaction');
   }
 
   getInteraction(id) {
-    return this.interactionSpecs.get(id);
+    return this.getSpecification(id);
   }
 
   getInteractionList() {
-    return Array.from(this.interactionSpecs.values());
+    return this.getSpecificationList(id);
   }
 
   registerInteraction(specs) {
