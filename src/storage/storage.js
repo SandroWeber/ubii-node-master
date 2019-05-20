@@ -61,6 +61,8 @@ class Storage {
     }
   }
 
+  // Storage file utility methods:
+
   /**
    * Load all specification files that are present in the sub-folder specified for this storage.
    */
