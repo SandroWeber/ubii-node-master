@@ -24,6 +24,9 @@ class Storage {
     return this.specifications.get(id);
   }
 
+  /**
+   * Get an array of all specifications.
+   */
   getSpecificationList() { //
     return Array.from(this.specifications.values());
   }
