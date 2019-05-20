@@ -112,14 +112,10 @@ class Storage {
   }
 
   replaceSpecificationFile(specs) {
-    if (this.verifySpecification(specs)) {
-      try {
-        fs.writeFileSync(this.filePaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
-      } catch (error) {
-        if (error) throw error;
-      }
-    } else {
-      throw 'Invalid interaction specifications';
+    try {
+      fs.writeFileSync(this.filePaths.get(specs.id), JSON.stringify(specs, null, 4), {flag: 'w'});
+    } catch (error) {
+      if (error) throw error;
     }
   }
 
