@@ -4,8 +4,10 @@ const SessionDatabase = require('../../storage/sessionDatabase');
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class SessionRegistrationService extends Service {
-  constructor() {
+  constructor(sessionManager) {
     super(DEFAULT_TOPICS.SERVICES.INTERACTION_REGISTRATION);
+
+    this.sessionManager = sessionManager;
   }
 
   reply(sessionSpecs) {
@@ -22,7 +24,7 @@ class SessionRegistrationService extends Service {
       let newSessions = [];
       sessionSpecs.forEach((spec) => {
         try {
-          newSessions.push(SessionDatabase.addSession(spec));
+          newSessions.push(SessionDatabase.addSession(spec, this.sessionManager));
         } catch (error) {
           return {
             error: {
@@ -40,7 +42,7 @@ class SessionRegistrationService extends Service {
 
     let session;
     try {
-      session = SessionDatabase.addSession(sessionSpecs);
+      session = SessionDatabase.addSession(sessionSpecs, this.sessionManager);
     } catch (error) {
       return {
         error: {
