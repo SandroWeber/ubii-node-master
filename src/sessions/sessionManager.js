@@ -8,7 +8,7 @@ class SessionManager {
   }
 
   createSession(specifications = {}) {
-    if (specifications.id && (this.getSession(specifications.id) || SessionDatabase.getSessionSpecsByID(specifications.id))) {
+    if (specifications.id && (this.getSession(specifications.id) || SessionDatabase.getSession(specifications.id))) {
       throw 'Session with ID ' + specifications.id + ' already exists.';
     }
 
