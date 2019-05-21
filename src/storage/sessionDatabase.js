@@ -1,4 +1,3 @@
-const {Session} = require('../sessions/session');
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
 const Storage = require('./storage.js');
 
