@@ -40,7 +40,11 @@ class ServiceManager {
     this.addService(new SubscriptionService(this.clientManager));
     this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', connectionManager));
     this.addService(new TopicListService(this.topicData, this));
+    this.addService(new SessionDeleteService());
+    this.addService(new SessionGetListService());
+    this.addService(new SessionGetService());
     this.addService(new SessionRegistrationService(this.sessionManager));
+    this.addService(new SessionReplaceService());
     this.addService(new SessionStartService(this.sessionManager));
     this.addService(new SessionStopService(this.sessionManager));
   }
