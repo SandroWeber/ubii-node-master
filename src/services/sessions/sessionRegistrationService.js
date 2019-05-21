@@ -5,7 +5,7 @@ const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class SessionRegistrationService extends Service {
   constructor(sessionManager) {
-    super(DEFAULT_TOPICS.SERVICES.INTERACTION_REGISTRATION);
+    super(DEFAULT_TOPICS.SERVICES.SESSION_REGISTRATION);
 
     this.sessionManager = sessionManager;
   }
