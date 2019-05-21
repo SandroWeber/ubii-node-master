@@ -25,15 +25,16 @@ class SessionDatabase extends Storage{
   /**
    * Add a new session protobuf specification based on the specified specification to the specifications list. Returns the corresponding session.
    * @param {Object} specification The specification in protobuf format. It requires a name and id property.
+   * @param {Object} sessionManager A reference tot he sessionmanager is required to create session instances.
    * @returns Returns an session that corresponds to the specified specification.
    */
-  addSession(specification) {
+  addSession(specification, sessionManager) {
     if (!this.verifySpecification(specification)) {
       throw 'Session with ID ' + specification.id + ' could not be registered, invalid specs'
     }
 
     try {
-      let session = new Session(specification);
+      let session = sessionManager.createSession(specification);
       let sessionSpecification = session.toProtobuf();
 
       this.addSpecification(sessionSpecification);
