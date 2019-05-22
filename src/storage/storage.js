@@ -17,6 +17,10 @@ class Storage {
     this.loadAllSpecificationFiles();
   }
 
+  hasSpecification(id) {
+    return this.specifications.has(id);
+  }
+
   /**
    * Get the specification with the specified id.
    * @param {String} id 
