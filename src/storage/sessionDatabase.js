@@ -7,6 +7,15 @@ class SessionDatabase extends Storage{
   }
 
   /**
+   * Returns whether a session specification with the specified ID exists.
+   * @param {String} id 
+   * @returns {Boolean} Does a session specification with the specified ID exists?
+   */
+  hasSession(id) {
+    return this.specifications.has(id);
+  }
+
+  /**
    * Get the session with the specified id.
    * @param {String} id 
    */
