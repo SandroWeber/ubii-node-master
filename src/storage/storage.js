@@ -17,6 +17,11 @@ class Storage {
     this.loadAllSpecificationFiles();
   }
 
+  /**
+   * Returns whether a specification with the specified ID exists.
+   * @param {String} id 
+   * @returns {Boolean} Does a specification with the specified ID exists?
+   */
   hasSpecification(id) {
     return this.specifications.has(id);
   }
