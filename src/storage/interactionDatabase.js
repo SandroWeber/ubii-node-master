@@ -8,6 +8,15 @@ class InteractionDatabase extends Storage{
   }
 
   /**
+   * Returns whether an interaction specification with the specified ID exists.
+   * @param {String} id 
+   * @returns {Boolean} Does an interaction specification with the specified ID exists?
+   */
+  hasInteraction(id) {
+    return this.hasSpecification(id);
+  }
+
+  /**
    * Get the interaction with the specified id.
    * @param {String} id 
    */
