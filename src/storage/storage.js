@@ -29,6 +29,7 @@ class Storage {
   /**
    * Get the specification with the specified id.
    * @param {String} id 
+   * @returns The specification with the specified id.
    */
   getSpecification(id) {
     return this.specifications.get(id);
@@ -36,6 +37,7 @@ class Storage {
 
   /**
    * Get an array of all specifications.
+   * @returns Array with all specifications.
    */
   getSpecificationList() {
     return Array.from(this.specifications.values());
