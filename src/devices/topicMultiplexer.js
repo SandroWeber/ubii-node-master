@@ -18,11 +18,13 @@ class TopicMultiplexer {
     this.identityMatchPattern = identityMatchPattern;
 
     this.topicData = topicData;
-    this.topicList = [];
+    this.topicData.events.on('newTopic', (topic) => { this.addTopic(topic); });
     this.topicSelectorRegExp = new RegExp(this.topicSelector);
     if (this.identityMatchPattern.length > 0) {
       this.identityMatchRegExp = new RegExp(this.identityMatchPattern);
     }
+
+    this.updateTopicList();
   }
 
   /**
@@ -33,8 +35,6 @@ class TopicMultiplexer {
    * @return {Array} List of {topic, data, [optional] identity} objects for all topic data that match the topic selector. 
    */
   get() {
-    this.updateTopicList();
-
     let topicDataRecords = [];
     this.topicList.forEach((topic) => {
       let entry = this.topicData.pull(topic);
@@ -62,6 +62,12 @@ class TopicMultiplexer {
       }
       return selectedTopics;
     }, []);
+  }
+
+  addTopic(topic) {
+    if (this.topicSelectorRegExp.test(topic)) {
+      this.topicList.push(topic);
+    }
   }
 
   toProtobuf() {
