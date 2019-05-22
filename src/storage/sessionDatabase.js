@@ -12,7 +12,7 @@ class SessionDatabase extends Storage{
    * @returns {Boolean} Does a session specification with the specified ID exists?
    */
   hasSession(id) {
-    return this.specifications.has(id);
+    return this.hasSpecification(id);
   }
 
   /**
