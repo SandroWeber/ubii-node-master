@@ -93,8 +93,8 @@ class Session {
       }
 
       if (mapping.interactionInput && interaction.hasInput(mapping.interactionInput.internalName)) {
-        if (!interaction.connectInput(mapping.interactionInput.internalName, mapping.topic)) {
-          console.info('Session.applyIOMappings() - connectInput() failed for interaction ' + interaction.id +
+        if (!interaction.connectInputTopic(mapping.interactionInput.internalName, mapping.topic)) {
+          console.info('Session.applyIOMappings() - connectInputTopic() failed for interaction ' + interaction.id +
             ': ' + mapping.interactionInput.internalName + ' -> ' + mapping.topic);
         }
       } else if (mapping.interactionOutput && interaction.hasOutput(mapping.interactionOutput.internalName)) {
@@ -103,8 +103,8 @@ class Session {
         let type = formatArray[formatArray.length-1];  // remove namespacing
         type = type.charAt(0).toLowerCase() + type.slice(1);  // make first letter lowercase
 
-        if (!interaction.connectOutput(mapping.interactionOutput.internalName, mapping.topic, type)) {
-          console.info('Session.applyIOMappings() - connectOutput() failed for interaction ' + interaction.id +
+        if (!interaction.connectOutputTopic(mapping.interactionOutput.internalName, mapping.topic, type)) {
+          console.info('Session.applyIOMappings() - connectOutputTopic() failed for interaction ' + interaction.id +
             ': ' + mapping.interactionOutput.internalName + ' -> ' + mapping.topic);
         }
       }

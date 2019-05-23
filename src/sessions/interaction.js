@@ -28,9 +28,9 @@ class Interaction {
     return this.outputFormats.some((output) => {return output.internalName === name});
   }
 
-  connectInput(internalName, externalTopic) {
+  connectInputTopic(internalName, externalTopic) {
     if (!this.topicData) {
-      console.log('Interaction(' + this.id + ').connectInput() - missing topicData == ' + this.topicData);
+      console.log('Interaction(' + this.id + ').connectInputTopic() - missing topicData == ' + this.topicData);
       return false;
     }
 
@@ -50,13 +50,13 @@ class Interaction {
     return true;
   }
 
-  disconnectInput(internalName) {
+  disconnectInputTopic(internalName) {
     delete this.inputProxy[internalName];
   }
 
-  connectOutput(internalName, externalTopic, type) {
+  connectOutputTopic(internalName, externalTopic, type) {
     if (!this.topicData) {
-      console.log('Interaction(' + this.id + ').connectOutput() - missing topicData == ' + this.topicData);
+      console.log('Interaction(' + this.id + ').connectOutputTopic() - missing topicData == ' + this.topicData);
       return false;
     }
 
@@ -75,7 +75,7 @@ class Interaction {
     return true;
   }
 
-  disconnectOutput(internalName) {
+  disconnectOutputTopic(internalName) {
     delete this.outputProxy[internalName];
   }
 
@@ -100,9 +100,9 @@ class Interaction {
 
       //TODO: check topic vs. input/output format for consistency, needs "topicData.getMsgType(topic)"
       if (mapping.interactionInput && this.hasInput(mapping.interactionInput.internalName)) {
-        this.connectInput(mapping.interactionInput.internalName, mapping.topic);
+        this.connectInputTopic(mapping.interactionInput.internalName, mapping.topic);
       } else if (mapping.interactionOutput && this.hasOutput(mapping.interactionOutput.internalName)) {
-        this.connectOutput(mapping.interactionOutput.internalName, mapping.topic);
+        this.connectOutputTopic(mapping.interactionOutput.internalName, mapping.topic);
       }
     });
   }

@@ -46,7 +46,7 @@ test('setTopicData()', t => {
   t.is(interaction.topicData, topicData);
 });
 
-test('connectInput()', t => {
+test('connectInputTopic()', t => {
   let interaction = t.context.interaction;
 
   let inputName = 'inputName';
@@ -54,7 +54,7 @@ test('connectInput()', t => {
 
   // no topic data defined yet
   t.is(interaction.inputProxy[inputName], undefined);
-  interaction.connectInput(inputName, topicName);
+  interaction.connectInputTopic(inputName, topicName);
   t.is(interaction.inputProxy[inputName], undefined);
 
   // defined topic data, but topic undefined
@@ -62,28 +62,28 @@ test('connectInput()', t => {
     pull: sinon.fake()
   };
   interaction.setTopicData(topicData);
-  interaction.connectInput(inputName, topicName);
+  interaction.connectInputTopic(inputName, topicName);
   t.is(interaction.inputProxy[inputName], undefined);
   t.is(topicData.pull.callCount, 1);
 
   // defined topic data
   topicData.pull = sinon.fake.returns({data: 0, type: 'number'});
-  interaction.connectInput(inputName, topicName);
+  interaction.connectInputTopic(inputName, topicName);
   t.not(interaction.inputProxy[inputName], null);
   t.is(topicData.pull.callCount, 2);
   t.is(topicData.pull.lastArg, topicName);
 });
 
-test('disconnectInput()', t => {
+test('disconnectInputTopic()', t => {
   let interaction  = t.context.interaction;
 
   let inputName = 'inputName';
   interaction.inputProxy[inputName] = {};
-  interaction.disconnectInput(inputName);
+  interaction.disconnectInputTopic(inputName);
   t.is(interaction.inputProxy[inputName], undefined);
 });
 
-test('connectOutput()', t => {
+test('connectOutputTopic()', t => {
   let interaction = t.context.interaction;
 
   let outputName = 'outputName';
@@ -92,7 +92,7 @@ test('connectOutput()', t => {
 
   // no topic data defined yet
   t.is(interaction.outputProxy[outputName], undefined);
-  interaction.connectOutput(outputName, topicName);
+  interaction.connectOutputTopic(outputName, topicName);
   t.is(interaction.outputProxy[outputName], undefined);
 
   // defined topic data
@@ -100,7 +100,7 @@ test('connectOutput()', t => {
     publish: sinon.fake()
   };
   interaction.setTopicData(topicData);
-  interaction.connectOutput(outputName, topicName, type);
+  interaction.connectOutputTopic(outputName, topicName, type);
 
   let value = 'test-value';
   interaction.outputProxy[outputName] = value;
@@ -108,20 +108,20 @@ test('connectOutput()', t => {
   t.deepEqual(topicData.publish.lastCall.args, [topicName, value, type]);
 });
 
-test('disconnectOutput()', t => {
+test('disconnectOutputTopic()', t => {
   let interaction  = t.context.interaction;
 
   let outputName = 'outputName';
   interaction.outputProxy[outputName] = {};
-  interaction.disconnectOutput(outputName);
+  interaction.disconnectOutputTopic(outputName);
   t.is(interaction.outputProxy[outputName], undefined);
 });
 
 test('connectIO()', t => {
   let interaction  = t.context.interaction;
 
-  interaction.connectInput = sinon.fake();
-  interaction.connectOutput = sinon.fake();
+  interaction.connectInputTopic = sinon.fake();
+  interaction.connectOutputTopic = sinon.fake();
 
   let input1 = {internalName: 'input-1', messageFormat: ''},
     topicInput1 = 'topic-input-1',
@@ -134,8 +134,8 @@ test('connectIO()', t => {
 
   // no mappings
   interaction.connectIO(ioMappings);
-  t.is(interaction.connectInput.callCount, 0);
-  t.is(interaction.connectOutput.callCount, 0);
+  t.is(interaction.connectInputTopic.callCount, 0);
+  t.is(interaction.connectOutputTopic.callCount, 0);
 
   // not well defined mappings
   ioMappings.push({
@@ -147,8 +147,8 @@ test('connectIO()', t => {
     topic: topicOutput1
   });
   interaction.connectIO(ioMappings);
-  t.is(interaction.connectInput.callCount, 0);
-  t.is(interaction.connectOutput.callCount, 0);
+  t.is(interaction.connectInputTopic.callCount, 0);
+  t.is(interaction.connectOutputTopic.callCount, 0);
 
   // well defined mappings
   ioMappings = [];
@@ -163,8 +163,8 @@ test('connectIO()', t => {
     topic: topicOutput1
   });
   interaction.connectIO(ioMappings);
-  t.is(interaction.connectInput.callCount, 1);
-  t.is(interaction.connectOutput.callCount, 1);
+  t.is(interaction.connectInputTopic.callCount, 1);
+  t.is(interaction.connectOutputTopic.callCount, 1);
 });
 
 test('disconnectIO()', t => {

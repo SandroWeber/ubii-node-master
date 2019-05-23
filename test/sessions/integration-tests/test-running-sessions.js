@@ -50,8 +50,8 @@ let setupInteraction2 = (topicData) => {
   interaction.state.triggerToggle = true;
   interaction.state.outputNumber = 0;
 
-  interaction.connectInput('integer', topicNameInteger);
-  interaction.connectOutput('string', topicNameString);
+  interaction.connectInputTopic('integer', topicNameInteger);
+  interaction.connectOutputTopic('string', topicNameString);
 
   return interaction;
 };
@@ -77,8 +77,8 @@ let setupGenericInteractions = (session, count, topicData) => {
     interaction.setTopicData(topicData);
     interaction.state.counter = 0;
 
-    interaction.connectInput('bool', getGenericTopicInputBool(session, interaction));
-    interaction.connectOutput('string', getGenericTopicOutputString(session, interaction));
+    interaction.connectInputTopic('bool', getGenericTopicInputBool(session, interaction));
+    interaction.connectOutputTopic('string', getGenericTopicOutputString(session, interaction));
 
     session.addInteraction(interaction);
   }

@@ -19,7 +19,7 @@ class TopicDemultiplexer {
   }
 
   /**
-   * Publish a list of entries: {data : data to publish, outputTopicParams: array of string params used to format outputTopicFormat}
+   * Publish a list of entries: [{data : data to publish, outputTopicParams: array of string params used to format outputTopicFormat}, ...]
    */
   push(topicDataList) {
     topicDataList.forEach((entry) => {
