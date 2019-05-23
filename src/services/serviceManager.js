@@ -1,5 +1,5 @@
 const {ClientRegistrationService} = require('./clientRegistrationService.js');
-const {DeviceRegistrationService} = require('./deviceRegistrationService.js');
+const {DeviceRegistrationService} = require('./devices/deviceRegistrationService.js');
 const {InteractionDeleteService} = require('./interactions/interactionDeleteService.js');
 const {InteractionGetListService} = require('./interactions/interactionGetListService.js');
 const {InteractionGetService} = require('./interactions/interactionGetService.js');
