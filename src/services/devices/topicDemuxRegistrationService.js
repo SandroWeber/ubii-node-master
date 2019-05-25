@@ -6,14 +6,14 @@ const namida = require("@tum-far/namida");
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class TopicDemuxRegistrationService extends Service {
-  constructor(clientManager, deviceManager) {
+  constructor(deviceManager) {
     super(DEFAULT_TOPICS.SERVICES.TOPIC_DEMUX_REGISTRATION);
 
-    this.clientManager = clientManager;
     this.deviceManager = deviceManager;
   }
 
   reply(specs) {
+    //TODO: extend with DB after merge for UBII-83 (storage unification)
     try {
       let demux = this.deviceManager.processTopicDemuxRegistration(specs);
 
