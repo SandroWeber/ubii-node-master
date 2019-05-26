@@ -42,8 +42,6 @@ class InteractionDatabase extends Storage{
 
     try {
       this.addSpecification(specification);
-
-      return interaction;
     } catch (error) {
       throw error;
     }
