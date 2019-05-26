@@ -1,4 +1,5 @@
 const {Service} = require('./../service.js');
+const {Interaction} = require('./../../sessions/interaction.js');
 const InteractionDatabase = require('../../storage/interactionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
@@ -22,7 +23,8 @@ class InteractionRegistrationService extends Service {
       let newInteractions = [];
       interactionSpecs.forEach((spec) => {
         try {
-          newInteractions.push(InteractionDatabase.addInteraction(spec));
+          InteractionDatabase.addInteraction(spec);
+          newInteractions.push(new Interaction(spec));
         } catch (error) {
           return {
             error: {
