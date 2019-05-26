@@ -36,16 +36,13 @@ class SessionDatabase extends Storage{
    * @param {Object} sessionManager A reference tot he sessionmanager is required to create session instances.
    * @returns Returns an session that corresponds to the specified specification.
    */
-  addSession(specification, sessionManager) {
+  addSession(specification) {
     if (!this.verifySpecification(specification)) {
       throw 'Session with ID ' + specification.id + ' could not be registered, invalid specs'
     }
 
     try {
-      let session = sessionManager.createSession(specification);
-      let sessionSpecification = session.toProtobuf();
-
-      this.addSpecification(sessionSpecification);
+      this.addSpecification(specification);
 
       return session;
     } catch (error) {
