@@ -24,7 +24,7 @@ class SessionDeleteService extends Service {
         return {
           error: {
             title: 'SessionDeleteService Error',
-            message: error
+            message: error.toString()
           }
         };
       }
