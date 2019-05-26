@@ -24,7 +24,8 @@ class SessionRegistrationService extends Service {
       let newSessions = [];
       sessionSpecs.forEach((spec) => {
         try {
-          newSessions.push(SessionDatabase.addSession(spec, this.sessionManager));
+          SessionDatabase.addSession(spec);
+          newSessions.push(this.sessionManager.createSession(spec));
         } catch (error) {
           return {
             error: {
