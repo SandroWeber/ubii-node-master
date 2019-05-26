@@ -8,18 +8,18 @@ class SessionReplaceService extends Service {
     super(DEFAULT_TOPICS.SERVICES.SESSION_REPLACE);
   }
 
-  reply(sessionMessage) {
-    if (!SessionDatabase.verifySpecification(sessionMessage)) {
+  reply(sessionSpecs) {
+    if (!SessionDatabase.verifySpecification(sessionSpecs)) {
       return {
         error: {
           title: 'SessionGetService Error',
-          message: 'Could not verify session with ID ' + sessionMessage.id
+          message: 'Could not verify session with ID ' + sessionSpecs.id
         }
       };
     }
 
     try {
-      SessionDatabase.updateSession(sessionMessage);
+      SessionDatabase.updateSession(sessionSpecs);
     } catch (error) {
       return {
         error: {
@@ -32,7 +32,7 @@ class SessionReplaceService extends Service {
     return {
       success: {
         title: 'SessionReplaceService',
-        message: 'Successfully replaced session with ID ' + sessionMessage.id
+        message: 'Successfully replaced session with ID ' + sessionSpecs.id
       }
     };
   }
