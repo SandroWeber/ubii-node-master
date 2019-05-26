@@ -65,7 +65,7 @@ class SessionDatabase extends Storage{
    * Update a session specification that is already present in the specifications list with a new value.
    * @param {Object} specification The specification requires a name and id property.
    */
-  updateSessionSpecs(specification) {
+  updateSession(specification) {
     if (!this.verifySpecification(specification)) {
       throw 'session specification could not be verified';
     }
