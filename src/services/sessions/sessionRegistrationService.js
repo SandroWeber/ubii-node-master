@@ -43,7 +43,8 @@ class SessionRegistrationService extends Service {
 
     let session;
     try {
-      session = SessionDatabase.addSession(sessionSpecs, this.sessionManager);
+      SessionDatabase.addSession(sessionSpecs);
+      session = this.sessionManager.createSession(sessionSpecs);
     } catch (error) {
       return {
         error: {
