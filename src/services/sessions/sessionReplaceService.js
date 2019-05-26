@@ -19,7 +19,7 @@ class SessionReplaceService extends Service {
     }
 
     try {
-      SessionDatabase.updateSessionSpecs(sessionMessage);
+      SessionDatabase.updateSession(sessionMessage);
     } catch (error) {
       return {
         error: {
