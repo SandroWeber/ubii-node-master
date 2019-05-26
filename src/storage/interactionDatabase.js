@@ -31,9 +31,8 @@ class InteractionDatabase extends Storage{
   }
 
   /**
-   * Add a new interaction protobuf specification based on the specified specification to the specifications list. Returns the corresponding interaction.
+   * Add a new interaction protobuf specification based on the specified specification to the specifications list.
    * @param {Object} specification The specification in protobuf format. It requires a name and id property.
-   * @returns Returns an interaction that corresponds to the specified specification.
    */
   addInteraction(specification) {
     if (!this.verifySpecification(specification)) {

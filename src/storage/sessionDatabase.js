@@ -31,10 +31,9 @@ class SessionDatabase extends Storage{
   }
 
   /**
-   * Add a new session protobuf specification based on the specified specification to the specifications list. Returns the corresponding session.
+   * Add a new session protobuf specification based on the specified specification to the specifications list.
    * @param {Object} specification The specification in protobuf format. It requires a name and id property.
    * @param {Object} sessionManager A reference tot he sessionmanager is required to create session instances.
-   * @returns Returns an session that corresponds to the specified specification.
    */
   addSession(specification) {
     if (!this.verifySpecification(specification)) {
@@ -43,8 +42,6 @@ class SessionDatabase extends Storage{
 
     try {
       this.addSpecification(specification);
-
-      return session;
     } catch (error) {
       throw error;
     }
