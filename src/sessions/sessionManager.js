@@ -43,6 +43,10 @@ class SessionManager {
     return this.sessions.find((session) => {return session.id === id;});
   }
 
+  getSessionList() {
+    return this.sessions;
+  }
+
   startSession(id) {
     let session = this.sessions.find((session) => {return session.id === id;});
     if (session) {
