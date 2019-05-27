@@ -1,4 +1,5 @@
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
+const {Session} = require('./../sessions/session.js');
 const Storage = require('./storage.js');
 
 class SessionDatabase extends Storage{
@@ -74,6 +75,10 @@ class SessionDatabase extends Storage{
   verifySpecification(specification) {
     let translator = new ProtobufTranslator(MSG_TYPES.SESSION);
     try {
+      // Verify by object creation.
+      let session = new Session(specification);
+      session.toProtobuf();
+
       return translator.verify(specification);
     }
     catch (error) {
