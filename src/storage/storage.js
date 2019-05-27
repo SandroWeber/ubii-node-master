@@ -138,7 +138,7 @@ class Storage {
     if (specification.name && specification.name.length > 0) {
       path += specification.name + '_';
     }
-    path += specification.id + '.'+this.fileEnding;
+    path += specification.id + '.' + this.fileEnding;
 
     // Write to file and store path.
     try {
