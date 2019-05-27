@@ -1,4 +1,5 @@
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
+const {Interaction} = require('./../sessions/interaction.js');
 const Storage = require('./storage.js');
 
 class InteractionDatabase extends Storage{
@@ -73,6 +74,10 @@ class InteractionDatabase extends Storage{
   verifySpecification(specification) {
     let translator = new ProtobufTranslator(MSG_TYPES.INTERACTION);
     try {
+      // Verify by object creation.
+      let interaction = new Interaction(specification);
+      interaction.toProtobuf();
+
       return translator.verify(specification);
     }
     catch (error) {
