@@ -44,7 +44,6 @@ class InteractionRegistrationService extends Service {
     let interaction;
     try {
       let interaction = new Interaction(interactionSpecs);
-      newInteractions.push(interaction);
       InteractionDatabase.addInteraction(interaction.toProtobuf());
     } catch (error) {
       return {
