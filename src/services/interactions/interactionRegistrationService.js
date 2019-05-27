@@ -23,8 +23,9 @@ class InteractionRegistrationService extends Service {
       let newInteractions = [];
       interactionSpecs.forEach((spec) => {
         try {
-          InteractionDatabase.addInteraction(spec);
-          newInteractions.push(new Interaction(spec));
+          let interaction = new Interaction(spec);
+          newInteractions.push(interaction);
+          InteractionDatabase.addInteraction(interaction.toProtobuf());
         } catch (error) {
           return {
             error: {
@@ -42,8 +43,9 @@ class InteractionRegistrationService extends Service {
 
     let interaction;
     try {
-      InteractionDatabase.addInteraction(interactionSpecs);
-      interaction = new Interaction(interactionSpecs)
+      let interaction = new Interaction(interactionSpecs);
+      newInteractions.push(interaction);
+      InteractionDatabase.addInteraction(interaction.toProtobuf());
     } catch (error) {
       return {
         error: {
