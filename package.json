@@ -33,7 +33,7 @@
     "sinon": "6.0.1"
   },
   "dependencies": {
-    "@tum-far/namida": "0.1.0",
+    "@tum-far/namida": "0.1.1",
     "@tum-far/ubii-msg-formats": "0.8.20",
     "@tum-far/ubii-topic-data": "0.3.1",
     "body-parser": "1.18.3",
