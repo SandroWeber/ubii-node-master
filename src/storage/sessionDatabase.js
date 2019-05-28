@@ -42,7 +42,7 @@ class SessionDatabase extends Storage{
     }
 
     try {
-      this.addSpecification(specification);
+      return this.addSpecification(specification);
     } catch (error) {
       throw error;
     }
