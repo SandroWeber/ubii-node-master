@@ -55,6 +55,7 @@ class Storage {
     try {
       this.specifications.set(specification.id, specification);
       this.saveSpecificationToFile(specification);
+      return specification;
     } catch (error) {
       throw error;
     }
