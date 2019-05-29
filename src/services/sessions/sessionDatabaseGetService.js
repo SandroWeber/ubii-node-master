@@ -5,7 +5,7 @@ const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class SessionDatabaseGetService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.SESSION_GET);
+    super(DEFAULT_TOPICS.SERVICES.SESSION_DATABASE_GET);
   }
 
   reply(sessionMessage) {

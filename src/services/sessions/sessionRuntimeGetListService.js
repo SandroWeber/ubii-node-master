@@ -4,7 +4,7 @@ const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class SessionRuntimeGetListService extends Service {
   constructor(sessionManager) {
-    super(DEFAULT_TOPICS.SERVICES.SESSION_GET_RUNTIME_LIST);
+    super(DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_GET_LIST);
 
     this.sessionManager = sessionManager;
   }
