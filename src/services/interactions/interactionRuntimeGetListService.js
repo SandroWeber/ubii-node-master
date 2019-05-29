@@ -9,6 +9,7 @@ class InteractionRuntimeGetListService extends Service {
   }
 
   reply() {
+    // Todo: Change to runtime
     let interactions = InteractionDatabase.getInteractionList();
     if (typeof interactions === 'undefined') {
       return {

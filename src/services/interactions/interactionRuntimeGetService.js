@@ -9,6 +9,7 @@ class InteractionRuntimeGetService extends Service {
   }
 
   reply(interactionMessage) {
+    // Todo: Change to runtime
     let interaction = InteractionDatabase.getInteraction(interactionMessage.id);
     if (typeof interaction === 'undefined') {
       return {
