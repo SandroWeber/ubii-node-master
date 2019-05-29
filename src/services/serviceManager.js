@@ -49,8 +49,8 @@ class ServiceManager {
     this.addService(new SessionDeleteService());
     this.addService(new SessionDatabaseGetListService());
     this.addService(new SessionDatabaseGetService());
-    this.addService(new SessionRuntimeGetListService());
-    this.addService(new SessionRuntimeGetService());
+    this.addService(new SessionRuntimeGetListService(this.sessionManager));
+    this.addService(new SessionRuntimeGetService(this.sessionManager));
     this.addService(new SessionRegistrationService(this.sessionManager));
     this.addService(new SessionReplaceService());
     this.addService(new SessionStartService(this.sessionManager));
