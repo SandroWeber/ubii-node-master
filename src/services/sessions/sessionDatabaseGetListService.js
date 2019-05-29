@@ -3,7 +3,7 @@ const SessionDatabase = require('../../storage/sessionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
-class SessionGetListService extends Service {
+class SessionDatabaseGetListService extends Service {
   constructor() {
     super(DEFAULT_TOPICS.SERVICES.SESSION_GET_LIST);
   }
@@ -13,7 +13,7 @@ class SessionGetListService extends Service {
     if (typeof sessions === 'undefined') {
       return {
         error: {
-          title: 'SessionGetListService Error',
+          title: 'SessionDatabaseGetListService Error',
           message: 'Could not retrieve session list'
         }
       };
@@ -26,5 +26,5 @@ class SessionGetListService extends Service {
 }
 
 module.exports = {
-  'SessionGetListService': SessionGetListService
+  'SessionDatabaseGetListService': SessionDatabaseGetListService
 };
