@@ -4,13 +4,14 @@ const SessionDatabase = require('../../storage/sessionDatabase');
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class SessionRuntimeGetService extends Service {
-  constructor() {
+  constructor(sessionManager) {
     super(DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_GET);
+    this.sessionManager = sessionManager;
   }
 
   reply(sessionMessage) {
     // Todo: Change to runtime
-    let session = SessionDatabase.getSession(sessionMessage.id);
+    let session = this.sessionManager.getSession(sessionMessage.id);
     if (typeof session === 'undefined') {
       return {
         error: {
