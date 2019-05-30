@@ -1,5 +1,4 @@
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
-const {Session} = require('./../sessions/session.js');
 const Storage = require('./storage.js');
 
 class SessionDatabase extends Storage{
