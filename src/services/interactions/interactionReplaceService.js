@@ -12,7 +12,7 @@ class InteractionReplaceService extends Service {
     if (!InteractionDatabase.verifySpecification(interactionMessage)) {
       return {
         error: {
-          title: 'InteractionGetService Error',
+          title: 'InteractionReplaceService Error',
           message: 'Could not verify interaction with ID ' + interactionMessage.id
         }
       };
@@ -23,7 +23,7 @@ class InteractionReplaceService extends Service {
     } catch (error) {
       return {
         error: {
-          title: 'InteractionGetService Error',
+          title: 'InteractionReplaceService Error',
           message: error.toString()
         }
       };
