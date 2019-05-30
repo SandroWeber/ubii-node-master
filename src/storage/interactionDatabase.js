@@ -74,10 +74,6 @@ class InteractionDatabase extends Storage{
   verifySpecification(specification) {
     let translator = new ProtobufTranslator(MSG_TYPES.INTERACTION);
     try {
-      // Verify by object creation.
-      let interaction = new Interaction(specification);
-      interaction.toProtobuf();
-
       return translator.verify(specification);
     }
     catch (error) {
