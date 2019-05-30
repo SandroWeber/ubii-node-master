@@ -3,8 +3,6 @@ const {DeviceRegistrationService} = require('./deviceRegistrationService.js');
 const {InteractionDeleteService} = require('./interactions/interactionDeleteService.js');
 const {InteractionDatabaseGetListService} = require('./interactions/interactionDatabaseGetListService.js');
 const {InteractionDatabaseGetService} = require('./interactions/interactionDatabaseGetService.js');
-const {InteractionRuntimeGetListService} = require('./interactions/interactionRuntimeGetListService.js');
-const {InteractionRuntimeGetService} = require('./interactions/interactionRuntimeGetService.js');
 const {InteractionRegistrationService} = require('./interactions/interactionRegistrationService.js');
 const {InteractionReplaceService} = require('./interactions/interactionReplaceService.js');
 const {SubscriptionService} = require('./subscriptionService.js');
@@ -39,8 +37,6 @@ class ServiceManager {
     this.addService(new InteractionDeleteService());
     this.addService(new InteractionDatabaseGetListService());
     this.addService(new InteractionDatabaseGetService());
-    this.addService(new InteractionRuntimeGetListService());
-    this.addService(new InteractionRuntimeGetService());
     this.addService(new InteractionRegistrationService());
     this.addService(new InteractionReplaceService());
     this.addService(new SubscriptionService(this.clientManager));
