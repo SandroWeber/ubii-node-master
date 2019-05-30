@@ -75,10 +75,6 @@ class SessionDatabase extends Storage{
   verifySpecification(specification) {
     let translator = new ProtobufTranslator(MSG_TYPES.SESSION);
     try {
-      // Verify by object creation.
-      let session = new Session(specification);
-      session.toProtobuf();
-
       return translator.verify(specification);
     }
     catch (error) {
