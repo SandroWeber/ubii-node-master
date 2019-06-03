@@ -180,7 +180,7 @@ class Client {
    * @param {String} topic
    */
   unsubscribe(topic) {
-    if (this.subscriptionTokens.has(topic)) {
+    if (!this.subscriptionTokens.has(topic)) {
       namida.logFailure(`Topic Data unsubscription rejected`,
         `Client with ID ${this.id} is not subscribed to this topic.`);
       return;
