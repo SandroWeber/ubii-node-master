@@ -1,88 +1,84 @@
-const fs = require('fs');
-const shelljs = require('shelljs');
-
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
+const Storage = require('./storage.js');
 
-const {BASE_FOLDER_DB} = require('./storageConstants');
-
-
-class SessionDatabase {
+class SessionDatabase extends Storage{
   constructor() {
-    this.directory = BASE_FOLDER_DB + '/sessions';
-    if (!fs.existsSync(this.directory)){
-      shelljs.mkdir('-p', this.directory);
+    super('sessions', 'session');
+  }
+
+  /**
+   * Returns whether a session specification with the specified ID exists.
+   * @param {String} id 
+   * @returns {Boolean} Does a session specification with the specified ID exists?
+   */
+  hasSession(id) {
+    return this.hasSpecification(id);
+  }
+
+  /**
+   * Get the session with the specified id.
+   * @param {String} id 
+   */
+  getSession(id) {
+    return this.getSpecification(id);
+  }
+
+  /**
+   * Get an array of all specifications.
+   */
+  getSessionList() {
+    return this.getSpecificationList();
+  }
+
+  /**
+   * Add a new session protobuf specification based on the specified specification to the specifications list.
+   * @param {Object} specification The specification in protobuf format. It requires a name and id property.
+   * @param {Object} sessionManager A reference tot he sessionmanager is required to create session instances.
+   */
+  addSession(specification) {
+    if (!this.verifySpecification(specification)) {
+      throw 'Session with ID ' + specification.id + ' could not be registered, invalid specs'
     }
 
-    this.sessionSpecs = new Map();
-    this.loadSessionFiles();
-  }
-
-  hasSessionSpecsByID(id) {
-    return this.sessionSpecs.has(id);
-  }
-
-  getSessionSpecsByID(id) {
-    return this.sessionSpecs.get(id);
-  }
-
-  loadSessionFiles() {
-    fs.readdir(this.directory, (err, files) => {
-      if (err) {
-        return console.info('SessionDatabase - Unable to scan directory: ' + err);
-      }
-
-      files.forEach((file) => {
-        this.loadSessionFromFile(this.directory + '/' + file);
-      });
-    });
-  }
-
-  saveSessionSpecsToFile(specs) {
-    let path = this.directory + '/';
-    if (specs.name && specs.name.length > 0) {
-      path += specs.name + '_';
-    }
-    path += specs.id + '.session';
-
-    if (this.verifySpecification(specs)) {
-      fs.writeFile(path, JSON.stringify(specs, null, 4), { flag: 'wx' }, (error) => {
-        if (error) {
-          console.info('SessionDatabase - session already esists:\n' + error);
-          throw error;
-        }
-      });
-    }
-  }
-
-  loadSessionFromFile(path) {
-    fs.readFile(path, (err, data) => {
-      if (err) throw err;
-
-      let specs = JSON.parse(data);
-
-      if (!this.verifySpecification(specs)) {
-        console.info('InteractionDatabase - invalid specifications:\n' + specs);
-      }
-
-      if (this.sessionSpecs.has(specs.id)) {
-        console.info('InteractionDatabase - interaction from file ' + path + ' has conflicting ID ' + specs.id);
-      } else {
-        this.sessionSpecs.set(specs.id, specs);
-      }
-    });
-  }
-
-  verifySpecification(specs) {
-    let translator = new ProtobufTranslator(MSG_TYPES.SESSION);
-    let result = false;
     try {
-      result = translator.verify(specs);
+      return this.addSpecification(specification);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Delete the session specification with the specified id from the specifications list.
+   * @param {String} id 
+   */
+  deleteSession(id) {
+    this.deleteSpecification(id);
+  }
+
+  /**
+   * Update a session specification that is already present in the specifications list with a new value.
+   * @param {Object} specification The specification requires a name and id property.
+   */
+  updateSession(specification) {
+    if (!this.verifySpecification(specification)) {
+      throw 'session specification could not be verified';
+    }
+
+    this.updateSpecification(specification);
+  }
+
+  /**
+   * Verifies the specified specification.
+   * @param {*} specification 
+   */
+  verifySpecification(specification) {
+    let translator = new ProtobufTranslator(MSG_TYPES.SESSION);
+    try {
+      return translator.verify(specification);
     }
     catch (error) {
-      result = false;
+      return false;
     }
-
-    return result;
   }
 }
 
