@@ -191,6 +191,8 @@ class Client {
 
     // unsubscribe
     this.topicData.unsubscribe(token);
+    // remove token
+    this.subscriptionTokens.delete(topic);
   }
 
   unsubscribeAll() {
