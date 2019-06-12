@@ -199,9 +199,10 @@ class MasterNode {
       context.feedback.message = `TopicData message publishing failed (ZMQ) with an error:`;
       context.feedback.stack = '' + (e.stack || e);
 
-      namida.error(context.feedback.title,
+      console.error(context.feedback.message + context.feedback.stack);
+      /*namida.error(context.feedback.title,
         context.feedback.message,
-        context.feedback.stack);
+        context.feedback.stack);*/
 
       try {
         // Send error:
@@ -257,9 +258,10 @@ class MasterNode {
       context.feedback.message = `TopicData message publishing failed (WS) with an error:`;
       context.feedback.stack = '' + (e.stack || e);
 
-      namida.error(context.feedback.title,
+      console.error(context.feedback.message + context.feedback.stack);
+      /*namida.error(context.feedback.title,
         context.feedback.message,
-        context.feedback.stack);
+        context.feedback.stack);*/
 
       try {
         // Send error:
