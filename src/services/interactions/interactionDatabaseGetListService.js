@@ -3,9 +3,9 @@ const InteractionDatabase = require('../../storage/interactionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
-class InteractionGetListService extends Service {
+class InteractionDatabaseGetListService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.INTERACTION_GET_LIST);
+    super(DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_GET_LIST);
   }
 
   reply() {
@@ -13,7 +13,7 @@ class InteractionGetListService extends Service {
     if (typeof interactions === 'undefined') {
       return {
         error: {
-          title: 'InteractionGetListService Error',
+          title: 'InteractionDatabaseGetListService Error',
           message: 'Could not retrieve interaction list'
         }
       };
@@ -26,5 +26,5 @@ class InteractionGetListService extends Service {
 }
 
 module.exports = {
-  'InteractionGetListService': InteractionGetListService
+  'InteractionDatabaseGetListService': InteractionDatabaseGetListService
 };

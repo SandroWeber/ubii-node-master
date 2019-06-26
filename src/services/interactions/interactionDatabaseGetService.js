@@ -3,9 +3,9 @@ const InteractionDatabase = require('../../storage/interactionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
-class InteractionGetService extends Service {
+class InteractionDatabaseGetService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.INTERACTION_GET);
+    super(DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_GET);
   }
 
   reply(interactionMessage) {
@@ -13,7 +13,7 @@ class InteractionGetService extends Service {
     if (typeof interaction === 'undefined') {
       return {
         error: {
-          title: 'InteractionGetService Error',
+          title: 'InteractionDatabaseGetService Error',
           message: 'Could not find interaction with ID ' + interactionMessage.id
         }
       };
@@ -24,5 +24,5 @@ class InteractionGetService extends Service {
 }
 
 module.exports = {
-  'InteractionGetService': InteractionGetService
+  'InteractionDatabaseGetService': InteractionDatabaseGetService
 };

@@ -10,25 +10,52 @@ class SessionRegistrationService extends Service {
     this.sessionManager = sessionManager;
   }
 
-  reply(message) {
+  reply(sessionSpecs) {
+    if (typeof sessionSpecs === 'undefined') {
+      return {
+        error: {
+          title: 'SessionRegistrationService Error',
+          message: 'Session specifications are undefined.'
+        }
+      };
+    }
+
+    if (Array.isArray(sessionSpecs)) {
+      let newSessions = [];
+      sessionSpecs.forEach((spec) => {
+        try {
+          let session = this.sessionManager.createSession(spec);
+          newSessions.push(session);
+          SessionDatabase.addSession(session.toProtobuf());
+        } catch (error) {
+          return {
+            error: {
+              title: 'SessionRegistrationService Error',
+              message: error.toString()
+            }
+          };
+        }
+      });
+
+      return {
+        sessionList: newSessions.map((session) => {return session.toProtobuf()})
+      };
+    }
+
+    let session;
     try {
-      let session = this.sessionManager.createSession(message);
-      SessionDatabase.saveSessionSpecsToFile(session.toProtobuf());
+      session = this.sessionManager.createSession(sessionSpecs);
+      SessionDatabase.addSession(session.toProtobuf());
     } catch (error) {
       return {
         error: {
           title: 'SessionRegistrationService Error',
           message: error.toString()
         }
-      }
+      };
     }
 
-    return {
-      success: {
-        title: 'SessionRegistrationService Success',
-        message: 'Saved session with ID ' + message.id + ' to database'
-      }
-    }
+    return {session: session.toProtobuf()};
   }
 }
 

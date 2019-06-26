@@ -1,5 +1,4 @@
 const {Session} = require('./session.js');
-const SessionDatabase = require('../storage/sessionDatabase');
 
 class SessionManager {
   constructor(topicData) {
@@ -8,7 +7,7 @@ class SessionManager {
   }
 
   createSession(specifications = {}) {
-    if (specifications.id && (this.getSession(specifications.id) || SessionDatabase.getSessionSpecsByID(specifications.id))) {
+    if (specifications.id && (this.getSession(specifications.id))) {
       throw 'Session with ID ' + specifications.id + ' already exists.';
     }
 
@@ -41,6 +40,10 @@ class SessionManager {
 
   getSession(id) {
     return this.sessions.find((session) => {return session.id === id;});
+  }
+
+  getSessionList() {
+    return this.sessions;
   }
 
   startSession(id) {
