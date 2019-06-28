@@ -1,5 +1,7 @@
 const uuidv4 = require('uuid/v4');
 
+const {TOPIC_EVENTS} = require('@tum-far/ubii-topic-data')
+
 
 /**
  * A class able to gather a list of topic data with unknown length, for example as input for an interaction.
@@ -18,12 +20,12 @@ class TopicMultiplexer {
     this.identityMatchPattern = identityMatchPattern;
 
     this.topicData = topicData;
-    this.topicData.events.on('newTopic', (topic) => { this.addTopic(topic); });
     this.topicSelectorRegExp = new RegExp(this.topicSelector);
     if (this.identityMatchPattern.length > 0) {
       this.identityMatchRegExp = new RegExp(this.identityMatchPattern);
     }
 
+    this.topicData.events.on(TOPIC_EVENTS.NEW_TOPIC, (topic) => { this.addTopic(topic); });
     this.updateTopicList();
   }
 
@@ -40,9 +42,8 @@ class TopicMultiplexer {
       let entry = this.topicData.pull(topic);
       if (entry && entry.type !== this.dataType && entry.data !== undefined) {
         let record = { topic: topic, data: entry.data };
-        //TODO: (Sandro) adhere to protobuf TopicDataRecord format?
-        //record.type = entry.type;
-        //record[entry.type] = entry.data;
+        record.type = entry.type;
+        record[entry.type] = record.data;
 
         if (this.identityMatchRegExp) {
           record.identity = topic.match(this.identityMatchRegExp)[0];

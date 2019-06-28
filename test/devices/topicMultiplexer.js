@@ -1,7 +1,8 @@
 import test from 'ava';
 
 const {
-  RuntimeTopicData
+  RuntimeTopicData,
+  TOPIC_EVENTS
 } = require('@tum-far/ubii-topic-data');
 
 const {
@@ -148,7 +149,7 @@ const {
     });
   });
 
-  test('add matching topics on event "newTopic"', t => {
+  test('add matching topics on event "new topic"', t => {
     let topicSelector = '[0-9]+\/category_A\/';
     let identityMatchPattern = '\/[0-9]+\/';
     let mux = new TopicMultiplexer(
@@ -156,11 +157,11 @@ const {
       t.context.topicData);
 
     let invalidTopic = '/category_A/invalid/topic';
-    t.context.topicData.events.emit('newTopic', invalidTopic);
+    t.context.topicData.events.emit(TOPIC_EVENTS.NEW_TOPIC, invalidTopic);
     t.is(mux.topicList.length, 0);
 
     let validTopic = '/12345/category_A/invalid/topic';
-    t.context.topicData.events.emit('newTopic', validTopic);
+    t.context.topicData.events.emit(TOPIC_EVENTS.NEW_TOPIC, validTopic);
     t.is(mux.topicList.length, 1);
     t.true(mux.topicList.indexOf(validTopic) !== -1);
   });
