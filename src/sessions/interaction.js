@@ -118,22 +118,6 @@ class Interaction {
     delete this.inputProxy[internalName];
   }
 
-  connectIO(mappings) {
-    mappings.forEach(mapping => {
-      if (mapping.interactionId !== this.id || !mapping.topic) return;
-
-      //TODO: check topic vs. input/output format for consistency, needs "topicData.getMsgType(topic)"
-      if (mapping.interactionInput && this.hasInput(mapping.interactionInput.internalName)) {
-        this.connectInput(mapping.interactionInput.internalName, mapping.topic);
-      } else if (
-        mapping.interactionOutput &&
-        this.hasOutput(mapping.interactionOutput.internalName)
-      ) {
-        this.connectOutput(mapping.interactionOutput.internalName, mapping.topic);
-      }
-    });
-  }
-
   disconnectIO() {
     this.inputProxy = {};
     this.outputProxy = {};

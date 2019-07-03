@@ -138,56 +138,6 @@ test('disconnectOutput()', t => {
   t.is(interaction.outputProxy[outputName], undefined);
 });
 
-test('connectIO()', t => {
-  let interaction  = t.context.interaction;
-
-  interaction.connectInput = sinon.fake();
-  interaction.connectOutput = sinon.fake();
-
-  let input1 = {internalName: 'input-1', messageFormat: ''},
-    topicInput1 = 'topic-input-1',
-    output1 = {internalName: 'output-1', messageFormat: ''},
-    topicOutput1 = 'topic-output-1';
-  interaction.inputFormats.push(input1);
-  interaction.outputFormats.push(output1);
-
-  let ioMappings = [];
-
-  // no mappings
-  interaction.connectIO(ioMappings);
-  t.is(interaction.connectInput.callCount, 0);
-  t.is(interaction.connectOutput.callCount, 0);
-
-  // not well defined mappings
-  ioMappings.push({
-    interactionId: interaction.id,
-    interactionInput: input1
-  });
-  ioMappings.push({
-    interactionId: interaction.id,
-    topic: topicOutput1
-  });
-  interaction.connectIO(ioMappings);
-  t.is(interaction.connectInput.callCount, 0);
-  t.is(interaction.connectOutput.callCount, 0);
-
-  // well defined mappings
-  ioMappings = [];
-  ioMappings.push({
-    interactionId: interaction.id,
-    interactionInput: input1,
-    topic: topicInput1
-  });
-  ioMappings.push({
-    interactionId: interaction.id,
-    interactionOutput: output1,
-    topic: topicOutput1
-  });
-  interaction.connectIO(ioMappings);
-  t.is(interaction.connectInput.callCount, 1);
-  t.is(interaction.connectOutput.callCount, 1);
-});
-
 test('disconnectIO()', t => {
   let interaction  = t.context.interaction;
 
