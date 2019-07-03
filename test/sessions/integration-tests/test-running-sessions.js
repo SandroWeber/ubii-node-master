@@ -44,8 +44,19 @@ let setupInteraction2 = (topicData) => {
       output.string = state.outputNumber.toString();
     }
   };
+  let specs = {
+    processingCallback: processCB.toString(),
+    inputFormats: [{
+      internalName: 'integer',
+      messageFormat: 'uint32'
+    }],
+    outputFormats: [{
+      internalName: 'string',
+      messageFormat: 'string'
+    }]
+  };
 
-  let interaction = new Interaction({processingCallback: processCB.toString()});
+  let interaction = new Interaction(specs);
   interaction.setTopicData(topicData);
   interaction.state.triggerToggle = true;
   interaction.state.outputNumber = 0;
@@ -72,8 +83,19 @@ let setupGenericInteractions = (session, count, topicData) => {
         output.string = state.counter.toString();
       }
     };
+    let specs = {
+      processingCallback: processCB.toString(),
+      inputFormats: [{
+        internalName: 'bool',
+        messageFormat: 'bool'
+      }],
+      outputFormats: [{
+        internalName: 'string',
+        messageFormat: 'string'
+      }]
+    };
 
-    let interaction = new Interaction({processingCallback: processCB.toString()});
+    let interaction = new Interaction(specs);
     interaction.setTopicData(topicData);
     interaction.state.counter = 0;
 
