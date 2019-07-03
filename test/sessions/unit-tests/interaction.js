@@ -1,6 +1,7 @@
 import test from 'ava';
 
 import {Interaction} from '../../../src/index';
+import Utils from '../../../src/sessions/utilities';
 import MockTopicData from '../../mocks/mock-topicdata.js';
 import sinon from 'sinon';
 
@@ -8,6 +9,32 @@ import sinon from 'sinon';
 test.beforeEach(t => {
   t.context.interaction = new Interaction({});
   t.context.topicData = new MockTopicData();
+
+  t.context.interactionSpecs = {
+    id: 'test-id',
+    name: 'test-name',
+    processingCallback: '() => {}',
+    inputFormats: [
+      {
+        internalName: 'input1',
+        messageFormat: 'messageFormat1'
+      },
+      {
+        internalName: 'input2',
+        messageFormat: 'messageFormat2'
+      }
+    ],
+    outputFormats: [
+      {
+        internalName: 'output1',
+        messageFormat: 'messageFormat3'
+      },
+      {
+        internalName: 'output2',
+        messageFormat: 'messageFormat4'
+      }
+    ]
+  };
 });
 
 /* run tests */
@@ -20,22 +47,16 @@ test('constructor() - no params', t => {
   t.is(interaction.processingCallback, undefined);
 });
 
-test('constructor() - with params', t => {
-  let params = {
-    id: 'test-id',
-    name: 'test-name',
-    processingCallback: '() => {}',
-    inputFormats: [],
-    outputFormats: []
-  };
-  let interaction = new Interaction(params);
+test('constructor() - with specs', t => {
+  let specs = t.context.interactionSpecs;
+  let interaction = new Interaction(specs);
   interaction.setTopicData(t.context.topicData);
-  t.is(interaction.id, params.id);
-  t.is(interaction.name, params.name);
-  t.deepEqual(interaction.processingCallback.toString(), params.processingCallback);
+  t.is(interaction.id, specs.id);
+  t.is(interaction.name, specs.name);
+  t.deepEqual(interaction.processingCallback.toString(), specs.processingCallback);
   t.is(interaction.topicData, t.context.topicData);
-  t.is(interaction.inputFormats, params.inputFormats);
-  t.is(interaction.outputFormats, params.outputFormats);
+  t.is(interaction.inputFormats, specs.inputFormats);
+  t.is(interaction.outputFormats, specs.outputFormats);
   t.deepEqual(interaction.state, {});
 });
 
@@ -84,11 +105,11 @@ test('disconnectInputTopic()', t => {
 });
 
 test('connectOutputTopic()', t => {
-  let interaction = t.context.interaction;
+  let interaction = new Interaction(t.context.interactionSpecs);
 
-  let outputName = 'outputName';
+  let outputName = interaction.outputFormats[0].internalName;
   let topicName = 'topicName';
-  let type = 'type';
+  let dataType = Utils.getTopicDataTypeFromMessageFormat(interaction.outputFormats[0].messageFormat);
 
   // no topic data defined yet
   t.is(interaction.outputProxy[outputName], undefined);
@@ -100,12 +121,12 @@ test('connectOutputTopic()', t => {
     publish: sinon.fake()
   };
   interaction.setTopicData(topicData);
-  interaction.connectOutputTopic(outputName, topicName, type);
+  interaction.connectOutputTopic(outputName, topicName);
 
   let value = 'test-value';
   interaction.outputProxy[outputName] = value;
   t.is(topicData.publish.callCount, 1);
-  t.deepEqual(topicData.publish.lastCall.args, [topicName, value, type]);
+  t.deepEqual(topicData.publish.lastCall.args, [topicName, value, dataType]);
 });
 
 test('disconnectOutputTopic()', t => {
@@ -115,56 +136,6 @@ test('disconnectOutputTopic()', t => {
   interaction.outputProxy[outputName] = {};
   interaction.disconnectOutputTopic(outputName);
   t.is(interaction.outputProxy[outputName], undefined);
-});
-
-test('connectIO()', t => {
-  let interaction  = t.context.interaction;
-
-  interaction.connectInputTopic = sinon.fake();
-  interaction.connectOutputTopic = sinon.fake();
-
-  let input1 = {internalName: 'input-1', messageFormat: ''},
-    topicInput1 = 'topic-input-1',
-    output1 = {internalName: 'output-1', messageFormat: ''},
-    topicOutput1 = 'topic-output-1';
-  interaction.inputFormats.push(input1);
-  interaction.outputFormats.push(output1);
-
-  let ioMappings = [];
-
-  // no mappings
-  interaction.connectIO(ioMappings);
-  t.is(interaction.connectInputTopic.callCount, 0);
-  t.is(interaction.connectOutputTopic.callCount, 0);
-
-  // not well defined mappings
-  ioMappings.push({
-    interactionId: interaction.id,
-    interactionInput: input1
-  });
-  ioMappings.push({
-    interactionId: interaction.id,
-    topic: topicOutput1
-  });
-  interaction.connectIO(ioMappings);
-  t.is(interaction.connectInputTopic.callCount, 0);
-  t.is(interaction.connectOutputTopic.callCount, 0);
-
-  // well defined mappings
-  ioMappings = [];
-  ioMappings.push({
-    interactionId: interaction.id,
-    interactionInput: input1,
-    topic: topicInput1
-  });
-  ioMappings.push({
-    interactionId: interaction.id,
-    interactionOutput: output1,
-    topic: topicOutput1
-  });
-  interaction.connectIO(ioMappings);
-  t.is(interaction.connectInputTopic.callCount, 1);
-  t.is(interaction.connectOutputTopic.callCount, 1);
 });
 
 test('disconnectIO()', t => {

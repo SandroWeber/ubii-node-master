@@ -42,7 +42,6 @@ test.beforeEach(async t => {
       topic: 'topics/out/b'
     }
   ];
-  interaction.connectIO(ioMappings);
 
   t.context.interaction = interaction;
 });
