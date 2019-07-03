@@ -7,6 +7,8 @@ class Utils {
     let messageFormatArray = messageFormat.split('.');
     let type = messageFormatArray[messageFormatArray.length - 1]; // remove namespacing
     type = type.charAt(0).toLowerCase() + type.slice(1); // make first letter lowercase
+
+    return type;
   }
 }
 

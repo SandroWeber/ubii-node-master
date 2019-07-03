@@ -78,7 +78,7 @@ class Interaction {
 
   connectOutput(internalName, externalTopic) {
     if (!this.topicData) {
-      console.log(
+      console.info(
         'Interaction(' + this.id + ').connectOutput() - missing topicData == ' + this.topicData
       );
       return false;

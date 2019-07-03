@@ -117,6 +117,7 @@ class Session {
         // topic mux
         else if (typeof inputMapping.topicSource === 'object') {
           //TODO
+          console.info('TOPIC MUX not implemented yet!')
         }
       });
 
@@ -124,13 +125,6 @@ class Session {
         // single topic output target
         if (typeof outputMapping.topicDestination === 'string') {
           if (interaction.hasOutput(outputMapping.name)) {
-            //TODO: still looks a bit "hacky", maybe include type info in protobuf
-            /*let formatArray = mapping.interactionOutput.messageFormat.split(
-              '.'
-            );
-            let type = formatArray[formatArray.length - 1]; // remove namespacing
-            type = type.charAt(0).toLowerCase() + type.slice(1); // make first letter lowercase*/
-
             if (!interaction.connectOutput(outputMapping.name, outputMapping.topicDestination)) {
               console.info(
                 'Session.applyIOMappings() - connectOutput() failed for interaction ' +
@@ -146,6 +140,7 @@ class Session {
         // topic demux
         else if (typeof inputMapping.topicSource === 'object') {
           //TODO
+          console.info('TOPIC DEMUX not implemented yet!')
         }
       });
     });
