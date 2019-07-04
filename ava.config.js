@@ -12,7 +12,7 @@ export default {
   "failFast": false,
   "failWithoutAssertions": false,
   "tap": false,
-  "verbose": true,
-  "serial": false,
+  "verbose": false,
+  "serial": true,
   "compileEnhancements": false
 };
