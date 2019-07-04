@@ -14,7 +14,7 @@ class TopicMuxDatabaseReplaceService extends Service {
 
       return {
         success: {
-          title: 'TopicMuxDatabaseReplaceService',
+          title: 'TopicMuxDatabaseReplaceService Success',
           message: 'Successfully updated topic mux with ID ' + specs.id
         }
       }

@@ -14,7 +14,7 @@ class TopicDemuxDatabaseReplaceService extends Service {
 
       return {
         success: {
-          title: 'TopicDemuxDatabaseReplaceService',
+          title: 'TopicDemuxDatabaseReplaceService Success',
           message: 'Successfully updated topic demux with ID ' + specs.id
         }
       }
