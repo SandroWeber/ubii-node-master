@@ -1,8 +1,9 @@
 import test from 'ava';
 
-import { SessionManager, Session, Interaction } from '../../../src/index'
-import { RuntimeTopicData } from '@tum-far/ubii-topic-data'
+import TestUtility from '../testUtility';
 
+import { SessionManager, Session, Interaction } from '../../../src/index';
+import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
 /* utility */
 
@@ -11,29 +12,6 @@ let topicNameString = 'deviceB->stringTopic';
 
 let cause2IntegerCondition = 42;
 
-let wait = (milliseconds) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve();
-    }, milliseconds);
-  });
-};
-
-/* an interaction always triggering and increasing a counter in state */
-/*let setupInteraction1 = (topicData) => {
-  let processCB = (input, output, state) => {
-    if (state.counter === undefined) {
-      state.counter = 0;
-    } else {
-      state.counter = state.counter + 1;
-    }
-  };
-
-  let interaction = new Interaction({ processingCallback: processCB.toString() });
-  interaction.setTopicData(topicData);
-
-  return interaction;
-};*/
 let getInteraction1Specs = () => {
   let processCB = (input, output, state) => {
     if (state.counter === undefined) {
@@ -47,38 +25,6 @@ let getInteraction1Specs = () => {
     processingCallback: processCB.toString()
   };
 };
-
-/* an interaction working with input, output and state */
-/*let setupInteraction2 = (topicData) => {
-  let processCB = (input, output, state) => {
-    if (input.integer === 42 && state.triggerToggle) {
-      state.triggerToggle = false;
-      state.outputNumber = state.outputNumber + 1;
-      output.string = state.outputNumber.toString();
-    }
-  };
-  let specs = {
-    processingCallback: processCB.toString(),
-    inputFormats: [{
-      internalName: 'integer',
-      messageFormat: 'uint32'
-    }],
-    outputFormats: [{
-      internalName: 'string',
-      messageFormat: 'string'
-    }]
-  };
-
-  let interaction = new Interaction(specs);
-  interaction.setTopicData(topicData);
-  interaction.state.triggerToggle = true;
-  interaction.state.outputNumber = 0;
-
-  interaction.connectInputTopic('integer', topicNameInteger);
-  interaction.connectOutputTopic('string', topicNameString);
-
-  return interaction;
-};*/
 
 let getInteraction2Specs = () => {
   let processCB = (input, output, state) => {
@@ -175,7 +121,7 @@ test('single session - two interactions', async t => {
   t.is(session.status === Session.STATUS.RUNNING, true);
 
   // wait until t1
-  await wait(500);
+  await TestUtility.wait(500);
   // interaction1 at t1
   let counterT1 = interaction1.state.counter;
   t.is(counterT1 > 0, true);
@@ -187,11 +133,11 @@ test('single session - two interactions', async t => {
   t.is(topicData.pull(topicNameString).data, '0');
 
   // wait until t2
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, cause2IntegerCondition);
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, topicIntegerTarget);
-  await wait(50);
+  await TestUtility.wait(50);
   // interaction1 at t2
   let counterT2 = interaction1.state.counter;
   t.is(counterT2 > counterT1, true);
@@ -204,11 +150,11 @@ test('single session - two interactions', async t => {
 
   // wait until t3
   topicIntegerTarget = -50;
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, cause2IntegerCondition);
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, topicIntegerTarget);
-  await wait(50);
+  await TestUtility.wait(50);
   // interaction1 at t3
   let counterT3 = interaction1.state.counter;
   t.is(counterT3 > counterT2, true);
@@ -222,11 +168,11 @@ test('single session - two interactions', async t => {
   // wait until t4
   topicIntegerTarget = 0;
   interaction2.state.triggerToggle = true;
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, 42);
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, topicIntegerTarget);
-  await wait(50);
+  await TestUtility.wait(50);
   // interaction1 at t4
   let counterT4 = interaction1.state.counter;
   t.is(counterT4 > counterT3, true);
@@ -269,7 +215,7 @@ test('two sessions - one interaction each', async t => {
   t.is(session2.status === Session.STATUS.RUNNING, true);
 
   // wait until t1
-  await wait(100);
+  await TestUtility.wait(100);
   // interaction1 at t1
   let counterT1 = interaction1.state.counter;
   t.is(counterT1 > 0, true);
@@ -281,11 +227,11 @@ test('two sessions - one interaction each', async t => {
   t.is(topicData.pull(topicNameString).data, '0');
 
   // wait until t2
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, cause2IntegerCondition);
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, topicIntegerTarget);
-  await wait(50);
+  await TestUtility.wait(50);
   // interaction1 at t2
   let counterT2 = interaction1.state.counter;
   t.is(counterT2 > counterT1, true);
@@ -298,11 +244,11 @@ test('two sessions - one interaction each', async t => {
 
   // wait until t3
   topicIntegerTarget = -50;
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, cause2IntegerCondition);
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, topicIntegerTarget);
-  await wait(50);
+  await TestUtility.wait(50);
   // interaction1 at t3
   let counterT3 = interaction1.state.counter;
   t.is(counterT3 > counterT2, true);
@@ -316,11 +262,11 @@ test('two sessions - one interaction each', async t => {
   // wait until t4
   topicIntegerTarget = 0;
   interaction2.state.triggerToggle = true;
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, cause2IntegerCondition);
-  await wait(50);
+  await TestUtility.wait(50);
   topicData.publish(topicNameInteger, topicIntegerTarget);
-  await wait(50);
+  await TestUtility.wait(50);
   // interaction1 at t4
   let counterT4 = interaction1.state.counter;
   t.is(counterT4 > counterT3, true);
@@ -353,7 +299,7 @@ test('100 generic sessions with 100 generic interactions each', async t => {
     t.is(session.status, Session.STATUS.RUNNING);
   });
 
-  await wait(sessionCount * waitTimePerSession);
+  await TestUtility.wait(sessionCount * waitTimePerSession);
 
   // nothing published on input topics yet, ouput topics should all still be undefined
   sessionManager.sessions.forEach((session) => {
@@ -369,7 +315,7 @@ test('100 generic sessions with 100 generic interactions each', async t => {
       topicData.publish(getGenericTopicInputBool(session, mapping.interaction), true);
     })
   });
-  await wait(sessionCount * waitTimePerSession);
+  await TestUtility.wait(sessionCount * waitTimePerSession);
   // nothing published on input topics yet, counters and ouput topics should all still be at 0
   sessionManager.sessions.forEach((session) => {
     session.ioMappings && session.ioMappings.forEach((mapping) => {

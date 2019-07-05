@@ -1,6 +1,6 @@
 const uuidv4 = require('uuid/v4');
 
-const Utils = require('./utilities');
+const Utils = require('../utilities');
 
 class Interaction {
   constructor({
@@ -105,6 +105,10 @@ class Interaction {
   }
 
   connectMultiplexer(internalName, multiplexer) {
+    if (this.inputProxy[internalName]) {
+      delete this.inputProxy[internalName];
+    }
+
     Object.defineProperty(this.inputProxy, internalName, {
       // input is read-only
       get: () => {
@@ -116,6 +120,26 @@ class Interaction {
 
   disconnectMultiplexer(internalName) {
     delete this.inputProxy[internalName];
+  }
+
+  connectDemultiplexer(internalName, demultiplexer) {
+    if (this.outputProxy[internalName]) {
+      delete this.outputProxy[internalName];
+    }
+
+    Object.defineProperty(this.outputProxy, internalName, {
+      // output is write-only
+      set: value => {
+        demultiplexer.push(value);
+      },
+      configurable: true
+    });
+
+    return true;
+  }
+
+  disconnectDemultiplexer(internalName) {
+    delete this.outputProxy[internalName];
   }
 
   disconnectIO() {
@@ -133,9 +157,9 @@ class Interaction {
     if (typeof this.processingCallback !== 'function') {
       console.log(
         'Interaction(' +
-          this.id +
-          ').process() - processingCallback not a function == ' +
-          this.processingCallback
+        this.id +
+        ').process() - processingCallback not a function == ' +
+        this.processingCallback
       );
       return false;
     }

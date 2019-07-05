@@ -29,6 +29,14 @@ class TestUtility {
 
     return promise;
   }
+
+  static wait(milliseconds) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve();
+      }, milliseconds);
+    });
+  };
 }
 
 module.exports = TestUtility;

@@ -45,7 +45,7 @@ const {
     let mux;
     t.notThrows(() => {
       mux = new TopicMultiplexer(
-        { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
+        { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector },
         t.context.topicData);
     });
     t.true(mux.id.length > 0);
@@ -56,7 +56,7 @@ const {
 
     let topicSelector = 'category_A';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
+      { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector },
       t.context.topicData);
     mux.updateTopicList();
 
@@ -69,7 +69,7 @@ const {
   test('addTopic', t => {
     let topicSelector = 'category_A';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
+      { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector },
       t.context.topicData);
 
     let invalidTopic = '/my/invalid/topic/category';
@@ -87,7 +87,7 @@ const {
 
     let topicSelector = 'category_A';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
+      { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector },
       t.context.topicData);
     let topicDataList = mux.get();
 
@@ -96,7 +96,7 @@ const {
       t.true(t.context.topicsCategoryA.includes(topicDataRecord.topic));
 
       let index = t.context.topicsCategoryA.indexOf(topicDataRecord.topic);
-      t.deepEqual(topicDataRecord.data, {x: index, y: index});
+      t.deepEqual(topicDataRecord.data, { x: index, y: index });
     });
   });
 
@@ -105,7 +105,7 @@ const {
 
     let topicSelector = '[0-9]+\/category_A\/';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector },
+      { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector },
       t.context.topicData);
     let topicDataList = mux.get();
 
@@ -127,7 +127,8 @@ const {
       t.true(t.context.topicsCategoryA.includes(topicDataRecord.topic));
 
       let index = t.context.topicsCategoryA.indexOf(topicDataRecord.topic);
-      t.deepEqual(topicDataRecord.data, {x: index, y: index});
+      t.deepEqual(topicDataRecord.data, { x: index, y: index });
+      t.is(topicDataRecord[topicDataRecord.type], topicDataRecord.data);
     });
   });
 
@@ -137,7 +138,7 @@ const {
     let topicSelector = '[0-9]+\/category_A\/';
     let identityMatchPattern = '\/[0-9]+\/';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector, identityMatchPattern: identityMatchPattern },
+      { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector, identityMatchPattern: identityMatchPattern },
       t.context.topicData);
     let topicDataList = mux.get();
 
@@ -153,7 +154,7 @@ const {
     let topicSelector = '[0-9]+\/category_A\/';
     let identityMatchPattern = '\/[0-9]+\/';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', messageFormat: 'ubii.dataStructure.Vector2', topicSelector: topicSelector, identityMatchPattern: identityMatchPattern },
+      { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector, identityMatchPattern: identityMatchPattern },
       t.context.topicData);
 
     let invalidTopic = '/category_A/invalid/topic';

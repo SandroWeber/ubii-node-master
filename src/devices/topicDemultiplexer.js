@@ -20,6 +20,12 @@ class TopicDemultiplexer {
 
   /**
    * Publish a list of entries: [{data : data to publish, outputTopicParams: array of string params used to format outputTopicFormat}, ...]
+   * 
+   * `outputTopicFormat` uses printf format to generate output topic: 
+   * `outputTopicFormat` = '/publish/to/%s/this/topic/%s'
+   * `outputTopicParams` = ['paramter1', 'parameter2']
+   * results in
+   * `outputTopic` = /publish/to/paramter1/this/topic/parameter2
    */
   push(topicDataList) {
     topicDataList.forEach((entry) => {

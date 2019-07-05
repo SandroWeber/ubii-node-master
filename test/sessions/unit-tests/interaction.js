@@ -1,7 +1,7 @@
 import test from 'ava';
 
-import {Interaction} from '../../../src/index';
-import Utils from '../../../src/sessions/utilities';
+import { Interaction } from '../../../src/index';
+import Utils from '../../../src/utilities';
 import MockTopicData from '../../mocks/mock-topicdata.js';
 import sinon from 'sinon';
 
@@ -88,7 +88,7 @@ test('connectInputTopic()', t => {
   t.is(topicData.pull.callCount, 1);
 
   // defined topic data
-  topicData.pull = sinon.fake.returns({data: 0, type: 'number'});
+  topicData.pull = sinon.fake.returns({ data: 0, type: 'number' });
   interaction.connectInputTopic(inputName, topicName);
   t.not(interaction.inputProxy[inputName], null);
   t.is(topicData.pull.callCount, 2);
@@ -96,7 +96,7 @@ test('connectInputTopic()', t => {
 });
 
 test('disconnectInputTopic()', t => {
-  let interaction  = t.context.interaction;
+  let interaction = t.context.interaction;
 
   let inputName = 'inputName';
   interaction.inputProxy[inputName] = {};
@@ -130,7 +130,7 @@ test('connectOutputTopic()', t => {
 });
 
 test('disconnectOutputTopic()', t => {
-  let interaction  = t.context.interaction;
+  let interaction = t.context.interaction;
 
   let outputName = 'outputName';
   interaction.outputProxy[outputName] = {};
@@ -139,7 +139,7 @@ test('disconnectOutputTopic()', t => {
 });
 
 test('disconnectIO()', t => {
-  let interaction  = t.context.interaction;
+  let interaction = t.context.interaction;
 
   interaction.inputProxy.a = 1;
   interaction.inputProxy.b = '2';
@@ -152,7 +152,7 @@ test('disconnectIO()', t => {
 });
 
 test('setProcessingCallback()', t => {
-  let interaction  = t.context.interaction;
+  let interaction = t.context.interaction;
 
   // not a function
   let callbackFunction = {};
@@ -160,13 +160,13 @@ test('setProcessingCallback()', t => {
   t.is(interaction.processingCallback, undefined);
 
   // a function
-  callbackFunction = () => {};
+  callbackFunction = () => { };
   interaction.setProcessingCallback(callbackFunction);
   t.is(interaction.processingCallback, callbackFunction);
 });
 
 test('process()', t => {
-  let interaction  = t.context.interaction;
+  let interaction = t.context.interaction;
 
   interaction.inputProxy = {
     a: 1,

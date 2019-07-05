@@ -122,7 +122,8 @@ class Session {
         }
         // topic mux
         else if (typeof inputMapping.topicSource === 'object') {
-          this.deviceManager.addTopicMux(topicSource);
+          let mux = this.deviceManager.addTopicMux(inputMapping.topicSource);
+          interaction.connectMultiplexer(inputMapping.name, mux)
         }
       });
 
@@ -144,7 +145,8 @@ class Session {
         }
         // topic demux
         else if (typeof outputMapping.topicDestination === 'object') {
-          this.deviceManager.addTopicDemux(topicDestination);
+          let demux = this.deviceManager.addTopicDemux(outputMapping.topicDestination);
+          interaction.connectDemultiplexer(outputMapping.name, demux);
         }
       });
     });
