@@ -2,25 +2,25 @@ const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../../service.js');
 
-class TopicMuxRuntimeGetService extends Service {
+class TopicDemuxRuntimeGetListService extends Service {
   constructor(deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_GET);
+    super(DEFAULT_TOPICS.SERVICES.TOPIC_DEMUX_RUNTIME_GET_LIST);
 
     this.deviceManager = deviceManager;
   }
 
   reply(specs) {
     try {
-      let muxSpecs = this.deviceManager.getTopicMux(specs.id);
+      let demuxSpecsList = this.deviceManager.getTopicDemuxList().map((demux) => { return demux.toProtobuf(); });
 
       return {
-        topicMux: muxSpecs
+        topicDemuxList: demuxSpecsList
       };
     }
     catch (error) {
       return {
         error: {
-          title: 'TopicMuxRuntimeGetService Error',
+          title: 'TopicDemuxRuntimeGetListService Error',
           message: error.toString(),
           stack: error.stack && error.stack.toString()
         }
@@ -30,5 +30,5 @@ class TopicMuxRuntimeGetService extends Service {
 }
 
 module.exports = {
-  'TopicMuxRuntimeGetService': TopicMuxRuntimeGetService,
+  'TopicDemuxRuntimeGetListService': TopicDemuxRuntimeGetListService,
 };

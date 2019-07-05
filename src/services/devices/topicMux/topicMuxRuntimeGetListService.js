@@ -1,11 +1,10 @@
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../../service.js');
-const topicMuxDatabase = require('../../../storage/topicMuxDatabase');
 
 class TopicMuxRuntimeGetListService extends Service {
   constructor(deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_START);
+    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_GET_LIST);
 
     this.deviceManager = deviceManager;
   }

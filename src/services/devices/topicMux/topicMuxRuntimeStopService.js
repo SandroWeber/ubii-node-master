@@ -5,7 +5,7 @@ const topicMuxDatabase = require('../../../storage/topicMuxDatabase');
 
 class TopicMuxRuntimeStopService extends Service {
   constructor(deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_START);
+    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_STOP);
 
     this.deviceManager = deviceManager;
   }
@@ -15,7 +15,10 @@ class TopicMuxRuntimeStopService extends Service {
       this.deviceManager.deleteTopicMux(specs.id);
 
       return {
-        topicMux: muxSpecs
+        success: {
+          title: 'TopicMuxRuntimeStopService Success',
+          message: 'Stop topic mux (ID ' + specs.id + ') SUCCESS'
+        }
       };
     }
     catch (error) {
