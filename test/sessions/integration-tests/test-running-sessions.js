@@ -1,7 +1,7 @@
 import test from 'ava';
 
-import {SessionManager, Session, Interaction} from '../../../src/index'
-import {RuntimeTopicData} from '@tum-far/ubii-topic-data'
+import { SessionManager, Session, Interaction } from '../../../src/index'
+import { RuntimeTopicData } from '@tum-far/ubii-topic-data'
 
 
 /* utility */
@@ -20,7 +20,7 @@ let wait = (milliseconds) => {
 };
 
 /* an interaction always triggering and increasing a counter in state */
-let setupInteraction1 = (topicData) => {
+/*let setupInteraction1 = (topicData) => {
   let processCB = (input, output, state) => {
     if (state.counter === undefined) {
       state.counter = 0;
@@ -29,14 +29,27 @@ let setupInteraction1 = (topicData) => {
     }
   };
 
-  let interaction = new Interaction({processingCallback: processCB.toString()});
+  let interaction = new Interaction({ processingCallback: processCB.toString() });
   interaction.setTopicData(topicData);
 
   return interaction;
+};*/
+let getInteraction1Specs = () => {
+  let processCB = (input, output, state) => {
+    if (state.counter === undefined) {
+      state.counter = 0;
+    } else {
+      state.counter = state.counter + 1;
+    }
+  };
+
+  return {
+    processingCallback: processCB.toString()
+  };
 };
 
 /* an interaction working with input, output and state */
-let setupInteraction2 = (topicData) => {
+/*let setupInteraction2 = (topicData) => {
   let processCB = (input, output, state) => {
     if (input.integer === 42 && state.triggerToggle) {
       state.triggerToggle = false;
@@ -65,6 +78,27 @@ let setupInteraction2 = (topicData) => {
   interaction.connectOutputTopic('string', topicNameString);
 
   return interaction;
+};*/
+
+let getInteraction2Specs = () => {
+  let processCB = (input, output, state) => {
+    if (input.integer === 42 && state.triggerToggle) {
+      state.triggerToggle = false;
+      state.outputNumber = state.outputNumber + 1;
+      output.string = state.outputNumber.toString();
+    }
+  };
+  return {
+    processingCallback: processCB.toString(),
+    inputFormats: [{
+      internalName: 'integer',
+      messageFormat: 'uint32'
+    }],
+    outputFormats: [{
+      internalName: 'string',
+      messageFormat: 'string'
+    }]
+  };
 };
 
 let getGenericTopicInputBool = (session, interaction) => {
@@ -109,8 +143,8 @@ let setupGenericInteractions = (session, count, topicData) => {
 /* test setup */
 
 test.beforeEach(t => {
-  t.context.sessionManager = new SessionManager();
   t.context.topicData = new RuntimeTopicData();
+  t.context.sessionManager = new SessionManager(t.context.topicData);
 });
 
 
@@ -122,11 +156,15 @@ test('single session - two interactions', async t => {
 
   let session = sessionManager.createSession();
 
-  let interaction1 = setupInteraction1(topicData);
-  session.addInteraction(interaction1);
+  //let interaction1 = setupInteraction1(topicData);
+  let interaction1 = session.addInteraction(getInteraction1Specs());
 
-  let interaction2 = setupInteraction2(topicData);
-  session.addInteraction(interaction2);
+  //let interaction2 = setupInteraction2(topicData);
+  let interaction2 = session.addInteraction(getInteraction2Specs());
+  interaction2.state.triggerToggle = true;
+  interaction2.state.outputNumber = 0;
+  interaction2.connectInputTopic(interaction2.inputFormats[0].internalName, topicNameInteger);
+  interaction2.connectOutputTopic(interaction2.outputFormats[0].internalName, topicNameString);
 
   let topicIntegerTarget = 21;
   topicData.publish(topicNameInteger, topicIntegerTarget);
@@ -211,11 +249,15 @@ test('two sessions - one interaction each', async t => {
   let session1 = sessionManager.createSession();
   let session2 = sessionManager.createSession();
 
-  let interaction1 = setupInteraction1(topicData);
-  session1.addInteraction(interaction1);
+  //let interaction1 = setupInteraction1(topicData);
+  let interaction1 = session1.addInteraction(getInteraction1Specs());
 
-  let interaction2 = setupInteraction2(topicData);
-  session2.addInteraction(interaction2);
+  //let interaction2 = setupInteraction2(topicData);
+  let interaction2 = session2.addInteraction(getInteraction2Specs());
+  interaction2.state.triggerToggle = true;
+  interaction2.state.outputNumber = 0;
+  interaction2.connectInputTopic(interaction2.inputFormats[0].internalName, topicNameInteger);
+  interaction2.connectOutputTopic(interaction2.outputFormats[0].internalName, topicNameString);
 
   let topicIntegerTarget = 21;
   topicData.publish(topicNameInteger, topicIntegerTarget);
