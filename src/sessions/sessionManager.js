@@ -1,8 +1,9 @@
-const {Session} = require('./session.js');
+const { Session } = require('./session.js');
 
 class SessionManager {
-  constructor(topicData) {
+  constructor(topicData, deviceManager) {
     this.topicData = topicData;
+    this.deviceManager = deviceManager;
     this.sessions = [];
   }
 
@@ -11,7 +12,7 @@ class SessionManager {
       throw 'Session with ID ' + specifications.id + ' already exists.';
     }
 
-    let session = new Session(specifications, this.topicData);
+    let session = new Session(specifications, this.topicData, this.deviceManager);
     this.addSession(session);
 
     return session;
@@ -19,8 +20,8 @@ class SessionManager {
 
   addSession(session) {
     if (this.sessions.some((element) => {
-        return element.id === session.id;
-      })) {
+      return element.id === session.id;
+    })) {
       return;
     }
 
@@ -39,7 +40,7 @@ class SessionManager {
   }
 
   getSession(id) {
-    return this.sessions.find((session) => {return session.id === id;});
+    return this.sessions.find((session) => { return session.id === id; });
   }
 
   getSessionList() {
@@ -47,7 +48,7 @@ class SessionManager {
   }
 
   startSession(id) {
-    let session = this.sessions.find((session) => {return session.id === id;});
+    let session = this.sessions.find((session) => { return session.id === id; });
     if (session) {
       session.start();
       return true;
@@ -57,7 +58,7 @@ class SessionManager {
   }
 
   stopSession(id) {
-    let session = this.sessions.find((session) => {return session.id === id;});
+    let session = this.sessions.find((session) => { return session.id === id; });
     if (session) {
       session.stop();
       return true;
@@ -87,4 +88,4 @@ class SessionManager {
   }
 }
 
-module.exports = {SessionManager};
+module.exports = { SessionManager };

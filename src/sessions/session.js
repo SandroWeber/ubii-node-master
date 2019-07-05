@@ -2,21 +2,19 @@ const uuidv4 = require('uuid/v4');
 const { Interaction } = require('./interaction');
 
 class Session {
-  constructor({ id, name = '', interactions = [], ioMappings = [] }, topicData) {
+  constructor({ id, name = '', interactions = [], ioMappings = [] }, topicData, deviceManager) {
     this.id = id ? id : uuidv4();
     this.name = name;
     this.status = Session.STATUS.CREATED;
     this.processMode = Session.PROCESS_MODES.PROMISE_RECURSIVECALLS;
     this.isProcessing = false;
-    this.interactions = [];
-    interactions.forEach(interactionSpecs => {
-      let interaction = new Interaction(interactionSpecs);
-      interaction.setTopicData(topicData);
-      this.addInteraction(interaction);
-    });
+    this.interactions = interactions;
     this.ioMappings = ioMappings;
 
     this.topicData = topicData;
+    this.deviceManager = deviceManager;
+
+    this.runtimeInteractions = [];
   }
 
   start() {
@@ -24,12 +22,16 @@ class Session {
       return;
     }
 
+    this.interactions.forEach(interactionSpecs => {
+      this.addInteraction(interactionSpecs);
+    });
+
     this.applyIOMappings();
 
     this.status = Session.STATUS.STARTED;
     if (this.processMode === Session.PROCESS_MODES.PROMISE_RECURSIVECALLS) {
       this.processInteractionsPromiseRecursive().then(
-        () => {},
+        () => { },
         rejected => {
           console.info(rejected);
         }
@@ -49,7 +51,7 @@ class Session {
     let recursiveisProcessingCall = i => {
       if (!this.isProcessing) return;
 
-      let interaction = this.interactions[i % this.interactions.length];
+      let interaction = this.runtimeInteractions[i % this.runtimeInteractions.length];
       if (interaction) {
         interaction.process();
       }
@@ -69,18 +71,22 @@ class Session {
     });
   }
 
-  addInteraction(interaction) {
+  addInteraction(specs) {
     if (
-      !this.interactions.some(element => {
-        return element.id === interaction.id;
+      !this.runtimeInteractions.some(interaction => {
+        return interaction.id === specs.id;
       })
     ) {
-      this.interactions.push(interaction);
+      let interaction = new Interaction(specs);
+      interaction.setTopicData(this.topicData);
+      this.runtimeInteractions.push(interaction);
+
+      return interaction;
     }
   }
 
   removeInteraction(interactionID) {
-    this.interactions.forEach((element, index) => {
+    this.runtimeInteractions.forEach((element, index) => {
       if (element.id === interactionID) {
         this.interactions.splice(index, 1);
       }
@@ -89,7 +95,7 @@ class Session {
 
   applyIOMappings() {
     this.ioMappings.forEach(mapping => {
-      let interaction = this.interactions.find(interaction => {
+      let interaction = this.runtimeInteractions.find(interaction => {
         return interaction.id === mapping.interactionId;
       });
 
@@ -102,22 +108,22 @@ class Session {
         // single topic input target
         if (typeof inputMapping.topicSource === 'string') {
           if (interaction.hasInput(inputMapping.name)) {
-            if (!interaction.connectInput(inputMapping.name, inputMapping.topicSource)) {
+            if (!interaction.connectInputTopic(inputMapping.name, inputMapping.topicSource)) {
               console.info(
                 'Session.applyIOMappings() - connectInput() failed for interaction ' +
-                  interaction.id +
-                  ': ' +
-                  inputMapping.name +
-                  ' -> ' +
-                  inputMapping.topicSource
+                interaction.id +
+                ': ' +
+                inputMapping.name +
+                ' -> ' +
+                inputMapping.topicSource
               );
             }
           }
         }
         // topic mux
         else if (typeof inputMapping.topicSource === 'object') {
-          //TODO
-          console.info('TOPIC MUX not implemented yet!')
+          let mux = this.deviceManager.addTopicMux(inputMapping.topicSource);
+          interaction.connectMultiplexer(inputMapping.name, mux)
         }
       });
 
@@ -125,35 +131,32 @@ class Session {
         // single topic output target
         if (typeof outputMapping.topicDestination === 'string') {
           if (interaction.hasOutput(outputMapping.name)) {
-            if (!interaction.connectOutput(outputMapping.name, outputMapping.topicDestination)) {
+            if (!interaction.connectOutputTopic(outputMapping.name, outputMapping.topicDestination)) {
               console.info(
-                'Session.applyIOMappings() - connectOutput() failed for interaction ' +
-                  interaction.id +
-                  ': ' +
-                  outputMapping.name +
-                  ' -> ' +
-                  outputMapping.topicDestination
+                'Session.applyIOMappings() - connectOutputTopic() failed for interaction ' +
+                interaction.id +
+                ': ' +
+                outputMapping.name +
+                ' -> ' +
+                outputMapping.topicDestination
               );
             }
           }
         }
         // topic demux
-        else if (typeof inputMapping.topicSource === 'object') {
-          //TODO
-          console.info('TOPIC DEMUX not implemented yet!')
+        else if (typeof outputMapping.topicDestination === 'object') {
+          let demux = this.deviceManager.addTopicDemux(outputMapping.topicDestination);
+          interaction.connectDemultiplexer(outputMapping.name, demux);
         }
       });
     });
   }
 
   toProtobuf() {
-    let protobufInteractions = this.interactions.map(interaction => {
-      return interaction.toProtobuf();
-    });
     return {
       id: this.id,
       name: this.name,
-      interactions: protobufInteractions,
+      interactions: this.interactions,
       ioMappings: this.ioMappings
     };
   }

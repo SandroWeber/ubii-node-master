@@ -1,8 +1,10 @@
 const namida = require('@tum-far/namida');
 
-const {proto} = require('@tum-far/ubii-msg-formats');
-const {Participant} = require('./../devices/participant.js');
-const {Watcher} = require('./../devices/watcher.js');
+const { proto } = require('@tum-far/ubii-msg-formats');
+const { Participant } = require('./../devices/participant.js');
+const { Watcher } = require('./../devices/watcher.js');
+const { TopicMultiplexer } = require('./../devices/topicMultiplexer.js');
+const { TopicDemultiplexer } = require('./../devices/topicDemultiplexer.js');
 
 const REJECT_REGISTRATION_FEEDBBACK_TITLE = 'Device registration rejected';
 const ACCEPT_REGISTRATION_FEEDBACK_TITLE = 'Device registration accepted';
@@ -18,6 +20,8 @@ class DeviceManager {
     this.server = server;
     this.participants = new Map();
     this.watchers = new Map();
+    this.topicMuxers = new Map();
+    this.topicDemuxers = new Map();
 
     namida.log('Device Manager Ready', 'The Device Manager is initialized and ready to work.');
   }
@@ -299,6 +303,60 @@ class DeviceManager {
 
     // Return the deviceSpecification payload.
     return currentDevice;
+  }
+
+  addTopicMux(specs) {
+    if (this.topicMuxers.has(specs.id)) {
+      throw 'TopicMux with ID ' + specs.id + ' already exists.';
+    }
+
+    let mux = new TopicMultiplexer(specs, this.topicData);
+    this.topicMuxers.set(mux.id, mux);
+
+    return mux;
+  }
+
+  deleteTopicMux(id) {
+    this.topicMuxers.delete(id);
+  }
+
+  hasTopicMux(id) {
+    return this.topicMuxers.some((mux) => { return mux.id === id; });
+  }
+
+  getTopicMux(id) {
+    return this.topicMuxers.find((mux) => { return mux.id === id; });
+  }
+
+  getTopicMuxList() {
+    return Array.from(this.topicMuxers.values());
+  }
+
+  addTopicDemux(specs) {
+    if (this.topicDemuxers.has(specs.id)) {
+      throw 'TopicMux with ID ' + specs.id + ' already exists.';
+    }
+
+    let demux = new TopicDemultiplexer(specs, this.topicData);
+    this.topicDemuxers.set(demux.id, demux);
+
+    return demux;
+  }
+
+  deleteTopicDemux(id) {
+    this.topicDemuxers.delete(id);
+  }
+
+  hasTopicDemux(id) {
+    return this.topicDemuxers.some((demux) => { return demux.id === id; });
+  }
+
+  getTopicDemux(id) {
+    return this.topicDemuxers.find((demux) => { return demux.id === id; });
+  }
+
+  getTopicDemuxList() {
+    return Array.from(this.topicDemuxers.values());
   }
 }
 

@@ -17,13 +17,6 @@ class Participant extends Device {
 
         this.topicData = topicData;
         //this.subscriptionTokens = new Map();
-
-        // emit events for new topics being published
-        components.forEach((component) => {
-            if (component.ioType === proto.ubii.devices.Component.IOType.INPUT) {
-                topicData.events.emit('newTopic', component.topic);
-            }
-        });
     }
 
     /**

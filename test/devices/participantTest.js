@@ -23,29 +23,4 @@ import {proto} from '@tum-far/ubii-msg-formats';
             let participant = new Participant({}, undefined, t.context.topicDataMock);
         });
     });
-    
-    /* integration tests */
-    test('emit "newTopic" event for input components', t => {
-        let topicData = new RuntimeTopicData();
-        let listener = sinon.fake();
-        topicData.events.on('newTopic', listener);
-        let components = [
-            {
-                topic: 'my-topic-0',
-                ioType: proto.ubii.devices.Component.IOType.INPUT
-            },
-            {
-                topic: 'my-topic-1',
-                ioType: proto.ubii.devices.Component.IOType.INPUT
-            }
-        ];
-        let participant = new Participant({
-            components: components
-        }, undefined, topicData);
-
-        t.is(listener.callCount, 2);
-        listener.args.forEach((argument, index) => {
-            t.is(argument[0], 'my-topic-' + index);
-        });
-    });
 })();
