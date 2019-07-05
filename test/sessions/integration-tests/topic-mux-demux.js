@@ -22,7 +22,6 @@ let generateInputList = (count) => {
 
   return list;
 };
-//let uuidv4Regex = '[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}';
 
 let topicMuxSpecs = {
   name: 'test-mux',
@@ -106,6 +105,22 @@ test('publish first, start session', async t => {
 
   t.context.sessionManager.createSession(sessionSpecs);
   t.context.sessionManager.startAllSessions();
+  await TestUtility.wait(10);
+  t.context.sessionManager.stopAllSessions();
+
+  inputList.forEach(input => {
+    let expected = input.value < 0.5 ? 'low' : 'high';
+    let outputTopic = '/' + input.uuid + outputTopicSuffix;
+    t.is(t.context.topicData.pull(outputTopic).data, expected);
+  });
+});
+
+test('start session first, then publish', async t => {
+  let inputList = generateInputList(10);
+
+  t.context.sessionManager.createSession(sessionSpecs);
+  t.context.sessionManager.startAllSessions();
+  publishInput(inputList, t.context.topicData);
   await TestUtility.wait(10);
   t.context.sessionManager.stopAllSessions();
 
