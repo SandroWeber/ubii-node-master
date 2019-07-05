@@ -131,9 +131,9 @@ class Session {
         // single topic output target
         if (typeof outputMapping.topicDestination === 'string') {
           if (interaction.hasOutput(outputMapping.name)) {
-            if (!interaction.connectOutput(outputMapping.name, outputMapping.topicDestination)) {
+            if (!interaction.connectOutputTopic(outputMapping.name, outputMapping.topicDestination)) {
               console.info(
-                'Session.applyIOMappings() - connectOutput() failed for interaction ' +
+                'Session.applyIOMappings() - connectOutputTopic() failed for interaction ' +
                 interaction.id +
                 ': ' +
                 outputMapping.name +
