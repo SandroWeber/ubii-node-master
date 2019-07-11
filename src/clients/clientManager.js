@@ -43,13 +43,22 @@ class ClientManager {
     this.clients.set(client.id, client);
   }
 
+  reconnectClient(clientSpecs) {
+
+  }
+
   /**
    * Remove the specified Client from the clients map.
    * @param {String} clientIdentifier Universally unique identifier of a Client.
    */
   removeClient(clientIdentifier) {
-    this.clients.get(clientIdentifier).deactivate();
+    let client = this.clients.get(clientIdentifier);
+    client.deactivate();
     this.clients.delete(clientIdentifier);
+  }
+
+  setClientInactive(id) {
+    this.clients.get(id).setState(clientStateEnum.inactive);
   }
 
   /**
