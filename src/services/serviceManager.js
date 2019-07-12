@@ -1,22 +1,23 @@
-const {ClientRegistrationService} = require('./clientRegistrationService.js');
-const {DeviceRegistrationService} = require('./devices/deviceRegistrationService.js');
-const {InteractionDeleteService} = require('./interactions/interactionDeleteService.js');
-const {InteractionDatabaseGetListService} = require('./interactions/interactionDatabaseGetListService.js');
-const {InteractionDatabaseGetService} = require('./interactions/interactionDatabaseGetService.js');
-const {InteractionRegistrationService} = require('./interactions/interactionRegistrationService.js');
-const {InteractionReplaceService} = require('./interactions/interactionReplaceService.js');
-const {SubscriptionService} = require('./subscriptionService.js');
-const {ServerConfigService} = require('./serverConfigService.js');
-const {TopicListService} = require('./topicListService');
-const {SessionDeleteService} = require('./sessions/sessionDeleteService.js');
-const {SessionDatabaseGetListService} = require('./sessions/sessionDatabaseGetListService.js');
-const {SessionDatabaseGetService} = require('./sessions/sessionDatabaseGetService.js');
-const {SessionRuntimeGetListService} = require('./sessions/sessionRuntimeGetListService.js');
-const {SessionRuntimeGetService} = require('./sessions/sessionRuntimeGetService.js');
-const {SessionRegistrationService} = require('./sessions/sessionRegistrationService.js');
-const {SessionReplaceService} = require('./sessions/sessionReplaceService.js');
-const {SessionStartService} = require('./sessions/sessionStartService');
-const {SessionStopService} = require('./sessions/sessionStopService');
+const { ClientRegistrationService } = require('./clientRegistrationService.js');
+const { ClientDeregistrationService } = require('./clientDeregistrationService.js');
+const { DeviceRegistrationService } = require('./devices/deviceRegistrationService.js');
+const { InteractionDeleteService } = require('./interactions/interactionDeleteService.js');
+const { InteractionDatabaseGetListService } = require('./interactions/interactionDatabaseGetListService.js');
+const { InteractionDatabaseGetService } = require('./interactions/interactionDatabaseGetService.js');
+const { InteractionRegistrationService } = require('./interactions/interactionRegistrationService.js');
+const { InteractionReplaceService } = require('./interactions/interactionReplaceService.js');
+const { SubscriptionService } = require('./subscriptionService.js');
+const { ServerConfigService } = require('./serverConfigService.js');
+const { TopicListService } = require('./topicListService');
+const { SessionDeleteService } = require('./sessions/sessionDeleteService.js');
+const { SessionDatabaseGetListService } = require('./sessions/sessionDatabaseGetListService.js');
+const { SessionDatabaseGetService } = require('./sessions/sessionDatabaseGetService.js');
+const { SessionRuntimeGetListService } = require('./sessions/sessionRuntimeGetListService.js');
+const { SessionRuntimeGetService } = require('./sessions/sessionRuntimeGetService.js');
+const { SessionRegistrationService } = require('./sessions/sessionRegistrationService.js');
+const { SessionReplaceService } = require('./sessions/sessionReplaceService.js');
+const { SessionStartService } = require('./sessions/sessionStartService');
+const { SessionStopService } = require('./sessions/sessionStopService');
 const namida = require("@tum-far/namida");
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
@@ -32,16 +33,22 @@ class ServiceManager {
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
     this.services = new Map();
+    /* add general services */
+    this.addService(new SubscriptionService(this.clientManager));
+    this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.connectionManager));
+    this.addService(new TopicListService(this.topicData, this));
+    /* add client services */
     this.addService(new ClientRegistrationService(this.clientManager));
+    this.addService(new ClientDeregistrationService(this.clientManager));
+    /* add device services */
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
+    /* add interaction services */
     this.addService(new InteractionDeleteService());
     this.addService(new InteractionDatabaseGetListService());
     this.addService(new InteractionDatabaseGetService());
     this.addService(new InteractionRegistrationService());
     this.addService(new InteractionReplaceService());
-    this.addService(new SubscriptionService(this.clientManager));
-    this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', connectionManager));
-    this.addService(new TopicListService(this.topicData, this));
+    /* add session services */
     this.addService(new SessionDeleteService());
     this.addService(new SessionDatabaseGetListService());
     this.addService(new SessionDatabaseGetService());
