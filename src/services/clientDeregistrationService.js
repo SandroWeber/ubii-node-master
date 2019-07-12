@@ -1,22 +1,26 @@
 const {
   Service
 } = require('./service.js');
+const namida = require("@tum-far/namida");
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class ClientDeregistrationService extends Service {
-  constructor(clientManager) {
+  constructor(clientManager, deviceManager) {
     super(DEFAULT_TOPICS.SERVICES.CLIENT_DEREGISTRATION);
 
     this.clientManager = clientManager;
+    this.deviceManager = deviceManager;
   }
 
   reply(message) {
     // Process the registration of the sepcified client at the client manager
     try {
+      this.deviceManager.removeClientDevices(message.id);
       this.clientManager.removeClient(message.id);
     }
     catch (error) {
+      namida.logFailure('ClientDeregistrationService ERROR', error.toString());
       return {
         error: {
           title: 'ClientDeregistrationService ERROR',
@@ -26,6 +30,7 @@ class ClientDeregistrationService extends Service {
       };
     }
 
+    namida.logSuccess('ClientDeregistrationService SUCCESS', 'Client with ID ' + message.id + ' was successfully removed');
     return {
       success: {
         title: 'ClientDeregistrationService SUCCESS',

@@ -39,7 +39,7 @@ class ServiceManager {
     this.addService(new TopicListService(this.topicData, this));
     /* add client services */
     this.addService(new ClientRegistrationService(this.clientManager));
-    this.addService(new ClientDeregistrationService(this.clientManager));
+    this.addService(new ClientDeregistrationService(this.clientManager, this.deviceManager));
     /* add device services */
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
     /* add interaction services */

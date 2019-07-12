@@ -117,7 +117,7 @@ class ClientManager {
         namida.logFailure(context.feedback.title, context.feedback.message);
 
         return undefined;
-      } else {
+      } else if (this.getClient(clientIdentifier).name === clientSpecification.name) {
         // => Re-registering is possible: Prepare the registration.
 
         // Update the context feedback.
