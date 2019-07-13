@@ -26,6 +26,38 @@ class DeviceManager {
     namida.log('Device Manager Ready', 'The Device Manager is initialized and ready to work.');
   }
 
+  getDevice(id) {
+    if (this.hasParticipant(id)) {
+      return this.getParticipant(id);
+    } else if (this.hasWatcher(id)) {
+      return this.getWatcher(id);
+    }
+  }
+
+  removeDevice(id) {
+    if (this.hasParticipant(id)) {
+      this.getParticipant(id).components.forEach(component => {
+        this.topicData.remove(component.topic)
+      });
+      this.removeParticipant(id);
+    } else if (this.hasWatcher(id)) {
+      this.removeWatcher(id);
+    }
+  }
+
+  removeClientDevices(clientID) {
+    this.participants.forEach(participant => {
+      if (participant.clientId === clientID) {
+        this.removeParticipant(participant.id);
+      }
+    });
+    this.watchers.forEach(watcher => {
+      if (watcher.clientId === clientID) {
+        this.removeWatcher(watcher.id);
+      }
+    });
+  }
+
   // Participants utilities:
 
   /**
@@ -61,6 +93,7 @@ class DeviceManager {
   removeParticipant(deviceIdentifier) {
     this.getParticipant(deviceIdentifier).deactivate();
     this.participants.delete(deviceIdentifier);
+    console.info('removeParticipant - ' + deviceIdentifier);
   }
 
   /**
@@ -120,6 +153,7 @@ class DeviceManager {
   removeWatcher(deviceIdentifier) {
     this.getWatcher(deviceIdentifier).deactivate();
     this.watchers.delete(deviceIdentifier);
+    console.info('removeWatcher - ' + deviceIdentifier);
   }
 
   /**

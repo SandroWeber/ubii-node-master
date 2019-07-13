@@ -43,13 +43,22 @@ class ClientManager {
     this.clients.set(client.id, client);
   }
 
+  reconnectClient(clientSpecs) {
+
+  }
+
   /**
    * Remove the specified Client from the clients map.
    * @param {String} clientIdentifier Universally unique identifier of a Client.
    */
   removeClient(clientIdentifier) {
-    this.clients.get(clientIdentifier).deactivate();
+    let client = this.clients.get(clientIdentifier);
+    client.deactivate();
     this.clients.delete(clientIdentifier);
+  }
+
+  setClientInactive(id) {
+    this.clients.get(id).setState(clientStateEnum.inactive);
   }
 
   /**
@@ -96,7 +105,7 @@ class ClientManager {
     if (clientIdentifier && this.hasClient(clientIdentifier)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (this.getClient(clientIdentifier).getState() === clientStateEnum.active) {
-        // => REregistering is not an option: Reject the registration.
+        // => Re-registering is NOT an option: Reject the registration.
 
         // Update the context feedback.
         context.feedback.message = `Client with id ${namida.style.messageHighlight(clientIdentifier)} ` +
@@ -108,8 +117,8 @@ class ClientManager {
         namida.logFailure(context.feedback.title, context.feedback.message);
 
         return undefined;
-      } else {
-        // => REregistering is possible: Prepare the registration.
+      } else if (this.getClient(clientIdentifier).name === clientSpecification.name) {
+        // => Re-registering is possible: Prepare the registration.
 
         // Update the context feedback.
         context.feedback.message = `Reregistration of Client with id ${namida.style.messageHighlight(clientIdentifier)} ` +
@@ -120,7 +129,7 @@ class ClientManager {
         namida.logWarn(context.feedback.title, context.feedback.message);
 
         // Prepare the reregistration.
-        this.removeClient(clientIdentifier);
+        this.clients.delete(clientIdentifier);
 
         // Update the feedback.
         context.feedback.message = `Client with id ${namida.style.messageHighlight(clientIdentifier)} reregistered.`;
@@ -130,7 +139,7 @@ class ClientManager {
         // Continue with the normal registration process...
       }
     }
-    // Normal registration steps:
+    // No client ID, normal registration steps:
 
     // Create a new client based on the client specification and register it.
     let currentClient = new Client(clientSpecification, this.server, this.topicData);
@@ -146,7 +155,7 @@ class ClientManager {
     // Ouput the feedback on the server console.
     namida.logSuccess(context.feedback.title, context.feedback.message);
 
-    // Return the clientSpecification payload
+    // Return the client
     return currentClient;
   }
 }
