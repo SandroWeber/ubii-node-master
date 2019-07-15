@@ -1,22 +1,20 @@
 const uuidv4 = require('uuid/v4');
-const {Interaction} = require('./interaction');
+const { Interaction } = require('./interaction');
 
 class Session {
-  constructor({id, name = '', interactions = [], ioMappings = []}, topicData) {
+  constructor({ id, name = '', interactions = [], ioMappings = [] }, topicData, deviceManager) {
     this.id = id ? id : uuidv4();
     this.name = name;
     this.status = Session.STATUS.CREATED;
     this.processMode = Session.PROCESS_MODES.PROMISE_RECURSIVECALLS;
     this.isProcessing = false;
-    this.interactions = [];
-    interactions.forEach((interactionSpecs) => {
-      let interaction = new Interaction(interactionSpecs);
-      interaction.setTopicData(topicData);
-      this.addInteraction(interaction);
-    });
+    this.interactions = interactions;
     this.ioMappings = ioMappings;
 
     this.topicData = topicData;
+    this.deviceManager = deviceManager;
+
+    this.runtimeInteractions = [];
   }
 
   start() {
@@ -24,15 +22,20 @@ class Session {
       return;
     }
 
+    this.interactions.forEach(interactionSpecs => {
+      this.addInteraction(interactionSpecs);
+    });
+
     this.applyIOMappings();
 
     this.status = Session.STATUS.STARTED;
     if (this.processMode === Session.PROCESS_MODES.PROMISE_RECURSIVECALLS) {
-      this.processInteractionsPromiseRecursive()
-        .then(
-          () => {},
-          (rejected) => {console.info(rejected);}
-        );
+      this.processInteractionsPromiseRecursive().then(
+        () => { },
+        rejected => {
+          console.info(rejected);
+        }
+      );
     }
   }
 
@@ -45,21 +48,22 @@ class Session {
     this.isProcessing = true;
     this.status = Session.STATUS.RUNNING;
 
-    let recursiveisProcessingCall = (i) => {
+    let recursiveisProcessingCall = i => {
       if (!this.isProcessing) return;
 
-      let interaction = this.interactions[i % this.interactions.length];
+      let interaction = this.runtimeInteractions[i % this.runtimeInteractions.length];
       if (interaction) {
         interaction.process();
       }
-      setTimeout(() => {recursiveisProcessingCall(i+1);}, 0);
+      setTimeout(() => {
+        recursiveisProcessingCall(i + 1);
+      }, 0);
     };
 
     return new Promise((resolve, reject) => {
       try {
         recursiveisProcessingCall(0);
-      }
-      catch (error) {
+      } catch (error) {
         reject(error);
       }
 
@@ -67,14 +71,22 @@ class Session {
     });
   }
 
-  addInteraction(interaction) {
-    if (!this.interactions.some((element) => {return element.id === interaction.id;})) {
-      this.interactions.push(interaction);
+  addInteraction(specs) {
+    if (
+      !this.runtimeInteractions.some(interaction => {
+        return interaction.id === specs.id;
+      })
+    ) {
+      let interaction = new Interaction(specs);
+      interaction.setTopicData(this.topicData);
+      this.runtimeInteractions.push(interaction);
+
+      return interaction;
     }
   }
 
   removeInteraction(interactionID) {
-    this.interactions.forEach((element, index) => {
+    this.runtimeInteractions.forEach((element, index) => {
       if (element.id === interactionID) {
         this.interactions.splice(index, 1);
       }
@@ -82,8 +94,8 @@ class Session {
   }
 
   applyIOMappings() {
-    this.ioMappings.forEach((mapping) => {
-      let interaction = this.interactions.find((interaction) => {
+    this.ioMappings.forEach(mapping => {
+      let interaction = this.runtimeInteractions.find(interaction => {
         return interaction.id === mapping.interactionId;
       });
 
@@ -92,39 +104,73 @@ class Session {
         return;
       }
 
-      if (mapping.interactionInput && interaction.hasInput(mapping.interactionInput.internalName)) {
-        if (!interaction.connectInput(mapping.interactionInput.internalName, mapping.topic)) {
-          console.info('Session.applyIOMappings() - connectInput() failed for interaction ' + interaction.id +
-            ': ' + mapping.interactionInput.internalName + ' -> ' + mapping.topic);
+      mapping.inputMappings.forEach(inputMapping => {
+        // single topic input target
+        if (typeof inputMapping.topicSource === 'string') {
+          if (interaction.hasInput(inputMapping.name)) {
+            if (!interaction.connectInputTopic(inputMapping.name, inputMapping.topicSource)) {
+              console.info(
+                'Session.applyIOMappings() - connectInput() failed for interaction ' +
+                interaction.id +
+                ': ' +
+                inputMapping.name +
+                ' -> ' +
+                inputMapping.topicSource
+              );
+            }
+          }
         }
-      } else if (mapping.interactionOutput && interaction.hasOutput(mapping.interactionOutput.internalName)) {
-        //TODO: still looks a bit "hacky", maybe include type info in protobuf
-        let formatArray = mapping.interactionOutput.messageFormat.split('.');
-        let type = formatArray[formatArray.length-1];  // remove namespacing
-        type = type.charAt(0).toLowerCase() + type.slice(1);  // make first letter lowercase
+        // topic mux
+        else if (typeof inputMapping.topicSource === 'object') {
+          let mux = this.deviceManager.addTopicMux(inputMapping.topicSource);
+          interaction.connectMultiplexer(inputMapping.name, mux)
+        }
+      });
 
-        if (!interaction.connectOutput(mapping.interactionOutput.internalName, mapping.topic, type)) {
-          console.info('Session.applyIOMappings() - connectOutput() failed for interaction ' + interaction.id +
-            ': ' + mapping.interactionOutput.internalName + ' -> ' + mapping.topic);
+      mapping.outputMappings.forEach(outputMapping => {
+        // single topic output target
+        if (typeof outputMapping.topicDestination === 'string') {
+          if (interaction.hasOutput(outputMapping.name)) {
+            if (!interaction.connectOutputTopic(outputMapping.name, outputMapping.topicDestination)) {
+              console.info(
+                'Session.applyIOMappings() - connectOutputTopic() failed for interaction ' +
+                interaction.id +
+                ': ' +
+                outputMapping.name +
+                ' -> ' +
+                outputMapping.topicDestination
+              );
+            }
+          }
         }
-      }
+        // topic demux
+        else if (typeof outputMapping.topicDestination === 'object') {
+          let demux = this.deviceManager.addTopicDemux(outputMapping.topicDestination);
+          interaction.connectDemultiplexer(outputMapping.name, demux);
+        }
+      });
     });
   }
 
   toProtobuf() {
-    let protobufInteractions = this.interactions.map((interaction) => {
-      return interaction.toProtobuf();
-    });
     return {
       id: this.id,
       name: this.name,
-      interactions: protobufInteractions,
+      interactions: this.interactions,
       ioMappings: this.ioMappings
     };
   }
 }
 
-Session.PROCESS_MODES = Object.freeze({'PROMISE_RECURSIVECALLS': 1/*, 'SINGLE_THREAD':1, 'THREAD_POOL':2, 'INDIVIDUAL_THREADS':3*/});
-Session.STATUS = Object.freeze({'CREATED': 1, 'STARTED': 2, 'RUNNING': 3, 'PAUSED': 4, 'STOPPED': 5});
+Session.PROCESS_MODES = Object.freeze({
+  PROMISE_RECURSIVECALLS: 1 /*, 'SINGLE_THREAD':1, 'THREAD_POOL':2, 'INDIVIDUAL_THREADS':3*/
+});
+Session.STATUS = Object.freeze({
+  CREATED: 1,
+  STARTED: 2,
+  RUNNING: 3,
+  PAUSED: 4,
+  STOPPED: 5
+});
 
-module.exports = {Session};
+module.exports = { Session };

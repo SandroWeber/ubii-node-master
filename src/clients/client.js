@@ -16,7 +16,7 @@ let clientStateEnum = Object.freeze({
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class Client {
-  constructor({id, name = '', devices = []}, server, topicData) {
+  constructor({ id, name = '', devices = [] }, server, topicData) {
     this.id = id ? id : uuidv4();
     this.name = name;
     this.devices = devices;
@@ -37,6 +37,17 @@ class Client {
    */
   getState() {
     return this.state;
+  }
+
+  /**
+   * Set the current state.
+   */
+  setState(state) {
+    if (state === clientStateEnum.active) {
+      this.startLifeMonitoring();
+    } else if (state === clientStateEnum.inactive) {
+      this.stopLifeMonitoring();
+    }
   }
 
   /**
@@ -75,9 +86,8 @@ class Client {
    * Note: You should call this method before clearing all references to a Client object.
    */
   deactivate() {
-    if (this.signOfLifeInterval !== undefined) {
-      clearInterval(this.signOfLifeInterval);
-    }
+    this.stopLifeMonitoring();
+    this.unsubscribeAll();
   }
 
   /**
@@ -143,6 +153,12 @@ class Client {
     }, SIGN_OF_LIFE_DELTA_TIME);
   }
 
+  stopLifeMonitoring() {
+    if (this.signOfLifeInterval !== undefined) {
+      clearInterval(this.signOfLifeInterval);
+    }
+  }
+
   /**
    * Subscribe to a topic at the topicData
    * @param {String} topic
@@ -196,7 +212,7 @@ class Client {
   }
 
   unsubscribeAll() {
-    for(let token in this.subscriptionTokens){
+    for (let token in this.subscriptionTokens) {
       this.topicData.unsubscribe(token);
     }
   }

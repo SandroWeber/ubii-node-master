@@ -1,10 +1,15 @@
 const uuidv4 = require('uuid/v4');
 
-const Utils = require('./utilities');
+const Utils = require('../utilities');
 
 class Interaction {
-
-  constructor({id = uuidv4(), name = '', processingCallback = undefined, inputFormats = [], outputFormats = []}) {
+  constructor({
+    id = uuidv4(),
+    name = '',
+    processingCallback = undefined,
+    inputFormats = [],
+    outputFormats = []
+  }) {
     this.id = id;
     this.name = name;
     this.processingCallback = Utils.createFunctionFromString(processingCallback);
@@ -21,90 +26,120 @@ class Interaction {
   }
 
   hasInput(name) {
-    return this.inputFormats.some((input) => {return input.internalName === name});
+    return this.inputFormats.some(input => {
+      return input.internalName === name;
+    });
+  }
+
+  getInputFormat(name) {
+    return this.inputFormats.find(input => {
+      input.internalName === name;
+    });
   }
 
   hasOutput(name) {
-    return this.outputFormats.some((output) => {return output.internalName === name});
+    return this.outputFormats.some(output => {
+      return output.internalName === name;
+    });
   }
 
-  connectInput(internalName, externalTopic) {
+  getOutputFormat(name) {
+    return this.outputFormats.find(output => {
+      return output.internalName === name;
+    });
+  }
+
+  connectInputTopic(internalName, externalTopic) {
     if (!this.topicData) {
-      console.log('Interaction(' + this.id + ').connectInput() - missing topicData == ' + this.topicData);
+      console.log(
+        'Interaction(' + this.id + ').connectInputTopic() - missing topicData == ' + this.topicData
+      );
       return false;
     }
 
     if (this.inputProxy[internalName]) {
       delete this.inputProxy[internalName];
     }
-    Object.defineProperty(this.inputProxy, internalName,
-      {
-        // input is read-only
-        get: () => {
-          let entry = this.topicData.pull(externalTopic);
-          return entry && entry.data;
-        },
-        configurable: true
-      });
+    Object.defineProperty(this.inputProxy, internalName, {
+      // input is read-only
+      get: () => {
+        let entry = this.topicData.pull(externalTopic);
+        return entry && entry.data;
+      },
+      configurable: true
+    });
 
     return true;
   }
 
-  disconnectInput(internalName) {
+  disconnectInputTopic(internalName) {
     delete this.inputProxy[internalName];
   }
 
-  connectOutput(internalName, externalTopic, type) {
+  connectOutputTopic(internalName, externalTopic) {
     if (!this.topicData) {
-      console.log('Interaction(' + this.id + ').connectOutput() - missing topicData == ' + this.topicData);
+      console.info(
+        'Interaction(' + this.id + ').connectOutputTopic() - missing topicData == ' + this.topicData
+      );
       return false;
     }
 
     if (this.outputProxy[internalName]) {
       delete this.outputProxy[internalName];
     }
-    Object.defineProperty(this.outputProxy, internalName,
-      {
-        // output is write-only
-        set: (value) => {
-          this.topicData.publish(externalTopic, value, type);
-        },
-        configurable: true
-      });
+
+    let type = Utils.getTopicDataTypeFromMessageFormat(this.getOutputFormat(internalName).messageFormat);
+    Object.defineProperty(this.outputProxy, internalName, {
+      // output is write-only
+      set: value => {
+        this.topicData.publish(externalTopic, value, type);
+      },
+      configurable: true
+    });
 
     return true;
   }
 
-  disconnectOutput(internalName) {
+  disconnectOutputTopic(internalName) {
     delete this.outputProxy[internalName];
   }
 
   connectMultiplexer(internalName, multiplexer) {
-    Object.defineProperty(this.inputProxy, internalName,
-      {
-        // input is read-only
-        get: () => {
-          return multiplexer.get();
-        },
-        configurable: true
-      });
+    if (this.inputProxy[internalName]) {
+      delete this.inputProxy[internalName];
+    }
+
+    Object.defineProperty(this.inputProxy, internalName, {
+      // input is read-only
+      get: () => {
+        return multiplexer.get();
+      },
+      configurable: true
+    });
   }
 
   disconnectMultiplexer(internalName) {
     delete this.inputProxy[internalName];
   }
 
-  connectIO(mappings) {
-    mappings.forEach((mapping) => {
-      if (mapping.interactionId !== this.id || !mapping.topic) return;
+  connectDemultiplexer(internalName, demultiplexer) {
+    if (this.outputProxy[internalName]) {
+      delete this.outputProxy[internalName];
+    }
 
-      //TODO: check topic vs. input/output format for consistency, needs "topicData.getMsgType(topic)"
-      if (mapping.interactionInput && this.hasInput(mapping.interactionInput.internalName)) {
-        this.connectInput(mapping.interactionInput.internalName, mapping.topic);
-      } else if (mapping.interactionOutput && this.hasOutput(mapping.interactionOutput.internalName)) {
-        this.connectOutput(mapping.interactionOutput.internalName, mapping.topic);
-      }
+    Object.defineProperty(this.outputProxy, internalName, {
+      // output is write-only
+      set: value => {
+        demultiplexer.push(value);
+      },
+      configurable: true
     });
+
+    return true;
+  }
+
+  disconnectDemultiplexer(internalName) {
+    delete this.outputProxy[internalName];
   }
 
   disconnectIO() {
@@ -120,7 +155,12 @@ class Interaction {
 
   process() {
     if (typeof this.processingCallback !== 'function') {
-      console.log('Interaction(' + this.id + ').process() - processingCallback not a function == ' + this.processingCallback);
+      console.log(
+        'Interaction(' +
+        this.id +
+        ').process() - processingCallback not a function == ' +
+        this.processingCallback
+      );
       return false;
     }
 
@@ -139,5 +179,5 @@ class Interaction {
 }
 
 module.exports = {
-  'Interaction': Interaction
+  Interaction: Interaction
 };

@@ -63,7 +63,7 @@ class MasterNode {
       this.connectionsManager.connections.topicDataZMQ);
 
     // Session manager component:
-    this.sessionManager = new SessionManager(this.topicData);
+    this.sessionManager = new SessionManager(this.topicData, this.deviceManager);
 
     // Service Manager Component:
     this.serviceManager = new ServiceManager(

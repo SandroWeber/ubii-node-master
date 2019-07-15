@@ -21,7 +21,7 @@
   },
   "scripts": {
     "start": "node scripts/startBackend.js",
-    "test": "ava -v -s --match=!*RoundTripTime*",
+    "test": "ava --match=!*RoundTripTime*",
     "test-rtt": "ava --match=*RoundTripTime*"
   },
   "keywords": [
@@ -34,8 +34,8 @@
   },
   "dependencies": {
     "@tum-far/namida": "0.1.1",
-    "@tum-far/ubii-msg-formats": "^0.10.4",
-    "@tum-far/ubii-topic-data": "0.3.1",
+    "@tum-far/ubii-msg-formats": "^0.10.8",
+    "@tum-far/ubii-topic-data": "0.3.3",
     "body-parser": "1.18.3",
     "express": "4.16.4",
     "printf": "0.5.1",

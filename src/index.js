@@ -15,7 +15,7 @@ const {Interaction} = require('./sessions/interaction');
 
 const {ServiceManager} = require('./services/serviceManager');
 const {ClientRegistrationService} = require('./services/clientRegistrationService');
-const {DeviceRegistrationService} = require('./services/deviceRegistrationService');
+const {DeviceRegistrationService} = require('./services/devices/deviceRegistrationService');
 const {SubscriptionService} = require('./services/subscriptionService');
 
 module.exports = {

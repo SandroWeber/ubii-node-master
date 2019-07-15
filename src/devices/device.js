@@ -4,7 +4,7 @@ const uuidv4 = require('uuid/v4');
  * Devices are representations of remote entities at the server that interact with the ubii system.
  */
 class Device {
-  constructor({id, name = '', deviceType = undefined, components = [], clientId = undefined}, client) {
+  constructor({ id, name = '', deviceType = undefined, components = [], clientId = undefined }, client) {
     if (new.target === Device) {
       throw new TypeError("Cannot construct Device instances directly");
     }

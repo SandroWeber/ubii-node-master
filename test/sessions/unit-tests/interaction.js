@@ -1,6 +1,7 @@
 import test from 'ava';
 
-import {Interaction} from '../../../src/index';
+import { Interaction } from '../../../src/index';
+import Utils from '../../../src/utilities';
 import MockTopicData from '../../mocks/mock-topicdata.js';
 import sinon from 'sinon';
 
@@ -8,6 +9,32 @@ import sinon from 'sinon';
 test.beforeEach(t => {
   t.context.interaction = new Interaction({});
   t.context.topicData = new MockTopicData();
+
+  t.context.interactionSpecs = {
+    id: 'test-id',
+    name: 'test-name',
+    processingCallback: '() => {}',
+    inputFormats: [
+      {
+        internalName: 'input1',
+        messageFormat: 'messageFormat1'
+      },
+      {
+        internalName: 'input2',
+        messageFormat: 'messageFormat2'
+      }
+    ],
+    outputFormats: [
+      {
+        internalName: 'output1',
+        messageFormat: 'messageFormat3'
+      },
+      {
+        internalName: 'output2',
+        messageFormat: 'messageFormat4'
+      }
+    ]
+  };
 });
 
 /* run tests */
@@ -20,22 +47,16 @@ test('constructor() - no params', t => {
   t.is(interaction.processingCallback, undefined);
 });
 
-test('constructor() - with params', t => {
-  let params = {
-    id: 'test-id',
-    name: 'test-name',
-    processingCallback: '() => {}',
-    inputFormats: [],
-    outputFormats: []
-  };
-  let interaction = new Interaction(params);
+test('constructor() - with specs', t => {
+  let specs = t.context.interactionSpecs;
+  let interaction = new Interaction(specs);
   interaction.setTopicData(t.context.topicData);
-  t.is(interaction.id, params.id);
-  t.is(interaction.name, params.name);
-  t.deepEqual(interaction.processingCallback.toString(), params.processingCallback);
+  t.is(interaction.id, specs.id);
+  t.is(interaction.name, specs.name);
+  t.deepEqual(interaction.processingCallback.toString(), specs.processingCallback);
   t.is(interaction.topicData, t.context.topicData);
-  t.is(interaction.inputFormats, params.inputFormats);
-  t.is(interaction.outputFormats, params.outputFormats);
+  t.is(interaction.inputFormats, specs.inputFormats);
+  t.is(interaction.outputFormats, specs.outputFormats);
   t.deepEqual(interaction.state, {});
 });
 
@@ -46,7 +67,7 @@ test('setTopicData()', t => {
   t.is(interaction.topicData, topicData);
 });
 
-test('connectInput()', t => {
+test('connectInputTopic()', t => {
   let interaction = t.context.interaction;
 
   let inputName = 'inputName';
@@ -54,7 +75,7 @@ test('connectInput()', t => {
 
   // no topic data defined yet
   t.is(interaction.inputProxy[inputName], undefined);
-  interaction.connectInput(inputName, topicName);
+  interaction.connectInputTopic(inputName, topicName);
   t.is(interaction.inputProxy[inputName], undefined);
 
   // defined topic data, but topic undefined
@@ -62,37 +83,37 @@ test('connectInput()', t => {
     pull: sinon.fake()
   };
   interaction.setTopicData(topicData);
-  interaction.connectInput(inputName, topicName);
+  interaction.connectInputTopic(inputName, topicName);
   t.is(interaction.inputProxy[inputName], undefined);
   t.is(topicData.pull.callCount, 1);
 
   // defined topic data
-  topicData.pull = sinon.fake.returns({data: 0, type: 'number'});
-  interaction.connectInput(inputName, topicName);
+  topicData.pull = sinon.fake.returns({ data: 0, type: 'number' });
+  interaction.connectInputTopic(inputName, topicName);
   t.not(interaction.inputProxy[inputName], null);
   t.is(topicData.pull.callCount, 2);
   t.is(topicData.pull.lastArg, topicName);
 });
 
-test('disconnectInput()', t => {
-  let interaction  = t.context.interaction;
+test('disconnectInputTopic()', t => {
+  let interaction = t.context.interaction;
 
   let inputName = 'inputName';
   interaction.inputProxy[inputName] = {};
-  interaction.disconnectInput(inputName);
+  interaction.disconnectInputTopic(inputName);
   t.is(interaction.inputProxy[inputName], undefined);
 });
 
-test('connectOutput()', t => {
-  let interaction = t.context.interaction;
+test('connectOutputTopic()', t => {
+  let interaction = new Interaction(t.context.interactionSpecs);
 
-  let outputName = 'outputName';
+  let outputName = interaction.outputFormats[0].internalName;
   let topicName = 'topicName';
-  let type = 'type';
+  let dataType = Utils.getTopicDataTypeFromMessageFormat(interaction.outputFormats[0].messageFormat);
 
   // no topic data defined yet
   t.is(interaction.outputProxy[outputName], undefined);
-  interaction.connectOutput(outputName, topicName);
+  interaction.connectOutputTopic(outputName, topicName);
   t.is(interaction.outputProxy[outputName], undefined);
 
   // defined topic data
@@ -100,75 +121,25 @@ test('connectOutput()', t => {
     publish: sinon.fake()
   };
   interaction.setTopicData(topicData);
-  interaction.connectOutput(outputName, topicName, type);
+  interaction.connectOutputTopic(outputName, topicName);
 
   let value = 'test-value';
   interaction.outputProxy[outputName] = value;
   t.is(topicData.publish.callCount, 1);
-  t.deepEqual(topicData.publish.lastCall.args, [topicName, value, type]);
+  t.deepEqual(topicData.publish.lastCall.args, [topicName, value, dataType]);
 });
 
-test('disconnectOutput()', t => {
-  let interaction  = t.context.interaction;
+test('disconnectOutputTopic()', t => {
+  let interaction = t.context.interaction;
 
   let outputName = 'outputName';
   interaction.outputProxy[outputName] = {};
-  interaction.disconnectOutput(outputName);
+  interaction.disconnectOutputTopic(outputName);
   t.is(interaction.outputProxy[outputName], undefined);
 });
 
-test('connectIO()', t => {
-  let interaction  = t.context.interaction;
-
-  interaction.connectInput = sinon.fake();
-  interaction.connectOutput = sinon.fake();
-
-  let input1 = {internalName: 'input-1', messageFormat: ''},
-    topicInput1 = 'topic-input-1',
-    output1 = {internalName: 'output-1', messageFormat: ''},
-    topicOutput1 = 'topic-output-1';
-  interaction.inputFormats.push(input1);
-  interaction.outputFormats.push(output1);
-
-  let ioMappings = [];
-
-  // no mappings
-  interaction.connectIO(ioMappings);
-  t.is(interaction.connectInput.callCount, 0);
-  t.is(interaction.connectOutput.callCount, 0);
-
-  // not well defined mappings
-  ioMappings.push({
-    interactionId: interaction.id,
-    interactionInput: input1
-  });
-  ioMappings.push({
-    interactionId: interaction.id,
-    topic: topicOutput1
-  });
-  interaction.connectIO(ioMappings);
-  t.is(interaction.connectInput.callCount, 0);
-  t.is(interaction.connectOutput.callCount, 0);
-
-  // well defined mappings
-  ioMappings = [];
-  ioMappings.push({
-    interactionId: interaction.id,
-    interactionInput: input1,
-    topic: topicInput1
-  });
-  ioMappings.push({
-    interactionId: interaction.id,
-    interactionOutput: output1,
-    topic: topicOutput1
-  });
-  interaction.connectIO(ioMappings);
-  t.is(interaction.connectInput.callCount, 1);
-  t.is(interaction.connectOutput.callCount, 1);
-});
-
 test('disconnectIO()', t => {
-  let interaction  = t.context.interaction;
+  let interaction = t.context.interaction;
 
   interaction.inputProxy.a = 1;
   interaction.inputProxy.b = '2';
@@ -181,7 +152,7 @@ test('disconnectIO()', t => {
 });
 
 test('setProcessingCallback()', t => {
-  let interaction  = t.context.interaction;
+  let interaction = t.context.interaction;
 
   // not a function
   let callbackFunction = {};
@@ -189,13 +160,13 @@ test('setProcessingCallback()', t => {
   t.is(interaction.processingCallback, undefined);
 
   // a function
-  callbackFunction = () => {};
+  callbackFunction = () => { };
   interaction.setProcessingCallback(callbackFunction);
   t.is(interaction.processingCallback, callbackFunction);
 });
 
 test('process()', t => {
-  let interaction  = t.context.interaction;
+  let interaction = t.context.interaction;
 
   interaction.inputProxy = {
     a: 1,

@@ -1,7 +1,7 @@
-const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const Storage = require('./storage.js');
 
-class SessionDatabase extends Storage{
+class SessionDatabase extends Storage {
   constructor() {
     super('sessions', 'session');
   }

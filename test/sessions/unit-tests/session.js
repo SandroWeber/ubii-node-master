@@ -1,8 +1,9 @@
 import test from 'ava';
+import sinon from 'sinon';
 
-import {Session} from '../../../src/index.js'
+import { Session } from '../../../src/index.js'
 
-import {MockInteractionIOMapping} from '../../mocks/mock-interaction-io-mapping.js'
+import { MockInteractionIOMapping } from '../../mocks/mock-interaction-io-mapping.js'
 import MockTopicData from '../../mocks/mock-topicdata.js';
 
 
@@ -37,7 +38,7 @@ test('constructor', t => {
   t.not(session.id, '');
   t.is(session.ioMappings.length, 0);
 
-  session = new Session({ioMappings: interactionIOMappings});
+  session = new Session({ ioMappings: interactionIOMappings });
   t.is(typeof session.id, 'string');
   t.not(session.id, '');
   t.is(session.ioMappings.length, interactionIOMappings.length);
@@ -63,7 +64,7 @@ test('add/remove interactions', t => {
   let removeID = session.ioMappings[removeIndex].interaction.id;
   session.removeInteraction(interactionIOMappings[removeIndex].interaction.id);
   t.is(session.ioMappings.length, interactionIOMappings.length);
-  t.is(session.ioMappings.some((element) => {return element.interaction.id === removeID;}), true);
+  t.is(session.ioMappings.some((element) => { return element.interaction.id === removeID; }), true);
   // try removing the same element
   session.removeInteraction(interactionIOMappings[removeIndex]);
   t.is(session.ioMappings.length, interactionIOMappings.length);
@@ -75,13 +76,14 @@ test('processing - promise with recursive calls, single interaction', async t =>
 
   session.processMode = Session.PROCESS_MODES.PROMISE_RECURSIVECALLS;
 
-  session.addInteraction(interactionIOMappings[0].interaction);
+  let interaction = session.addInteraction({});
+  interaction.process = sinon.fake();
 
-  t.is(interactionIOMappings[0].interaction.process.callCount, 0);
+  t.is(interaction.process.callCount, 0);
 
   await runProcessing(session, 100);
 
-  t.is(interactionIOMappings[0].interaction.process.callCount > 0, true);
+  t.is(interaction.process.callCount > 0, true);
 });
 
 test('processing - promise with recursive calls, multiple interactions', async t => {
@@ -90,17 +92,20 @@ test('processing - promise with recursive calls, multiple interactions', async t
 
   session.processMode = Session.PROCESS_MODES.PROMISE_RECURSIVECALLS;
 
-  session.addInteraction(interactionIOMappings[0].interaction);
-  session.addInteraction(interactionIOMappings[1].interaction);
-  session.addInteraction(interactionIOMappings[2].interaction);
+  let interaction1 = session.addInteraction({});
+  let interaction2 = session.addInteraction({});
+  let interaction3 = session.addInteraction({});
+  interaction1.process = sinon.fake();
+  interaction2.process = sinon.fake();
+  interaction3.process = sinon.fake();
 
-  t.is(interactionIOMappings[0].interaction.process.callCount, 0);
-  t.is(interactionIOMappings[1].interaction.process.callCount, 0);
-  t.is(interactionIOMappings[2].interaction.process.callCount, 0);
+  t.is(interaction1.process.callCount, 0);
+  t.is(interaction2.process.callCount, 0);
+  t.is(interaction3.process.callCount, 0);
 
   await runProcessing(session, 100);
 
-  t.is(interactionIOMappings[0].interaction.process.callCount > 0, true);
-  t.is(interactionIOMappings[1].interaction.process.callCount > 0, true);
-  t.is(interactionIOMappings[2].interaction.process.callCount > 0, true);
+  t.is(interaction1.process.callCount > 0, true);
+  t.is(interaction2.process.callCount > 0, true);
+  t.is(interaction3.process.callCount > 0, true);
 });
