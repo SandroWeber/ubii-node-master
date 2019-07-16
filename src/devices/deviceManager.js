@@ -38,6 +38,7 @@ class DeviceManager {
     if (this.hasParticipant(id)) {
       this.getParticipant(id).components.forEach(component => {
         this.topicData.remove(component.topic)
+        console.info('topic removed: ' + component.topic);
       });
       this.removeParticipant(id);
     } else if (this.hasWatcher(id)) {
@@ -48,12 +49,12 @@ class DeviceManager {
   removeClientDevices(clientID) {
     this.participants.forEach(participant => {
       if (participant.clientId === clientID) {
-        this.removeParticipant(participant.id);
+        this.removeDevice(participant.id);
       }
     });
     this.watchers.forEach(watcher => {
       if (watcher.clientId === clientID) {
-        this.removeWatcher(watcher.id);
+        this.removeDevice(watcher.id);
       }
     });
   }
