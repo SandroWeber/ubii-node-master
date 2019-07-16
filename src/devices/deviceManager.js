@@ -37,8 +37,7 @@ class DeviceManager {
   removeDevice(id) {
     if (this.hasParticipant(id)) {
       this.getParticipant(id).components.forEach(component => {
-        this.topicData.remove(component.topic)
-        console.info('topic removed: ' + component.topic);
+        this.topicData.remove(component.topic);
       });
       this.removeParticipant(id);
     } else if (this.hasWatcher(id)) {
@@ -94,7 +93,6 @@ class DeviceManager {
   removeParticipant(deviceIdentifier) {
     this.getParticipant(deviceIdentifier).deactivate();
     this.participants.delete(deviceIdentifier);
-    console.info('removeParticipant - ' + deviceIdentifier);
   }
 
   /**
