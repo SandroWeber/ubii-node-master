@@ -37,7 +37,7 @@ class DeviceManager {
   removeDevice(id) {
     if (this.hasParticipant(id)) {
       this.getParticipant(id).components.forEach(component => {
-        this.topicData.remove(component.topic)
+        this.topicData.remove(component.topic);
       });
       this.removeParticipant(id);
     } else if (this.hasWatcher(id)) {
@@ -48,12 +48,12 @@ class DeviceManager {
   removeClientDevices(clientID) {
     this.participants.forEach(participant => {
       if (participant.clientId === clientID) {
-        this.removeParticipant(participant.id);
+        this.removeDevice(participant.id);
       }
     });
     this.watchers.forEach(watcher => {
       if (watcher.clientId === clientID) {
-        this.removeWatcher(watcher.id);
+        this.removeDevice(watcher.id);
       }
     });
   }
@@ -93,7 +93,6 @@ class DeviceManager {
   removeParticipant(deviceIdentifier) {
     this.getParticipant(deviceIdentifier).deactivate();
     this.participants.delete(deviceIdentifier);
-    console.info('removeParticipant - ' + deviceIdentifier);
   }
 
   /**
