@@ -1,6 +1,10 @@
+const EventEmitter = require('events');
+
 const uuidv4 = require('uuid/v4');
+const tf = require('@tensorflow/tfjs');
 
 const Utils = require('../utilities');
+const { INTERACTION_LIFECYCLE_EVENTS } = require('./constants');
 
 class Interaction {
   constructor({
@@ -8,19 +12,24 @@ class Interaction {
     name = '',
     processingCallback = undefined,
     inputFormats = [],
-    outputFormats = []
+    outputFormats = [],
+    onCreated = undefined
   }) {
     this.id = id;
     this.name = name;
     this.processingCallback = Utils.createFunctionFromString(processingCallback);
     this.inputFormats = inputFormats;
     this.outputFormats = outputFormats;
+    this.onCreated = Utils.createFunctionFromString(onCreated);
 
     this.state = {};
     this.inputProxy = {};
     this.outputProxy = {};
+
+    this.events = new EventEmitter();
   }
 
+  /* I/O functions */
   setTopicData(topicData) {
     this.topicData = topicData;
   }
@@ -146,7 +155,9 @@ class Interaction {
     this.inputProxy = {};
     this.outputProxy = {};
   }
+  /* I/O functions end */
 
+  /* processing functions */
   setProcessingCallback(callback) {
     if (typeof callback !== 'function') return;
 
@@ -154,6 +165,7 @@ class Interaction {
   }
 
   process() {
+    this.events.emit(INTERACTION_LIFECYCLE_EVENTS.PROCESS);
     if (typeof this.processingCallback !== 'function') {
       console.log(
         'Interaction(' +
@@ -166,6 +178,10 @@ class Interaction {
 
     this.processingCallback(this.inputProxy, this.outputProxy, this.state);
   }
+  /* processing functions end*/
+
+  /* lifecycle functions */
+  /* lifecycle functions end */
 
   toProtobuf() {
     return {

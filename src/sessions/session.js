@@ -80,6 +80,7 @@ class Session {
       let interaction = new Interaction(specs);
       interaction.setTopicData(this.topicData);
       this.runtimeInteractions.push(interaction);
+      interaction.onCreated && interaction.onCreated();
 
       return interaction;
     }
