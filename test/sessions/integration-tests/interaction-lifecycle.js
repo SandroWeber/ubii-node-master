@@ -9,41 +9,22 @@ import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
 /* helper functions */
 
-let processCB = (inputs, outputs, state) => { };
-let onCreated = () => {
-  this.state.bool = true;
-  this.state.string = 'test-string';
+let processCB = () => { };
+let onCreated = (state) => {
+  state.bool = true;
+  state.string = 'test-string';
 };
 
 let interactionSpecs = {
   id: uuidv4(),
   name: 'test-interaction',
   processingCallback: processCB.toString(),
-  inputFormats: [{
-    internalName: 'mux',
-    messageFormat: 'double'
-  }],
-  outputFormats: [{
-    internalName: 'demux',
-    messageFormat: 'string'
-  }],
   onCreated: onCreated.toString()
 };
 
 let sessionSpecs = {
   name: 'test-session',
-  interactions: [interactionSpecs],
-  ioMappings: [{
-    interactionId: interactionSpecs.id,
-    inputMappings: [{
-      name: interactionSpecs.inputFormats[0].internalName,
-      topicSource: topicMuxSpecs
-    }],
-    outputMappings: [{
-      name: interactionSpecs.outputFormats[0].internalName,
-      topicDestination: topicDemuxSpecs
-    }]
-  }]
+  interactions: [interactionSpecs]
 };
 
 /* initialize tests */
@@ -57,7 +38,10 @@ test.beforeEach(t => {
 
 /* run tests */
 
-test('execute interaction with TFjs example code', async t => {
+test('onCreated', async t => {
   let session = t.context.sessionManager.createSession(sessionSpecs);
+  t.context.sessionManager.startAllSessions();
   t.is(session.runtimeInteractions.length, 1);
+  t.is(session.runtimeInteractions[0].state.bool, true);
+  t.is(session.runtimeInteractions[0].state.string, 'test-string');
 });

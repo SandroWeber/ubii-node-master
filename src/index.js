@@ -1,22 +1,23 @@
-const {MasterNode} = require('./node/masterNode');
+const { MasterNode } = require('./node/masterNode');
 
-const {Client} = require('./clients/client');
-const {ClientManager} = require('./clients/clientManager');
+const { Client } = require('./clients/client');
+const { ClientManager } = require('./clients/clientManager');
 
-const {DeviceManager} = require('./devices/deviceManager');
-const {Watcher} = require('./devices/watcher');
-const {Participant} = require('./devices/participant');
-const {TopicMultiplexer} = require('./devices/topicMultiplexer');
-const {TopicDemultiplexer} = require('./devices/topicDemultiplexer');
+const { DeviceManager } = require('./devices/deviceManager');
+const { Watcher } = require('./devices/watcher');
+const { Participant } = require('./devices/participant');
+const { TopicMultiplexer } = require('./devices/topicMultiplexer');
+const { TopicDemultiplexer } = require('./devices/topicDemultiplexer');
 
-const {Session} = require('./sessions/session');
-const {SessionManager} = require('./sessions/sessionManager');
-const {Interaction} = require('./sessions/interaction');
+const { Session } = require('./sessions/session');
+const { SessionManager } = require('./sessions/sessionManager');
+const { Interaction } = require('./sessions/interaction');
+const { INTERACTION_LIFECYCLE_EVENTS, INTERACTION_STATUS } = require('./sessions/constants');
 
-const {ServiceManager} = require('./services/serviceManager');
-const {ClientRegistrationService} = require('./services/clientRegistrationService');
-const {DeviceRegistrationService} = require('./services/devices/deviceRegistrationService');
-const {SubscriptionService} = require('./services/subscriptionService');
+const { ServiceManager } = require('./services/serviceManager');
+const { ClientRegistrationService } = require('./services/clientRegistrationService');
+const { DeviceRegistrationService } = require('./services/devices/deviceRegistrationService');
+const { SubscriptionService } = require('./services/subscriptionService');
 
 module.exports = {
     'MasterNode': MasterNode,
@@ -33,5 +34,7 @@ module.exports = {
     'ServiceManager': ServiceManager,
     'ClientRegistrationService': ClientRegistrationService,
     'DeviceRegistrationService': DeviceRegistrationService,
-    'SubscriptionService': SubscriptionService
+    'SubscriptionService': SubscriptionService,
+    'INTERACTION_LIFECYCLE_EVENTS': INTERACTION_LIFECYCLE_EVENTS,
+    'INTERACTION_STATUS': INTERACTION_STATUS
 };

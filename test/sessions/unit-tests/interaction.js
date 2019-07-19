@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { Interaction } from '../../../src/index';
+import { Interaction, INTERACTION_STATUS } from '../../../src/index';
 import Utils from '../../../src/utilities';
 import MockTopicData from '../../mocks/mock-topicdata.js';
 import sinon from 'sinon';
@@ -57,7 +57,7 @@ test('constructor() - with specs', t => {
   t.is(interaction.topicData, t.context.topicData);
   t.is(interaction.inputFormats, specs.inputFormats);
   t.is(interaction.outputFormats, specs.outputFormats);
-  t.deepEqual(interaction.state, {});
+  t.not(interaction.state, undefined);
 });
 
 test('setTopicData()', t => {
@@ -182,6 +182,7 @@ test('process()', t => {
   };
 
   interaction.processingCallback = sinon.fake();
+  interaction.status = INTERACTION_STATUS.PROCESSING;
   interaction.process();
   t.deepEqual(interaction.processingCallback.lastCall.args, [interaction.inputProxy, interaction.outputProxy, interaction.state]);
 });

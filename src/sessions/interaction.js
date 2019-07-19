@@ -1,10 +1,10 @@
 const EventEmitter = require('events');
 
 const uuidv4 = require('uuid/v4');
-const tf = require('@tensorflow/tfjs');
+const tf = require('@tensorflow/tfjs-node');
 
 const Utils = require('../utilities');
-const { INTERACTION_LIFECYCLE_EVENTS } = require('./constants');
+const { INTERACTION_LIFECYCLE_EVENTS, INTERACTION_STATUS } = require('./constants');
 
 class Interaction {
   constructor({
@@ -20,13 +20,30 @@ class Interaction {
     this.processingCallback = Utils.createFunctionFromString(processingCallback);
     this.inputFormats = inputFormats;
     this.outputFormats = outputFormats;
-    this.onCreated = Utils.createFunctionFromString(onCreated);
+    if (onCreated) {
+      this.onCreatedCallback = Utils.createFunctionFromString(onCreated);
+    }
 
-    this.state = {};
+    this.state = {
+      /*modules: {
+        tf: tf
+      }*/
+    };
+    Object.defineProperty(this.state, 'modules', {
+      // input is read-only
+      get: () => {
+        return {
+          tf: tf
+        }
+      },
+      configurable: true
+    });
+
     this.inputProxy = {};
     this.outputProxy = {};
 
     this.events = new EventEmitter();
+    this.status = INTERACTION_STATUS.CREATED;
   }
 
   /* I/O functions */
@@ -165,7 +182,11 @@ class Interaction {
   }
 
   process() {
-    this.events.emit(INTERACTION_LIFECYCLE_EVENTS.PROCESS);
+    if (this.status !== INTERACTION_STATUS.PROCESSING) {
+      return;
+    }
+
+    //this.events.emit(INTERACTION_LIFECYCLE_EVENTS.PROCESS);
     if (typeof this.processingCallback !== 'function') {
       console.log(
         'Interaction(' +
@@ -181,6 +202,13 @@ class Interaction {
   /* processing functions end*/
 
   /* lifecycle functions */
+  async onCreated() {
+    if (this.onCreatedCallback) {
+      await this.onCreatedCallback(this.state);
+    }
+
+    this.status = INTERACTION_STATUS.PROCESSING;
+  }
   /* lifecycle functions end */
 
   toProtobuf() {
@@ -189,7 +217,8 @@ class Interaction {
       name: this.name,
       processingCallback: this.processingCallback.toString(),
       inputFormats: this.inputFormats,
-      outputFormats: this.outputFormats
+      outputFormats: this.outputFormats,
+      onCreated: this.onCreatedCallback && this.onCreatedCallback.toString()
     };
   }
 }

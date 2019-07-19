@@ -1,8 +1,8 @@
 export default {
   "files": [
-    "!test/node/master-client-web.js",
-    "!test/node/master-client-zmq.js",
-    "!test/devices/**/*",
+    "test/node/master-client-web.js",
+    "test/node/master-client-zmq.js",
+    "test/devices/**/*",
     "test/sessions/**/*",
     "!test/files/**/*",
     "!test/mocks/*",
@@ -12,7 +12,7 @@ export default {
   "failFast": false,
   "failWithoutAssertions": false,
   "tap": false,
-  "verbose": true,
+  "verbose": false,
   "serial": true,
   "compileEnhancements": false
 };
