@@ -13,12 +13,10 @@ let topicPrediction = '/tfjs-runtime-test/prediction';
 let processCB = (inputs, outputs, state) => {
   // Use the model to do inference on a data point the model hasn't seen before:
   let prediction = state.model.predict(state.modules.tf.tensor2d([5], [1, 1])).dataSync()[0];
-  console.info('processCB result:');
-  console.info(prediction);
   outputs.prediction = prediction;
 };
 
-let onCreated = async (state) => {
+let onCreatedCB = async (state) => {
   state.model = state.modules.tf.sequential();
   state.model.add(state.modules.tf.layers.dense({ units: 1, inputShape: [1] }));
 
@@ -32,8 +30,6 @@ let onCreated = async (state) => {
   // Train the model using the data.
   await state.model.fit(xs, ys).then(() => {
     state.expectedPrediction = state.model.predict(state.modules.tf.tensor2d([5], [1, 1])).dataSync()[0];
-    console.info('onCreated result:');
-    console.info(state.expectedPrediction);
   });
 };
 
@@ -41,7 +37,7 @@ let interactionSpecs = {
   id: uuidv4(),
   name: 'test-interaction',
   processingCallback: processCB.toString(),
-  onCreated: onCreated.toString(),
+  onCreated: onCreatedCB.toString(),
   outputFormats: [{
     internalName: 'prediction',
     messageFormat: 'double'
