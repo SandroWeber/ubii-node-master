@@ -3,6 +3,10 @@ const uuidv4Regex = '[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12
 
 class Utils {
   static createFunctionFromString(string) {
+    if (!string || string.length === 0) {
+      return undefined;
+    }
+
     return new Function("return " + string)();
   };
 

@@ -79,6 +79,8 @@ class Session {
     ) {
       let interaction = new Interaction(specs);
       interaction.setTopicData(this.topicData);
+      interaction.onCreated();
+
       this.runtimeInteractions.push(interaction);
 
       return interaction;
@@ -104,7 +106,7 @@ class Session {
         return;
       }
 
-      mapping.inputMappings.forEach(inputMapping => {
+      mapping.inputMappings && mapping.inputMappings.forEach(inputMapping => {
         // single topic input target
         if (typeof inputMapping.topicSource === 'string') {
           if (interaction.hasInput(inputMapping.name)) {
@@ -127,7 +129,7 @@ class Session {
         }
       });
 
-      mapping.outputMappings.forEach(outputMapping => {
+      mapping.outputMappings && mapping.outputMappings.forEach(outputMapping => {
         // single topic output target
         if (typeof outputMapping.topicDestination === 'string') {
           if (interaction.hasOutput(outputMapping.name)) {

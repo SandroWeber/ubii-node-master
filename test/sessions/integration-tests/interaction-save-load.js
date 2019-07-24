@@ -1,7 +1,7 @@
 import test from 'ava';
 import fs from 'fs';
 
-import {Interaction} from '../../../src/index'
+import { Interaction } from '../../../src/index'
 
 import TestUtility from '../testUtility';
 
@@ -16,7 +16,7 @@ test.beforeEach(async t => {
     outputs.b = inputs.b + 1;
   });
 
-  let ioMappings = [
+  /*let ioMappings = [
     {
       interactionId: interaction.id,
       ioType: {
@@ -41,7 +41,7 @@ test.beforeEach(async t => {
       },
       topic: 'topics/out/b'
     }
-  ];
+  ];*/
 
   t.context.interaction = interaction;
 });
@@ -62,7 +62,7 @@ test('save to / load from FILE', async t => {
   await TestUtility.loadJSONFromFile(filepath).then(
     (json) => {
       let newInteraction = new Interaction(json);
-      t.deepEqual(JSON.stringify(interaction), JSON.stringify(newInteraction));
+      t.deepEqual(interaction.toProtobuf(), newInteraction.toProtobuf());
 
       fs.unlinkSync(filepath);
     }
@@ -76,5 +76,5 @@ test('convert to / create from PROTOBUF', async t => {
 
   let newInteraction = new Interaction(protobufMsg);
 
-  t.deepEqual(JSON.stringify(interaction), JSON.stringify(newInteraction));
+  t.deepEqual(interaction.toProtobuf(), newInteraction.toProtobuf());
 });
