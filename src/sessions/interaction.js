@@ -2,6 +2,7 @@ const EventEmitter = require('events');
 
 const uuidv4 = require('uuid/v4');
 const tf = require('@tensorflow/tfjs-node');
+const cocoSsd = require('@tensorflow-models/coco-ssd');
 
 const Utils = require('../utilities');
 const { INTERACTION_LIFECYCLE_EVENTS, INTERACTION_STATUS } = require('./constants');
@@ -29,7 +30,8 @@ class Interaction {
       // input is read-only
       get: () => {
         return {
-          tf: tf
+          tf: tf,
+          cocoSsd: cocoSsd
         }
       },
       configurable: true
