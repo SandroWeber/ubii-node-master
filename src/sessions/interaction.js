@@ -23,6 +23,7 @@ class Interaction {
     this.outputFormats = outputFormats;
     if (onCreated) {
       this.onCreatedCallback = Utils.createFunctionFromString(onCreated);
+      console.info(this.onCreatedCallback);
     }
 
     this.state = {};
@@ -202,7 +203,12 @@ class Interaction {
   /* lifecycle functions */
   async onCreated() {
     if (this.onCreatedCallback) {
-      await this.onCreatedCallback(this.state);
+      try {
+        await this.onCreatedCallback(this.state);
+      }
+      catch (error) {
+        console.info(error);
+      }
     }
 
     this.status = INTERACTION_STATUS.PROCESSING;

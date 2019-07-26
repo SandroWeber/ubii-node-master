@@ -67,9 +67,9 @@ class SessionManager {
     }
   }
 
-  startAllSessions() {
-    this.sessions.forEach((session) => {
-      session.start();
+  async startAllSessions() {
+    this.sessions.forEach(async (session) => {
+      await session.start();
     });
   }
 
