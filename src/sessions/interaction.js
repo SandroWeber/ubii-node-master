@@ -39,6 +39,16 @@ class Interaction {
       configurable: true
     });
 
+    Object.defineProperty(this.state, 'modules', {
+      // input is read-only
+      get: () => {
+        return {
+          tf: tf
+        }
+      },
+      configurable: true
+    });
+
     this.inputProxy = {};
     this.outputProxy = {};
 

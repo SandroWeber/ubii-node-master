@@ -35,7 +35,7 @@
   "dependencies": {
     "@tensorflow/tfjs-node": "1.2.4",
     "@tum-far/namida": "0.1.1",
-    "@tum-far/ubii-msg-formats": "^0.10.11",
+    "@tum-far/ubii-msg-formats": "^0.10.12",
     "@tum-far/ubii-topic-data": "0.3.3",
     "body-parser": "1.18.3",
     "express": "4.16.4",
