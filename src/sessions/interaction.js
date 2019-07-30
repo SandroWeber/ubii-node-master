@@ -23,7 +23,6 @@ class Interaction {
     this.outputFormats = outputFormats;
     if (onCreated) {
       this.onCreatedCallback = Utils.createFunctionFromString(onCreated);
-      console.info(this.onCreatedCallback);
     }
 
     this.state = {};
@@ -76,7 +75,7 @@ class Interaction {
 
   connectInputTopic(internalName, externalTopic) {
     if (!this.topicData) {
-      console.log(
+      console.warn(
         'Interaction(' + this.id + ').connectInputTopic() - missing topicData == ' + this.topicData
       );
       return false;
@@ -103,7 +102,7 @@ class Interaction {
 
   connectOutputTopic(internalName, externalTopic) {
     if (!this.topicData) {
-      console.info(
+      console.warn(
         'Interaction(' + this.id + ').connectOutputTopic() - missing topicData == ' + this.topicData
       );
       return false;
@@ -187,7 +186,7 @@ class Interaction {
 
     //this.events.emit(INTERACTION_LIFECYCLE_EVENTS.PROCESS);
     if (typeof this.processingCallback !== 'function') {
-      console.log(
+      console.warn(
         'Interaction(' +
         this.id +
         ').process() - processingCallback not a function == ' +
@@ -207,7 +206,7 @@ class Interaction {
         await this.onCreatedCallback(this.state);
       }
       catch (error) {
-        console.info(error);
+        console.warn(error);
       }
     }
 
