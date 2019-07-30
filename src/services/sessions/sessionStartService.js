@@ -1,6 +1,6 @@
-const {DEFAULT_TOPICS} = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
-const {Service} = require('./../service.js');
+const { Service } = require('./../service.js');
 const SessionDatabase = require('../../storage/sessionDatabase');
 
 class SessionStartService extends Service {
@@ -28,7 +28,8 @@ class SessionStartService extends Service {
         return {
           error: {
             title: 'SessionStartService Error',
-            message: error.toString()
+            message: error.toString(),
+            stack: error.stack && error.stack.toString()
           }
         }
       }
@@ -51,7 +52,8 @@ class SessionStartService extends Service {
         return {
           error: {
             title: 'SessionStartService Error',
-            message: error.toString()
+            message: error.toString(),
+            stack: error.stack && error.stack.toString()
           }
         }
       }
@@ -72,7 +74,8 @@ class SessionStartService extends Service {
       return {
         error: {
           title: 'SessionStartService Error',
-          message: error.toString()
+          message: error.toString(),
+          stack: error.stack && error.stack.toString()
         }
       }
     }

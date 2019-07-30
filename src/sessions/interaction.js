@@ -2,6 +2,7 @@ const EventEmitter = require('events');
 
 const uuidv4 = require('uuid/v4');
 const tf = require('@tensorflow/tfjs-node');
+const cocoSsd = require('@tensorflow-models/coco-ssd');
 
 const Utils = require('../utilities');
 const { INTERACTION_LIFECYCLE_EVENTS, INTERACTION_STATUS } = require('./constants');
@@ -29,7 +30,8 @@ class Interaction {
       // input is read-only
       get: () => {
         return {
-          tf: tf
+          tf: tf,
+          cocoSsd: cocoSsd
         }
       },
       configurable: true
@@ -73,7 +75,7 @@ class Interaction {
 
   connectInputTopic(internalName, externalTopic) {
     if (!this.topicData) {
-      console.log(
+      console.warn(
         'Interaction(' + this.id + ').connectInputTopic() - missing topicData == ' + this.topicData
       );
       return false;
@@ -100,7 +102,7 @@ class Interaction {
 
   connectOutputTopic(internalName, externalTopic) {
     if (!this.topicData) {
-      console.info(
+      console.warn(
         'Interaction(' + this.id + ').connectOutputTopic() - missing topicData == ' + this.topicData
       );
       return false;
@@ -184,7 +186,7 @@ class Interaction {
 
     //this.events.emit(INTERACTION_LIFECYCLE_EVENTS.PROCESS);
     if (typeof this.processingCallback !== 'function') {
-      console.log(
+      console.warn(
         'Interaction(' +
         this.id +
         ').process() - processingCallback not a function == ' +
@@ -200,7 +202,12 @@ class Interaction {
   /* lifecycle functions */
   async onCreated() {
     if (this.onCreatedCallback) {
-      await this.onCreatedCallback(this.state);
+      try {
+        await this.onCreatedCallback(this.state);
+      }
+      catch (error) {
+        console.warn(error);
+      }
     }
 
     this.status = INTERACTION_STATUS.PROCESSING;

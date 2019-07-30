@@ -40,7 +40,7 @@ test.beforeEach(t => {
 
 test('onCreated', async t => {
   let session = t.context.sessionManager.createSession(sessionSpecs);
-  t.context.sessionManager.startAllSessions();
+  await t.context.sessionManager.startAllSessions();
   t.is(session.runtimeInteractions.length, 1);
   t.is(session.runtimeInteractions[0].state.bool, true);
   t.is(session.runtimeInteractions[0].state.string, 'test-string');
