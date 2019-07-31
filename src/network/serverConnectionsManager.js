@@ -69,7 +69,7 @@ class ServerConnectionsManager {
 
     // REST Service Server Component:
     this.connections.serviceREST = new RESTServer(
-      this.ports.serviceREST,
+      this.ports.serviceREST, 41000,
       true
     );
 

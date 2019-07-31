@@ -1,4 +1,6 @@
 const express = require('express');
+var http = require('http');
+var https = require('https');
 const bodyParser = require('body-parser');
 
 class RESTServer {
@@ -9,9 +11,10 @@ class RESTServer {
    * @param {*} autoBind Should the socket bind directly after the initialization of the object?
    * If not, the start method must be called manually.
    */
-  constructor(port = 5555,
+  constructor(port = 5555, portHTTPS = 41000,
               autoBind = true) {
     this.port = port;
+    this.portHTTPS = portHTTPS;
 
     if (autoBind) {
       this.start();
@@ -21,6 +24,13 @@ class RESTServer {
   start() {
     // init
     this.app = express();
+    //this.httpServer = http.createServer(this.app);
+    /*var credentials = {
+      ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
+      cert: fs.readFileSync(PATH_TO_CERT),
+      key: fs.readFileSync(PATH_TO_KEY)
+    };*/
+    this.httpsServer = https.createServer(/*credentials*/ undefined, this.app);
 
     // CORS
     this.app.use(function(req, res, next) {
@@ -40,7 +50,7 @@ class RESTServer {
     /// VARIANT B: JSON
     this.app.use(bodyParser.json());
 
-    this.server = this.app.listen(this.port, () => {
+    this.server = this.httpsServer.listen(this.port, () => {
       console.info('[' + new Date() + '] REST server listening on port ' + this.port)
     });
   }
