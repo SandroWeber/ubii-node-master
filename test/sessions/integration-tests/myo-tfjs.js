@@ -66,16 +66,16 @@ let sessionSpecs = {
 
 /* initialize tests */
 
-test.beforeEach(t => {
+/* test.beforeEach(t => {
   t.context.topicData = new RuntimeTopicData();
   t.context.deviceManager = new DeviceManager(undefined, t.context.topicData, undefined);
   t.context.sessionManager = new SessionManager(t.context.topicData, t.context.deviceManager);
-});
+}); */
 
 
 /* run tests */
 
-test('execute interaction with TFjs myo code', async t => {
+/* test('execute interaction with TFjs myo code', async t => {
   let session = t.context.sessionManager.createSession(sessionSpecs);
   t.context.sessionManager.startAllSessions();
   t.is(session.runtimeInteractions.length, 1);
@@ -86,4 +86,4 @@ test('execute interaction with TFjs myo code', async t => {
   await TestUtility.wait(50);
 
   t.is(t.context.topicData.pull(topicPrediction).data, interaction.state.expectedPrediction);
-});
+}); */
