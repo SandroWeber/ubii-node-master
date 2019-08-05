@@ -69,7 +69,7 @@ test.beforeEach(t => {
 
 test('execute interaction with TFjs example code', async t => {
   let session = t.context.sessionManager.createSession(sessionSpecs);
-  t.context.sessionManager.startAllSessions();
+  await t.context.sessionManager.startAllSessions();
   t.is(session.runtimeInteractions.length, 1);
 
   let interaction = session.runtimeInteractions[0];

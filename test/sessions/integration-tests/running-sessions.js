@@ -117,7 +117,7 @@ test('single session - two interactions', async t => {
   topicData.publish(topicNameString, '0');
 
   // start
-  sessionManager.startAllSessions();
+  await sessionManager.startAllSessions();
   t.is(session.status === Session.STATUS.RUNNING, true);
 
   // wait until t1
@@ -210,7 +210,7 @@ test('two sessions - one interaction each', async t => {
   topicData.publish(topicNameString, '0');
 
   // start
-  sessionManager.startAllSessions();
+  await sessionManager.startAllSessions();
   t.is(session1.status === Session.STATUS.RUNNING, true);
   t.is(session2.status === Session.STATUS.RUNNING, true);
 
@@ -294,7 +294,7 @@ test('100 generic sessions with 100 generic interactions each', async t => {
     setupGenericInteractions(session, 100, topicData);
   }
 
-  sessionManager.startAllSessions();
+  await sessionManager.startAllSessions();
   sessionManager.sessions.forEach((session) => {
     t.is(session.status, Session.STATUS.RUNNING);
   });
