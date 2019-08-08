@@ -6,39 +6,44 @@ import TestUtility from '../testUtility';
 import { SessionManager, DeviceManager } from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
+
+import mkdirp from 'mkdirp';
+import fs from 'fs';
+
+//import * as tfjsModel from '@tum-far/myo-gesture-something'; //-> put package in dependencies
+
+
 /* helper functions */
 
 let topicPrediction = '/tfjs-myo-test/prediction';
 
 let processCB = (inputs, outputs, state) => {
-  // Use the model to do inference on a data point the model hasn't seen before:
-  //let prediction = state.model.predict(state.modules.tf.tensor2d([5], [1, 1])).dataSync()[0];
-  
-  let prediction = state.model.predict(state.modules.tf.tensor2d([1,1,1,1,1,1,1,1], [8,1])).dataSync()[0]; //oder [1,8] ?
-  outputs.prediction = prediction;
+  /* let prediction = state.model.predict(state.modules.tf.tensor2d(
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], [64,1]
+    )).dataSync()[0]; */
+
+  outputs.prediction = 5//prediction;
 };
 
-let onCreatedCB = async (state) => {
-/*   state.model = state.modules.tf.sequential();
-  state.model.add(state.modules.tf.layers.dense({ units: 1, inputShape: [1] }));
+let onCreatedCB = async (state) => {    
+  //const handler = state.modules.tf.io.fileSystem("tfjs models/myo rps/model.json"); 
 
-  // Prepare the model for training: Specify the loss and the optimizer.
-  state.model.compile({ loss: 'meanSquaredError', optimizer: 'sgd' });
+  state.test = 1;
+    
+  const MODEL_PATH = "file:///tfjs-models/myo-rps/model.json";
 
-  // Generate some synthetic data for training.
-  const xs = state.modules.tf.tensor2d([1, 2, 3, 4], [4, 1]);
-  const ys = state.modules.tf.tensor2d([1, 3, 5, 7], [4, 1]);
+  //Mobilenet test url, to test model loading
+  const TEST_URL = "https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json";
+  
+  state.model = await state.modules.tf.loadGraphModel(MODEL_PATH);
+  //state.model = await state.modules.tf.loadLayersModel(TEST_URL);
+  
+  state.test = 2;
 
-  // Train the model using the data.
-  await state.model.fit(xs, ys).then(() => {
-    state.expectedPrediction = state.model.predict(state.modules.tf.tensor2d([5], [1, 1])).dataSync()[0];
-  }); */
+  let prediction = state.model.predict(state.modules.tf.tensor2d(
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], [64,1]
+    )).dataSync()[0];
 
-
-  //Load model
-  state.model = something;
-
-  //can be skipped if model is in a npm package
 };
 
 let interactionSpecs = {
@@ -66,24 +71,28 @@ let sessionSpecs = {
 
 /* initialize tests */
 
-/* test.beforeEach(t => {
+test.beforeEach(t => {
   t.context.topicData = new RuntimeTopicData();
   t.context.deviceManager = new DeviceManager(undefined, t.context.topicData, undefined);
   t.context.sessionManager = new SessionManager(t.context.topicData, t.context.deviceManager);
-}); */
+});
 
 
 /* run tests */
 
-/* test('execute interaction with TFjs myo code', async t => {
+test('execute interaction with TFjs example code', async t => {
   let session = t.context.sessionManager.createSession(sessionSpecs);
-  t.context.sessionManager.startAllSessions();
+  await t.context.sessionManager.startAllSessions();
   t.is(session.runtimeInteractions.length, 1);
-
+  
+  //await TestUtility.wait(10000);
+  
   let interaction = session.runtimeInteractions[0];
+  t.is(interaction.state.test, 2); // -> load takes super long or dosn't finish until test is performed
   t.not(interaction.state.model, undefined);
 
-  await TestUtility.wait(50);
 
-  t.is(t.context.topicData.pull(topicPrediction).data, interaction.state.expectedPrediction);
-}); */
+  t.not(t.context.topicData.pull(topicPrediction).data, undefined);
+
+  //t.is(t.context.topicData.pull(topicPrediction).data, interaction.state.expectedPrediction);
+});
