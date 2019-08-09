@@ -22,14 +22,28 @@ import { weightsLoaderFactory } from '@tensorflow/tfjs-core/dist/io/io';
 let topicPrediction = '/tfjs-myo-test/prediction';
 
 let processCB = (inputs, outputs, state) => {
-  /* let prediction = state.model.predict(state.modules.tf.tensor2d(
+/*   let prediction = state.model.predict(state.modules.tf.tensor2d(
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1], [64,1]
     )).dataSync()[0]; */
 
   outputs.prediction = 5//prediction;
 };
 
-let onCreatedCB = async (state) => {    
+
+/* let onCreatedCB =
+  state => {
+    let prepareModel = async () => {
+    state.model = await state.modules.cocoSsd.load();
+    state.timestampLastImage = 0;
+    state.tLastProcess = Date.now();
+    }; 
+  prepareModel(); 
+  };;
+ */
+
+
+
+ let onCreatedCB = async (state) => {    
   //const handler = state.modules.tf.io.fileSystem("tfjs models/myo rps/model.json"); 
 
   state.test = 1;
@@ -39,8 +53,13 @@ let onCreatedCB = async (state) => {
   
   //Mobilenet test url, to test model loading
   const TEST_URL = "https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json";
+
+
   
   try {
+    state.model = await state.modules.cocoSsd.load();
+    
+    //Example from other tfjs test
     state.model = state.modules.tf.sequential();
     state.model.add(state.modules.tf.layers.dense({ units: 1, inputShape: [1] }));
     
@@ -53,9 +72,14 @@ let onCreatedCB = async (state) => {
     
     // Train the model using the data.
     await state.model.fit(xs, ys).then(() => {
+      state.test = 2;
       state.expectedPrediction = state.model.predict(state.modules.tf.tensor2d([5], [1, 1])).dataSync()[0];
       throw new TypeError('🦄'); //For testing if this line is reached
     });
+
+    //Load model from package
+    await state.modules.cocoSsd.load().then(() => { throw new TypeError('🦄'); });
+    throw new TypeError('🦄'); //For testing if this line is reached
     
     var waitabit = await new Promise(resolve => {
       setTimeout(() => {
@@ -80,7 +104,7 @@ let onCreatedCB = async (state) => {
     
     //My own model
     state.model = await state.modules.tf.loadGraphModel(MODEL_PATH);
-    //state.model = await state.modules.tf.loadLayersModel(TEST_URL); */
+    //state.model = await state.modules.tf.loadLayersModel(TEST_URL); 
     
     state.test = 2;
     
@@ -135,9 +159,9 @@ test('execute interaction with TFjs example code', async t => {
   t.is(session.runtimeInteractions.length, 1);
   let interaction = session.runtimeInteractions[0];
   
-  //await TestUtility.wait(100);
+  await TestUtility.wait(100);
   
-  t.is(interaction.state.test, 2); // -> if fails, gets stuck at load model
+  //t.is(interaction.state.test, 2); // -> if fails, gets stuck at load model
   t.not(interaction.state.model, undefined);
 
   t.not(t.context.topicData.pull(topicPrediction).data, undefined);
