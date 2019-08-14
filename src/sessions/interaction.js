@@ -11,6 +11,10 @@ class Interaction {
   constructor({
     id = uuidv4(),
     name = '',
+    authors = [],
+    tags = [],
+    description = '',
+    processFrequency = 0.1,
     processingCallback = undefined,
     inputFormats = [],
     outputFormats = [],
@@ -18,6 +22,10 @@ class Interaction {
   }) {
     this.id = id;
     this.name = name;
+    this.authors = authors;
+    this.tags = tags;
+    this.description = description;
+    this.processFrequency = processFrequency;
     this.processingCallback = Utils.createFunctionFromString(processingCallback);
     this.inputFormats = inputFormats;
     this.outputFormats = outputFormats;
@@ -218,6 +226,10 @@ class Interaction {
     return {
       id: this.id,
       name: this.name,
+      authors: this.authors,
+      tags: this.tags,
+      description: this.description,
+      processFrequency: this.processFrequency,
       processingCallback: this.processingCallback.toString(),
       inputFormats: this.inputFormats,
       outputFormats: this.outputFormats,
