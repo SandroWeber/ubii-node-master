@@ -3,6 +3,7 @@ const EventEmitter = require('events');
 const uuidv4 = require('uuid/v4');
 const tf = require('@tensorflow/tfjs-node');
 const cocoSsd = require('@tensorflow-models/coco-ssd');
+const cv = require('opencv4nodejs');
 
 const Utils = require('../utilities');
 const { INTERACTION_LIFECYCLE_EVENTS, INTERACTION_STATUS } = require('./constants');
@@ -14,7 +15,7 @@ class Interaction {
     authors = [],
     tags = [],
     description = '',
-    processFrequency = 0.1,
+    processFrequency = undefined,
     processingCallback = undefined,
     inputFormats = [],
     outputFormats = [],
@@ -39,7 +40,8 @@ class Interaction {
       get: () => {
         return {
           tf: tf,
-          cocoSsd: cocoSsd
+          cocoSsd: cocoSsd,
+          cv: cv
         }
       },
       configurable: true
