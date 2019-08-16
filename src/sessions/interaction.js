@@ -4,6 +4,7 @@ const uuidv4 = require('uuid/v4');
 const tf = require('@tensorflow/tfjs-node');
 const cocoSsd = require('@tensorflow-models/coco-ssd');
 const cv = require('opencv4nodejs');
+const fs = require('fs');
 
 const Utils = require('../utilities');
 const { INTERACTION_LIFECYCLE_EVENTS, INTERACTION_STATUS } = require('./constants');
@@ -41,7 +42,8 @@ class Interaction {
         return {
           tf: tf,
           cocoSsd: cocoSsd,
-          cv: cv
+          cv: cv,
+          fs: fs
         }
       },
       configurable: true
