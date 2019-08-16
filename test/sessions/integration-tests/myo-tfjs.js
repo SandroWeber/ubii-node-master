@@ -19,6 +19,27 @@ import { weightsLoaderFactory } from '@tensorflow/tfjs-core/dist/io/io';
 
 /* helper functions */
 
+
+let interactionCoCoSSDOnCreatedCB =
+'state => {' +
+'let prepareModel = async () => {' +
+'state.model = await state.modules.cocoSsd.load();' +
+'state.timestampLastImage = 0;' +
+'state.tLastProcess = Date.now();' +
+'};' +
+'prepareModel();' +
+'};';
+
+let onCreatedCBDummy = 
+  'state => {' +
+  'let prepareModel = async () => {' +
+  'state.model = await state.modules.cocoSsd.load();' +
+  'state.timestampLastImage = 0;' +
+  'state.tLastProcess = Date.now();' +
+  'prepareModel();' +
+  'throw new TypeError("???????????????????????????????????????");'+
+  '};';
+
 let topicPrediction = '/tfjs-myo-test/prediction';
 
 let processCB = (inputs, outputs, state) => {
@@ -123,7 +144,7 @@ let interactionSpecs = {
   id: uuidv4(),
   name: 'test-interaction',
   processingCallback: processCB.toString(),
-  onCreated: onCreatedCB.toString(),
+  onCreated: onCreatedCBDummy,
   outputFormats: [{
     internalName: 'prediction',
     messageFormat: 'double'
