@@ -187,8 +187,6 @@ class Storage {
       files.forEach((file) => {
         let srcPath = dirOnlineDB + '/' + file;
         let destPath = this.directory + '/' + file;
-        console.info(srcPath);
-        console.info(destPath);
         fs.copyFileSync(srcPath, destPath);
       });
     });
