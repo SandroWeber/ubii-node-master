@@ -36,6 +36,7 @@
     "@tensorflow/tfjs-node": "1.2.4",
     "@tensorflow-models/coco-ssd": "1.1.1",
     "@tum-far/namida": "0.1.1",
+    "@tum-far/ubii-database": "0.1.0",
     "@tum-far/ubii-msg-formats": "^0.10.15",
     "@tum-far/ubii-topic-data": "0.3.3",
     "opencv4nodejs": "5.1.0",
