@@ -3,6 +3,8 @@ const EventEmitter = require('events');
 const uuidv4 = require('uuid/v4');
 const tf = require('@tensorflow/tfjs-node');
 const cocoSsd = require('@tensorflow-models/coco-ssd');
+const cv = require('opencv4nodejs');
+const fs = require('fs');
 
 const Utils = require('../utilities');
 const { INTERACTION_LIFECYCLE_EVENTS, INTERACTION_STATUS } = require('./constants');
@@ -11,6 +13,10 @@ class Interaction {
   constructor({
     id = uuidv4(),
     name = '',
+    authors = [],
+    tags = [],
+    description = '',
+    processFrequency = undefined,
     processingCallback = undefined,
     inputFormats = [],
     outputFormats = [],
@@ -18,6 +24,10 @@ class Interaction {
   }) {
     this.id = id;
     this.name = name;
+    this.authors = authors;
+    this.tags = tags;
+    this.description = description;
+    this.processFrequency = processFrequency;
     this.processingCallback = Utils.createFunctionFromString(processingCallback);
     this.inputFormats = inputFormats;
     this.outputFormats = outputFormats;
@@ -31,7 +41,9 @@ class Interaction {
       get: () => {
         return {
           tf: tf,
-          cocoSsd: cocoSsd
+          cocoSsd: cocoSsd,
+          cv: cv,
+          fs: fs
         }
       },
       configurable: true
@@ -218,6 +230,10 @@ class Interaction {
     return {
       id: this.id,
       name: this.name,
+      authors: this.authors,
+      tags: this.tags,
+      description: this.description,
+      processFrequency: this.processFrequency,
       processingCallback: this.processingCallback.toString(),
       inputFormats: this.inputFormats,
       outputFormats: this.outputFormats,

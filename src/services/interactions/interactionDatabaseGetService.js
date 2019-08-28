@@ -18,7 +18,7 @@ class InteractionDatabaseGetService extends Service {
         }
       };
     } else {
-      return {interaction: interaction.toProtobuf()};
+      return {interaction: interaction};
     }
   }
 }
