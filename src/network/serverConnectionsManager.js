@@ -94,7 +94,6 @@ class ServerConnectionsManager {
 
   onServiceMessageREST(callback) {
     this.connections.serviceREST.setRoutePOST('/services', (request, response) => {
-      console.info('serverConnectionsManager - onServiceMessageREST()')
       callback(request, response);
     });
   }
