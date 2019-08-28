@@ -113,6 +113,7 @@ class MasterNode {
   }
 
   onServiceMessageREST(request, response) {
+    console.info('onServiceMessageREST');
     try {
       // Decode buffer.
       // VARIANT A: PROTOBUF

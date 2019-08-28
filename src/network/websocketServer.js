@@ -12,8 +12,9 @@ class WebsocketServer {
    * If not, the start method must be called manually.
    */
   constructor(port = 5555,
-              autoconnect = true) {
+    autoconnect = true, httpsServer = undefined) {
     this.port = port;
+    this.httpsServer = httpsServer;
 
     this.clients = new Map();
 
@@ -28,7 +29,8 @@ class WebsocketServer {
    * Start the websocket server.
    */
   start() {
-    this.wsServer = new WebSocket.Server({port: this.port});
+    this.wsServer = new WebSocket.Server({ port: this.port });
+    //this.wsServer = new WebSocket.Server({ server: this.httpsServer });
     console.log('[' + new Date() + '] websocket server listening on port ' + this.port);
 
     this.wsServer.on('connection', (websocket, request) => {
@@ -53,7 +55,7 @@ class WebsocketServer {
    * @param {*} request The request for the new connection.
    */
   _onConnection(websocket, request) {
-    const {query: {clientID}} = url.parse(request.url, true);
+    const { query: { clientID } } = url.parse(request.url, true);
     console.log('[' + new Date() + '] websocket connection accepted from ID ' + clientID);
 
     //TODO: get proper client ID specification

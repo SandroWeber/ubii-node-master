@@ -83,7 +83,8 @@ class ServerConnectionsManager {
     // Websocket Topic Data Server Component:
     this.connections.topicDataWS = new WebsocketServer(
       this.ports.topicDataWS,
-      (message) => { }
+      (message) => { },
+      this.connections.serviceREST.httpsServer
     );
   }
 
@@ -93,6 +94,7 @@ class ServerConnectionsManager {
 
   onServiceMessageREST(callback) {
     this.connections.serviceREST.setRoutePOST('/services', (request, response) => {
+      console.info('serverConnectionsManager - onServiceMessageREST()')
       callback(request, response);
     });
   }
