@@ -54,7 +54,7 @@ class RESTServer {
       console.info('[' + new Date() + '] REST server listening on port ' + this.port)
     });*/
     this.server = this.httpsServer.listen(this.portHTTPS, () => {
-      console.info('[' + new Date() + '] REST server listening on port ' + this.portHTTPS)
+      console.info('[' + new Date() + '] REST Server: Listening on *:' + this.portHTTPS)
     });
   }
 

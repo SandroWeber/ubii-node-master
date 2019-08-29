@@ -29,9 +29,12 @@ class WebsocketServer {
    * Start the websocket server.
    */
   start() {
+    //let path = 'wss://localhost:' + this.port + '/websocket';
     this.wsServer = new WebSocket.Server({ port: this.port });
+    //this.wsServer = new WebSocket.Server({ port: this.port });
     //this.wsServer = new WebSocket.Server({ server: this.httpsServer });
-    console.log('[' + new Date() + '] websocket server listening on port ' + this.port);
+
+    console.log('[' + new Date() + '] WebSocket Server: Listening on wss://*:' + this.port);
 
     this.wsServer.on('connection', (websocket, request) => {
       this._onConnection(websocket, request);
