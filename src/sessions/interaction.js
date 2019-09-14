@@ -3,6 +3,8 @@ const EventEmitter = require('events');
 const uuidv4 = require('uuid/v4');
 const tf = require('@tensorflow/tfjs-node');
 const cocoSsd = require('@tensorflow-models/coco-ssd');
+const emgClassifier = require('@baumlos/emg-classifier');
+const fs = require('fs');
 
 const Utils = require('../utilities');
 const { INTERACTION_LIFECYCLE_EVENTS, INTERACTION_STATUS } = require('./constants');
@@ -39,7 +41,9 @@ class Interaction {
       get: () => {
         return {
           tf: tf,
-          cocoSsd: cocoSsd
+          cocoSsd: cocoSsd,
+          fs: fs,
+          emgClassifier: emgClassifier
         }
       },
       configurable: true
