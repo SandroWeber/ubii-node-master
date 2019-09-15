@@ -33,7 +33,7 @@
     "sinon": "6.0.1"
   },
   "dependencies": {
-    "@baumlos/emg-classifier": "0.0.2",
+    "@baumlos/emg-classifier": "0.0.4",
     "@tensorflow-models/coco-ssd": "1.1.1",
     "@tensorflow/tfjs-node": "1.2.4",
     "@tum-far/namida": "0.1.1",
