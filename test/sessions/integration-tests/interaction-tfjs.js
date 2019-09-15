@@ -75,7 +75,9 @@ test('execute interaction with TFjs example code', async t => {
   let interaction = session.runtimeInteractions[0];
   t.not(interaction.state.model, undefined);
 
-  await TestUtility.wait(50);
-
+  while (!t.context.topicData.pull(topicPrediction)) {
+    await TestUtility.wait(50);
+  }
+  
   t.is(t.context.topicData.pull(topicPrediction).data, interaction.state.expectedPrediction);
 });

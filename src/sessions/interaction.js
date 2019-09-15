@@ -4,6 +4,7 @@ const uuidv4 = require('uuid/v4');
 const tf = require('@tensorflow/tfjs-node');
 const cocoSsd = require('@tensorflow-models/coco-ssd');
 const emgClassifier = require('@baumlos/emg-classifier');
+const cv = require('opencv4nodejs');
 const fs = require('fs');
 
 const Utils = require('../utilities');
@@ -56,8 +57,9 @@ class Interaction {
         return {
           tf: tf,
           cocoSsd: cocoSsd,
-          fs: fs,
-          emgClassifier: emgClassifier
+          emgClassifier: emgClassifier,
+          cv: cv,
+          fs: fs
         }
       },
       configurable: true

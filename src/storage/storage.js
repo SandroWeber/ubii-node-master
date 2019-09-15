@@ -1,18 +1,22 @@
 const fs = require('fs');
 const shelljs = require('shelljs');
-const {BASE_FOLDER_DB} = require('./storageConstants');
+const {BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB} = require('./storageConstants');
 
 class Storage {
   constructor(subFolder, fileEnding) {
     this.fileEnding = fileEnding;
     this.subFolder = subFolder;
-    this.directory = BASE_FOLDER_DB + '/' + this.subFolder;
+    this.directory = BASE_FOLDER_LOCAL_DB + '/' + this.subFolder;
+
     if (!fs.existsSync(this.directory)) {
       shelljs.mkdir('-p', this.directory);
     }
 
     this.specifications = new Map();
     this.filePaths = new Map();
+
+    // copy online DB specs
+    this.copyOnlineDB();
 
     this.loadAllSpecificationFiles();
   }
@@ -171,6 +175,21 @@ class Storage {
     if (typeof path !== 'undefined') {
       fs.unlinkSync(path);
     }
+  }
+
+  copyOnlineDB() {
+    let dirOnlineDB = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
+    fs.readdir(dirOnlineDB, (err, files) => {
+      if (err) {
+        return console.info('Storage - Unable to scan directory: ' + err);
+      }
+
+      files.forEach((file) => {
+        let srcPath = dirOnlineDB + '/' + file;
+        let destPath = this.directory + '/' + file;
+        fs.copyFileSync(srcPath, destPath);
+      });
+    });
   }
 }
 
