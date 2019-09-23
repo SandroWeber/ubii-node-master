@@ -36,21 +36,7 @@ class Interaction {
       this.onCreatedCallback = Utils.createFunctionFromString(onCreated);
     }
 
-    this.state = {
-      /*modules: {
-        tf: tf
-      }*/
-    };
-    Object.defineProperty(this.state, 'modules', {
-      // input is read-only
-      get: () => {
-        return {
-          tf: tf
-        }
-      },
-      configurable: true
-    });
-
+    this.state = {};
     Object.defineProperty(this.state, 'modules', {
       // input is read-only
       get: () => {
