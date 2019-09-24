@@ -1,4 +1,6 @@
 const WebSocket = require('ws');
+var https = require('https');
+const fs = require('fs');
 const url = require('url');
 
 class WebsocketServer {
@@ -30,9 +32,15 @@ class WebsocketServer {
    */
   start() {
     //let path = 'wss://localhost:' + this.port + '/websocket';
-    this.wsServer = new WebSocket.Server({ port: this.port });
     //this.wsServer = new WebSocket.Server({ port: this.port });
-    //this.wsServer = new WebSocket.Server({ server: this.httpsServer });
+    var credentials = {
+      //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
+      cert: fs.readFileSync('./certs/ubii.com+5.pem'),
+      key: fs.readFileSync('./certs/ubii.com+5-key.pem')
+    };
+    this.httpsServer = https.createServer(credentials);
+    this.httpsServer.listen(this.port);
+    this.wsServer = new WebSocket.Server({ server: this.httpsServer });
 
     console.log('[' + new Date() + '] WebSocket Server: Listening on wss://*:' + this.port);
 
