@@ -1,6 +1,6 @@
 const uuidv4 = require('uuid/v4');
 
-const { TOPIC_EVENTS } = require('@tum-far/ubii-topic-data')
+const { TOPIC_EVENTS } = require('@tum-far/ubii-topic-data');
 
 
 /**

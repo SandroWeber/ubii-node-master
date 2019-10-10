@@ -35,7 +35,7 @@ class ServiceManager {
 
     this.services = new Map();
     /* add general services */
-    this.addService(new SubscriptionService(this.clientManager));
+    this.addService(new SubscriptionService(this.clientManager, this.topicData));
     this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.connectionManager));
     this.addService(new TopicListService(this.topicData, this));
     /* add client services */
