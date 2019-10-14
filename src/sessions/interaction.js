@@ -8,7 +8,7 @@ const cv = require('opencv4nodejs');
 const fs = require('fs');
 
 const Utils = require('../utilities');
-const { INTERACTION_LIFECYCLE_EVENTS, INTERACTION_STATUS } = require('./constants');
+const { INTERACTION_STATUS } = require('./constants');
 
 class Interaction {
   constructor({
@@ -17,7 +17,7 @@ class Interaction {
     authors = [],
     tags = [],
     description = '',
-    processFrequency = 0.1,
+    processFrequency = 30, // 30 Hz
     processingCallback = undefined,
     inputFormats = [],
     outputFormats = [],
@@ -211,6 +211,20 @@ class Interaction {
 
     this.processingCallback(this.inputProxy, this.outputProxy, this.state);
   }
+
+  run() {
+    this.status = INTERACTION_STATUS.PROCESSING;
+
+    let processAtFrequency = () => {
+
+      this.process();
+      setTimeout(() => {
+        processAtFrequency();
+      }, 1000 / this.processFrequency);
+    }
+
+    processAtFrequency();
+  }
   /* processing functions end*/
 
   /* lifecycle functions */
@@ -223,8 +237,6 @@ class Interaction {
         console.warn(error);
       }
     }
-
-    this.status = INTERACTION_STATUS.PROCESSING;
   }
   /* lifecycle functions end */
 
