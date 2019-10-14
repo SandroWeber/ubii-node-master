@@ -213,6 +213,11 @@ class Interaction {
   }
 
   run() {
+    if (this.status !== INTERACTION_STATUS.INITIALIZED) {
+      setTimeout(this.run, 500);
+      return;
+    }
+
     this.status = INTERACTION_STATUS.PROCESSING;
 
     let processAtFrequency = () => {
@@ -237,6 +242,8 @@ class Interaction {
         console.warn(error);
       }
     }
+
+    this.status = INTERACTION_STATUS.INITIALIZED;
   }
   /* lifecycle functions end */
 

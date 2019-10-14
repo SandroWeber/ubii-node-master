@@ -30,9 +30,9 @@ class Session {
       return;
     }
 
-    this.interactions.forEach(interactionSpecs => {
+    for (let interactionSpecs of this.interactions) {
       this.addInteraction(interactionSpecs);
-    });
+    }
 
     this.applyIOMappings();
 
@@ -60,15 +60,14 @@ class Session {
     this.isProcessing = true;
     this.status = Session.STATUS.RUNNING;
 
-    this.runtimeInteractions.forEach(interaction => {
-      interaction.status = INTERACTION_STATUS.PROCESSING;
-    });
-
     let processingCycleCallback = i => {
       if (!this.isProcessing) return;
 
       let interaction = this.runtimeInteractions[i % this.runtimeInteractions.length];
       if (interaction) {
+        if (interaction.status === INTERACTION_STATUS.INITIALIZED) {
+          interaction.status = INTERACTION_STATUS.PROCESSING;
+        }
         interaction.process();
       }
       setTimeout(() => {
@@ -180,10 +179,6 @@ class Session {
   }
 }
 
-Session.PROCESS_MODES = Object.freeze({
-  CYCLE_INTERACTIONS: 1,
-  INDIVIDUAL_PROCESS_FREQUENCIES: 2
-});
 Session.STATUS = Object.freeze({
   CREATED: 1,
   STARTED: 2,
