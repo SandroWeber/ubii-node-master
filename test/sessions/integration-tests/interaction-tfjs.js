@@ -78,6 +78,6 @@ test('execute interaction with TFjs example code', async t => {
   while (!t.context.topicData.pull(topicPrediction)) {
     await TestUtility.wait(50);
   }
-  
+
   t.is(t.context.topicData.pull(topicPrediction).data, interaction.state.expectedPrediction);
 });

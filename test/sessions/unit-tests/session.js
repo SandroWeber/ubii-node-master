@@ -1,5 +1,6 @@
 import test from 'ava';
 import sinon from 'sinon';
+const { proto } = require('@tum-far/ubii-msg-formats');
 
 import { Session } from '../../../src/index.js'
 
@@ -72,9 +73,6 @@ test('add/remove interactions', t => {
 
 test('processing - promise with recursive calls, single interaction', async t => {
   let session = t.context.session;
-  let interactionIOMappings = t.context.mockInteractionIOMappings;
-
-  session.processMode = Session.PROCESS_MODES.PROMISE_RECURSIVECALLS;
 
   let interaction = session.addInteraction({});
   interaction.process = sinon.fake();
@@ -88,9 +86,6 @@ test('processing - promise with recursive calls, single interaction', async t =>
 
 test('processing - promise with recursive calls, multiple interactions', async t => {
   let session = t.context.session;
-  let interactionIOMappings = t.context.mockInteractionIOMappings;
-
-  session.processMode = Session.PROCESS_MODES.PROMISE_RECURSIVECALLS;
 
   let interaction1 = session.addInteraction({});
   let interaction2 = session.addInteraction({});
