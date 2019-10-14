@@ -54,6 +54,10 @@ class Session {
   stop() {
     this.isProcessing = false;
     this.status = Session.STATUS.STOPPED;
+
+    for (let interaction of this.runtimeInteractions) {
+      interaction.status = INTERACTION_STATUS.STOPPED;
+    }
   }
 
   processInteractionsCycle() {

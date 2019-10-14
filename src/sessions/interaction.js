@@ -213,19 +213,20 @@ class Interaction {
   }
 
   run() {
-    if (this.status !== INTERACTION_STATUS.INITIALIZED) {
-      setTimeout(this.run, 500);
+    if (this.status !== INTERACTION_STATUS.INITIALIZED && this.status !== INTERACTION_STATUS.STOPPED) {
+      setTimeout(() => { this.run(); }, 500);
       return;
     }
 
     this.status = INTERACTION_STATUS.PROCESSING;
 
     let processAtFrequency = () => {
-
       this.process();
-      setTimeout(() => {
-        processAtFrequency();
-      }, 1000 / this.processFrequency);
+      if (this.status === INTERACTION_STATUS.PROCESSING) {
+        setTimeout(() => {
+          processAtFrequency();
+        }, 1000 / this.processFrequency);
+      }
     }
 
     processAtFrequency();
