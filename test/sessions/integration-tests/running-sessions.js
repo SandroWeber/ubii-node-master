@@ -4,6 +4,8 @@ import TestUtility from '../testUtility';
 
 import { SessionManager, Session, Interaction } from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
+const { proto } = require('@tum-far/ubii-msg-formats');
+const SessionStatus = proto.ubii.sessions.SessionStatus;
 
 /* utility */
 
@@ -118,7 +120,7 @@ test('single session - two interactions', async t => {
 
   // start
   await sessionManager.startAllSessions();
-  t.is(session.status === Session.STATUS.RUNNING, true);
+  t.is(session.status === SessionStatus.RUNNING, true);
 
   // wait until t1
   await TestUtility.wait(500);
@@ -185,7 +187,7 @@ test('single session - two interactions', async t => {
 
   // stop
   sessionManager.stopAllSessions();
-  t.is(session.status === Session.STATUS.STOPPED, true);
+  t.is(session.status === SessionStatus.STOPPED, true);
 });
 
 test('two sessions - one interaction each', async t => {
@@ -211,8 +213,8 @@ test('two sessions - one interaction each', async t => {
 
   // start
   await sessionManager.startAllSessions();
-  t.is(session1.status === Session.STATUS.RUNNING, true);
-  t.is(session2.status === Session.STATUS.RUNNING, true);
+  t.is(session1.status === SessionStatus.RUNNING, true);
+  t.is(session2.status === SessionStatus.RUNNING, true);
 
   // wait until t1
   await TestUtility.wait(100);
@@ -279,8 +281,8 @@ test('two sessions - one interaction each', async t => {
 
   // stop
   sessionManager.stopAllSessions();
-  t.is(session1.status === Session.STATUS.STOPPED, true);
-  t.is(session2.status === Session.STATUS.STOPPED, true);
+  t.is(session1.status === SessionStatus.STOPPED, true);
+  t.is(session2.status === SessionStatus.STOPPED, true);
 });
 
 test('100 generic sessions with 100 generic interactions each', async t => {
@@ -296,7 +298,7 @@ test('100 generic sessions with 100 generic interactions each', async t => {
 
   await sessionManager.startAllSessions();
   sessionManager.sessions.forEach((session) => {
-    t.is(session.status, Session.STATUS.RUNNING);
+    t.is(session.status, SessionStatus.RUNNING);
   });
 
   await TestUtility.wait(sessionCount * waitTimePerSession);

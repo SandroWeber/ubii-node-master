@@ -1,6 +1,5 @@
 import test from 'ava';
 import sinon from 'sinon';
-const { proto } = require('@tum-far/ubii-msg-formats');
 
 import { Session } from '../../../src/index.js'
 

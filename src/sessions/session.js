@@ -1,19 +1,21 @@
 const uuidv4 = require('uuid/v4');
 
 const { proto } = require('@tum-far/ubii-msg-formats');
+const ProcessMode = proto.ubii.sessions.ProcessMode;
+const SessionStatus = proto.ubii.sessions.SessionStatus;
+const InteractionStatus = proto.ubii.interactions.InteractionStatus;
 
 const { Interaction } = require('./interaction');
-const { INTERACTION_STATUS } = require('./constants');
 
 class Session {
   constructor(
-    { id, name = '', interactions = [], ioMappings = [], processMode = proto.ubii.sessions.Session.ProcessMode.CYCLE_INTERACTIONS },
+    { id, name = '', interactions = [], ioMappings = [], processMode = ProcessMode.CYCLE_INTERACTIONS },
     topicData,
     deviceManager
   ) {
     this.id = id ? id : uuidv4();
     this.name = name;
-    this.status = Session.STATUS.CREATED;
+    this.status = SessionStatus.CREATED;
     this.processMode = processMode;
     this.isProcessing = false;
     this.interactions = interactions;
@@ -36,15 +38,16 @@ class Session {
 
     this.applyIOMappings();
 
-    this.status = Session.STATUS.STARTED;
-    if (this.processMode === proto.ubii.sessions.Session.ProcessMode.CYCLE_INTERACTIONS) {
+    this.status = SessionStatus.RUNNING;
+    this.isProcessing = true;
+    if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
       this.processInteractionsCycle().then(
         () => { },
         rejected => {
           console.info(rejected);
         }
       );
-    } else if (this.processMode === proto.ubii.sessions.Session.ProcessMode.INDIVIDUAL_PROCESS_FREQUENCIES) {
+    } else if (this.processMode === ProcessMode.INDIVIDUAL_PROCESS_FREQUENCIES) {
       this.runtimeInteractions.forEach(interaction => {
         interaction.run();
       });
@@ -53,24 +56,29 @@ class Session {
 
   stop() {
     this.isProcessing = false;
-    this.status = Session.STATUS.STOPPED;
+    this.status = SessionStatus.STOPPED;
 
     for (let interaction of this.runtimeInteractions) {
-      interaction.status = INTERACTION_STATUS.STOPPED;
+      interaction.status = InteractionStatus.HALTED;
     }
   }
 
   processInteractionsCycle() {
-    this.isProcessing = true;
-    this.status = Session.STATUS.RUNNING;
 
     let processingCycleCallback = i => {
-      if (!this.isProcessing) return;
+      if (!this.isProcessing) {
+        for (let interaction of this.runtimeInteractions) {
+          if (interaction.status === InteractionStatus.PROCESSING) {
+            interaction.status = InteractionStatus.HALTED;
+          }
+        }
+        return;
+      }
 
       let interaction = this.runtimeInteractions[i % this.runtimeInteractions.length];
       if (interaction) {
-        if (interaction.status === INTERACTION_STATUS.INITIALIZED) {
-          interaction.status = INTERACTION_STATUS.PROCESSING;
+        if (interaction.status === InteractionStatus.INITIALIZED) {
+          interaction.status = InteractionStatus.PROCESSING;
         }
         interaction.process();
       }
@@ -182,13 +190,5 @@ class Session {
     };
   }
 }
-
-Session.STATUS = Object.freeze({
-  CREATED: 1,
-  STARTED: 2,
-  RUNNING: 3,
-  PAUSED: 4,
-  STOPPED: 5
-});
 
 module.exports = { Session };
