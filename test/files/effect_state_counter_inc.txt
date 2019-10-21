@@ -1,5 +1,0 @@
-if (state.counter === undefined) {
-    state.counter = 0;
-} else {
-    state.counter = state.counter + 1;
-}

@@ -7,8 +7,10 @@ const emgClassifier = require('@baumlos/emg-classifier');
 const cv = require('opencv4nodejs');
 const fs = require('fs');
 
+const { proto } = require('@tum-far/ubii-msg-formats');
+const InteractionStatus = proto.ubii.interactions.InteractionStatus;
+
 const Utils = require('../utilities');
-const { INTERACTION_LIFECYCLE_EVENTS, INTERACTION_STATUS } = require('./constants');
 
 class Interaction {
   constructor({
@@ -17,7 +19,7 @@ class Interaction {
     authors = [],
     tags = [],
     description = '',
-    processFrequency = 0.1,
+    processFrequency = 30, // 30 Hz
     processingCallback = undefined,
     inputFormats = [],
     outputFormats = [],
@@ -55,7 +57,7 @@ class Interaction {
     this.outputProxy = {};
 
     this.events = new EventEmitter();
-    this.status = INTERACTION_STATUS.CREATED;
+    this.status = InteractionStatus.CREATED;
   }
 
   /* I/O functions */
@@ -194,7 +196,7 @@ class Interaction {
   }
 
   process() {
-    if (this.status !== INTERACTION_STATUS.PROCESSING) {
+    if (this.status !== InteractionStatus.PROCESSING) {
       return;
     }
 
@@ -211,6 +213,26 @@ class Interaction {
 
     this.processingCallback(this.inputProxy, this.outputProxy, this.state);
   }
+
+  run() {
+    if (this.status !== InteractionStatus.INITIALIZED && this.status !== InteractionStatus.HALTED) {
+      setTimeout(() => { this.run(); }, 500);
+      return;
+    }
+
+    this.status = InteractionStatus.PROCESSING;
+
+    let processAtFrequency = () => {
+      this.process();
+      if (this.status === InteractionStatus.PROCESSING) {
+        setTimeout(() => {
+          processAtFrequency();
+        }, 1000 / this.processFrequency);
+      }
+    }
+
+    processAtFrequency();
+  }
   /* processing functions end*/
 
   /* lifecycle functions */
@@ -224,7 +246,7 @@ class Interaction {
       }
     }
 
-    this.status = INTERACTION_STATUS.PROCESSING;
+    this.status = InteractionStatus.INITIALIZED;
   }
   /* lifecycle functions end */
 

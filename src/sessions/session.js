@@ -1,12 +1,22 @@
 const uuidv4 = require('uuid/v4');
+
+const { proto } = require('@tum-far/ubii-msg-formats');
+const ProcessMode = proto.ubii.sessions.ProcessMode;
+const SessionStatus = proto.ubii.sessions.SessionStatus;
+const InteractionStatus = proto.ubii.interactions.InteractionStatus;
+
 const { Interaction } = require('./interaction');
 
 class Session {
-  constructor({ id, name = '', interactions = [], ioMappings = [] }, topicData, deviceManager) {
+  constructor(
+    { id, name = '', interactions = [], ioMappings = [], processMode = ProcessMode.CYCLE_INTERACTIONS },
+    topicData,
+    deviceManager
+  ) {
     this.id = id ? id : uuidv4();
     this.name = name;
-    this.status = Session.STATUS.CREATED;
-    this.processMode = Session.PROCESS_MODES.PROMISE_RECURSIVECALLS;
+    this.status = SessionStatus.CREATED;
+    this.processMode = processMode;
     this.isProcessing = false;
     this.interactions = interactions;
     this.ioMappings = ioMappings;
@@ -22,47 +32,64 @@ class Session {
       return;
     }
 
-    this.interactions.forEach(interactionSpecs => {
+    for (let interactionSpecs of this.interactions) {
       this.addInteraction(interactionSpecs);
-    });
+    }
 
     this.applyIOMappings();
 
-    this.status = Session.STATUS.STARTED;
-    if (this.processMode === Session.PROCESS_MODES.PROMISE_RECURSIVECALLS) {
-      this.processInteractionsPromiseRecursive().then(
+    this.status = SessionStatus.RUNNING;
+    this.isProcessing = true;
+    if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
+      this.processInteractionsCycle().then(
         () => { },
         rejected => {
           console.info(rejected);
         }
       );
+    } else if (this.processMode === ProcessMode.INDIVIDUAL_PROCESS_FREQUENCIES) {
+      this.runtimeInteractions.forEach(interaction => {
+        interaction.run();
+      });
     }
   }
 
   stop() {
     this.isProcessing = false;
-    this.status = Session.STATUS.STOPPED;
+    this.status = SessionStatus.STOPPED;
+
+    for (let interaction of this.runtimeInteractions) {
+      interaction.status = InteractionStatus.HALTED;
+    }
   }
 
-  processInteractionsPromiseRecursive() {
-    this.isProcessing = true;
-    this.status = Session.STATUS.RUNNING;
+  processInteractionsCycle() {
 
-    let recursiveisProcessingCall = i => {
-      if (!this.isProcessing) return;
+    let processingCycleCallback = i => {
+      if (!this.isProcessing) {
+        for (let interaction of this.runtimeInteractions) {
+          if (interaction.status === InteractionStatus.PROCESSING) {
+            interaction.status = InteractionStatus.HALTED;
+          }
+        }
+        return;
+      }
 
       let interaction = this.runtimeInteractions[i % this.runtimeInteractions.length];
       if (interaction) {
+        if (interaction.status === InteractionStatus.INITIALIZED) {
+          interaction.status = InteractionStatus.PROCESSING;
+        }
         interaction.process();
       }
       setTimeout(() => {
-        recursiveisProcessingCall(i + 1);
+        processingCycleCallback(i + 1);
       }, 0);
     };
 
     return new Promise((resolve, reject) => {
       try {
-        recursiveisProcessingCall(0);
+        processingCycleCallback(0);
       } catch (error) {
         reject(error);
       }
@@ -163,16 +190,5 @@ class Session {
     };
   }
 }
-
-Session.PROCESS_MODES = Object.freeze({
-  PROMISE_RECURSIVECALLS: 1 /*, 'SINGLE_THREAD':1, 'THREAD_POOL':2, 'INDIVIDUAL_THREADS':3*/
-});
-Session.STATUS = Object.freeze({
-  CREATED: 1,
-  STARTED: 2,
-  RUNNING: 3,
-  PAUSED: 4,
-  STOPPED: 5
-});
 
 module.exports = { Session };

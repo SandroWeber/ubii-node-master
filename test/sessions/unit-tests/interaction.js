@@ -1,6 +1,8 @@
 import test from 'ava';
+const { proto } = require('@tum-far/ubii-msg-formats');
+const InteractionStatus = proto.ubii.interactions.InteractionStatus;
 
-import { Interaction, INTERACTION_STATUS } from '../../../src/index';
+import { Interaction } from '../../../src/index';
 import Utils from '../../../src/utilities';
 import MockTopicData from '../../mocks/mock-topicdata.js';
 import sinon from 'sinon';
@@ -182,7 +184,7 @@ test('process()', t => {
   };
 
   interaction.processingCallback = sinon.fake();
-  interaction.status = INTERACTION_STATUS.PROCESSING;
+  interaction.status = InteractionStatus.PROCESSING;
   interaction.process();
   t.deepEqual(interaction.processingCallback.lastCall.args, [interaction.inputProxy, interaction.outputProxy, interaction.state]);
 });
