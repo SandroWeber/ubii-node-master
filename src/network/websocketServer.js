@@ -33,17 +33,18 @@ class WebsocketServer {
     if (this.useHTTPS) {
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
-        cert: fs.readFileSync('./certs/ubii.com+5.pem'),
-        key: fs.readFileSync('./certs/ubii.com+5-key.pem')
+        cert: fs.readFileSync('./certificates/ubii.com+5.pem'),
+        key: fs.readFileSync('./certificates/ubii.com+5-key.pem')
       };
       this.server = https.createServer(credentials);
       this.server.listen(this.port);
       this.wsServer = new WebSocket.Server({ server: this.server });
+      console.log('[' + new Date() + '] WebSocket Server: Listening on wss://*:' + this.port);
     } else {
       this.wsServer = new WebSocket.Server({ port: this.port });
+      console.log('[' + new Date() + '] WebSocket Server: Listening on ws://*:' + this.port);
     }
 
-    console.log('[' + new Date() + '] WebSocket Server: Listening on wss://*:' + this.port);
 
     this.wsServer.on('connection', (websocket, request) => {
       this._onConnection(websocket, request);

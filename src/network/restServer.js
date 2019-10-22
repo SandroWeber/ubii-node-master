@@ -28,8 +28,8 @@ class RESTServer {
     if (this.useHTTPS) {
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
-        cert: fs.readFileSync('./certs/ubii.com+5.pem'),
-        key: fs.readFileSync('./certs/ubii.com+5-key.pem')
+        cert: fs.readFileSync('./certificates/ubii.com+5.pem'),
+        key: fs.readFileSync('./certificates/ubii.com+5-key.pem')
       };
       this.server = https.createServer(credentials, this.app);
     } else {
