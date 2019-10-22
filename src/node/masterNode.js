@@ -31,10 +31,11 @@ const namida = require('@tum-far/namida');
 
 class MasterNode {
   constructor(
+    serviceServerPortZMQ = defaultServiceServerPortZMQ,
+    serviceServerPortREST = defaultServiceServerPortREST,
     topicDataServerPortZMQ = defaultTopicDataServerPortZMQ,
     topicDataServerPortWS = defaultTopicDataServerPortWS,
-    serviceServerPortZMQ = defaultServiceServerPortZMQ,
-    serviceServerPortREST = defaultServiceServerPortREST) {
+    useHTTPS = true) {
 
     // Translators:
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
@@ -48,7 +49,8 @@ class MasterNode {
       topicDataServerPortZMQ,
       topicDataServerPortWS,
       serviceServerPortZMQ,
-      serviceServerPortREST);
+      serviceServerPortREST,
+      useHTTPS);
     this.connectionsManager.onServiceMessageREST((...params) => this.onServiceMessageREST(...params));
     this.connectionsManager.onServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
     this.connectionsManager.onTopicDataMessageWS((...params) => this.onTopicDataMessageWS(...params));

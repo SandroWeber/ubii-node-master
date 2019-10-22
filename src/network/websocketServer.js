@@ -13,10 +13,9 @@ class WebsocketServer {
    * @param {*} autoconnect Should the socket connect directly after the initialization of the object?
    * If not, the start method must be called manually.
    */
-  constructor(port = 5555,
-    autoconnect = true, httpsServer = undefined) {
+  constructor(port = 5555, useHTTPS = true, autoconnect = true) {
     this.port = port;
-    this.httpsServer = httpsServer;
+    this.useHTTPS = useHTTPS;
 
     this.clients = new Map();
 
@@ -31,16 +30,20 @@ class WebsocketServer {
    * Start the websocket server.
    */
   start() {
-    //let path = 'wss://localhost:' + this.port + '/websocket';
-    //this.wsServer = new WebSocket.Server({ port: this.port });
-    var credentials = {
-      //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
-      cert: fs.readFileSync('./certs/ubii.com+5.pem'),
-      key: fs.readFileSync('./certs/ubii.com+5-key.pem')
-    };
-    this.httpsServer = https.createServer(credentials);
-    this.httpsServer.listen(this.port);
-    this.wsServer = new WebSocket.Server({ server: this.httpsServer });
+    if (this.useHTTPS) {
+      console.info('WebsocketServer using HTTPS');
+      var credentials = {
+        //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
+        cert: fs.readFileSync('./certs/ubii.com+5.pem'),
+        key: fs.readFileSync('./certs/ubii.com+5-key.pem')
+      };
+      this.server = https.createServer(credentials);
+      this.server.listen(this.port);
+      this.wsServer = new WebSocket.Server({ server: this.server });
+    } else {
+      console.info('WebsocketServer using HTTP');
+      this.wsServer = new WebSocket.Server({ port: this.port });
+    }
 
     console.log('[' + new Date() + '] WebSocket Server: Listening on wss://*:' + this.port);
 
