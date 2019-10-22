@@ -10,10 +10,10 @@ class ZmqReply {
    * If not, the start method must be called manually.
    */
   constructor(port = 5555,
-              onReceive = (request) => {
-                return request
-              },
-              autoBind = true) {
+    onReceive = (request) => {
+      return request
+    },
+    autoBind = true) {
 
     this.port = port;
     this.onReceive = onReceive;
@@ -40,7 +40,7 @@ class ZmqReply {
       if (err) {
         console.log('Error: ' + err);
       } else {
-        console.log('ZMQ Server (Reply): Listening on tcp://*:' + this.port + ' ...');
+        console.log('[' + new Date() + '] ZMQ Server (Reply): Listening on tcp://*:' + this.port);
       }
     });
   }

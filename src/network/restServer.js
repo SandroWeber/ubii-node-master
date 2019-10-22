@@ -1,5 +1,8 @@
 const express = require('express');
+const http = require('http');
+const https = require('https');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 
 class RESTServer {
 
@@ -9,9 +12,9 @@ class RESTServer {
    * @param {*} autoBind Should the socket bind directly after the initialization of the object?
    * If not, the start method must be called manually.
    */
-  constructor(port = 5555,
-              autoBind = true) {
+  constructor(port = 5555, useHTTPS = true, autoBind = true) {
     this.port = port;
+    this.useHTTPS = useHTTPS;
 
     if (autoBind) {
       this.start();
@@ -22,10 +25,21 @@ class RESTServer {
     // init
     this.app = express();
 
+    if (this.useHTTPS) {
+      var credentials = {
+        //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
+        cert: fs.readFileSync('./certificates/ubii.com+5.pem'),
+        key: fs.readFileSync('./certificates/ubii.com+5-key.pem')
+      };
+      this.server = https.createServer(credentials, this.app);
+    } else {
+      this.server = http.createServer(this.app);
+    }
+
     // CORS
-    this.app.use(function(req, res, next) {
+    this.app.use(function (req, res, next) {
       res.header("Access-Control-Allow-Origin", "*");
-      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, access-control-allow-origin");
       next();
     });
 
@@ -40,8 +54,8 @@ class RESTServer {
     /// VARIANT B: JSON
     this.app.use(bodyParser.json());
 
-    this.server = this.app.listen(this.port, () => {
-      console.info('[' + new Date() + '] REST server listening on port ' + this.port)
+    this.server.listen(this.port, () => {
+      console.info('[' + new Date() + '] REST Server: Listening on *:' + this.port)
     });
   }
 

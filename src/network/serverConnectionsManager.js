@@ -19,13 +19,14 @@ class ServerConnectionsManager {
   constructor(portTopicDataZMQ = defaultTopicDataServerPortZMQ,
     portTopicDataWS = defaultTopicDataServerPortWS,
     portServiceZMQ = defaultServiceServerPortZMQ,
-    portServiceREST = defaultServiceServerPortREST) {
+    portServiceREST = defaultServiceServerPortREST, useHTTPS = true) {
     this.ports = {
       serviceREST: portServiceREST,
       serviceZMQ: portServiceZMQ,
       topicDataWS: portTopicDataWS,
       topicDataZMQ: portTopicDataZMQ
     };
+    this.useHTTPS = useHTTPS;
 
     // Translators:
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
@@ -61,30 +62,16 @@ class ServerConnectionsManager {
     this.connections = {};
 
     // ZMQ Service Server Component:
-    this.connections.serviceZMQ = new ZmqReply(
-      this.ports.serviceZMQ,
-      (message) => { },
-      true
-    );
+    this.connections.serviceZMQ = new ZmqReply(this.ports.serviceZMQ, (message) => { }, true);
 
     // REST Service Server Component:
-    this.connections.serviceREST = new RESTServer(
-      this.ports.serviceREST,
-      true
-    );
+    this.connections.serviceREST = new RESTServer(this.ports.serviceREST, this.useHTTPS);
 
     // ZMQ Topic Data Server Component:
-    this.connections.topicDataZMQ = new ZmqRouter(
-      'server_zmq',
-      this.ports.topicDataZMQ,
-      (envelope, message) => { }
-    );
+    this.connections.topicDataZMQ = new ZmqRouter('server_zmq', this.ports.topicDataZMQ, (envelope, message) => { });
 
     // Websocket Topic Data Server Component:
-    this.connections.topicDataWS = new WebsocketServer(
-      this.ports.topicDataWS,
-      (message) => { }
-    );
+    this.connections.topicDataWS = new WebsocketServer(this.ports.topicDataWS, this.useHTTPS);
   }
 
   onServiceMessageZMQ(callback) {

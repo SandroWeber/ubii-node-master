@@ -18,7 +18,7 @@ class ZmqRouter {
     constructor(
         identity,
         port = 5555,
-        onReceive = (envelope, payload) => {},
+        onReceive = (envelope, payload) => { },
         autoBind = true) {
         this.identity = identity;
         this.port = port;
@@ -29,7 +29,7 @@ class ZmqRouter {
         this.waitingPongCallbacks = new Map();
 
         if (autoBind) {
-            this.start(); 
+            this.start();
         }
     }
 
@@ -54,19 +54,19 @@ class ZmqRouter {
 
                     return;
                 }
-                
+
                 return;
             }
 
             this.onReceive(envelope, payload);
-        }); 
+        });
 
         // bind
         this.socket.bind('tcp://*:' + this.port + '', (err) => {
             if (err) {
                 console.log('Error: ' + err);
             } else {
-                console.log('ZMQ Server (Router): Listening on tcp://*:' + this.port + ' ...');
+                console.log('[' + new Date() + '] ZMQ Server (Router): Listening on tcp://*:' + this.port);
             }
         });
     }

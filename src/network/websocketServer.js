@@ -1,4 +1,6 @@
 const WebSocket = require('ws');
+var https = require('https');
+const fs = require('fs');
 const url = require('url');
 
 class WebsocketServer {
@@ -11,9 +13,9 @@ class WebsocketServer {
    * @param {*} autoconnect Should the socket connect directly after the initialization of the object?
    * If not, the start method must be called manually.
    */
-  constructor(port = 5555,
-              autoconnect = true) {
+  constructor(port = 5555, useHTTPS = true, autoconnect = true) {
     this.port = port;
+    this.useHTTPS = useHTTPS;
 
     this.clients = new Map();
 
@@ -28,8 +30,21 @@ class WebsocketServer {
    * Start the websocket server.
    */
   start() {
-    this.wsServer = new WebSocket.Server({port: this.port});
-    console.log('[' + new Date() + '] websocket server listening on port ' + this.port);
+    if (this.useHTTPS) {
+      var credentials = {
+        //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
+        cert: fs.readFileSync('./certificates/ubii.com+5.pem'),
+        key: fs.readFileSync('./certificates/ubii.com+5-key.pem')
+      };
+      this.server = https.createServer(credentials);
+      this.server.listen(this.port);
+      this.wsServer = new WebSocket.Server({ server: this.server });
+      console.log('[' + new Date() + '] WebSocket Server: Listening on wss://*:' + this.port);
+    } else {
+      this.wsServer = new WebSocket.Server({ port: this.port });
+      console.log('[' + new Date() + '] WebSocket Server: Listening on ws://*:' + this.port);
+    }
+
 
     this.wsServer.on('connection', (websocket, request) => {
       this._onConnection(websocket, request);
@@ -53,7 +68,7 @@ class WebsocketServer {
    * @param {*} request The request for the new connection.
    */
   _onConnection(websocket, request) {
-    const {query: {clientID}} = url.parse(request.url, true);
+    const { query: { clientID } } = url.parse(request.url, true);
     console.log('[' + new Date() + '] websocket connection accepted from ID ' + clientID);
 
     //TODO: get proper client ID specification
