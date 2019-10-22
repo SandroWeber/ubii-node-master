@@ -3,8 +3,9 @@ var https = require('https');
 const fs = require('fs');
 const url = require('url');
 
-class WebsocketServer {
+const configService = require('../config/configService');
 
+class WebsocketServer {
   /**
    * Communication endpoint implementing the zmq router pattern.
    * @param {*} port Port to bind.
@@ -30,7 +31,7 @@ class WebsocketServer {
    * Start the websocket server.
    */
   start() {
-    if (this.useHTTPS) {
+    if (configService.config.useHTTPS) {
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
         cert: fs.readFileSync('./certificates/ubii.com+5.pem'),
@@ -45,7 +46,6 @@ class WebsocketServer {
       console.log('[' + new Date() + '] WebSocket Server: Listening on ws://*:' + this.port);
     }
 
-
     this.wsServer.on('connection', (websocket, request) => {
       this._onConnection(websocket, request);
     });
@@ -55,7 +55,7 @@ class WebsocketServer {
    * Stop the server and close the socket.
    */
   stop() {
-    this.wsServer.clients.forEach((websocket) => {
+    this.wsServer.clients.forEach(websocket => {
       websocket.close();
     });
 
@@ -68,7 +68,9 @@ class WebsocketServer {
    * @param {*} request The request for the new connection.
    */
   _onConnection(websocket, request) {
-    const { query: { clientID } } = url.parse(request.url, true);
+    const {
+      query: { clientID }
+    } = url.parse(request.url, true);
     console.log('[' + new Date() + '] websocket connection accepted from ID ' + clientID);
 
     //TODO: get proper client ID specification
@@ -76,7 +78,7 @@ class WebsocketServer {
     //let clientID = this.clients.size;
     this.clients.set(clientID, websocket);
 
-    websocket.on('message', (message) => {
+    websocket.on('message', message => {
       this._onMessage(clientID, message);
     });
 
@@ -101,8 +103,15 @@ class WebsocketServer {
      }*/
 
     if (!this.processMessage) {
-      console.warn('[' + new Date() + '] WebsocketServer.onMessageReceived() has not been set!' +
-        '\nClient ID:\n' + clientID + '\nMessage received:\n' + message);
+      console.warn(
+        '[' +
+          new Date() +
+          '] WebsocketServer.onMessageReceived() has not been set!' +
+          '\nClient ID:\n' +
+          clientID +
+          '\nMessage received:\n' +
+          message
+      );
     } else {
       this.processMessage(clientID, message);
     }
@@ -120,7 +129,7 @@ class WebsocketServer {
   send(toClientId, message) {
     let client = this.clients.get(toClientId);
     if (client && client.readyState === WebSocket.OPEN) {
-      client.send(message, (error) => {
+      client.send(message, error => {
         if (error !== undefined) console.warn(error);
       });
     }

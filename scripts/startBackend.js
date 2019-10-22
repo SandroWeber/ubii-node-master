@@ -1,8 +1,9 @@
-const {
-  MasterNode
-} = require('../src/index.js');
+const fs = require('fs');
 
-(function () {
+const { MasterNode } = require('../src/index.js');
+const configService = require('../src/config/configService');
+
+(function() {
   if (process.argv.length >= 7) {
     let serviceServerPortZMQ = process.argv[2];
     let serviceServerPortREST = process.argv[3];
@@ -10,11 +11,17 @@ const {
     let topicDataServerPortWS = process.argv[5];
     let useHTTPS = process.argv[6] === 'true' ? true : false;
 
-    console.log('Starting backend with the following ports:\n' +
-      'ZMQ service: ' + serviceServerPortZMQ +
-      '\nZMQ topic data: ' + topicDataServerPortZMQ +
-      '\nREST service: ' + serviceServerPortREST +
-      '\nWebsocket service: ' + topicDataServerPortWS);
+    console.log(
+      'Starting backend with the following ports:\n' +
+        'ZMQ service: ' +
+        serviceServerPortZMQ +
+        '\nZMQ topic data: ' +
+        topicDataServerPortZMQ +
+        '\nREST service: ' +
+        serviceServerPortREST +
+        '\nWebsocket service: ' +
+        topicDataServerPortWS
+    );
     console.log('using HTTPS: ' + useHTTPS);
 
     let master = new MasterNode(
@@ -22,7 +29,8 @@ const {
       serviceServerPortREST,
       topicDataServerPortZMQ,
       topicDataServerPortWS,
-      useHTTPS);
+      useHTTPS
+    );
   } else {
     let master = new MasterNode();
   }
