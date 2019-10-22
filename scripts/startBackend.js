@@ -10,7 +10,7 @@ const {
     let topicDataServerPortWS = process.argv[5];
     let useHTTPS = process.argv[6] === 'true' ? true : false;
 
-    console.log('Starting master node with the following ports:\n' +
+    console.log('Starting backend with the following ports:\n' +
       'ZMQ service: ' + serviceServerPortZMQ +
       '\nZMQ topic data: ' + topicDataServerPortZMQ +
       '\nREST service: ' + serviceServerPortREST +

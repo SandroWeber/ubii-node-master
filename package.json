@@ -20,7 +20,7 @@
     "node": ">=4"
   },
   "scripts": {
-    "start": "node scripts/startBackend.js",
+    "start": "node scripts/startBackend.js 8101 8102 8103 8104 false",
     "startHTTPS": "node scripts/startBackend.js",
     "startHTTP": "node scripts/startBackend.js 8101 8102 8103 8104 false",
     "test": "ava --match=!*RoundTripTime*",

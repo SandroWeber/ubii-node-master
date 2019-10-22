@@ -31,7 +31,6 @@ class WebsocketServer {
    */
   start() {
     if (this.useHTTPS) {
-      console.info('WebsocketServer using HTTPS');
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
         cert: fs.readFileSync('./certs/ubii.com+5.pem'),
@@ -41,7 +40,6 @@ class WebsocketServer {
       this.server.listen(this.port);
       this.wsServer = new WebSocket.Server({ server: this.server });
     } else {
-      console.info('WebsocketServer using HTTP');
       this.wsServer = new WebSocket.Server({ port: this.port });
     }
 

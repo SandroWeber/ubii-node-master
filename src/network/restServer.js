@@ -26,30 +26,14 @@ class RESTServer {
     this.app = express();
 
     if (this.useHTTPS) {
-      console.info('RESTServer using HTTPS');
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
         cert: fs.readFileSync('./certs/ubii.com+5.pem'),
         key: fs.readFileSync('./certs/ubii.com+5-key.pem')
       };
       this.server = https.createServer(credentials, this.app);
-
-      // CORS
-      /*this.app.use(function (req, res, next) {
-        res.header("Access-Control-Allow-Origin", "*");
-        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, access-control-allow-origin");
-        next();
-      });*/
     } else {
-      console.info('RESTServer using HTTP');
       this.server = http.createServer(this.app);
-
-      // CORS
-      /*this.app.use(function (req, res, next) {
-        res.header("Access-Control-Allow-Origin", "*");
-        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-        next();
-      });*/
     }
 
     // CORS
