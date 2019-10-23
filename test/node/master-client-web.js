@@ -7,6 +7,8 @@ const configService = require('../../src/config/configService');
 (function() {
   // Preparation:
 
+  //TODO: rewrite so only one master node is necessary
+
   // Test cases:
 
   test.cb('register client', t => {

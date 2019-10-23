@@ -5,6 +5,12 @@ const configService = require('../../src/config/configService');
 const { ClientNodeZMQ } = require('../files/testNodes/clientNodeZMQ');
 
 (function() {
+  // Preparation:
+
+  //TODO: rewrite so only one master node is necessary
+
+  // Test cases:
+
   test.cb('register client', t => {
     configService.config.ports = {
       serviceZMQ: 8491,
