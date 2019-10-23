@@ -1,42 +1,50 @@
 import test from 'ava';
 
-const {MasterNode} = require('../../src/index.js');
+const { MasterNode } = require('../../src/index.js');
+const { ClientNodeWeb } = require('../files/testNodes/clientNodeWeb');
+const configService = require('../../src/config/configService');
 
-const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
+(function() {
+  // Preparation:
 
-(function () {
+  //TODO: rewrite so only one master node is necessary
+
+  // Test cases:
+
   test.cb('register client', t => {
-    let master = new MasterNode(
-      9191,
-      9192,
-      9193,
-      9194);
+    configService.config.ports = {
+      serviceZMQ: 9191,
+      serviceREST: 9192,
+      topicdataZMQ: 9193,
+      topicdataWS: 9194
+    };
+    configService.config.useHTTPS = false;
+    let master = new MasterNode();
 
-    let client = new ClientNodeWeb('clientName',
-      'localhost',
-      9194);
+    let client = new ClientNodeWeb('clientName', 'localhost', 9192);
 
-    client.initialize()
-      .then(() => {
-        t.true(client.isInitialized());
-        t.true(client.serviceClient !== undefined);
-        t.true(master.clientManager.clients.size > 0);
-        t.end();
-      });
+    client.initialize().then(() => {
+      t.true(client.isInitialized());
+      t.true(client.serviceClient !== undefined);
+      t.true(master.clientManager.clients.size > 0);
+      t.end();
+    });
   });
 
   test.cb('register device', t => {
-    let master = new MasterNode(
-      9291,
-      9292,
-      9293,
-      9294);
+    configService.config.ports = {
+      serviceZMQ: 9291,
+      serviceREST: 9292,
+      topicdataZMQ: 9293,
+      topicdataWS: 9294
+    };
+    configService.config.useHTTPS = false;
+    let master = new MasterNode();
 
-    let client = new ClientNodeWeb('clientName',
-      'localhost',
-      9294);
+    let client = new ClientNodeWeb('clientName', 'localhost', 9292);
 
-    client.initialize()
+    client
+      .initialize()
       .then(() => {
         return client.registerDevice('awesomeDeviceName', 0);
       })
@@ -47,19 +55,21 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
   });
 
   test.cb('publish', t => {
-    let master = new MasterNode(
-      9391,
-      9392,
-      9393,
-      9394);
+    configService.config.ports = {
+      serviceZMQ: 9391,
+      serviceREST: 9392,
+      topicdataZMQ: 9393,
+      topicdataWS: 9394
+    };
+    configService.config.useHTTPS = false;
+    let master = new MasterNode();
 
     t.deepEqual(master.topicData.storage, {});
 
-    let client = new ClientNodeWeb('clientName',
-      'localhost',
-      9394);
+    let client = new ClientNodeWeb('clientName', 'localhost', 9392);
 
-    client.initialize()
+    client
+      .initialize()
       .then(() => {
         return client.registerDevice('anotherAwesomeDeviceName', 0);
       })
@@ -80,19 +90,21 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
   });
 
   test.cb('subscribe then', t => {
-    let master = new MasterNode(
-      9491,
-      9492,
-      9493,
-      9494);
+    configService.config.ports = {
+      serviceZMQ: 9491,
+      serviceREST: 9492,
+      topicdataZMQ: 9493,
+      topicdataWS: 9494
+    };
+    configService.config.useHTTPS = false;
+    let master = new MasterNode();
 
     t.deepEqual(master.topicData.storage, {});
 
-    let client = new ClientNodeWeb('clientName',
-      'localhost',
-      9494);
+    let client = new ClientNodeWeb('clientName', 'localhost', 9492);
 
-    client.initialize()
+    client
+      .initialize()
       .then(() => {
         return client.registerDevice('anotherAwesomeDeviceName', 0);
       })
@@ -106,17 +118,18 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
   });
 
   test('subscribe await', async t => {
-    let master = new MasterNode(
-      9591,
-      9592,
-      9593,
-      9594);
+    configService.config.ports = {
+      serviceZMQ: 9591,
+      serviceREST: 9592,
+      topicdataZMQ: 9593,
+      topicdataWS: 9594
+    };
+    configService.config.useHTTPS = false;
+    let master = new MasterNode();
 
     t.deepEqual(master.topicData.storage, {});
 
-    let client = new ClientNodeWeb('clientName',
-      'localhost',
-      9594);
+    let client = new ClientNodeWeb('clientName', 'localhost', 9592);
 
     await client.initialize();
     await client.registerDevice('anotherAwesomeDeviceName', 0);
@@ -126,24 +139,19 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
   });
 
   test.cb('subscribe & publish', t => {
-    let master = new MasterNode(
-      9691,
-      9692,
-      9693,
-      9694);
+    configService.config.ports = {
+      serviceZMQ: 9691,
+      serviceREST: 9692,
+      topicdataZMQ: 9693,
+      topicdataWS: 9694
+    };
+    configService.config.useHTTPS = false;
+    let master = new MasterNode();
 
     t.deepEqual(master.topicData.storage, {});
 
-    let client1 = new ClientNodeWeb('clientName1',
-      'localhost',
-      9694);
-    /*client1.onTopicDataMessageReceived = (message) => {
-      t.true(master.topicData.storage['t:awesomeTopic:t'] !== undefined);
-      t.end();
-    };*/
-    let client2 = new ClientNodeWeb('clientName2',
-      'localhost',
-      9694);
+    let client1 = new ClientNodeWeb('clientName1', 'localhost', 9692);
+    let client2 = new ClientNodeWeb('clientName2', 'localhost', 9692);
 
     let quaternion = {
       x: 129.1,
@@ -152,12 +160,13 @@ const {ClientNodeWeb} = require('../files/testNodes/clientNodeWeb');
       w: 79824678.78927348
     };
 
-    client1.initialize()
+    client1
+      .initialize()
       .then(() => {
         return client1.registerDevice('anotherAwesomeDeviceName2', 0);
       })
       .then(() => {
-        return client1.subscribe('awesomeTopic', (message) => {
+        return client1.subscribe('awesomeTopic', message => {
           t.is(message.x, quaternion.x);
           t.is(message.y, quaternion.y);
           t.is(message.z, quaternion.z);

@@ -1,18 +1,18 @@
 export default {
-  "files": [
-    "test/node/master-client-web.js",
-    "test/node/master-client-zmq.js",
-    "test/devices/**/*",
-    "test/sessions/**/*",
-    "!test/files/**/*",
-    "!test/mocks/*",
-    "!test/sessions/testUtility.js"
+  files: [
+    'test/node/master-client-web.js',
+    'test/node/master-client-zmq.js',
+    'test/devices/**/*',
+    'test/sessions/**/*',
+    '!test/files/**/*',
+    '!test/mocks/*',
+    '!test/sessions/testUtility.js'
   ],
-  "cache": false,
-  "failFast": false,
-  "failWithoutAssertions": false,
-  "tap": false,
-  "verbose": false,
-  "serial": true,
-  "compileEnhancements": false
+  cache: false,
+  failFast: false,
+  failWithoutAssertions: false,
+  tap: false,
+  verbose: false,
+  serial: true,
+  compileEnhancements: false
 };

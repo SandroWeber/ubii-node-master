@@ -1,0 +1,9 @@
+{
+  "ports": {
+    "serviceZMQ": 8101,
+    "serviceREST": 8102,
+    "topicdataZMQ": 8103,
+    "topicdataWS": 8104
+  },
+  "useHTTPS": true
+}

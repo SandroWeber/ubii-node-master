@@ -20,20 +20,20 @@ const { DeviceRegistrationService } = require('./services/devices/deviceRegistra
 const { SubscriptionService } = require('./services/subscriptionService');
 
 module.exports = {
-    'MasterNode': MasterNode,
-    'Client': Client,
-    'ClientManager': ClientManager,
-    'DeviceManager': DeviceManager,
-    'Watcher': Watcher,
-    'Participant': Participant,
-    'TopicMultiplexer': TopicMultiplexer,
-    'TopicDemultiplexer': TopicDemultiplexer,
-    'Session': Session,
-    'SessionManager': SessionManager,
-    'Interaction': Interaction,
-    'ServiceManager': ServiceManager,
-    'ClientRegistrationService': ClientRegistrationService,
-    'DeviceRegistrationService': DeviceRegistrationService,
-    'SubscriptionService': SubscriptionService,
-    'INTERACTION_LIFECYCLE_EVENTS': INTERACTION_LIFECYCLE_EVENTS
+  MasterNode: MasterNode,
+  Client: Client,
+  ClientManager: ClientManager,
+  DeviceManager: DeviceManager,
+  Watcher: Watcher,
+  Participant: Participant,
+  TopicMultiplexer: TopicMultiplexer,
+  TopicDemultiplexer: TopicDemultiplexer,
+  Session: Session,
+  SessionManager: SessionManager,
+  Interaction: Interaction,
+  ServiceManager: ServiceManager,
+  ClientRegistrationService: ClientRegistrationService,
+  DeviceRegistrationService: DeviceRegistrationService,
+  SubscriptionService: SubscriptionService,
+  INTERACTION_LIFECYCLE_EVENTS: INTERACTION_LIFECYCLE_EVENTS
 };

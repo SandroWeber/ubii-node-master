@@ -1,7 +1,6 @@
 const zmq = require('zeromq');
 
 class ZmqReply {
-
   /**
    * Communication endpoint implementing the zmq reply pattern.
    * @param {*} port Port to bind.
@@ -9,12 +8,13 @@ class ZmqReply {
    * @param {*} autoBind Should the socket bind directly after the initialization of the object?
    * If not, the start method must be called manually.
    */
-  constructor(port = 5555,
-    onReceive = (request) => {
-      return request
+  constructor(
+    port = 5555,
+    onReceive = request => {
+      return request;
     },
-    autoBind = true) {
-
+    autoBind = true
+  ) {
     this.port = port;
     this.onReceive = onReceive;
 
@@ -30,17 +30,19 @@ class ZmqReply {
     this.socket = zmq.socket('rep');
 
     // add callbacks
-    this.socket.on('message', (request) => {
+    this.socket.on('message', request => {
       let replyBuffer = this.onReceive(request);
       this.socket.send(replyBuffer);
     });
 
     // bind
-    this.socket.bind('tcp://*:' + this.port + '', (err) => {
+    this.socket.bind('tcp://*:' + this.port + '', err => {
       if (err) {
         console.log('Error: ' + err);
       } else {
-        console.log('[' + new Date() + '] ZMQ Server (Reply): Listening on tcp://*:' + this.port);
+        console.log(
+          '[' + new Date() + '] ZMQ Service connection (Reply): Listening on tcp://*:' + this.port
+        );
       }
     });
   }

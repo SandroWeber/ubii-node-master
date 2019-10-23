@@ -5,7 +5,6 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 
 class RESTServer {
-
   /**
    * Communication endpoint implementing the zmq reply pattern.
    * @param {*} port Port to bind.
@@ -37,9 +36,12 @@ class RESTServer {
     }
 
     // CORS
-    this.app.use(function (req, res, next) {
-      res.header("Access-Control-Allow-Origin", "*");
-      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, access-control-allow-origin");
+    this.app.use(function(req, res, next) {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept, access-control-allow-origin'
+      );
       next();
     });
 
@@ -55,7 +57,7 @@ class RESTServer {
     this.app.use(bodyParser.json());
 
     this.server.listen(this.port, () => {
-      console.info('[' + new Date() + '] REST Server: Listening on *:' + this.port)
+      console.info('[' + new Date() + '] REST Service connection: Listening on *:' + this.port);
     });
   }
 
