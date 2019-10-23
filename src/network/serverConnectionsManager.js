@@ -1,11 +1,6 @@
 const os = require('os');
 
-const {
-  defaultTopicDataServerPortZMQ,
-  defaultTopicDataServerPortWS,
-  defaultServiceServerPortZMQ,
-  defaultServiceServerPortREST
-} = require('../node/constants.js');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const ZmqReply = require('./zmqReply');
 const ZmqRouter = require('./zmqRouter');
@@ -13,21 +8,10 @@ const ZmqRouter = require('./zmqRouter');
 const WebsocketServer = require('./websocketServer');
 const RESTServer = require('./restServer');
 
-const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const configService = require('../config/configService');
 
 class ServerConnectionsManager {
-  constructor(portTopicDataZMQ = defaultTopicDataServerPortZMQ,
-    portTopicDataWS = defaultTopicDataServerPortWS,
-    portServiceZMQ = defaultServiceServerPortZMQ,
-    portServiceREST = defaultServiceServerPortREST, useHTTPS = true) {
-    this.ports = {
-      serviceREST: portServiceREST,
-      serviceZMQ: portServiceZMQ,
-      topicDataWS: portTopicDataWS,
-      topicDataZMQ: portTopicDataZMQ
-    };
-    this.useHTTPS = useHTTPS;
-
+  constructor() {
     // Translators:
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
     this.serviceRequestTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
@@ -45,10 +29,14 @@ class ServerConnectionsManager {
     };
 
     let ifaces = os.networkInterfaces();
-    Object.keys(ifaces).forEach((ifname) => {
-      ifaces[ifname].forEach((iface) => {
+    Object.keys(ifaces).forEach(ifname => {
+      ifaces[ifname].forEach(iface => {
         if (iface.family === 'IPv4' && !iface.internal && ifname.indexOf('Default Switch') === -1) {
-          if (ifname.indexOf('en') === 0 || ifname.indexOf('vEthernet') === 0 || ifname.indexOf('Ethernet') === 0) {
+          if (
+            ifname.indexOf('en') === 0 ||
+            ifname.indexOf('vEthernet') === 0 ||
+            ifname.indexOf('Ethernet') === 0
+          ) {
             this.hostAdresses.ethernet = iface.address;
           } else if (ifname.indexOf('wl') === 0 || ifname.indexOf('Wi-Fi') === 0) {
             this.hostAdresses.wlan = iface.address;
@@ -62,16 +50,30 @@ class ServerConnectionsManager {
     this.connections = {};
 
     // ZMQ Service Server Component:
-    this.connections.serviceZMQ = new ZmqReply(this.ports.serviceZMQ, (message) => { }, true);
+    this.connections.serviceZMQ = new ZmqReply(
+      configService.getPortServiceZMQ(),
+      message => {},
+      true
+    );
 
     // REST Service Server Component:
-    this.connections.serviceREST = new RESTServer(this.ports.serviceREST, this.useHTTPS);
+    this.connections.serviceREST = new RESTServer(
+      configService.getPortServiceREST(),
+      configService.useHTTPS()
+    );
 
     // ZMQ Topic Data Server Component:
-    this.connections.topicDataZMQ = new ZmqRouter('server_zmq', this.ports.topicDataZMQ, (envelope, message) => { });
+    this.connections.topicDataZMQ = new ZmqRouter(
+      'server_zmq',
+      configService.getPortTopicdataZMQ(),
+      (envelope, message) => {}
+    );
 
     // Websocket Topic Data Server Component:
-    this.connections.topicDataWS = new WebsocketServer(this.ports.topicDataWS, this.useHTTPS);
+    this.connections.topicDataWS = new WebsocketServer(
+      configService.getPortTopicdataWS(),
+      configService.useHTTPS()
+    );
   }
 
   onServiceMessageZMQ(callback) {
@@ -100,11 +102,9 @@ class ServerConnectionsManager {
     }
   }
 
-  ping(clientID, callback) {
-
-  }
+  ping(clientID, callback) {}
 }
 
 module.exports = {
-  'ServerConnectionsManager': ServerConnectionsManager,
+  ServerConnectionsManager: ServerConnectionsManager
 };

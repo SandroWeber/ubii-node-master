@@ -3,8 +3,6 @@ var https = require('https');
 const fs = require('fs');
 const url = require('url');
 
-const configService = require('../config/configService');
-
 class WebsocketServer {
   /**
    * Communication endpoint implementing the zmq router pattern.
@@ -31,7 +29,7 @@ class WebsocketServer {
    * Start the websocket server.
    */
   start() {
-    if (configService.config.useHTTPS) {
+    if (this.useHTTPS) {
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
         cert: fs.readFileSync('./certificates/ubii.com+5.pem'),
@@ -40,10 +38,14 @@ class WebsocketServer {
       this.server = https.createServer(credentials);
       this.server.listen(this.port);
       this.wsServer = new WebSocket.Server({ server: this.server });
-      console.log('[' + new Date() + '] WebSocket Server: Listening on wss://*:' + this.port);
+      console.log(
+        '[' + new Date() + '] WebSocket Topicdata connection: Listening on wss://*:' + this.port
+      );
     } else {
       this.wsServer = new WebSocket.Server({ port: this.port });
-      console.log('[' + new Date() + '] WebSocket Server: Listening on ws://*:' + this.port);
+      console.log(
+        '[' + new Date() + '] WebSocket Topicdata connection: Listening on ws://*:' + this.port
+      );
     }
 
     this.wsServer.on('connection', (websocket, request) => {

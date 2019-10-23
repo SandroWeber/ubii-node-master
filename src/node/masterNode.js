@@ -1,42 +1,15 @@
-const {
-  defaultTopicDataServerPortZMQ,
-  defaultTopicDataServerPortWS,
-  defaultServiceServerPortZMQ,
-  defaultServiceServerPortREST
-} = require('./constants.js');
-
-const {
-  ServerConnectionsManager
-} = require('../network/serverConnectionsManager.js');
-
-const {
-  RuntimeTopicData
-} = require('@tum-far/ubii-topic-data');
-const {
-  ClientManager
-} = require('../clients/clientManager');
-const {
-  DeviceManager
-} = require('../devices/deviceManager');
-const {
-  ServiceManager
-} = require('../services/serviceManager');
-const {
-  SessionManager
-} = require('../sessions/sessionManager');
-
+const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
-
 const namida = require('@tum-far/namida');
 
-class MasterNode {
-  constructor(
-    serviceServerPortZMQ = defaultServiceServerPortZMQ,
-    serviceServerPortREST = defaultServiceServerPortREST,
-    topicDataServerPortZMQ = defaultTopicDataServerPortZMQ,
-    topicDataServerPortWS = defaultTopicDataServerPortWS,
-    useHTTPS = true) {
+const { ServerConnectionsManager } = require('../network/serverConnectionsManager.js');
+const { ClientManager } = require('../clients/clientManager');
+const { DeviceManager } = require('../devices/deviceManager');
+const { ServiceManager } = require('../services/serviceManager');
+const { SessionManager } = require('../sessions/sessionManager');
 
+class MasterNode {
+  constructor() {
     // Translators:
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
     this.serviceRequestTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
@@ -45,24 +18,27 @@ class MasterNode {
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
 
-    this.connectionsManager = new ServerConnectionsManager(
-      topicDataServerPortZMQ,
-      topicDataServerPortWS,
-      serviceServerPortZMQ,
-      serviceServerPortREST,
-      useHTTPS);
-    this.connectionsManager.onServiceMessageREST((...params) => this.onServiceMessageREST(...params));
+    this.connectionsManager = new ServerConnectionsManager();
+    this.connectionsManager.onServiceMessageREST((...params) =>
+      this.onServiceMessageREST(...params)
+    );
     this.connectionsManager.onServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
-    this.connectionsManager.onTopicDataMessageWS((...params) => this.onTopicDataMessageWS(...params));
-    this.connectionsManager.onTopicDataMessageZMQ((...params) => this.onTopicDataMessageZMQ(...params));
+    this.connectionsManager.onTopicDataMessageWS((...params) =>
+      this.onTopicDataMessageWS(...params)
+    );
+    this.connectionsManager.onTopicDataMessageZMQ((...params) =>
+      this.onTopicDataMessageZMQ(...params)
+    );
 
     // Client Manager Component:
     this.clientManager = new ClientManager(this.connectionsManager, this.topicData);
 
     // Device Manager Component:
-    this.deviceManager = new DeviceManager(this.clientManager,
+    this.deviceManager = new DeviceManager(
+      this.clientManager,
       this.topicData,
-      this.connectionsManager.connections.topicDataZMQ);
+      this.connectionsManager.connections.topicDataZMQ
+    );
 
     // Session manager component:
     this.sessionManager = new SessionManager(this.topicData, this.deviceManager);
@@ -73,7 +49,8 @@ class MasterNode {
       this.deviceManager,
       this.connectionsManager,
       this.topicData,
-      this.sessionManager);
+      this.sessionManager
+    );
   }
 
   onServiceMessageZMQ(message) {
@@ -100,9 +77,7 @@ class MasterNode {
       context.feedback.message = `Ubii service request processing failed with an error:`;
       context.feedback.stack = '' + (e.stack || e);
 
-      namida.logFailure(context.feedback.title,
-        context.feedback.message,
-        context.feedback.stack);
+      namida.logFailure(context.feedback.title, context.feedback.message, context.feedback.stack);
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
@@ -157,9 +132,7 @@ class MasterNode {
       context.feedback.stack = '' + (e.stack || e);
 
       console.warn(e);
-      namida.logFailure(context.feedback.title,
-        context.feedback.request,
-        context.feedback.stack);
+      namida.logFailure(context.feedback.title, context.feedback.request, context.feedback.stack);
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
@@ -208,21 +181,22 @@ class MasterNode {
 
       try {
         // Send error:
-        this.connectionsManager.connections.topicDataZMQ.send(clientID, this.topicDataTranslator.createBufferFromPayload({
-          error: {
-            title: context.feedback.title,
-            message: context.feedback.message,
-            stack: context.feedback.stack
-          }
-        }));
+        this.connectionsManager.connections.topicDataZMQ.send(
+          clientID,
+          this.topicDataTranslator.createBufferFromPayload({
+            error: {
+              title: context.feedback.title,
+              message: context.feedback.message,
+              stack: context.feedback.stack
+            }
+          })
+        );
       } catch (e) {
         context.feedback.title = 'TopicData error response sending failed (ZMQ)';
         context.feedback.message = `opicData error response sending failed (ZMQ) with an error:`;
         context.feedback.stack = '' + (e.stack || e);
 
-        namida.error(context.feedback.title,
-          context.feedback.message,
-          context.feedback.stack);
+        namida.error(context.feedback.title, context.feedback.message, context.feedback.stack);
       }
     }
 
@@ -269,21 +243,22 @@ class MasterNode {
         // Send error:
         //let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
         //let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
-        this.connectionsManager.send(clientID, this.topicDataTranslator.createBufferFromPayload({
-          error: {
-            title: context.feedback.title,
-            message: context.feedback.message,
-            stack: context.feedback.stack
-          }
-        }));
+        this.connectionsManager.send(
+          clientID,
+          this.topicDataTranslator.createBufferFromPayload({
+            error: {
+              title: context.feedback.title,
+              message: context.feedback.message,
+              stack: context.feedback.stack
+            }
+          })
+        );
       } catch (e) {
         context.feedback.title = 'TopicData error response sending failed (WS)';
         context.feedback.message = 'TopicData error response sending failed (WS) with an error:';
         context.feedback.stack = '' + (e.stack || e);
 
-        namida.error(context.feedback.title,
-          context.feedback.message,
-          context.feedback.stack);
+        namida.error(context.feedback.title, context.feedback.message, context.feedback.stack);
       }
     }
 
@@ -297,5 +272,5 @@ class MasterNode {
 }
 
 module.exports = {
-  'MasterNode': MasterNode,
+  MasterNode: MasterNode
 };

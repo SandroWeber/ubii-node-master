@@ -4,8 +4,6 @@ const https = require('https');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 
-const configService = require('../config/configService');
-
 class RESTServer {
   /**
    * Communication endpoint implementing the zmq reply pattern.
@@ -26,8 +24,7 @@ class RESTServer {
     // init
     this.app = express();
 
-    if (configService.config.useHTTPS) {
-      console.info('RESTServer using HTTPS');
+    if (this.useHTTPS) {
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
         cert: fs.readFileSync('./certificates/ubii.com+5.pem'),
@@ -35,7 +32,6 @@ class RESTServer {
       };
       this.server = https.createServer(credentials, this.app);
     } else {
-      console.info('RESTServer using HTTP');
       this.server = http.createServer(this.app);
     }
 
@@ -61,7 +57,7 @@ class RESTServer {
     this.app.use(bodyParser.json());
 
     this.server.listen(this.port, () => {
-      console.info('[' + new Date() + '] REST Server: Listening on *:' + this.port);
+      console.info('[' + new Date() + '] REST Service connection: Listening on *:' + this.port);
     });
   }
 
