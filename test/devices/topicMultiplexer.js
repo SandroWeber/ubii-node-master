@@ -1,18 +1,11 @@
 import test from 'ava';
 
-const {
-  RuntimeTopicData,
-  TOPIC_EVENTS
-} = require('@tum-far/ubii-topic-data');
+const { RuntimeTopicData, TOPIC_EVENTS } = require('@tum-far/ubii-topic-data');
 
-const {
-  TopicMultiplexer
-} = require('../../src/index');
-
+const { TopicMultiplexer } = require('../../src/index');
 
 /* integration tests */
-(function () {
-
+(function() {
   // Preparation:
 
   test.beforeEach(t => {
@@ -35,7 +28,7 @@ const {
       t.context.topicsCategoryB.forEach((topic, index) => {
         t.context.topicData.publish(topic, { x: index, y: index, z: index }, 'vector3');
       });
-    }
+    };
   });
 
   // Test cases:
@@ -46,7 +39,8 @@ const {
     t.notThrows(() => {
       mux = new TopicMultiplexer(
         { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector },
-        t.context.topicData);
+        t.context.topicData
+      );
     });
     t.true(mux.id.length > 0);
   });
@@ -57,11 +51,12 @@ const {
     let topicSelector = 'category_A';
     let mux = new TopicMultiplexer(
       { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector },
-      t.context.topicData);
+      t.context.topicData
+    );
     mux.updateTopicList();
 
     t.is(mux.topicList.length, t.context.topicsCategoryA.length);
-    mux.topicList.forEach((topic) => {
+    mux.topicList.forEach(topic => {
       t.true(t.context.topicsCategoryA.includes(topic));
     });
   });
@@ -70,7 +65,8 @@ const {
     let topicSelector = 'category_A';
     let mux = new TopicMultiplexer(
       { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector },
-      t.context.topicData);
+      t.context.topicData
+    );
 
     let invalidTopic = '/my/invalid/topic/category';
     mux.addTopic(invalidTopic);
@@ -88,11 +84,12 @@ const {
     let topicSelector = 'category_A';
     let mux = new TopicMultiplexer(
       { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector },
-      t.context.topicData);
+      t.context.topicData
+    );
     let topicDataList = mux.get();
 
     t.is(topicDataList.length, t.context.topicsCategoryA.length);
-    topicDataList.forEach((topicDataRecord) => {
+    topicDataList.forEach(topicDataRecord => {
       t.true(t.context.topicsCategoryA.includes(topicDataRecord.topic));
 
       let index = t.context.topicsCategoryA.indexOf(topicDataRecord.topic);
@@ -103,27 +100,28 @@ const {
   test('get - complex selector', t => {
     t.context.publishAllTopics();
 
-    let topicSelector = '[0-9]+\/category_A\/';
+    let topicSelector = '[0-9]+/category_A/';
     let mux = new TopicMultiplexer(
       { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector },
-      t.context.topicData);
+      t.context.topicData
+    );
     let topicDataList = mux.get();
 
     let correctTopics = [];
     let regexp = new RegExp(topicSelector);
-    t.context.topicsCategoryA.forEach((topic) => {
+    t.context.topicsCategoryA.forEach(topic => {
       if (regexp.test(topic)) {
         correctTopics.push(topic);
       }
     });
-    t.context.topicsCategoryB.forEach((topic) => {
+    t.context.topicsCategoryB.forEach(topic => {
       if (regexp.test(topic)) {
         correctTopics.push(topic);
       }
     });
 
     t.is(topicDataList.length, correctTopics.length);
-    topicDataList.forEach((topicDataRecord) => {
+    topicDataList.forEach(topicDataRecord => {
       t.true(t.context.topicsCategoryA.includes(topicDataRecord.topic));
 
       let index = t.context.topicsCategoryA.indexOf(topicDataRecord.topic);
@@ -135,14 +133,20 @@ const {
   test('get - identity extraction via pattern match', t => {
     t.context.publishAllTopics();
 
-    let topicSelector = '[0-9]+\/category_A\/';
-    let identityMatchPattern = '\/[0-9]+\/';
+    let topicSelector = '[0-9]+/category_A/';
+    let identityMatchPattern = '/[0-9]+/';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector, identityMatchPattern: identityMatchPattern },
-      t.context.topicData);
+      {
+        name: 'test-mux',
+        dataType: 'vector2',
+        topicSelector: topicSelector,
+        identityMatchPattern: identityMatchPattern
+      },
+      t.context.topicData
+    );
     let topicDataList = mux.get();
 
-    let confirmedIdentities = t.context.topicsCategoryA.map((topic) => {
+    let confirmedIdentities = t.context.topicsCategoryA.map(topic => {
       return topic.match(new RegExp(identityMatchPattern))[0];
     });
     topicDataList.forEach((record, index) => {
@@ -151,11 +155,17 @@ const {
   });
 
   test('add matching topics on event "new topic"', t => {
-    let topicSelector = '[0-9]+\/category_A\/';
-    let identityMatchPattern = '\/[0-9]+\/';
+    let topicSelector = '[0-9]+/category_A/';
+    let identityMatchPattern = '/[0-9]+/';
     let mux = new TopicMultiplexer(
-      { name: 'test-mux', dataType: 'vector2', topicSelector: topicSelector, identityMatchPattern: identityMatchPattern },
-      t.context.topicData);
+      {
+        name: 'test-mux',
+        dataType: 'vector2',
+        topicSelector: topicSelector,
+        identityMatchPattern: identityMatchPattern
+      },
+      t.context.topicData
+    );
 
     let invalidTopic = '/category_A/invalid/topic';
     t.context.topicData.events.emit(TOPIC_EVENTS.NEW_TOPIC, invalidTopic);

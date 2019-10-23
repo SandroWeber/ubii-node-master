@@ -1,11 +1,7 @@
 const zmq = require('zeromq');
-const {
-  PING_MESSAGE,
-  PONG_MESSAGE
-} = require('../../../src/network/constants.js');
+const { PING_MESSAGE, PONG_MESSAGE } = require('../../../src/network/constants.js');
 
 class ZmqDealer {
-
   /**
    * Communication endpoint implementing the zmq dealer pattern.
    * @param {*} identity ID string to uniquely identify this object. This id is used to route messages to this socket.
@@ -15,12 +11,13 @@ class ZmqDealer {
    * @param {*} autoConnect Should the socket connect directly after the initialization of the object?
    * If not, the start method must be called manually.
    */
-  constructor(identity,
-              host = 'localhost',
-              port = 5555,
-              onReceive = (envelope, payload) => {
-              },
-              autoConnect = true) {
+  constructor(
+    identity,
+    host = 'localhost',
+    port = 5555,
+    onReceive = (envelope, payload) => {},
+    autoConnect = true
+  ) {
     this.identity = identity;
     this.serverHost = host;
     this.port = port;
