@@ -5,5 +5,5 @@
     "topicdataZMQ": 8103,
     "topicdataWS": 8104
   },
-  "useHTTPS": true
+  "useHTTPS": false
 }
