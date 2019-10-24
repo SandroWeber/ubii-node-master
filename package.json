@@ -21,6 +21,7 @@
   },
   "scripts": {
     "start": "node scripts/startBackend.js",
+    "start-profiling": "node --inspect scripts/startBackend.js",
     "test": "ava --match=!*RoundTripTime*",
     "test-rtt": "ava --match=*RoundTripTime*"
   },
