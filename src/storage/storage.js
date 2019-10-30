@@ -46,6 +46,7 @@ class Storage {
   getLocalSpecificationList() {
     return Array.from(this.specificationsLocal.values());
   }
+  
   getOnlineSpecificationList() {
     return Array.from(this.specificationsOnline.values());
   }
