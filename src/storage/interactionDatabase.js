@@ -27,7 +27,7 @@ class InteractionDatabase extends Storage{
    * Get an array of all specifications.
    */
   getInteractionList() {
-    return this.getSpecificationList();
+    return this.getLocalSpecificationList();
   }
 
   /**
