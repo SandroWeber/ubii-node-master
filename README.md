@@ -5,6 +5,8 @@
 
 ### Windows pre-requisists before "npm install"
 
+#### windows build tools
+
 from admin shell:
 ```
 npm install -g windows-build-tools
@@ -16,6 +18,10 @@ npm install --vs2015 -g windows-build-tools
 ```
 
 also see: https://www.npmjs.com/package/zeromq
+
+#### CMake
+
+install from https://cmake.org/download/
 
 ### install dependencies
 
