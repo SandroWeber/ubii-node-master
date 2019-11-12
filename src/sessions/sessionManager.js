@@ -1,27 +1,42 @@
-const { Session } = require('./session.js');
+const EventEmitter = require('events');
 
-class SessionManager {
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+
+const { Session } = require('./session.js');
+const { EVENTS_SESSION_MANAGER } = require('./constants');
+const Utils = require('../utilities');
+
+class SessionManager extends EventEmitter {
   constructor(topicData, deviceManager) {
+    super();
+
     this.topicData = topicData;
     this.deviceManager = deviceManager;
     this.sessions = [];
+
+    this.on(EVENTS_SESSION_MANAGER.NEW_SESSION, specs => {
+      this.onEventNewSession(specs);
+    });
   }
 
   createSession(specifications = {}) {
-    if (specifications.id && (this.getSession(specifications.id))) {
+    if (specifications.id && this.getSession(specifications.id)) {
       throw 'Session with ID ' + specifications.id + ' already exists.';
     }
 
     let session = new Session(specifications, this.topicData, this.deviceManager);
     this.addSession(session);
+    this.emit(EVENTS_SESSION_MANAGER.NEW_SESSION, session.toProtobuf());
 
     return session;
   }
 
   addSession(session) {
-    if (this.sessions.some((element) => {
-      return element.id === session.id;
-    })) {
+    if (
+      this.sessions.some(element => {
+        return element.id === session.id;
+      })
+    ) {
       return;
     }
 
@@ -40,7 +55,9 @@ class SessionManager {
   }
 
   getSession(id) {
-    return this.sessions.find((session) => { return session.id === id; });
+    return this.sessions.find(session => {
+      return session.id === id;
+    });
   }
 
   getSessionList() {
@@ -48,7 +65,9 @@ class SessionManager {
   }
 
   startSession(id) {
-    let session = this.sessions.find((session) => { return session.id === id; });
+    let session = this.sessions.find(session => {
+      return session.id === id;
+    });
     if (session) {
       session.start();
       return true;
@@ -58,7 +77,9 @@ class SessionManager {
   }
 
   stopSession(id) {
-    let session = this.sessions.find((session) => { return session.id === id; });
+    let session = this.sessions.find(session => {
+      return session.id === id;
+    });
     if (session) {
       session.stop();
       return true;
@@ -68,13 +89,13 @@ class SessionManager {
   }
 
   async startAllSessions() {
-    this.sessions.forEach(async (session) => {
+    this.sessions.forEach(async session => {
       await session.start();
     });
   }
 
   stopSession(id) {
-    this.sessions.forEach((session) => {
+    this.sessions.forEach(session => {
       if (session.id === id) {
         session.stop();
       }
@@ -82,9 +103,17 @@ class SessionManager {
   }
 
   stopAllSessions() {
-    this.sessions.forEach((session) => {
+    this.sessions.forEach(session => {
       session.stop();
     });
+  }
+
+  onEventNewSession(sessionSpecs) {
+    this.topicData.publish(
+      DEFAULT_TOPICS.INFO_TOPICS.NEW_SESSION,
+      sessionSpecs,
+      Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
+    );
   }
 }
 
