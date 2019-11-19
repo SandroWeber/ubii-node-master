@@ -4,6 +4,8 @@ const https = require('https');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 
+const NetworkConfigManager = require('./networkConfigManager');
+
 class RESTServer {
   /**
    * Communication endpoint implementing the zmq reply pattern.
@@ -14,6 +16,25 @@ class RESTServer {
   constructor(port = 5555, useHTTPS = true, autoBind = true) {
     this.port = port;
     this.useHTTPS = useHTTPS;
+
+    let ipLan = NetworkConfigManager.hostAdresses.ethernet;
+    let ipWifi = NetworkConfigManager.hostAdresses.wifi;
+    if (this.useHTTPS) {
+      this.allowedOrigins = [
+        'https://' + ipLan + ':12345',
+        'https://' + ipWifi + ':12345',
+        'https://localhost:12345'
+      ];
+    } else {
+      this.allowedOrigins = [
+        'http://' + ipLan + ':8080',
+        'http://' + ipLan + ':8081',
+        'http://' + ipWifi + ':8080',
+        'http://' + ipWifi + ':8081',
+        'http://localhost:8080',
+        'http://localhost:8081'
+      ];
+    }
 
     if (autoBind) {
       this.start();
@@ -36,12 +57,11 @@ class RESTServer {
     }
 
     // CORS
-    this.app.use(function(req, res, next) {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header(
-        'Access-Control-Allow-Headers',
-        'Origin, X-Requested-With, Content-Type, Accept, access-control-allow-origin'
-      );
+    this.app.use((req, res, next) => {
+      let validOrigin = this.allowedOrigins.find(element => element === req.headers.origin);
+      res.header('Access-Control-Allow-Origin', validOrigin);
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+
       next();
     });
 
