@@ -4,7 +4,7 @@ const uuidv4 = require('uuid/v4');
 const tf = require('@tensorflow/tfjs-node');
 const cocoSsd = require('@tensorflow-models/coco-ssd');
 const emgClassifier = require('@baumlos/emg-classifier');
-const cv = require('opencv4nodejs');
+//const cv = require('opencv4nodejs');
 const fs = require('fs');
 
 const { proto } = require('@tum-far/ubii-msg-formats');
@@ -46,7 +46,7 @@ class Interaction {
           tf: tf,
           cocoSsd: cocoSsd,
           emgClassifier: emgClassifier,
-          cv: cv,
+          //cv: cv,
           fs: fs
         }
       },

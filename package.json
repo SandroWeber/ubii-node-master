@@ -34,14 +34,13 @@
     "sinon": "6.0.1"
   },
   "dependencies": {
-    "@tensorflow/tfjs-node": "1.2.4",
+    "@tensorflow/tfjs-node": "1.4.0",
     "@baumlos/emg-classifier": "0.0.4",
     "@tensorflow-models/coco-ssd": "1.1.1",
     "@tum-far/namida": "0.1.1",
     "@tum-far/ubii-database": "0.1.1",
     "@tum-far/ubii-msg-formats": "^0.11.14",
     "@tum-far/ubii-topic-data": "0.3.3",
-    "opencv4nodejs": "5.1.0",
     "body-parser": "1.18.3",
     "express": "4.16.4",
     "printf": "0.5.1",
