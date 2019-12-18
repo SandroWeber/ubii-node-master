@@ -27,7 +27,8 @@ class Client {
     this.state = clientStateEnum.active;
     this.registrationDate = new Date();
     this.lastSignOfLife = null;
-    this.subscriptionTokens = new Map();
+    this.topicSubscriptionTokens = new Map();
+    this.regexSubscriptionTokens = new Map();
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
   }
@@ -164,7 +165,7 @@ class Client {
    * @param {String} topic
    */
   subscribe(topic) {
-    if (this.subscriptionTokens.has(topic)) {
+    if (this.topicSubscriptionTokens.has(topic)) {
       namida.logFailure(`Topic Data subscription rejected`,
         `Client with id ${this.id} is already subscribed to this topic.`);
       return;
@@ -188,7 +189,45 @@ class Client {
     });
 
     // save token
-    this.subscriptionTokens.set(topic, token);
+    this.topicSubscriptionTokens.set(topic, token);
+  }
+
+  /**
+   * Subscribe to a regex at topicData
+   * @param {String} topic
+   */
+  subscribeRegex(regexString) {
+    if (this.regexSubscriptionTokens.has(regexString)) {
+      namida.logFailure(`Topic Data subscription rejected`,
+        `Client with id ${this.id} is already subscribed to this RegExp.`);
+      return;
+    }
+
+    // subscribe
+    let regexp = new RegExp(regexString);
+
+    // auto-subscribe on new matching topics
+    this.topicData.events.on(TOPIC_EVENTS.NEW_TOPIC, (topic) => {
+      if (regexp.test(topic)) {
+        client.subscribe(topic);
+      }
+    });
+
+    this.topicData.getAllTopicsWithData().map(entry => entry.topic).forEach(topic => {
+      if (regexp.test(topic)) {
+        client.subscribe(topic);
+      }
+    });
+
+    let token = {
+      'regexString': regexString,
+      'regex': regexp,
+      'id': this.id,
+      'type': 'single'
+    }
+
+    // save token
+    this.regexSubscriptionTokens.set(regex, token);
   }
 
   /**
@@ -196,23 +235,23 @@ class Client {
    * @param {String} topic
    */
   unsubscribe(topic) {
-    if (!this.subscriptionTokens.has(topic)) {
+    if (!this.topicSubscriptionTokens.has(topic)) {
       namida.logFailure(`Topic Data unsubscription rejected`,
         `Client with ID ${this.id} is not subscribed to this topic.`);
       return;
     }
 
     // get token
-    let token = this.subscriptionTokens.get(topic);
+    let token = this.topicSubscriptionTokens.get(topic);
 
     // unsubscribe
     this.topicData.unsubscribe(token);
     // remove token
-    this.subscriptionTokens.delete(topic);
+    this.topicSubscriptionTokens.delete(topic);
   }
 
   unsubscribeAll() {
-    for (let token in this.subscriptionTokens) {
+    for (let token in this.topicSubscriptionTokens) {
       this.topicData.unsubscribe(token);
     }
   }
