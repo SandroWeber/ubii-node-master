@@ -64,48 +64,65 @@ class SessionManager extends EventEmitter {
     return this.sessions;
   }
 
-  startSession(id) {
-    let session = this.sessions.find(session => {
-      return session.id === id;
-    });
-    if (session) {
-      session.start();
-      return true;
+  startSessionByID(id) {
+    let session = this.getSession(id);
+
+    return this.startSession(session);
+  }
+
+  startSession(session) {
+    let success = session && session.start();
+    if (success) {
+      this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
+    }
+
+    return success;
+
+    /*if (session) {
+      let success = session.start();
+      if (success) {
+        this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
+        return true;
+      } else {
+        return false;
+      }
     } else {
       return false;
+    }*/
+  }
+
+  startAllSessions() {
+    for (let i = 0; i < this.sessions.length; i++) {
+      this.startSession(this.sessions[i]);
     }
   }
 
-  stopSession(id) {
-    let session = this.sessions.find(session => {
-      return session.id === id;
-    });
-    if (session) {
+  stopSessionByID(id) {
+    let session = this.getSession(id);
+
+    return this.stopSession(session);
+  }
+
+  stopSession(session) {
+    let success = session && session.stop();
+    if (success) {
+      this.emit(EVENTS_SESSION_MANAGER.STOP_SESSION, session.toProtobuf());
+    }
+
+    return success;
+
+    /*if (session) {
       session.stop();
       return true;
     } else {
       return false;
-    }
-  }
-
-  async startAllSessions() {
-    this.sessions.forEach(async session => {
-      await session.start();
-    });
-  }
-
-  stopSession(id) {
-    this.sessions.forEach(session => {
-      if (session.id === id) {
-        session.stop();
-      }
-    });
+    }*/
   }
 
   stopAllSessions() {
-    this.sessions.forEach(session => {
-      session.stop();
-    });
+    for (let i = 0; i < this.sessions.length; i++) {
+      this.stopSession(this.sessions[i]);
+    }
   }
 
   /* event related functions */
@@ -121,6 +138,14 @@ class SessionManager extends EventEmitter {
 
     this.on(EVENTS_SESSION_MANAGER.DELETE_SESSION, specs => {
       this.onEventSessionChange(specs);
+    });
+
+    this.on(EVENTS_SESSION_MANAGER.START_SESSION, specs => {
+      this.onEventSessionStart(specs);
+    });
+
+    this.on(EVENTS_SESSION_MANAGER.STOP_SESSION, specs => {
+      this.onEventSessionStop(specs);
     });
   }
 
@@ -144,6 +169,22 @@ class SessionManager extends EventEmitter {
     this.topicData.publish(
       DEFAULT_TOPICS.INFO_TOPICS.DELETE_SESSION,
       sessionSpecs,
+      Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
+    );
+  }
+
+  onEventSessionStart(sessionSpecs) {
+    this.topicData.publish(
+      DEFAULT_TOPICS.INFO_TOPICS.START_SESSION,
+      { id: sessionSpecs.id },
+      Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
+    );
+  }
+
+  onEventSessionStop(sessionSpecs) {
+    this.topicData.publish(
+      DEFAULT_TOPICS.INFO_TOPICS.STOP_SESSION,
+      { id: sessionSpecs.id },
       Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
     );
   }

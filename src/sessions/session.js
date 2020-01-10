@@ -29,7 +29,7 @@ class Session {
 
   start() {
     if (this.isProcessing) {
-      return;
+      return false;
     }
 
     for (let interactionSpecs of this.interactions) {
@@ -40,6 +40,7 @@ class Session {
 
     this.status = SessionStatus.RUNNING;
     this.isProcessing = true;
+
     if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
       this.processInteractionsCycle().then(
         () => { },
@@ -52,15 +53,23 @@ class Session {
         interaction.run();
       });
     }
+
+    return true;
   }
 
   stop() {
+    if (this.status !== SessionStatus.RUNNING) {
+      return false;
+    }
+
     this.isProcessing = false;
     this.status = SessionStatus.STOPPED;
 
     for (let interaction of this.runtimeInteractions) {
       interaction.status = InteractionStatus.HALTED;
     }
+
+    return true;
   }
 
   processInteractionsCycle() {
