@@ -29,6 +29,7 @@ class Session {
 
   start() {
     if (this.isProcessing) {
+      console.info('Session ' + this.id + ' can\'t be started again, already processing');
       return false;
     }
 
@@ -120,6 +121,8 @@ class Session {
       this.runtimeInteractions.push(interaction);
 
       return interaction;
+    } else {
+      console.warn('Session ' + this.id + ' - can\'t add interaction, ID ' + specs.id + ' already exists');
     }
   }
 

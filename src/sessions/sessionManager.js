@@ -77,18 +77,6 @@ class SessionManager extends EventEmitter {
     }
 
     return success;
-
-    /*if (session) {
-      let success = session.start();
-      if (success) {
-        this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }*/
   }
 
   startAllSessions() {
@@ -110,13 +98,6 @@ class SessionManager extends EventEmitter {
     }
 
     return success;
-
-    /*if (session) {
-      session.stop();
-      return true;
-    } else {
-      return false;
-    }*/
   }
 
   stopAllSessions() {
