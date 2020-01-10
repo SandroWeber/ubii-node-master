@@ -93,7 +93,7 @@ test('startSession', t => {
   t.is(randomSession.start.callCount, 1);
 });
 
-test('startAllSessions', async t => {
+test('startAllSessions', t => {
   let sessionManager = t.context.sessionManager;
 
   createSessions(sessionManager, 16);
