@@ -1,7 +1,8 @@
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('./service.js');
 const configService = require('../config/configService');
+const NetworkConfigManager = require('../network/networkConfigManager');
 
 class ServerConfigService extends Service {
   constructor(id, name, connectionManager) {
@@ -13,16 +14,22 @@ class ServerConfigService extends Service {
   }
 
   reply() {
+    let constants = {
+      DEFAULT_TOPICS: DEFAULT_TOPICS,
+      MSG_TYPES: MSG_TYPES
+    };
+
     return {
       server: {
         id: this.id,
         name: this.name,
-        ipEthernet: this.connectionManager.hostAdresses.ethernet.toString(),
-        ipWlan: this.connectionManager.hostAdresses.wlan.toString(),
+        ipEthernet: NetworkConfigManager.hostAdresses.ethernet.toString(),
+        ipWlan: NetworkConfigManager.hostAdresses.wifi.toString(),
         portServiceZmq: configService.getPortServiceZMQ().toString(),
         portServiceRest: configService.getPortServiceREST().toString(),
         portTopicDataZmq: configService.getPortTopicdataZMQ().toString(),
-        portTopicDataWs: configService.getPortTopicdataWS().toString()
+        portTopicDataWs: configService.getPortTopicdataWS().toString(),
+        constantsJson: JSON.stringify(constants)
       }
     };
   }

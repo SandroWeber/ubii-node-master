@@ -1,5 +1,3 @@
-const os = require('os');
-
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const ZmqReply = require('./zmqReply');
@@ -17,33 +15,7 @@ class ServerConnectionsManager {
     this.serviceRequestTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
 
-    this.getIPConfig();
-
     this.openConnections();
-  }
-
-  getIPConfig() {
-    this.hostAdresses = {
-      ethernet: '',
-      wlan: ''
-    };
-
-    let ifaces = os.networkInterfaces();
-    Object.keys(ifaces).forEach(ifname => {
-      ifaces[ifname].forEach(iface => {
-        if (iface.family === 'IPv4' && !iface.internal && ifname.indexOf('Default Switch') === -1) {
-          if (
-            ifname.indexOf('en') === 0 ||
-            ifname.indexOf('vEthernet') === 0 ||
-            ifname.indexOf('Ethernet') === 0
-          ) {
-            this.hostAdresses.ethernet = iface.address;
-          } else if (ifname.indexOf('wl') === 0 || ifname.indexOf('Wi-Fi') === 0) {
-            this.hostAdresses.wlan = iface.address;
-          }
-        }
-      });
-    });
   }
 
   openConnections() {
