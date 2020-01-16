@@ -1,24 +1,24 @@
 const fs = require('fs');
 const shelljs = require('shelljs');
-const {BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB} = require('./storageConstants');
+const uuidv4 = require('uuid/v4');
+const { BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB } = require('./storageConstants');
 
 class Storage {
   constructor(subFolder, fileEnding) {
     this.fileEnding = fileEnding;
     this.subFolder = subFolder;
-    this.directory = BASE_FOLDER_LOCAL_DB + '/' + this.subFolder;
+    this.localDirectory = BASE_FOLDER_LOCAL_DB + '/' + this.subFolder;
 
-    if (!fs.existsSync(this.directory)) {
-      shelljs.mkdir('-p', this.directory);
+    if (!fs.existsSync(this.localDirectory)) {
+      shelljs.mkdir('-p', this.localDirectory);
     }
 
-    this.specifications = new Map();
+    this.specificationsLocal = new Map();
+    this.specificationsOnline = new Map();
     this.filePaths = new Map();
 
-    // copy online DB specs
-    this.copyOnlineDB();
-
-    this.loadAllSpecificationFiles();
+    this.loadOnlineDB();
+    this.loadLocalDB();
   }
 
   /**
@@ -27,7 +27,7 @@ class Storage {
    * @returns {Boolean} Does a specification with the specified ID exists?
    */
   hasSpecification(id) {
-    return this.specifications.has(id);
+    return this.specificationsLocal.has(id) || this.specificationsOnline.has(id);
   }
 
   /**
@@ -36,15 +36,19 @@ class Storage {
    * @returns The specification with the specified id.
    */
   getSpecification(id) {
-    return this.specifications.get(id);
+    return this.specificationsLocal.get(id) || this.specificationsOnline.get(id);
   }
 
   /**
    * Get an array of all specifications.
    * @returns Array with all specifications.
    */
-  getSpecificationList() {
-    return Array.from(this.specifications.values());
+  getLocalSpecificationList() {
+    return Array.from(this.specificationsLocal.values());
+  }
+
+  getOnlineSpecificationList() {
+    return Array.from(this.specificationsOnline.values());
   }
 
   /**
@@ -52,12 +56,12 @@ class Storage {
    * @param {Object} specification The specification in protobuf format. It requires a name and id property.
    */
   addSpecification(specification) {
-    if (this.specifications.has(specification.id)) {
+    if (this.hasSpecification(specification.id)) {
       throw 'Specification with ID ' + specification.id + ' could not be added, ID already exists.'
     }
 
     try {
-      this.specifications.set(specification.id, specification);
+      this.specificationsLocal.set(specification.id, specification);
       this.saveSpecificationToFile(specification);
       return specification;
     } catch (error) {
@@ -71,7 +75,7 @@ class Storage {
    */
   deleteSpecification(id) {
     try {
-      this.specifications.delete(id);
+      this.specificationsLocal.delete(id);
       this.deleteSpecificationFile(id);
     } catch (error) {
       throw error;
@@ -83,13 +87,13 @@ class Storage {
    * @param {Object} specification The specification requires a name and id property.
    */
   updateSpecification(specification) {
-    let localSpecification = this.specifications.get(specification.id);
+    let localSpecification = this.specificationsLocal.get(specification.id);
     if (typeof localSpecification === 'undefined') {
       throw 'Specification with ID ' + specification.id + ' could not be found';
     }
 
     try {
-      this.specifications.set(specification.id, specification);
+      this.specificationsLocal.set(specification.id, specification);
       this.deleteSpecificationFile(specification.id);
       this.saveSpecificationToFile(specification);
     } catch (error) {
@@ -102,14 +106,34 @@ class Storage {
   /**
    * Load all specification files that are present in the sub-folder specified for this storage.
    */
-  loadAllSpecificationFiles() {
-    fs.readdir(this.directory, (err, files) => {
+  loadLocalDB() {
+    fs.readdir(this.localDirectory, (err, files) => {
       if (err) {
         return console.info('Storage - Unable to scan directory: ' + err);
       }
 
       files.forEach((file) => {
-        this.loadSpecificationFromFile(this.directory + '/' + file);
+        this.loadSpecificationFromFile(this.localDirectory + '/' + file);
+      });
+    });
+  }
+
+  loadOnlineDB() {
+    let dirOnlineDB = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
+    fs.readdir(dirOnlineDB, (err, files) => {
+      if (err) {
+        return console.warn('Storage - Unable to scan directory: ' + err);
+      }
+
+      files.forEach(async (file) => {
+        let path = dirOnlineDB + '/' + file;
+        let specs = await this.getSpecificationFromFile(path);
+        if (this.specificationsLocal.has(specs.id) || this.specificationsOnline.has(specs.id)) {
+          console.info('Storage - specification from file ' + path + ' has conflicting ID ' + specs.id);
+        } else {
+          this.specificationsOnline.set(specs.id, specs);
+          this.filePaths.set(specs.id, path);
+        }
       });
     });
   }
@@ -118,18 +142,27 @@ class Storage {
    * Load a specification from the file with the specified path and adds it to the local specifications.
    * @param {String} path Path to the specification file.
    */
-  loadSpecificationFromFile(path) {
-    fs.readFile(path, (err, data) => {
-      if (err) throw err;
+  async loadSpecificationFromFile(path) {
+    let specs = await this.getSpecificationFromFile(path);
+    if (this.specificationsLocal.has(specs.id) || this.specificationsOnline.has(specs.id)) {
+      console.info('Storage - specification from file ' + path + ' has conflicting ID ' + specs.id);
+    } else {
+      this.specificationsLocal.set(specs.id, specs);
+      this.filePaths.set(specs.id, path);
+    }
+  }
 
-      let specs = JSON.parse(data);
+  getSpecificationFromFile(path) {
+    return new Promise((resolve, reject) => {
+      fs.readFile(path, (err, data) => {
+        if (err) {
+          reject(err);
+          throw err;
+        }
 
-      if (this.specifications.has(specs.id)) {
-        console.info('Storage - specification from file ' + path + ' has conflicting ID ' + specs.id);
-      } else {
-        this.specifications.set(specs.id, specs);
-        this.filePaths.set(specs.id, path);
-      }
+        let specs = JSON.parse(data);
+        return resolve(specs);
+      });
     });
   }
 
@@ -139,7 +172,7 @@ class Storage {
    */
   saveSpecificationToFile(specification) {
     // Build complete path.
-    let path = this.directory + '/';
+    let path = this.localDirectory + '/';
     if (specification.name && specification.name.length > 0) {
       path += specification.name + '_';
     }
@@ -147,7 +180,7 @@ class Storage {
 
     // Write to file and store path.
     try {
-      fs.writeFileSync(path, JSON.stringify(specification, null, 4), {flag: 'wx'});
+      fs.writeFileSync(path, JSON.stringify(specification, null, 4), { flag: 'wx' });
       this.filePaths.set(specification.id, path);
     } catch (error) {
       if (error) throw error;
@@ -160,7 +193,7 @@ class Storage {
    */
   replaceSpecificationFile(specification) {
     try {
-      fs.writeFileSync(this.filePaths.get(specification.id), JSON.stringify(specification, null, 4), {flag: 'w'});
+      fs.writeFileSync(this.filePaths.get(specification.id), JSON.stringify(specification, null, 4), { flag: 'w' });
     } catch (error) {
       if (error) throw error;
     }
@@ -177,19 +210,13 @@ class Storage {
     }
   }
 
-  copyOnlineDB() {
-    let dirOnlineDB = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
-    fs.readdir(dirOnlineDB, (err, files) => {
-      if (err) {
-        return console.info('Storage - Unable to scan directory: ' + err);
-      }
-
-      files.forEach((file) => {
-        let srcPath = dirOnlineDB + '/' + file;
-        let destPath = this.directory + '/' + file;
-        fs.copyFileSync(srcPath, destPath);
-      });
-    });
+  async copySpecsFromFile(path) {
+    let specs = await this.getSpecificationFromFile(path);
+    while (this.hasSpecification(specs.id)) {
+      specs.id = uuidv4();
+    }
+    specs.name += '_copy';
+    this.addSpecification(specs);
   }
 }
 
