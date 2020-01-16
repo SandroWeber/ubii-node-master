@@ -1,7 +1,7 @@
 const fs = require('fs');
 const shelljs = require('shelljs');
 const uuidv4 = require('uuid/v4');
-const {BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB} = require('./storageConstants');
+const { BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB } = require('./storageConstants');
 
 class Storage {
   constructor(subFolder, fileEnding) {
@@ -46,7 +46,7 @@ class Storage {
   getLocalSpecificationList() {
     return Array.from(this.specificationsLocal.values());
   }
-  
+
   getOnlineSpecificationList() {
     return Array.from(this.specificationsOnline.values());
   }
@@ -122,7 +122,7 @@ class Storage {
     let dirOnlineDB = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
     fs.readdir(dirOnlineDB, (err, files) => {
       if (err) {
-        return console.info('Storage - Unable to scan directory: ' + err);
+        return console.warn('Storage - Unable to scan directory: ' + err);
       }
 
       files.forEach(async (file) => {
@@ -159,7 +159,7 @@ class Storage {
           reject(err);
           throw err;
         }
-  
+
         let specs = JSON.parse(data);
         return resolve(specs);
       });
@@ -180,7 +180,7 @@ class Storage {
 
     // Write to file and store path.
     try {
-      fs.writeFileSync(path, JSON.stringify(specification, null, 4), {flag: 'wx'});
+      fs.writeFileSync(path, JSON.stringify(specification, null, 4), { flag: 'wx' });
       this.filePaths.set(specification.id, path);
     } catch (error) {
       if (error) throw error;
@@ -193,7 +193,7 @@ class Storage {
    */
   replaceSpecificationFile(specification) {
     try {
-      fs.writeFileSync(this.filePaths.get(specification.id), JSON.stringify(specification, null, 4), {flag: 'w'});
+      fs.writeFileSync(this.filePaths.get(specification.id), JSON.stringify(specification, null, 4), { flag: 'w' });
     } catch (error) {
       if (error) throw error;
     }

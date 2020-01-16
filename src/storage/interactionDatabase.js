@@ -1,7 +1,7 @@
-const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const Storage = require('./storage.js');
 
-class InteractionDatabase extends Storage{
+class InteractionDatabase extends Storage {
   constructor() {
     super('interactions', 'interaction');
   }
