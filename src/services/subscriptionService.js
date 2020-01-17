@@ -53,6 +53,8 @@ class SubscriptionService extends Service {
       client.unsubscribe(unsubscribeTopic);
     });
 
+    // process (un)subscribe regexp
+    // subscribe regex
     if (message.subscribeTopicRegexp) {
       let regexp = new RegExp(message.subscribeTopicRegexp);
 
@@ -68,6 +70,11 @@ class SubscriptionService extends Service {
           client.subscribe(topic);
         }
       });
+    }
+
+    //unsubscribe regex
+    if (message.unsubscribeTopicRegexp) {
+      //TODO
     }
 
     // Reply with success message
