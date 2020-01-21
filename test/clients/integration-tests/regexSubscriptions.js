@@ -1,6 +1,8 @@
 import test from 'ava';
-import { Client } from '../../../src/index.js';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
+
+import { Client } from '../../../src/index.js';
+import {ServerMock} from '../../mocks/serverMock';
 
 (function () {
     // Helpers:
@@ -9,7 +11,8 @@ import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
     test.beforeEach(t => {
         t.context.topicData = new RuntimeTopicData();
-        t.context.client = new Client({}, undefined, t.context.topicData);
+        t.context.server = new ServerMock();
+        t.context.client = new Client({}, t.context.server, t.context.topicData);
 
         t.context.topics = [
             // 0
@@ -74,12 +77,7 @@ import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
         let success = client.subscribeRegex(regexString);
         t.true(success);
 
-        try {
-            success = client.subscribeRegex(regexString);
-        } catch (error) {
-            console.info(error);
-        }
-
-        //t.false(success);
+        success = client.subscribeRegex(regexString);
+        t.false(success);
     });
 })();

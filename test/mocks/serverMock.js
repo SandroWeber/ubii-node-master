@@ -1,3 +1,5 @@
+const sinon = require('sinon');
+
 //TODO: merge servermocks
 
 /**
@@ -5,14 +7,14 @@
  */
 class ServerMock {
     constructor() {
-        this.send = () => {
+        this.send = sinon.fake(() => {
             this.sendCounter++;
-        };
+        });
         this.sendCounter = 0;
 
-        this.ping = () => {
+        this.ping = sinon.fake(() => {
             this.pingCounter++;
-        };
+        });
         this.pingCounter = 0;
     }
 }
