@@ -21,9 +21,9 @@ class ServerMock {
  * Client specification mock with a dummy structure as defined in the message formats repository.
  * @param {String} identifier 
  */
-let createClientSpecificationMock = function(identifier){
+let createClientSpecificationMock = function (identifier) {
     return {
-        identifier: identifier,
+        id: identifier,
         name: 'clientMock',
         namespace: '',
         targetHost: 'targetHost',

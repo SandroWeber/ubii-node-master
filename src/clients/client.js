@@ -6,6 +6,7 @@ const {
 } = require('./constants');
 const namida = require('@tum-far/namida');
 const uuidv4 = require('uuid/v4');
+const { TOPIC_EVENTS } = require('@tum-far/ubii-topic-data');
 
 let clientStateEnum = Object.freeze({
   "active": "active",
@@ -16,10 +17,12 @@ let clientStateEnum = Object.freeze({
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class Client {
-  constructor({ id, name = '', devices = [] }, server, topicData) {
+  constructor({ id, name = '', devices = [], tags = [], description = '' }, server, topicData) {
     this.id = id ? id : uuidv4();
     this.name = name;
     this.devices = devices;
+    this.tags = tags;
+    this.description = description;
 
     this.server = server;
     this.topicData = topicData;
@@ -193,44 +196,6 @@ class Client {
   }
 
   /**
-   * Subscribe to a regex at topicData
-   * @param {String} topic
-   */
-  subscribeRegex(regexString) {
-    if (this.regexSubscriptionTokens.has(regexString)) {
-      namida.logFailure(`Topic Data subscription rejected`,
-        `Client with id ${this.id} is already subscribed to this RegExp.`);
-      return;
-    }
-
-    // subscribe
-    let regexp = new RegExp(regexString);
-
-    // auto-subscribe on new matching topics
-    this.topicData.events.on(TOPIC_EVENTS.NEW_TOPIC, (topic) => {
-      if (regexp.test(topic)) {
-        client.subscribe(topic);
-      }
-    });
-
-    this.topicData.getAllTopicsWithData().map(entry => entry.topic).forEach(topic => {
-      if (regexp.test(topic)) {
-        client.subscribe(topic);
-      }
-    });
-
-    let token = {
-      'regexString': regexString,
-      'regex': regexp,
-      'id': this.id,
-      'type': 'single'
-    }
-
-    // save token
-    this.regexSubscriptionTokens.set(regex, token);
-  }
-
-  /**
    * Unsubscribes from a topic at the topicData.
    * @param {String} topic
    */
@@ -250,6 +215,76 @@ class Client {
     this.topicSubscriptionTokens.delete(topic);
   }
 
+  /**
+   * Subscribe to a regex at topicData
+   * @param {String} regexString
+   */
+  subscribeRegex(regexString) {
+    if (this.regexSubscriptionTokens.has(regexString)) {
+      namida.logFailure(`RegExp subscription rejected`,
+        `Client with id ${this.id} is already subscribed to this RegExp.`);
+      return false;
+    }
+
+    // subscribe
+    let regex = new RegExp(regexString);
+
+    let subscriptionCallback = (topic) => {
+      if (regex.test(topic)) {
+        this.subscribe(topic);
+      }
+    };
+
+    // auto-subscribe on new matching topics
+    this.topicData.events.addListener(TOPIC_EVENTS.NEW_TOPIC, subscriptionCallback);
+
+    this.topicData.getAllTopicsWithData().map(entry => entry.topic).forEach(subscriptionCallback);
+
+    let token = {
+      'regexString': regexString,
+      'regex': regex,
+      'id': this.id,
+      'type': 'single',
+      'subscriptionCallback': subscriptionCallback
+    };
+
+    // save token
+    this.regexSubscriptionTokens.set(regexString, token);
+
+    return true;
+  }
+
+  /**
+   * Unsubscribe from a regex at topicData
+   * @param {String} regexString
+   */
+  unsubscribeRegex(regexString) {
+    if (!this.regexSubscriptionTokens.has(regexString)) {
+      namida.logFailure(`RegExp unsubscription rejected`,
+        `Client with ID ${this.id} is not subscribed to this RegExp.`);
+      return;
+    }
+
+    // get token
+    let regexToken = this.regexSubscriptionTokens.get(regexString);
+
+    // remove subscriptionCallback
+    this.topicData.events.removeListener(TOPIC_EVENTS.NEW_TOPIC, regexToken.subscriptionCallback);
+
+    // unsubscribe
+    let topicList = [];
+    this.topicSubscriptionTokens.forEach((token) => {
+      if (regexToken.regex.test(token.topic)) {
+        topicList.push(token.topic);
+      }
+    });
+    topicList.forEach(topic => {
+      this.unsubscribe(topic);
+    });
+    // remove token
+    this.regexSubscriptionTokens.delete(regexString);
+  }
+
   unsubscribeAll() {
     for (let token in this.topicSubscriptionTokens) {
       this.topicData.unsubscribe(token);
@@ -260,7 +295,9 @@ class Client {
     return {
       id: this.id,
       name: this.name,
-      devices: this.devices
+      devices: this.devices,
+      tags: this.tags,
+      description: this.description
     }
   }
 }
