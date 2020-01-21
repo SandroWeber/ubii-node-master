@@ -2,7 +2,7 @@ import test from 'ava';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
 import { Client } from '../../../src/index.js';
-import {ServerMock} from '../../mocks/serverMock';
+import { ServerMock } from '../../mocks/serverMock';
 
 (function () {
     // Helpers:
@@ -54,6 +54,7 @@ import {ServerMock} from '../../mocks/serverMock';
 
         // subscribe regex
         client.subscribeRegex(regexString);
+        t.true(client.regexSubscriptionTokens.has(regexString));
 
         // check subscriptions to existing topics matching regex
         t.true(client.topicSubscriptionTokens.has(topics[0].topic));
@@ -79,5 +80,42 @@ import {ServerMock} from '../../mocks/serverMock';
 
         success = client.subscribeRegex(regexString);
         t.false(success);
+    });
+
+    test('unsubscribeRegex', t => {
+        let client = t.context.client;
+        let topicData = t.context.topicData;
+        let topics = t.context.topics;
+        let server = t.context.server;
+
+        let regexString = '/my/topics/*';
+
+        // subscribe
+        client.subscribeRegex(regexString);
+        //publish
+        topicData.publish(topics[0].topic, true, 'boolean');
+        topicData.publish(topics[1].topic, true, 'boolean');
+        // check subscriptions to existing topics matching regex
+        t.true(client.topicSubscriptionTokens.has(topics[0].topic));
+        t.true(client.topicSubscriptionTokens.has(topics[1].topic));
+
+        // unsubscribe
+        let callCountSendBeforeUnsubscribe = server.send.callCount;
+        client.unsubscribeRegex(regexString);
+        // check that subscriptions are gone
+        t.false(client.topicSubscriptionTokens.has(topics[0].topic));
+        t.false(client.topicSubscriptionTokens.has(topics[1].topic));
+        //publish again
+        topicData.publish(topics[0].topic, true, 'boolean');
+        topicData.publish(topics[1].topic, true, 'boolean');
+        // should not send out any more messages
+        t.is(server.send.callCount, callCountSendBeforeUnsubscribe);
+        // check subscriptions again, should not resubscribe after publishing
+        t.false(client.topicSubscriptionTokens.has(topics[0].topic));
+        t.false(client.topicSubscriptionTokens.has(topics[1].topic));
+
+        // publish new topic matching regex, should not subscribe to it
+        topicData.publish(topics[2].topic, true, 'boolean');
+        t.false(client.topicSubscriptionTokens.has(topics[2].topic));
     });
 })();
