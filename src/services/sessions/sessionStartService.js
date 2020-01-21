@@ -23,7 +23,7 @@ class SessionStartService extends Service {
     // check session manager for existing session by ID
     if (this.sessionManager.getSession(message.id)) {
       try {
-        this.sessionManager.startSession(message.id);
+        this.sessionManager.startSessionByID(message.id);
       } catch (error) {
         return {
           error: {
@@ -47,7 +47,7 @@ class SessionStartService extends Service {
       try {
         let specs = SessionDatabase.getSession(message.id);
         let session = this.sessionManager.createSession(specs);
-        this.sessionManager.startSession(session.id);
+        this.sessionManager.startSessionByID(session.id);
       } catch (error) {
         return {
           error: {
@@ -69,7 +69,7 @@ class SessionStartService extends Service {
     // try creating new session from message
     try {
       let session = this.sessionManager.createSession(message);
-      this.sessionManager.startSession(session.id);
+      this.sessionManager.startSessionByID(session.id);
     } catch (error) {
       return {
         error: {

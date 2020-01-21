@@ -7,12 +7,13 @@ const emgClassifier = require('@baumlos/emg-classifier');
 //const cv = require('opencv4nodejs');
 const fs = require('fs');
 
-const { proto } = require('@tum-far/ubii-msg-formats');
+const { proto, DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const InteractionStatus = proto.ubii.interactions.InteractionStatus;
+const { INTERACTION_LIFECYCLE_EVENTS } = require('./constants');
 
 const Utils = require('../utilities');
 
-class Interaction {
+class Interaction extends EventEmitter {
   constructor({
     id = uuidv4(),
     name = '',
@@ -25,6 +26,8 @@ class Interaction {
     outputFormats = [],
     onCreated = undefined
   }) {
+    super();
+
     this.id = id;
     this.name = name;
     this.authors = authors;
@@ -56,8 +59,9 @@ class Interaction {
     this.inputProxy = {};
     this.outputProxy = {};
 
-    this.events = new EventEmitter();
     this.status = InteractionStatus.CREATED;
+
+    this.on(INTERACTION_LIFECYCLE_EVENTS.AFTER_PROCESS, this.onEventAfterProcess);
   }
 
   /* I/O functions */
@@ -200,7 +204,6 @@ class Interaction {
       return;
     }
 
-    //this.events.emit(INTERACTION_LIFECYCLE_EVENTS.PROCESS);
     if (typeof this.processingCallback !== 'function') {
       console.warn(
         'Interaction(' +
@@ -212,6 +215,7 @@ class Interaction {
     }
 
     this.processingCallback(this.inputProxy, this.outputProxy, this.state);
+    this.emit(INTERACTION_LIFECYCLE_EVENTS.AFTER_PROCESS);
   }
 
   run() {
@@ -233,9 +237,9 @@ class Interaction {
 
     processAtFrequency();
   }
-  /* processing functions end*/
 
   /* lifecycle functions */
+
   async onCreated() {
     if (this.onCreatedCallback) {
       try {
@@ -248,7 +252,18 @@ class Interaction {
 
     this.status = InteractionStatus.INITIALIZED;
   }
-  /* lifecycle functions end */
+
+  /* event related functions */
+
+  onEventAfterProcess() {
+    this.topicData.publish(
+      DEFAULT_TOPICS.INFO_TOPICS.PROCESSED_INTERACTION,
+      { id: this.id },
+      Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.INTERACTION)
+    );
+  }
+
+  /* helper functions */
 
   toProtobuf() {
     return {

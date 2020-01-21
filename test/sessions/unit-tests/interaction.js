@@ -169,6 +169,7 @@ test('setProcessingCallback()', t => {
 
 test('process()', t => {
   let interaction = t.context.interaction;
+  t.context.interaction.setTopicData(t.context.topicData);
 
   interaction.inputProxy = {
     a: 1,

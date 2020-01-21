@@ -1,7 +1,7 @@
 import test from 'ava';
 import sinon from 'sinon';
 
-import {SessionManager, Session} from '../../../src/index'
+import { SessionManager, Session } from '../../../src/index'
 
 import MockTopicData from '../../mocks/mock-topicdata.js';
 
@@ -14,7 +14,9 @@ let getRandomInt = (max) => {
 
 let createSessions = (sessionManager, count) => {
   for (let i = 0; i < count; i = i + 1) {
-    sessionManager.createSession();
+    let session = sessionManager.createSession();
+    session.start = sinon.fake();
+    session.stop = sinon.fake();
   }
 };
 
@@ -87,7 +89,7 @@ test('startSession', t => {
   let randomSession = getRandomSession(sessionManager);
   randomSession.start = sinon.fake();
 
-  sessionManager.startSession(randomSession.id);
+  sessionManager.startSessionByID(randomSession.id);
   t.is(randomSession.start.callCount, 1);
 });
 
@@ -95,9 +97,6 @@ test('startAllSessions', t => {
   let sessionManager = t.context.sessionManager;
 
   createSessions(sessionManager, 16);
-  sessionManager.sessions.forEach((session) => {
-    session.start = sinon.fake();
-  });
 
   sessionManager.startAllSessions();
 
@@ -111,9 +110,8 @@ test('stopSession', t => {
 
   createSessions(sessionManager, 16);
   let randomSession = getRandomSession(sessionManager);
-  randomSession.stop = sinon.fake();
 
-  sessionManager.stopSession(randomSession.id);
+  sessionManager.stopSessionByID(randomSession.id);
   t.is(randomSession.stop.callCount, 1);
 });
 
@@ -121,9 +119,6 @@ test('stopAllSessions', t => {
   let sessionManager = t.context.sessionManager;
 
   createSessions(sessionManager, 16);
-  sessionManager.sessions.forEach((session) => {
-    session.stop = sinon.fake();
-  });
 
   sessionManager.stopAllSessions();
 

@@ -29,7 +29,8 @@ class Session {
 
   start() {
     if (this.isProcessing) {
-      return;
+      console.info('Session ' + this.id + ' can\'t be started again, already processing');
+      return false;
     }
 
     for (let interactionSpecs of this.interactions) {
@@ -40,6 +41,7 @@ class Session {
 
     this.status = SessionStatus.RUNNING;
     this.isProcessing = true;
+
     if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
       this.processInteractionsCycle().then(
         () => { },
@@ -52,15 +54,23 @@ class Session {
         interaction.run();
       });
     }
+
+    return true;
   }
 
   stop() {
+    if (this.status !== SessionStatus.RUNNING) {
+      return false;
+    }
+
     this.isProcessing = false;
     this.status = SessionStatus.STOPPED;
 
     for (let interaction of this.runtimeInteractions) {
       interaction.status = InteractionStatus.HALTED;
     }
+
+    return true;
   }
 
   processInteractionsCycle() {
@@ -111,6 +121,8 @@ class Session {
       this.runtimeInteractions.push(interaction);
 
       return interaction;
+    } else {
+      console.warn('Session ' + this.id + ' - can\'t add interaction, ID ' + specs.id + ' already exists');
     }
   }
 

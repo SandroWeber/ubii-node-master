@@ -21,7 +21,7 @@ class SessionStopService extends Service {
       }
     }
 
-    if (this.sessionManager.stopSession(message.id)) {
+    if (this.sessionManager.stopSessionByID(message.id)) {
       return {
         success: {
           title: 'SessionStopService Success',
