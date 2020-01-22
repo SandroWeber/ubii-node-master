@@ -1,3 +1,5 @@
+const sinon = require('sinon');
+
 //TODO: merge servermocks
 
 /**
@@ -5,14 +7,14 @@
  */
 class ServerMock {
     constructor() {
-        this.send = () => {
+        this.send = sinon.fake(() => {
             this.sendCounter++;
-        };
+        });
         this.sendCounter = 0;
 
-        this.ping = () => {
+        this.ping = sinon.fake(() => {
             this.pingCounter++;
-        };
+        });
         this.pingCounter = 0;
     }
 }
@@ -21,9 +23,9 @@ class ServerMock {
  * Client specification mock with a dummy structure as defined in the message formats repository.
  * @param {String} identifier 
  */
-let createClientSpecificationMock = function(identifier){
+let createClientSpecificationMock = function (identifier) {
     return {
-        identifier: identifier,
+        id: identifier,
         name: 'clientMock',
         namespace: '',
         targetHost: 'targetHost',

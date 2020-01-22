@@ -12,10 +12,10 @@ import {
 
     // Helpers:
 
-    let addDummiesToClientManager = function(context) {     
+    let addDummiesToClientManager = function (context) {
         context.clientManager.clients.set('00000000-0000-0000-0000-000000000000', {
-            identifier: '00000000-0000-0000-0000-000000000000',
-            deactivate: () => {}
+            id: '00000000-0000-0000-0000-000000000000',
+            deactivate: () => { }
         });
     };
 
@@ -42,7 +42,7 @@ import {
 
     test('addClient', t => {
         t.context.clientManager.addClient({
-            identifier: '00000000-0000-0000-0000-000000000000'
+            id: '00000000-0000-0000-0000-000000000000'
         });
 
         t.true(t.context.clientManager.clients.has('00000000-0000-0000-0000-000000000000'));
@@ -50,7 +50,7 @@ import {
 
     test('getClient', t => {
         let dummy = {
-            identifier: 'dummyString',
+            id: 'dummyString',
         };
         t.context.clientManager.clients.set('00000000-0000-0000-0000-000000000000', dummy);
 
@@ -69,36 +69,16 @@ import {
 
     test('registerClient', t => {
         t.context.clientManager.registerClient({
-            identifier: '00000000-0000-0000-0000-000000000000',
-            startLifeMonitoring: () => {}
+            id: '00000000-0000-0000-0000-000000000000',
+            startLifeMonitoring: () => { }
         });
 
         t.true(t.context.clientManager.clients.has('00000000-0000-0000-0000-000000000000'));
     });
 
-    test('createClientUuid', t => {
-        t.notThrows(()=>{
-            t.context.clientManager.createClientUuid('awesomeNamespace');
-        });
-    });
-
-    test('createClientSpecification', t => {
-        t.notThrows(()=>{
-            t.context.clientManager.createClientSpecification('identifier', 'name', 'namespace', 'targetHost', 'targetPort');
-        });
-    });
-
-    test('createClientSpecificationWithNewUuid', t => {
-        t.notThrows(()=>{
-            t.context.clientManager.createClientSpecificationWithNewUuid('name', 'namespace', 'targetHost', 'targetPort');
-        });
-    });
-
-    
-
     test('basic client operations', t => {
-        t.notThrows(()=>{
-            let dummyClient = new Client('00000000-0000-0000-0000-000000000000', 'clientDisplayName', 'awesomeNamespace', {})
+        t.notThrows(() => {
+            let dummyClient = new Client({ id: '00000000-0000-0000-0000-000000000000', name: 'clientDisplayName' }, {})
 
             t.context.clientManager.addClient(dummyClient);
 
@@ -115,21 +95,25 @@ import {
     });
 
     test('processClientRegistration', t => {
-        let clientRegistration = createClientSpecificationMock('uniqueId');
+        let clientSpecs = createClientSpecificationMock('uniqueId');
 
-        let result = t.context.clientManager.processClientRegistration(clientRegistration, {});
+        let result = t.context.clientManager.processClientRegistration(clientSpecs, {});
 
         t.is(result.error, undefined);
-        t.is(result.clientSpecification.identifier, 'uniqueId');
+        t.is(result.id, 'uniqueId');
     });
 
     test('processClientRegistration - double registration', t => {
         let clientRegistration = createClientSpecificationMock('uniqueId');
 
-        t.context.clientManager.processClientRegistration(clientRegistration, {});
-        let result = t.context.clientManager.processClientRegistration(clientRegistration, {});
-
-        t.is(result.error.title, 'Client registration rejected');
-        t.is(result.clientSpecification, undefined);
+        let registrationContext = {};
+        // first registration
+        t.context.clientManager.processClientRegistration(clientRegistration, registrationContext);
+        t.true(registrationContext.success);
+        // second registration
+        let result = t.context.clientManager.processClientRegistration(clientRegistration, registrationContext);
+        t.is(result, undefined);
+        t.false(registrationContext.success);
+        t.is(registrationContext.feedback.title, 'Client registration rejected');
     });
 })();

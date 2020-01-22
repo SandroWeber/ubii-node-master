@@ -4,7 +4,6 @@ const {
 const namida = require("@tum-far/namida");
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
-const { TOPIC_EVENTS } = require('@tum-far/ubii-topic-data');
 
 class SubscriptionService extends Service {
   constructor(clientManager, topicData) {
@@ -53,21 +52,15 @@ class SubscriptionService extends Service {
       client.unsubscribe(unsubscribeTopic);
     });
 
+    // process (un)subscribe regexp
+    // subscribe regex
     if (message.subscribeTopicRegexp) {
-      let regexp = new RegExp(message.subscribeTopicRegexp);
+      client.subscribeRegex(message.subscribeTopicRegexp);
+    }
 
-      // auto-subscribe on new matching topics
-      this.topicData.events.on(TOPIC_EVENTS.NEW_TOPIC, (topic) => {
-        if (regexp.test(topic)) {
-          client.subscribe(topic);
-        }
-      });
-
-      this.topicData.getAllTopicsWithData().map(entry => entry.topic).forEach(topic => {
-        if (regexp.test(topic)) {
-          client.subscribe(topic);
-        }
-      });
+    //unsubscribe regex
+    if (message.unsubscribeTopicRegexp) {
+      //TODO
     }
 
     // Reply with success message
