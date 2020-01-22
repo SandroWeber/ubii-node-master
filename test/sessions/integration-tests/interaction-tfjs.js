@@ -1,10 +1,16 @@
 import test from 'ava';
 import uuidv4 from 'uuid/v4';
 
-import TestUtility from '../testUtility';
-
-import { SessionManager, DeviceManager } from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
+import * as tf from '@tensorflow/tfjs-node';
+
+import TestUtility from '../testUtility';
+import { SessionManager, DeviceManager } from '../../../src/index';
+import InteractionModulesService from '../../../src/sessions/interactionModulesService';
+
+/* global setup */
+
+InteractionModulesService.addModule('tf', tf);
 
 /* helper functions */
 

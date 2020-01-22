@@ -1,16 +1,10 @@
 const EventEmitter = require('events');
-
 const uuidv4 = require('uuid/v4');
-const tf = require('@tensorflow/tfjs-node');
-const cocoSsd = require('@tensorflow-models/coco-ssd');
-const emgClassifier = require('@baumlos/emg-classifier');
-//const cv = require('opencv4nodejs');
-const fs = require('fs');
-
 const { proto, DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const InteractionStatus = proto.ubii.interactions.InteractionStatus;
-const { INTERACTION_LIFECYCLE_EVENTS } = require('./constants');
 
+const InteractModulesService = require('./interactionModulesService');
+const { INTERACTION_LIFECYCLE_EVENTS } = require('./constants');
 const Utils = require('../utilities');
 
 class Interaction extends EventEmitter {
@@ -43,15 +37,14 @@ class Interaction extends EventEmitter {
 
     this.state = {};
     Object.defineProperty(this.state, 'modules', {
-      // input is read-only
+      // modules are read-only
       get: () => {
-        return {
+        return InteractModulesService.getModulesObject();/*{
           tf: tf,
           cocoSsd: cocoSsd,
           emgClassifier: emgClassifier,
-          //cv: cv,
           fs: fs
-        }
+        }*/
       },
       configurable: true
     });
