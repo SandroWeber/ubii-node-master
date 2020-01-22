@@ -1,9 +1,9 @@
 export default {
   files: [
-    '!test/node/master-client-web.js',
-    '!test/node/master-client-zmq.js',
-    '!test/devices/**/*',
-    '!test/sessions/**/*',
+    'test/node/master-client-web.js',
+    'test/node/master-client-zmq.js',
+    'test/devices/**/*',
+    'test/sessions/**/*',
     'test/clients/**/*',
     '!test/files/**/*',
     '!test/mocks/*',
