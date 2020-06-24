@@ -8,16 +8,16 @@ class SessionDatabase extends Storage {
 
   /**
    * Returns whether a session specification with the specified ID exists.
-   * @param {String} id 
+   * @param {String} id
    * @returns {Boolean} Does a session specification with the specified ID exists?
    */
-  hasSession(id) {
-    return this.hasSpecification(id);
+  hasSession(specs) {
+    return this.hasSpecification(specs);
   }
 
   /**
    * Get the session with the specified id.
-   * @param {String} id 
+   * @param {String} id
    */
   getSession(id) {
     return this.getSpecification(id);
@@ -37,7 +37,7 @@ class SessionDatabase extends Storage {
    */
   addSession(specification) {
     if (!this.verifySpecification(specification)) {
-      throw 'Session with ID ' + specification.id + ' could not be registered, invalid specs'
+      throw 'Session with ID ' + specification.id + ' could not be registered, invalid specs';
     }
 
     try {
@@ -49,7 +49,7 @@ class SessionDatabase extends Storage {
 
   /**
    * Delete the session specification with the specified id from the specifications list.
-   * @param {String} id 
+   * @param {String} id
    */
   deleteSession(id) {
     this.deleteSpecification(id);
@@ -69,14 +69,13 @@ class SessionDatabase extends Storage {
 
   /**
    * Verifies the specified specification.
-   * @param {*} specification 
+   * @param {*} specification
    */
   verifySpecification(specification) {
     let translator = new ProtobufTranslator(MSG_TYPES.SESSION);
     try {
       return translator.verify(specification);
-    }
-    catch (error) {
+    } catch (error) {
       return false;
     }
   }
