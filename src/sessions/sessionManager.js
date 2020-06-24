@@ -31,7 +31,7 @@ class SessionManager extends EventEmitter {
 
   addSession(session) {
     if (
-      this.sessions.some(element => {
+      this.sessions.some((element) => {
         return element.id === session.id;
       })
     ) {
@@ -55,7 +55,7 @@ class SessionManager extends EventEmitter {
   }
 
   getSession(id) {
-    return this.sessions.find(session => {
+    return this.sessions.find((session) => {
       return session.id === id;
     });
   }
@@ -109,23 +109,23 @@ class SessionManager extends EventEmitter {
   /* event related functions */
 
   addEventListeners() {
-    this.on(EVENTS_SESSION_MANAGER.NEW_SESSION, specs => {
+    this.on(EVENTS_SESSION_MANAGER.NEW_SESSION, (specs) => {
       this.onEventNewSession(specs);
     });
 
-    this.on(EVENTS_SESSION_MANAGER.CHANGE_SESSION, specs => {
+    this.on(EVENTS_SESSION_MANAGER.CHANGE_SESSION, (specs) => {
       this.onEventSessionChange(specs);
     });
 
-    this.on(EVENTS_SESSION_MANAGER.DELETE_SESSION, specs => {
+    this.on(EVENTS_SESSION_MANAGER.DELETE_SESSION, (specs) => {
       this.onEventSessionChange(specs);
     });
 
-    this.on(EVENTS_SESSION_MANAGER.START_SESSION, specs => {
+    this.on(EVENTS_SESSION_MANAGER.START_SESSION, (specs) => {
       this.onEventSessionStart(specs);
     });
 
-    this.on(EVENTS_SESSION_MANAGER.STOP_SESSION, specs => {
+    this.on(EVENTS_SESSION_MANAGER.STOP_SESSION, (specs) => {
       this.onEventSessionStop(specs);
     });
   }

@@ -10,8 +10,8 @@ class SessionStartService extends Service {
     this.sessionManager = sessionManager;
   }
 
-  reply(message) {
-    if (typeof message === 'undefined') {
+  reply(sessionSpecs) {
+    if (typeof sessionSpecs === 'undefined') {
       return {
         error: {
           title: 'SessionStartService Error',
@@ -21,10 +21,10 @@ class SessionStartService extends Service {
     }
 
     // check session manager for existing session by ID
-    let session = this.sessionManager.getSession(message.id);
+    let session = this.sessionManager.getSession(sessionSpecs.id);
     if (session) {
       try {
-        this.sessionManager.startSessionByID(message.id);
+        this.sessionManager.startSessionByID(sessionSpecs.id);
 
         return {
           session: session.toProtobuf(),
@@ -41,9 +41,9 @@ class SessionStartService extends Service {
     }
 
     // check session database for existing session by ID
-    if (SessionDatabase.hasSession(message)) {
+    if (SessionDatabase.hasSession(sessionSpecs)) {
       try {
-        let specs = SessionDatabase.getSession(message.id);
+        let specs = SessionDatabase.getSession(sessionSpecs.id);
         let session = this.sessionManager.createSession(specs);
         this.sessionManager.startSessionByID(session.id);
 
@@ -63,7 +63,8 @@ class SessionStartService extends Service {
 
     // try creating new session from message
     try {
-      let session = this.sessionManager.createSession(message);
+      sessionSpecs.id = undefined; // ID is assigned by server upon creation
+      let session = this.sessionManager.createSession(sessionSpecs);
       this.sessionManager.startSessionByID(session.id);
 
       return {
