@@ -23,16 +23,16 @@ class Storage {
 
   /**
    * Returns whether a specification with the specified ID exists.
-   * @param {String} id 
+   * @param {String} id
    * @returns {Boolean} Does a specification with the specified ID exists?
    */
-  hasSpecification(id) {
-    return this.specificationsLocal.has(id) || this.specificationsOnline.has(id);
+  hasSpecification(specs) {
+    return this.specificationsLocal.has(specs.id) || this.specificationsOnline.has(specs.id);
   }
 
   /**
    * Get the specification with the specified id.
-   * @param {String} id 
+   * @param {String} id
    * @returns The specification with the specified id.
    */
   getSpecification(id) {
@@ -56,8 +56,8 @@ class Storage {
    * @param {Object} specification The specification in protobuf format. It requires a name and id property.
    */
   addSpecification(specification) {
-    if (this.hasSpecification(specification.id)) {
-      throw 'Specification with ID ' + specification.id + ' could not be added, ID already exists.'
+    if (this.hasSpecification(specification)) {
+      throw 'Specification with ID ' + specification.id + ' could not be added, ID already exists.';
     }
 
     try {
@@ -71,7 +71,7 @@ class Storage {
 
   /**
    * Delete the specification with the specified id from the specifications list.
-   * @param {String} id 
+   * @param {String} id
    */
   deleteSpecification(id) {
     try {
@@ -129,7 +129,9 @@ class Storage {
         let path = dirOnlineDB + '/' + file;
         let specs = await this.getSpecificationFromFile(path);
         if (this.specificationsLocal.has(specs.id) || this.specificationsOnline.has(specs.id)) {
-          console.info('Storage - specification from file ' + path + ' has conflicting ID ' + specs.id);
+          console.info(
+            'Storage - specification from file ' + path + ' has conflicting ID ' + specs.id
+          );
         } else {
           this.specificationsOnline.set(specs.id, specs);
           this.filePaths.set(specs.id, path);
@@ -193,7 +195,11 @@ class Storage {
    */
   replaceSpecificationFile(specification) {
     try {
-      fs.writeFileSync(this.filePaths.get(specification.id), JSON.stringify(specification, null, 4), { flag: 'w' });
+      fs.writeFileSync(
+        this.filePaths.get(specification.id),
+        JSON.stringify(specification, null, 4),
+        { flag: 'w' }
+      );
     } catch (error) {
       if (error) throw error;
     }
@@ -212,7 +218,7 @@ class Storage {
 
   async copySpecsFromFile(path) {
     let specs = await this.getSpecificationFromFile(path);
-    while (this.hasSpecification(specs.id)) {
+    while (this.hasSpecification(specs)) {
       specs.id = uuidv4();
     }
     specs.name += '_copy';

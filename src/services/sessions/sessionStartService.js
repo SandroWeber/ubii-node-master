@@ -15,54 +15,49 @@ class SessionStartService extends Service {
       return {
         error: {
           title: 'SessionStartService Error',
-          message: 'No session specifications given'
-        }
-      }
+          message: 'No session specifications given',
+        },
+      };
     }
 
     // check session manager for existing session by ID
-    if (this.sessionManager.getSession(message.id)) {
+    let session = this.sessionManager.getSession(message.id);
+    if (session) {
       try {
         this.sessionManager.startSessionByID(message.id);
+
+        return {
+          session: session.toProtobuf(),
+        };
       } catch (error) {
         return {
           error: {
             title: 'SessionStartService Error',
             message: error.toString(),
-            stack: error.stack && error.stack.toString()
-          }
-        }
-      }
-
-      return {
-        success: {
-          title: 'SessionStartService Success',
-          message: 'Started existing session with ID ' + message.id
-        }
+            stack: error.stack && error.stack.toString(),
+          },
+        };
       }
     }
 
     // check session database for existing session by ID
-    if (SessionDatabase.hasSession(message.id)) {
+    if (SessionDatabase.hasSession(message)) {
       try {
         let specs = SessionDatabase.getSession(message.id);
         let session = this.sessionManager.createSession(specs);
         this.sessionManager.startSessionByID(session.id);
+
+        return {
+          session: specs,
+        };
       } catch (error) {
         return {
           error: {
             title: 'SessionStartService Error',
             message: error.toString(),
-            stack: error.stack && error.stack.toString()
-          }
-        }
-      }
-
-      return {
-        success: {
-          title: 'SessionStartService Success',
-          message: 'Loaded existing session with ID ' + message.id + ' from database'
-        }
+            stack: error.stack && error.stack.toString(),
+          },
+        };
       }
     }
 
@@ -70,25 +65,22 @@ class SessionStartService extends Service {
     try {
       let session = this.sessionManager.createSession(message);
       this.sessionManager.startSessionByID(session.id);
+
+      return {
+        session: session,
+      };
     } catch (error) {
       return {
         error: {
           title: 'SessionStartService Error',
           message: error.toString(),
-          stack: error.stack && error.stack.toString()
-        }
-      }
+          stack: error.stack && error.stack.toString(),
+        },
+      };
     }
-
-    return {
-      success: {
-        title: 'SessionStartService Success',
-        message: 'Created new session from message'
-      }
-    };
   }
 }
 
 module.exports = {
-  'SessionStartService': SessionStartService,
+  SessionStartService: SessionStartService,
 };

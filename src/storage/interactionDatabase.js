@@ -8,16 +8,16 @@ class InteractionDatabase extends Storage {
 
   /**
    * Returns whether an interaction specification with the specified ID exists.
-   * @param {String} id 
+   * @param {String} id
    * @returns {Boolean} Does an interaction specification with the specified ID exists?
    */
-  hasInteraction(id) {
-    return this.hasSpecification(id);
+  hasInteraction(specs) {
+    return this.hasSpecification(specs);
   }
 
   /**
    * Get the interaction with the specified id.
-   * @param {String} id 
+   * @param {String} id
    */
   getInteraction(id) {
     return this.getSpecification(id);
@@ -36,7 +36,7 @@ class InteractionDatabase extends Storage {
    */
   addInteraction(specification) {
     if (!this.verifySpecification(specification)) {
-      throw 'Interaction with ID ' + specification.id + ' could not be registered, invalid specs'
+      throw 'Interaction with ID ' + specification.id + ' could not be registered, invalid specs';
     }
 
     try {
@@ -48,7 +48,7 @@ class InteractionDatabase extends Storage {
 
   /**
    * Delete the interaction specification with the specified id from the specifications list.
-   * @param {String} id 
+   * @param {String} id
    */
   deleteInteraction(id) {
     this.deleteSpecification(id);
@@ -68,14 +68,13 @@ class InteractionDatabase extends Storage {
 
   /**
    * Verifies the specified specification.
-   * @param {*} specification 
+   * @param {*} specification
    */
   verifySpecification(specification) {
     let translator = new ProtobufTranslator(MSG_TYPES.INTERACTION);
     try {
       return translator.verify(specification);
-    }
-    catch (error) {
+    } catch (error) {
       return false;
     }
   }
