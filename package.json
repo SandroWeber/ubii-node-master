@@ -3,6 +3,7 @@
   "version": "0.3.0",
   "description": "",
   "main": "src/index.js",
+  "gypfile": true,
   "license": "",
   "repository": "https://gitlab.lrz.de/IN-FAR/Ubi-Interact/ubii-nodejs-backend",
   "contributors": [
@@ -29,20 +30,23 @@
     ""
   ],
   "devDependencies": {
-    "ava": "^1.4.1",
+    "ava": "^3.8.1",
     "axios": "^0.19.0",
     "sinon": "6.0.1"
   },
   "dependencies": {
-    "@tensorflow/tfjs-node": "1.4.0",
     "@baumlos/emg-classifier": "0.0.4",
     "@tensorflow-models/coco-ssd": "1.1.1",
+    "@tensorflow/tfjs-node": "^1.2.3",
     "@tum-far/namida": "0.1.1",
     "@tum-far/ubii-database": "0.1.1",
     "@tum-far/ubii-msg-formats": "^0.11.17",
     "@tum-far/ubii-topic-data": "0.3.3",
     "body-parser": "1.18.3",
     "express": "4.16.4",
+    "node": "^10.16.3",
+    "node-addon-api": "^3.0.0",
+    "node-gyp": "^5.1.1",
     "printf": "0.5.1",
     "shelljs": "0.8.3",
     "uuid": "3.3.2",
