@@ -13,6 +13,9 @@ class Utils {
 
   static createFunction(proglang, dependency, processingCallback){
     switch(proglang){
+      case "js":
+        return this.createFunctionFromString(processingCallback);
+        break;
       case "c":
       case "cpp":
         // returns specified function 'processingCallback' of native module 'dependency'
