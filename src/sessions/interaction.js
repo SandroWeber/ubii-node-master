@@ -28,11 +28,11 @@ class Interaction extends EventEmitter {
     this.tags = tags;
     this.description = description;
     this.processFrequency = processFrequency;
-    this.processingCallback = Utils.createFunctionFromString(processingCallback);
+    this.processingCallback = Utils.createFunction(processingCallback);
     this.inputFormats = inputFormats;
     this.outputFormats = outputFormats;
     if (onCreated) {
-      this.onCreatedCallback = Utils.createFunctionFromString(onCreated);
+      this.onCreatedCallback = Utils.createFunction(onCreated);
     }
 
     this.state = {};
