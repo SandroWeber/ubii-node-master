@@ -15,8 +15,8 @@ class Utils {
     switch(proglang){
       case "c":
       case "cpp":
-        // returns specified function of native module
-        return new Function("require('./build/Release/native.node')."+processingCallback+"()")();
+        // returns specified function 'processingCallback' of native module 'dependency'
+        return new Function("require('./build/Release/"+dependency+".node')."+processingCallback+"()")();
         break;
       case "cs":
         break;
