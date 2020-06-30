@@ -68,7 +68,7 @@ class SessionStartService extends Service {
       this.sessionManager.startSessionByID(session.id);
 
       return {
-        session: session
+        session: session.toProtobuf()
       };
     } catch (error) {
       return {
