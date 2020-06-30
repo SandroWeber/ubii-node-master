@@ -1,4 +1,4 @@
-const {Service} = require('./../service.js');
+const { Service } = require('./../service.js');
 const SessionDatabase = require('../../storage/sessionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
@@ -24,6 +24,7 @@ class SessionRegistrationService extends Service {
       let newSessions = [];
       sessionSpecs.forEach((spec) => {
         try {
+          spec.id = undefined; // ID is assigned by server upon creation
           let session = this.sessionManager.createSession(spec);
           newSessions.push(session);
           SessionDatabase.addSession(session.toProtobuf());
@@ -38,7 +39,9 @@ class SessionRegistrationService extends Service {
       });
 
       return {
-        sessionList: newSessions.map((session) => {return session.toProtobuf()})
+        sessionList: newSessions.map((session) => {
+          return session.toProtobuf();
+        })
       };
     }
 
@@ -55,10 +58,10 @@ class SessionRegistrationService extends Service {
       };
     }
 
-    return {session: session.toProtobuf()};
+    return { session: session.toProtobuf() };
   }
 }
 
 module.exports = {
-  'SessionRegistrationService': SessionRegistrationService
+  SessionRegistrationService: SessionRegistrationService
 };
