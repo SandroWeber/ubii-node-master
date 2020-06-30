@@ -15,8 +15,8 @@ class SessionStartService extends Service {
       return {
         error: {
           title: 'SessionStartService Error',
-          message: 'No session specifications given',
-        },
+          message: 'No session specifications given'
+        }
       };
     }
 
@@ -27,15 +27,15 @@ class SessionStartService extends Service {
         this.sessionManager.startSessionByID(sessionSpecs.id);
 
         return {
-          session: session.toProtobuf(),
+          session: session.toProtobuf()
         };
       } catch (error) {
         return {
           error: {
             title: 'SessionStartService Error',
             message: error.toString(),
-            stack: error.stack && error.stack.toString(),
-          },
+            stack: error.stack && error.stack.toString()
+          }
         };
       }
     }
@@ -48,15 +48,15 @@ class SessionStartService extends Service {
         this.sessionManager.startSessionByID(session.id);
 
         return {
-          session: specs,
+          session: specs
         };
       } catch (error) {
         return {
           error: {
             title: 'SessionStartService Error',
             message: error.toString(),
-            stack: error.stack && error.stack.toString(),
-          },
+            stack: error.stack && error.stack.toString()
+          }
         };
       }
     }
@@ -68,20 +68,20 @@ class SessionStartService extends Service {
       this.sessionManager.startSessionByID(session.id);
 
       return {
-        session: session,
+        session: session
       };
     } catch (error) {
       return {
         error: {
           title: 'SessionStartService Error',
           message: error.toString(),
-          stack: error.stack && error.stack.toString(),
-        },
+          stack: error.stack && error.stack.toString()
+        }
       };
     }
   }
 }
 
 module.exports = {
-  SessionStartService: SessionStartService,
+  SessionStartService: SessionStartService
 };

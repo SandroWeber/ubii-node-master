@@ -14,8 +14,8 @@ class InteractionRegistrationService extends Service {
       return {
         error: {
           title: 'InteractionRegistrationService Error',
-          message: 'Interaction specifications are undefined.',
-        },
+          message: 'Interaction specifications are undefined.'
+        }
       };
     }
 
@@ -31,8 +31,8 @@ class InteractionRegistrationService extends Service {
           return {
             error: {
               title: 'InteractionRegistrationService Error',
-              message: error.toString(),
-            },
+              message: error.toString()
+            }
           };
         }
       });
@@ -40,7 +40,7 @@ class InteractionRegistrationService extends Service {
       return {
         interactionList: newInteractions.map((interaction) => {
           return interaction.toProtobuf();
-        }),
+        })
       };
     }
 
@@ -54,13 +54,13 @@ class InteractionRegistrationService extends Service {
       return {
         error: {
           title: 'InteractionRegistrationService Error',
-          message: error.toString(),
-        },
+          message: error.toString()
+        }
       };
     }
   }
 }
 
 module.exports = {
-  InteractionRegistrationService: InteractionRegistrationService,
+  InteractionRegistrationService: InteractionRegistrationService
 };

@@ -15,8 +15,8 @@ class SessionRegistrationService extends Service {
       return {
         error: {
           title: 'SessionRegistrationService Error',
-          message: 'Session specifications are undefined.',
-        },
+          message: 'Session specifications are undefined.'
+        }
       };
     }
 
@@ -32,8 +32,8 @@ class SessionRegistrationService extends Service {
           return {
             error: {
               title: 'SessionRegistrationService Error',
-              message: error.toString(),
-            },
+              message: error.toString()
+            }
           };
         }
       });
@@ -41,7 +41,7 @@ class SessionRegistrationService extends Service {
       return {
         sessionList: newSessions.map((session) => {
           return session.toProtobuf();
-        }),
+        })
       };
     }
 
@@ -53,8 +53,8 @@ class SessionRegistrationService extends Service {
       return {
         error: {
           title: 'SessionRegistrationService Error',
-          message: error.toString(),
-        },
+          message: error.toString()
+        }
       };
     }
 
@@ -63,5 +63,5 @@ class SessionRegistrationService extends Service {
 }
 
 module.exports = {
-  SessionRegistrationService: SessionRegistrationService,
+  SessionRegistrationService: SessionRegistrationService
 };
