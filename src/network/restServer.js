@@ -6,6 +6,8 @@ const fs = require('fs');
 
 const NetworkConfigManager = require('./networkConfigManager');
 
+const configService = require('../config/configService');
+
 class RESTServer {
   /**
    * Communication endpoint implementing the zmq reply pattern.
@@ -19,11 +21,12 @@ class RESTServer {
 
     let ipLan = NetworkConfigManager.hostAdresses.ethernet;
     let ipWifi = NetworkConfigManager.hostAdresses.wifi;
-    if (this.useHTTPS) {
+    if (configService.useHTTPS()) {
       this.allowedOrigins = [
         'https://' + ipLan + ':12345',
         'https://' + ipWifi + ':12345',
-        'https://localhost:12345'
+        'https://localhost:12345',
+        'https://*:12345',
       ];
     } else {
       this.allowedOrigins = [
@@ -32,7 +35,7 @@ class RESTServer {
         'http://' + ipWifi + ':8080',
         'http://' + ipWifi + ':8081',
         'http://localhost:8080',
-        'http://localhost:8081'
+        'http://localhost:8081',
       ];
     }
 
@@ -45,11 +48,11 @@ class RESTServer {
     // init
     this.app = express();
 
-    if (this.useHTTPS) {
+    if (configService.useHTTPS()) {
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
-        cert: fs.readFileSync('./certificates/ubii.com+5.pem'),
-        key: fs.readFileSync('./certificates/ubii.com+5-key.pem')
+        cert: fs.readFileSync(configService.getPathCertificate()),
+        key: fs.readFileSync(configService.getPathPrivateKey()),
       };
       this.server = https.createServer(credentials, this.app);
     } else {
@@ -58,7 +61,13 @@ class RESTServer {
 
     // CORS
     this.app.use((req, res, next) => {
-      let validOrigin = this.allowedOrigins.find(element => element === req.headers.origin);
+      console.info('origin = ' + req.headers.origin);
+      let validOrigin = this.allowedOrigins.find((element) => element === req.headers.origin);
+      if (validOrigin) {
+        console.info('validOrigin = ' + validOrigin);
+      } else {
+        console.info('invalidOrigin = ' + req.headers.origin);
+      }
       res.header('Access-Control-Allow-Origin', validOrigin);
       res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 

@@ -3,6 +3,8 @@ var https = require('https');
 const fs = require('fs');
 const url = require('url');
 
+const configService = require('../config/configService');
+
 class WebsocketServer {
   /**
    * Communication endpoint implementing the zmq router pattern.
@@ -29,11 +31,11 @@ class WebsocketServer {
    * Start the websocket server.
    */
   start() {
-    if (this.useHTTPS) {
+    if (configService.useHTTPS()) {
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
-        cert: fs.readFileSync('./certificates/ubii.com+5.pem'),
-        key: fs.readFileSync('./certificates/ubii.com+5-key.pem')
+        cert: fs.readFileSync(configService.getPathCertificate()),
+        key: fs.readFileSync(configService.getPathPrivateKey()),
       };
       this.server = https.createServer(credentials);
       this.server.listen(this.port);
@@ -57,7 +59,7 @@ class WebsocketServer {
    * Stop the server and close the socket.
    */
   stop() {
-    this.wsServer.clients.forEach(websocket => {
+    this.wsServer.clients.forEach((websocket) => {
       websocket.close();
     });
 
@@ -71,7 +73,7 @@ class WebsocketServer {
    */
   _onConnection(websocket, request) {
     const {
-      query: { clientID }
+      query: { clientID },
     } = url.parse(request.url, true);
     console.log('[' + new Date() + '] websocket connection accepted from ID ' + clientID);
 
@@ -80,7 +82,7 @@ class WebsocketServer {
     //let clientID = this.clients.size;
     this.clients.set(clientID, websocket);
 
-    websocket.on('message', message => {
+    websocket.on('message', (message) => {
       this._onMessage(clientID, message);
     });
 
@@ -131,7 +133,7 @@ class WebsocketServer {
   send(toClientId, message) {
     let client = this.clients.get(toClientId);
     if (client && client.readyState === WebSocket.OPEN) {
-      client.send(message, error => {
+      client.send(message, (error) => {
         if (error !== undefined) console.warn(error);
       });
     }
