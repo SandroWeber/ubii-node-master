@@ -1,6 +1,4 @@
-const {
-  Service
-} = require('./../service.js');
+const { Service } = require('./../service.js');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
@@ -18,7 +16,7 @@ class SessionStopService extends Service {
           title: 'SessionStopService Error',
           message: 'No session specifications given'
         }
-      }
+      };
     }
 
     if (this.sessionManager.stopSessionByID(message.id)) {
@@ -27,18 +25,18 @@ class SessionStopService extends Service {
           title: 'SessionStopService Success',
           message: 'Stop session (ID ' + message.id + ') SUCCESS'
         }
-      }
+      };
     } else {
       return {
         error: {
           title: 'SessionStopService Error',
           message: 'Stop session (ID ' + message.id + ') FAILED'
         }
-      }
+      };
     }
   }
 }
 
 module.exports = {
-  'SessionStopService': SessionStopService,
+  SessionStopService: SessionStopService
 };

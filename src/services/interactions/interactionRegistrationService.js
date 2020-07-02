@@ -1,5 +1,5 @@
-const {Service} = require('./../service.js');
-const {Interaction} = require('./../../sessions/interaction.js');
+const { Service } = require('./../service.js');
+const { Interaction } = require('./../../sessions/interaction.js');
 const InteractionDatabase = require('../../storage/interactionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
@@ -23,6 +23,7 @@ class InteractionRegistrationService extends Service {
       let newInteractions = [];
       interactionSpecs.forEach((spec) => {
         try {
+          spec.id = undefined; // ID is assigned by server upon creation
           let interaction = new Interaction(spec);
           newInteractions.push(interaction);
           InteractionDatabase.addInteraction(interaction.toProtobuf());
@@ -37,14 +38,18 @@ class InteractionRegistrationService extends Service {
       });
 
       return {
-        interactionList: newInteractions.map((interaction) => {return interaction.toProtobuf()})
+        interactionList: newInteractions.map((interaction) => {
+          return interaction.toProtobuf();
+        })
       };
     }
 
-    let interaction;
     try {
-      interaction = new Interaction(interactionSpecs);
+      interactionSpecs.id = undefined; // ID is assigned by server upon creation
+      let interaction = new Interaction(interactionSpecs);
       InteractionDatabase.addInteraction(interaction.toProtobuf());
+
+      return { interaction: interaction.toProtobuf() };
     } catch (error) {
       return {
         error: {
@@ -53,11 +58,9 @@ class InteractionRegistrationService extends Service {
         }
       };
     }
-
-    return {interaction: interaction.toProtobuf()};
   }
 }
 
 module.exports = {
-  'InteractionRegistrationService': InteractionRegistrationService
+  InteractionRegistrationService: InteractionRegistrationService
 };

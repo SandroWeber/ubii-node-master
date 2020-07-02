@@ -56,6 +56,12 @@ class Storage {
    * @param {Object} specification The specification in protobuf format. It requires a name and id property.
    */
   addSpecification(specification) {
+    // assign ID, only server does this i.e. IDs sent by clients are ignored and replaced
+    specification.id = uuidv4();
+    while (this.hasSpecification(specification)) {
+      specification.id = uuidv4();
+    }
+
     if (this.hasSpecification(specification)) {
       throw 'Specification with ID ' + specification.id + ' could not be added, ID already exists.';
     }

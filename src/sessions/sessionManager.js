@@ -1,6 +1,7 @@
 const EventEmitter = require('events');
 
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const namida = require('@tum-far/namida');
 
 const { Session } = require('./session.js');
 const { EVENTS_SESSION_MANAGER } = require('./constants');
@@ -31,7 +32,7 @@ class SessionManager extends EventEmitter {
 
   addSession(session) {
     if (
-      this.sessions.some(element => {
+      this.sessions.some((element) => {
         return element.id === session.id;
       })
     ) {
@@ -55,7 +56,7 @@ class SessionManager extends EventEmitter {
   }
 
   getSession(id) {
-    return this.sessions.find(session => {
+    return this.sessions.find((session) => {
       return session.id === id;
     });
   }
@@ -74,6 +75,9 @@ class SessionManager extends EventEmitter {
     let success = session && session.start();
     if (success) {
       this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
+      namida.logSuccess('SessionManager', 'succesfully started session ID ' + session.id);
+    } else {
+      namida.logFailure('SessionManager', 'failed to start session ID ' + session.id);
     }
 
     return success;
@@ -95,6 +99,9 @@ class SessionManager extends EventEmitter {
     let success = session && session.stop();
     if (success) {
       this.emit(EVENTS_SESSION_MANAGER.STOP_SESSION, session.toProtobuf());
+      namida.logSuccess('SessionManager', 'succesfully stopped session ID ' + session.id);
+    } else {
+      namida.logFailure('SessionManager', 'failed to stop session ID ' + session.id);
     }
 
     return success;
@@ -109,23 +116,23 @@ class SessionManager extends EventEmitter {
   /* event related functions */
 
   addEventListeners() {
-    this.on(EVENTS_SESSION_MANAGER.NEW_SESSION, specs => {
+    this.on(EVENTS_SESSION_MANAGER.NEW_SESSION, (specs) => {
       this.onEventNewSession(specs);
     });
 
-    this.on(EVENTS_SESSION_MANAGER.CHANGE_SESSION, specs => {
+    this.on(EVENTS_SESSION_MANAGER.CHANGE_SESSION, (specs) => {
       this.onEventSessionChange(specs);
     });
 
-    this.on(EVENTS_SESSION_MANAGER.DELETE_SESSION, specs => {
+    this.on(EVENTS_SESSION_MANAGER.DELETE_SESSION, (specs) => {
       this.onEventSessionChange(specs);
     });
 
-    this.on(EVENTS_SESSION_MANAGER.START_SESSION, specs => {
+    this.on(EVENTS_SESSION_MANAGER.START_SESSION, (specs) => {
       this.onEventSessionStart(specs);
     });
 
-    this.on(EVENTS_SESSION_MANAGER.STOP_SESSION, specs => {
+    this.on(EVENTS_SESSION_MANAGER.STOP_SESSION, (specs) => {
       this.onEventSessionStop(specs);
     });
   }
