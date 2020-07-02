@@ -7,8 +7,8 @@
   },
   "https": {
     "enabled": true,
-    "pathCert": "./certificates/ubii.com+5.pem",
-    "pathPrivateKey": "./certificates/ubii.com+5-key.pem",
+    "pathCert": "./certificates/ubii+5.pem",
+    "pathPrivateKey": "./certificates/ubii+5-key.pem",
     "pathPublicKey": "./certificates/ubii.public-key.pem"
   }
 }

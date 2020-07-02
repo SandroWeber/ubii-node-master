@@ -2,6 +2,8 @@ const selfsigned = require('selfsigned');
 const fs = require('fs');
 
 (function () {
+  console.info('WARNING! experimental feature, does not work reliably yet!');
+
   let pathCertificates = './certificates/';
   let filenameCertificate = 'ubii.cert.pem';
   let filenamePublic = 'ubii.public-key.pem';
@@ -23,7 +25,7 @@ const fs = require('fs');
     { shortName: 'ST', value: 'Bavaria' },
     { name: 'localityName', value: 'Garching' },
     { name: 'organizationName', value: 'TUM-FAR' },
-    { shortName: 'OU', value: 'Test' },
+    { shortName: 'OU', value: 'Test' }
   ];
 
   let options = {
@@ -36,22 +38,20 @@ const fs = require('fs');
         digitalSignature: true,
         nonRepudiation: true,
         keyEncipherment: true,
-        dataEncipherment: true,
+        dataEncipherment: true
       },
       {
         name: 'subjectAltName',
         altNames: [
-          { type: 6 /* URI */, value: 'https://192.168.178.37:8102/' },
-          { type: 6 /* URI */, value: 'https://192.168.178.37/' },
-          { type: 6 /* URI */, value: 'https://localhost:12345/' },
-          { type: 6 /* URI */, value: 'https://localhost:8102/' },
-          { type: 6 /* URI */, value: 'https://localhost:8102/services' },
-          { type: 6 /* URI */, value: 'https://localhost' },
-          { type: 6 /* URI */, value: 'localhost' },
           { type: 6 /* URI */, value: '192.168.178.37' },
-        ],
-      },
-    ],
+          { type: 6 /* URI */, value: '192.168.178.37:12345' },
+          { type: 6 /* URI */, value: '192.168.178.39' },
+          { type: 6 /* URI */, value: '192.168.178.39:12345' },
+          { type: 6 /* URI */, value: '131.159.10.80' },
+          { type: 6 /* URI */, value: 'localhost' }
+        ]
+      }
+    ]
   };
   let pems = selfsigned.generate(attrs, options);
 
