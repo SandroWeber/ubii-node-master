@@ -5,7 +5,7 @@ const {
   DEFAULT_PORT_SERVICE_REST,
   DEFAULT_PORT_TOPICDATA_ZMQ,
   DEFAULT_PORT_TOPICDATA_WS,
-  DEFAULT_USE_HTTPS
+  DEFAULT_USE_HTTPS,
 } = require('../network/constants');
 
 class ConfigService {
@@ -14,7 +14,21 @@ class ConfigService {
   }
 
   useHTTPS() {
-    return typeof this.config.useHTTPS !== 'undefined' ? this.config.useHTTPS : DEFAULT_USE_HTTPS;
+    return typeof this.config.https.enabled !== 'undefined'
+      ? this.config.https.enabled
+      : DEFAULT_USE_HTTPS;
+  }
+
+  getPathCertificate() {
+    return this.config.https.pathCert;
+  }
+
+  getPathPrivateKey() {
+    return this.config.https.pathPrivateKey;
+  }
+
+  getPathPublicKey() {
+    return this.config.https.pathPublicKey;
   }
 
   getPortServiceZMQ() {

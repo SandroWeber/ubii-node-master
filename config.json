@@ -5,5 +5,10 @@
     "topicdataZMQ": 8103,
     "topicdataWS": 8104
   },
-  "useHTTPS": false
+  "https": {
+    "enabled": true,
+    "pathCert": "./certificates/ubii+5.pem",
+    "pathPrivateKey": "./certificates/ubii+5-key.pem",
+    "pathPublicKey": "./certificates/ubii.public-key.pem"
+  }
 }
