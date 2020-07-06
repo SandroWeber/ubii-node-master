@@ -31,6 +31,10 @@ class ConfigService {
     return this.config.https.pathPublicKey;
   }
 
+  getAllowedOrigins() {
+    return this.config.https.allowedOrigins;
+  }
+
   getPortServiceZMQ() {
     return typeof this.config.ports.serviceZMQ !== 'undefined'
       ? this.config.ports.serviceZMQ

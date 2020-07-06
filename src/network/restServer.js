@@ -22,12 +22,7 @@ class RESTServer {
     let ipLan = NetworkConfigManager.hostAdresses.ethernet;
     let ipWifi = NetworkConfigManager.hostAdresses.wifi;
     if (configService.useHTTPS()) {
-      this.allowedOrigins = [
-        'https://' + ipLan + ':12345',
-        'https://' + ipWifi + ':12345',
-        'https://localhost:12345',
-        'https://*:12345',
-      ];
+      this.allowedOrigins = configService.getAllowedOrigins();
     } else {
       this.allowedOrigins = [
         'http://' + ipLan + ':8080',

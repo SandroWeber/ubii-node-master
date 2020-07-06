@@ -7,8 +7,11 @@
   },
   "https": {
     "enabled": true,
-    "pathCert": "./certificates/ubii+5.pem",
-    "pathPrivateKey": "./certificates/ubii+5-key.pem",
-    "pathPublicKey": "./certificates/ubii.public-key.pem"
+    "pathCert": "./certificates/ubii.cert.pem",
+    "pathPrivateKey": "./certificates/ubii.private-key.pem",
+    "pathPublicKey": "./certificates/ubii.public-key.pem",
+    "allowedOrigins": [
+      "https://localhost"
+    ]
   }
 }
