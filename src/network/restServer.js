@@ -56,13 +56,7 @@ class RESTServer {
 
     // CORS
     this.app.use((req, res, next) => {
-      console.info('origin = ' + req.headers.origin);
       let validOrigin = this.allowedOrigins.find((element) => element === req.headers.origin);
-      if (validOrigin) {
-        console.info('validOrigin = ' + validOrigin);
-      } else {
-        console.info('invalidOrigin = ' + req.headers.origin);
-      }
       res.header('Access-Control-Allow-Origin', validOrigin);
       res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 

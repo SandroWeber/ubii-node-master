@@ -1,24 +1,19 @@
 const selfsigned = require('selfsigned');
 const fs = require('fs');
+const yargs = require('yargs');
 
 (function () {
   console.info('WARNING! experimental feature, does not work reliably yet!');
 
-  let pathCertificates = './certificates/';
-  let filenameCertificate = 'ubii.cert.pem';
-  let filenamePublic = 'ubii.public-key.pem';
-  let filenamePrivate = 'ubii.private-key.pem';
+  // command line argument specifications
+  const scriptArguments = yargs.usage('Usage: -n <name>').option('n', {
+    alias: 'name',
+    describe: 'URIs (domain names) the certificates should be valid for.',
+    type: 'string',
+    demandOption: true
+  }).argv;
 
-  /*if (
-    fs.existsSync(pathCertificates + filenameCertificate) &&
-    fs.existsSync(pathCertificates + filenamePublic) &&
-    fs.existsSync(pathCertificates + filenamePrivate)
-  ) {
-    console.info('All certification files already exist. Aborting.');
-    return;
-  }*/
-
-  let selfsigned = require('selfsigned');
+  // define attributes for certificates
   let attrs = [
     { name: 'commonName', value: 'ubii' },
     { name: 'countryName', value: 'DE' },
@@ -28,7 +23,18 @@ const fs = require('fs');
     { shortName: 'OU', value: 'Test' }
   ];
 
-  let options = {
+  // define options for certificates
+
+  // create list of alternative names for self-signed options from --name arguments
+  if (!Array.isArray(scriptArguments.name)) {
+    scriptArguments.name = [scriptArguments.name];
+  }
+  let altNames = [];
+  scriptArguments.name.forEach((element) => {
+    altNames.push({ type: 6 /* URI */, value: element });
+  });
+
+  let selfsignedOptions = {
     days: 365,
     extensions: [
       { name: 'basicConstraints', cA: true },
@@ -42,19 +48,25 @@ const fs = require('fs');
       },
       {
         name: 'subjectAltName',
-        altNames: [
-          { type: 6 /* URI */, value: '192.168.178.37' },
-          { type: 6 /* URI */, value: '192.168.178.37:12345' },
-          { type: 6 /* URI */, value: '192.168.178.39' },
-          { type: 6 /* URI */, value: '192.168.178.39:12345' },
-          { type: 6 /* URI */, value: '131.159.10.80' },
-          { type: 6 /* URI */, value: 'localhost' }
-        ]
+        altNames: altNames
       }
     ]
   };
-  let pems = selfsigned.generate(attrs, options);
 
+  // generate certificates
+  let pems = selfsigned.generate(attrs, selfsignedOptions);
+
+  // define path and filenames, make sure path exists
+  let pathCertificates = './certificates/';
+  let filenameCertificate = 'ubii.cert.pem';
+  let filenamePublic = 'ubii.public-key.pem';
+  let filenamePrivate = 'ubii.private-key.pem';
+
+  if (!fs.existsSync(pathCertificates)) {
+    fs.mkdirSync(pathCertificates);
+  }
+
+  // write certificates to file
   try {
     fs.writeFileSync(pathCertificates + filenameCertificate, pems.cert);
     fs.writeFileSync(pathCertificates + filenamePublic, pems.public);
