@@ -5,7 +5,7 @@ const {
   DEFAULT_PORT_SERVICE_REST,
   DEFAULT_PORT_TOPICDATA_ZMQ,
   DEFAULT_PORT_TOPICDATA_WS,
-  DEFAULT_USE_HTTPS,
+  DEFAULT_USE_HTTPS
 } = require('../network/constants');
 
 class ConfigService {

@@ -5,7 +5,7 @@ const SessionDatabase = require('../../storage/sessionDatabase');
 
 class SessionStartService extends Service {
   constructor(sessionManager) {
-    super(DEFAULT_TOPICS.SERVICES.SESSION_START);
+    super(DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_START);
 
     this.sessionManager = sessionManager;
   }
