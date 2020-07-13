@@ -12,6 +12,9 @@ const {
   InteractionOnlineDatabaseGetListService
 } = require('./interactions/interactionOnlineDatabaseGetListService');
 const {
+  InteractionLocalDatabaseGetListService
+} = require('./interactions/interactionLocalDatabaseGetListService');
+const {
   InteractionDatabaseGetService
 } = require('./interactions/interactionDatabaseGetService.js');
 const {
@@ -59,6 +62,7 @@ class ServiceManager {
     this.addService(new InteractionDatabaseDeleteService());
     this.addService(new InteractionDatabaseGetListService());
     this.addService(new InteractionOnlineDatabaseGetListService());
+    this.addService(new InteractionLocalDatabaseGetListService());
     this.addService(new InteractionDatabaseGetService());
     this.addService(new InteractionDatabaseSaveService());
     /* add session services */
@@ -95,8 +99,9 @@ class ServiceManager {
 
   processRequest(request) {
     if (!request.topic) {
-      console.error('ServiceManager.processRequest() - request missing topic! request:');
-      console.error(request);
+      namida.error('ServiceManager Error', 'request missing topic! request:');
+      console.info(request);
+
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
           title: 'Service request error',

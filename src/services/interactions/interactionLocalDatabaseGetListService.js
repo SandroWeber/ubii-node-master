@@ -3,17 +3,17 @@ const InteractionDatabase = require('../../storage/interactionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
-class InteractionOnlineDatabaseGetListService extends Service {
+class InteractionLocalDatabaseGetListService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_ONLINE_GET_LIST);
+    super(DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_LOCAL_GET_LIST);
   }
 
   reply() {
-    let interactions = InteractionDatabase.getOnlineSpecificationList();
+    let interactions = InteractionDatabase.getLocalSpecificationList();
     if (typeof interactions === 'undefined') {
       return {
         error: {
-          title: 'InteractionOnlineDatabaseGetListService Error',
+          title: 'InteractionLocalDatabaseGetListService Error',
           message: 'Could not retrieve interaction list'
         }
       };
@@ -26,5 +26,5 @@ class InteractionOnlineDatabaseGetListService extends Service {
 }
 
 module.exports = {
-  InteractionOnlineDatabaseGetListService: InteractionOnlineDatabaseGetListService
+  InteractionLocalDatabaseGetListService: InteractionLocalDatabaseGetListService
 };
