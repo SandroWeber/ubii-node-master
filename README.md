@@ -44,6 +44,10 @@ npm start
 - Running `mkcert ubii.com "*.ubii.com" ubii.test localhost 127.0.0.1 <host-ip-address> ::1` will give you 2 .pem files
 - Copy .pem files to path-to-backend-folder/certificates
 
+OR (under development)
+
+- run script "createSelfsignedCertificates.js" with (multiple) options -n="<your domain name / IP>"
+
 Alternatives:
 
 - certbot (https://certbot.eff.org/)
@@ -51,4 +55,7 @@ Alternatives:
 
 ### Enable HTTPS
 
-- In `config.json` set useHTTPS to `true`.
+- In `config.json` set things up under "https"
+- enable by setting to "true"
+- set paths to your certificates
+- add IPs / URLs of allowed origins for CORS (usually the machine running your web frontend / other web clients)
