@@ -1,11 +1,11 @@
-const {Service} = require('./../service.js');
+const { Service } = require('../service.js');
 const InteractionDatabase = require('../../storage/interactionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
-class InteractionDeleteService extends Service {
+class InteractionDatabaseDeleteService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.INTERACTION_DELETE);
+    super(DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_DELETE);
   }
 
   reply(interactionMessage) {
@@ -19,8 +19,8 @@ class InteractionDeleteService extends Service {
       };
     } else {
       try {
-        InteractionDatabase.deleteInteraction(interactionMessage.id)
-      } catch(error) {
+        InteractionDatabase.deleteInteraction(interactionMessage.id);
+      } catch (error) {
         return {
           error: {
             title: 'InteractionDeleteService Error',
@@ -40,5 +40,5 @@ class InteractionDeleteService extends Service {
 }
 
 module.exports = {
-  'InteractionDeleteService': InteractionDeleteService
+  InteractionDatabaseDeleteService: InteractionDatabaseDeleteService
 };

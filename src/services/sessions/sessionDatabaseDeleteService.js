@@ -1,11 +1,11 @@
-const {Service} = require('./../service.js');
+const { Service } = require('../service.js');
 const SessionDatabase = require('../../storage/sessionDatabase');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
-class SessionDeleteService extends Service {
+class SessionDatabaseDeleteService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.SESSION_DELETE);
+    super(DEFAULT_TOPICS.SERVICES.SESSION_DATABASE_DELETE);
   }
 
   reply(sessionMessage) {
@@ -13,17 +13,17 @@ class SessionDeleteService extends Service {
     if (typeof session === 'undefined') {
       return {
         error: {
-          title: 'SessionDeleteService Error',
+          title: 'SessionDatabaseDeleteService Error',
           message: 'Could not find session with ID ' + sessionMessage.id
         }
       };
     } else {
       try {
-        SessionDatabase.deleteSession(sessionMessage.id)
-      } catch(error) {
+        SessionDatabase.deleteSession(sessionMessage.id);
+      } catch (error) {
         return {
           error: {
-            title: 'SessionDeleteService Error',
+            title: 'SessionDatabaseDeleteService Error',
             message: error.toString()
           }
         };
@@ -31,7 +31,7 @@ class SessionDeleteService extends Service {
 
       return {
         success: {
-          title: 'SessionDeleteService',
+          title: 'SessionDatabaseDeleteService',
           message: 'Successfully deleted session with ID ' + sessionMessage.id
         }
       };
@@ -40,5 +40,5 @@ class SessionDeleteService extends Service {
 }
 
 module.exports = {
-  'SessionDeleteService': SessionDeleteService
+  SessionDatabaseDeleteService: SessionDatabaseDeleteService
 };

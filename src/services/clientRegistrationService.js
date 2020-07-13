@@ -1,6 +1,4 @@
-const {
-  Service
-} = require('./service.js');
+const { Service } = require('./service.js');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
@@ -19,7 +17,7 @@ class ClientRegistrationService extends Service {
     let client = this.clientManager.processClientRegistration(message, context);
 
     if (context.success) {
-      return {client: client.toProtobuf()};
+      return { client: client.toProtobuf() };
     } else {
       return {
         error: {
@@ -33,5 +31,5 @@ class ClientRegistrationService extends Service {
 }
 
 module.exports = {
-  'ClientRegistrationService': ClientRegistrationService,
+  ClientRegistrationService: ClientRegistrationService
 };

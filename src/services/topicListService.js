@@ -1,6 +1,4 @@
-const {
-  Service
-} = require('./service.js');
+const { Service } = require('./service.js');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
@@ -14,7 +12,7 @@ class TopicListService extends Service {
 
   reply() {
     let serviceTopics = this.serviceManager.getTopicList();
-    let dataTopics = this.topicData.getAllTopicsWithData().map(entry => entry.topic);
+    let dataTopics = this.topicData.getAllTopicsWithData().map((entry) => entry.topic);
 
     return {
       stringList: {
@@ -25,5 +23,5 @@ class TopicListService extends Service {
 }
 
 module.exports = {
-  'TopicListService': TopicListService,
+  TopicListService: TopicListService
 };

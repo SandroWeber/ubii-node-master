@@ -2,25 +2,36 @@ const { ClientRegistrationService } = require('./clientRegistrationService.js');
 const { ClientDeregistrationService } = require('./clientDeregistrationService.js');
 const { DeviceRegistrationService } = require('./devices/deviceRegistrationService.js');
 const { DeviceDeregistrationService } = require('./devices/deviceDeregistrationService.js');
-const { InteractionDeleteService } = require('./interactions/interactionDeleteService.js');
-const { InteractionDatabaseGetListService } = require('./interactions/interactionDatabaseGetListService.js');
-const { InteractionOnlineDatabaseGetListService } = require('./interactions/interactionOnlineDatabaseGetListService');
-const { InteractionDatabaseGetService } = require('./interactions/interactionDatabaseGetService.js');
-const { InteractionRegistrationService } = require('./interactions/interactionRegistrationService.js');
-const { InteractionReplaceService } = require('./interactions/interactionReplaceService.js');
+const {
+  InteractionDatabaseDeleteService
+} = require('./interactions/interactionDatabaseDeleteService.js');
+const {
+  InteractionDatabaseGetListService
+} = require('./interactions/interactionDatabaseGetListService.js');
+const {
+  InteractionOnlineDatabaseGetListService
+} = require('./interactions/interactionOnlineDatabaseGetListService');
+const {
+  InteractionLocalDatabaseGetListService
+} = require('./interactions/interactionLocalDatabaseGetListService');
+const {
+  InteractionDatabaseGetService
+} = require('./interactions/interactionDatabaseGetService.js');
+const {
+  InteractionDatabaseSaveService
+} = require('./interactions/interactionDatabaseSaveService.js');
 const { SubscriptionService } = require('./subscriptionService.js');
 const { ServerConfigService } = require('./serverConfigService.js');
 const { TopicListService } = require('./topicListService');
-const { SessionDeleteService } = require('./sessions/sessionDeleteService.js');
+const { SessionDatabaseDeleteService } = require('./sessions/sessionDatabaseDeleteService.js');
 const { SessionDatabaseGetListService } = require('./sessions/sessionDatabaseGetListService.js');
 const { SessionDatabaseGetService } = require('./sessions/sessionDatabaseGetService.js');
 const { SessionRuntimeGetListService } = require('./sessions/sessionRuntimeGetListService.js');
 const { SessionRuntimeGetService } = require('./sessions/sessionRuntimeGetService.js');
-const { SessionRegistrationService } = require('./sessions/sessionRegistrationService.js');
-const { SessionReplaceService } = require('./sessions/sessionReplaceService.js');
+const { SessionDatabaseSaveService } = require('./sessions/sessionDatabaseSaveService.js');
 const { SessionStartService } = require('./sessions/sessionStartService');
 const { SessionStopService } = require('./sessions/sessionStopService');
-const namida = require("@tum-far/namida");
+const namida = require('@tum-far/namida');
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
@@ -37,7 +48,9 @@ class ServiceManager {
     this.services = new Map();
     /* add general services */
     this.addService(new SubscriptionService(this.clientManager, this.topicData));
-    this.addService(new ServerConfigService('generic_server_id', 'generic_server_name', this.connectionManager));
+    this.addService(
+      new ServerConfigService('generic_server_id', 'generic_server_name', this.connectionManager)
+    );
     this.addService(new TopicListService(this.topicData, this));
     /* add client services */
     this.addService(new ClientRegistrationService(this.clientManager));
@@ -46,28 +59,34 @@ class ServiceManager {
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
     this.addService(new DeviceDeregistrationService(this.clientManager, this.deviceManager));
     /* add interaction services */
-    this.addService(new InteractionDeleteService());
+    this.addService(new InteractionDatabaseDeleteService());
     this.addService(new InteractionDatabaseGetListService());
     this.addService(new InteractionOnlineDatabaseGetListService());
+    this.addService(new InteractionLocalDatabaseGetListService());
     this.addService(new InteractionDatabaseGetService());
-    this.addService(new InteractionRegistrationService());
-    this.addService(new InteractionReplaceService());
+    this.addService(new InteractionDatabaseSaveService());
     /* add session services */
-    this.addService(new SessionDeleteService());
+    this.addService(new SessionDatabaseDeleteService());
     this.addService(new SessionDatabaseGetListService());
     this.addService(new SessionDatabaseGetService());
     this.addService(new SessionRuntimeGetListService(this.sessionManager));
     this.addService(new SessionRuntimeGetService(this.sessionManager));
-    this.addService(new SessionRegistrationService(this.sessionManager));
-    this.addService(new SessionReplaceService());
+    this.addService(new SessionDatabaseSaveService(this.sessionManager));
     this.addService(new SessionStartService(this.sessionManager));
     this.addService(new SessionStopService(this.sessionManager));
   }
 
   addService(service) {
+    if (!service.topic) {
+      namida.error('Service topic error', 'Service topic: ' + service.topic, service);
+      return;
+    }
+
     if (this.services.has(service.topic)) {
-      namida.warn('Service already registered',
-        'Service for topic "' + service.topic + '" already registered.');
+      namida.warn(
+        'Service already registered',
+        'Service for topic "' + service.topic + '" already registered.'
+      );
       return;
     }
 
@@ -80,8 +99,9 @@ class ServiceManager {
 
   processRequest(request) {
     if (!request.topic) {
-      console.error('ServiceManager.processRequest() - request missing topic! request:');
-      console.error(request);
+      namida.error('ServiceManager Error', 'request missing topic! request:');
+      console.info(request);
+
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
           title: 'Service request error',

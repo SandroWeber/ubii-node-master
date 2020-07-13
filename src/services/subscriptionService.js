@@ -1,7 +1,5 @@
-const {
-  Service
-} = require('./service.js');
-const namida = require("@tum-far/namida");
+const { Service } = require('./service.js');
+const namida = require('@tum-far/namida');
 
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
@@ -23,7 +21,8 @@ class SubscriptionService extends Service {
       let context = this.prepareContext();
 
       // Update the context feedback.
-      context.feedback.message = `There is no client registered with the id ${namida.style.messageHighlight(clientID)}. ` +
+      context.feedback.message =
+        `There is no client registered with the id ${namida.style.messageHighlight(clientID)}. ` +
         `Subscription was rejected due to an unregistered device.`;
       context.feedback.title = 'Subscription rejected';
 
@@ -44,13 +43,15 @@ class SubscriptionService extends Service {
     client.updateLastSignOfLife();
 
     // Process subscribe topics and unsubscribe topics
-    message.subscribeTopics && message.subscribeTopics.forEach(subscribeTopic => {
-      client.subscribe(subscribeTopic);
-    });
+    message.subscribeTopics &&
+      message.subscribeTopics.forEach((subscribeTopic) => {
+        client.subscribe(subscribeTopic);
+      });
 
-    message.unsubscribeTopics && message.unsubscribeTopics.forEach(unsubscribeTopic => {
-      client.unsubscribe(unsubscribeTopic);
-    });
+    message.unsubscribeTopics &&
+      message.unsubscribeTopics.forEach((unsubscribeTopic) => {
+        client.unsubscribe(unsubscribeTopic);
+      });
 
     // process (un)subscribe regexp
     // subscribe regex
@@ -69,10 +70,10 @@ class SubscriptionService extends Service {
         title: 'Success',
         message: 'Successfully processed all Subscriptions.'
       }
-    }
+    };
   }
 }
 
 module.exports = {
-  'SubscriptionService': SubscriptionService,
+  SubscriptionService: SubscriptionService
 };
