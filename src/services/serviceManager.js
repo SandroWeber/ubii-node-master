@@ -100,7 +100,6 @@ class ServiceManager {
   processRequest(request) {
     if (!request.topic) {
       namida.error('ServiceManager Error', 'request missing topic! request:');
-      console.info(request);
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
