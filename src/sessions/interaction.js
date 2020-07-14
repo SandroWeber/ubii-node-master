@@ -87,14 +87,6 @@ class Interaction extends EventEmitter {
   }
 
   connectInputTopic(internalName, externalTopic) {
-    console.info(
-      'interaction ' +
-        this.id +
-        ' connectInputTopic - connecting ' +
-        internalName +
-        ' to ' +
-        externalTopic
-    );
     if (!this.topicData) {
       console.warn(
         'Interaction(' + this.id + ').connectInputTopic() - missing topicData == ' + this.topicData
@@ -122,14 +114,6 @@ class Interaction extends EventEmitter {
   }
 
   connectOutputTopic(internalName, externalTopic) {
-    console.info(
-      'interaction ' +
-        this.id +
-        ' connectOutputTopic - connecting ' +
-        internalName +
-        ' to ' +
-        externalTopic
-    );
     if (!this.topicData) {
       console.warn(
         'Interaction(' + this.id + ').connectOutputTopic() - missing topicData == ' + this.topicData
