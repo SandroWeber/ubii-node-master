@@ -6,10 +6,17 @@ const SessionStatus = proto.ubii.sessions.SessionStatus;
 const InteractionStatus = proto.ubii.interactions.InteractionStatus;
 
 const { Interaction } = require('./interaction');
+const namida = require('@tum-far/namida/src/namida');
 
 class Session {
   constructor(
-    { id, name = '', interactions = [], ioMappings = [], processMode = ProcessMode.CYCLE_INTERACTIONS },
+    {
+      id,
+      name = '',
+      interactions = [],
+      ioMappings = [],
+      processMode = ProcessMode.CYCLE_INTERACTIONS
+    },
     topicData,
     deviceManager
   ) {
@@ -29,7 +36,7 @@ class Session {
 
   start() {
     if (this.isProcessing) {
-      console.info('Session ' + this.id + ' can\'t be started again, already processing');
+      namida.logFailure('Session ' + this.id, "can't be started again, already processing");
       return false;
     }
 
@@ -44,13 +51,13 @@ class Session {
 
     if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
       this.processInteractionsCycle().then(
-        () => { },
-        rejected => {
+        () => {},
+        (rejected) => {
           console.info(rejected);
         }
       );
     } else if (this.processMode === ProcessMode.INDIVIDUAL_PROCESS_FREQUENCIES) {
-      this.runtimeInteractions.forEach(interaction => {
+      this.runtimeInteractions.forEach((interaction) => {
         interaction.run();
       });
     }
@@ -74,8 +81,7 @@ class Session {
   }
 
   processInteractionsCycle() {
-
-    let processingCycleCallback = i => {
+    let processingCycleCallback = (i) => {
       if (!this.isProcessing) {
         for (let interaction of this.runtimeInteractions) {
           if (interaction.status === InteractionStatus.PROCESSING) {
@@ -110,7 +116,7 @@ class Session {
 
   addInteraction(specs) {
     if (
-      !this.runtimeInteractions.some(interaction => {
+      !this.runtimeInteractions.some((interaction) => {
         return interaction.id === specs.id;
       })
     ) {
@@ -122,7 +128,9 @@ class Session {
 
       return interaction;
     } else {
-      console.warn('Session ' + this.id + ' - can\'t add interaction, ID ' + specs.id + ' already exists');
+      console.warn(
+        'Session ' + this.id + " - can't add interaction, ID " + specs.id + ' already exists'
+      );
     }
   }
 
@@ -135,61 +143,81 @@ class Session {
   }
 
   applyIOMappings() {
-    this.ioMappings.forEach(mapping => {
-      let interaction = this.runtimeInteractions.find(interaction => {
+    this.ioMappings.forEach((mapping) => {
+      let interaction = this.runtimeInteractions.find((interaction) => {
         return interaction.id === mapping.interactionId;
       });
 
       if (!interaction) {
-        console.info('Session.applyIOMappings() - no interaction with ID ' + mapping.interactionId);
+        namida.error(
+          'Session ' + this.id,
+          'no interaction with ID ' + mapping.interactionId + ' for I/O mapping'
+        );
         return;
       }
 
-      mapping.inputMappings && mapping.inputMappings.forEach(inputMapping => {
-        // single topic input target
-        if (typeof inputMapping.topicSource === 'string') {
-          if (interaction.hasInput(inputMapping.name)) {
-            if (!interaction.connectInputTopic(inputMapping.name, inputMapping.topicSource)) {
-              console.info(
-                'Session.applyIOMappings() - connectInput() failed for interaction ' +
-                interaction.id +
-                ': ' +
-                inputMapping.name +
-                ' -> ' +
-                inputMapping.topicSource
+      mapping.inputMappings &&
+        mapping.inputMappings.forEach((inputMapping) => {
+          // single topic input target
+          let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
+          if (typeof topicSource === 'string') {
+            if (interaction.hasInput(inputMapping.name)) {
+              if (!interaction.connectInputTopic(inputMapping.name, topicSource)) {
+                namida.error(
+                  'Session ' + this.id,
+                  'failed to connect input topic ' +
+                    inputMapping.topic +
+                    ' to internal name ' +
+                    inputMapping.name +
+                    ' for interaction ' +
+                    interaction.id
+                );
+              }
+            } else {
+              namida.error(
+                'Session ' + this.id,
+                'interaction ' + interaction.id + ' has no input with name ' + inputMapping.name
               );
             }
           }
-        }
-        // topic mux
-        else if (typeof inputMapping.topicSource === 'object') {
-          let mux = this.deviceManager.addTopicMux(inputMapping.topicSource);
-          interaction.connectMultiplexer(inputMapping.name, mux)
-        }
-      });
+          // topic mux
+          else if (typeof topicSource === 'object') {
+            let mux = this.deviceManager.addTopicMux(topicSource);
+            interaction.connectMultiplexer(inputMapping.name, mux);
+          }
+        });
 
-      mapping.outputMappings && mapping.outputMappings.forEach(outputMapping => {
-        // single topic output target
-        if (typeof outputMapping.topicDestination === 'string') {
-          if (interaction.hasOutput(outputMapping.name)) {
-            if (!interaction.connectOutputTopic(outputMapping.name, outputMapping.topicDestination)) {
-              console.info(
-                'Session.applyIOMappings() - connectOutputTopic() failed for interaction ' +
-                interaction.id +
-                ': ' +
-                outputMapping.name +
-                ' -> ' +
-                outputMapping.topicDestination
+      mapping.outputMappings &&
+        mapping.outputMappings.forEach((outputMapping) => {
+          // single topic output target
+          let topicDestination =
+            outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
+          if (typeof topicDestination === 'string') {
+            if (interaction.hasOutput(outputMapping.name)) {
+              if (!interaction.connectOutputTopic(outputMapping.name, topicDestination)) {
+                namida.error(
+                  'Session ' + this.id,
+                  'failed to connect output topic ' +
+                    outputMapping.topic +
+                    ' to internal name ' +
+                    outputMapping.name +
+                    ' for interaction ' +
+                    interaction.id
+                );
+              }
+            } else {
+              namida.error(
+                'Session ' + this.id,
+                'interaction ' + interaction.id + ' has no output with name ' + outputMapping.name
               );
             }
           }
-        }
-        // topic demux
-        else if (typeof outputMapping.topicDestination === 'object') {
-          let demux = this.deviceManager.addTopicDemux(outputMapping.topicDestination);
-          interaction.connectDemultiplexer(outputMapping.name, demux);
-        }
-      });
+          // topic demux
+          else if (typeof topicDestination === 'object') {
+            let demux = this.deviceManager.addTopicDemux(topicDestination);
+            interaction.connectDemultiplexer(outputMapping.name, demux);
+          }
+        });
     });
   }
 
