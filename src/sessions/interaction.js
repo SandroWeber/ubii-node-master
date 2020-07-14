@@ -39,7 +39,7 @@ class Interaction extends EventEmitter {
     Object.defineProperty(this.state, 'modules', {
       // modules are read-only
       get: () => {
-        return InteractModulesService.getModulesObject();/*{
+        return InteractModulesService.getModulesObject(); /*{
           tf: tf,
           cocoSsd: cocoSsd,
           emgClassifier: emgClassifier,
@@ -63,30 +63,38 @@ class Interaction extends EventEmitter {
   }
 
   hasInput(name) {
-    return this.inputFormats.some(input => {
+    return this.inputFormats.some((input) => {
       return input.internalName === name;
     });
   }
 
   getInputFormat(name) {
-    return this.inputFormats.find(input => {
+    return this.inputFormats.find((input) => {
       input.internalName === name;
     });
   }
 
   hasOutput(name) {
-    return this.outputFormats.some(output => {
+    return this.outputFormats.some((output) => {
       return output.internalName === name;
     });
   }
 
   getOutputFormat(name) {
-    return this.outputFormats.find(output => {
+    return this.outputFormats.find((output) => {
       return output.internalName === name;
     });
   }
 
   connectInputTopic(internalName, externalTopic) {
+    console.info(
+      'interaction ' +
+        this.id +
+        ' connectInputTopic - connecting ' +
+        internalName +
+        ' to ' +
+        externalTopic
+    );
     if (!this.topicData) {
       console.warn(
         'Interaction(' + this.id + ').connectInputTopic() - missing topicData == ' + this.topicData
@@ -114,6 +122,14 @@ class Interaction extends EventEmitter {
   }
 
   connectOutputTopic(internalName, externalTopic) {
+    console.info(
+      'interaction ' +
+        this.id +
+        ' connectOutputTopic - connecting ' +
+        internalName +
+        ' to ' +
+        externalTopic
+    );
     if (!this.topicData) {
       console.warn(
         'Interaction(' + this.id + ').connectOutputTopic() - missing topicData == ' + this.topicData
@@ -125,10 +141,12 @@ class Interaction extends EventEmitter {
       delete this.outputProxy[internalName];
     }
 
-    let type = Utils.getTopicDataTypeFromMessageFormat(this.getOutputFormat(internalName).messageFormat);
+    let type = Utils.getTopicDataTypeFromMessageFormat(
+      this.getOutputFormat(internalName).messageFormat
+    );
     Object.defineProperty(this.outputProxy, internalName, {
       // output is write-only
-      set: value => {
+      set: (value) => {
         this.topicData.publish(externalTopic, value, type);
       },
       configurable: true
@@ -166,7 +184,7 @@ class Interaction extends EventEmitter {
 
     Object.defineProperty(this.outputProxy, internalName, {
       // output is write-only
-      set: value => {
+      set: (value) => {
         demultiplexer.push(value);
       },
       configurable: true
@@ -200,9 +218,9 @@ class Interaction extends EventEmitter {
     if (typeof this.processingCallback !== 'function') {
       console.warn(
         'Interaction(' +
-        this.id +
-        ').process() - processingCallback not a function == ' +
-        this.processingCallback
+          this.id +
+          ').process() - processingCallback not a function == ' +
+          this.processingCallback
       );
       return false;
     }
@@ -213,7 +231,9 @@ class Interaction extends EventEmitter {
 
   run() {
     if (this.status !== InteractionStatus.INITIALIZED && this.status !== InteractionStatus.HALTED) {
-      setTimeout(() => { this.run(); }, 500);
+      setTimeout(() => {
+        this.run();
+      }, 500);
       return;
     }
 
@@ -226,7 +246,7 @@ class Interaction extends EventEmitter {
           processAtFrequency();
         }, 1000 / this.processFrequency);
       }
-    }
+    };
 
     processAtFrequency();
   }
@@ -237,8 +257,7 @@ class Interaction extends EventEmitter {
     if (this.onCreatedCallback) {
       try {
         await this.onCreatedCallback(this.state);
-      }
-      catch (error) {
+      } catch (error) {
         console.warn(error);
       }
     }

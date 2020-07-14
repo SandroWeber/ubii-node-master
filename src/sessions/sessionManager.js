@@ -18,12 +18,20 @@ class SessionManager extends EventEmitter {
     this.addEventListeners();
   }
 
-  createSession(specifications = {}) {
-    if (specifications.id && this.getSession(specifications.id)) {
-      throw 'Session with ID ' + specifications.id + ' already exists.';
+  createSession(specs = {}) {
+    if (specs.id && this.getSession(specs.id)) {
+      namida.error('SessionManager', 'Session ID already exists: ' + specs.id);
+      throw 'Session with ID ' + specs.id + ' already exists.';
     }
 
-    let session = new Session(specifications, this.topicData, this.deviceManager);
+    if (!specs.ioMappings || specs.ioMappings.length === 0) {
+      namida.warn(
+        'SessionManager',
+        'Session ' + specs.id + ' has no I/O Mappings (topics <-> interactions)'
+      );
+    }
+
+    let session = new Session(specs, this.topicData, this.deviceManager);
     this.addSession(session);
     this.emit(EVENTS_SESSION_MANAGER.NEW_SESSION, session.toProtobuf());
 
