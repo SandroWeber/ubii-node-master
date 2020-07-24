@@ -20,6 +20,7 @@ const { SessionRegistrationService } = require('./sessions/sessionRegistrationSe
 const { SessionReplaceService } = require('./sessions/sessionReplaceService.js');
 const { SessionStartService } = require('./sessions/sessionStartService');
 const { SessionStopService } = require('./sessions/sessionStopService');
+const { XRHubRoomDataGetService } = require('./xr-hub/xrHubRoomDataGetService');
 const namida = require("@tum-far/namida");
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
@@ -62,6 +63,8 @@ class ServiceManager {
     this.addService(new SessionReplaceService());
     this.addService(new SessionStartService(this.sessionManager));
     this.addService(new SessionStopService(this.sessionManager));
+    /* add room services */
+    this.addService(new XRHubRoomDataGetService())
   }
 
   addService(service) {
