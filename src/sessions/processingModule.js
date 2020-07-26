@@ -1,4 +1,5 @@
 const uuidv4 = require('uuid/v4');
+const InteractionStatus = proto.ubii.interactions.InteractionStatus;
 
 //TODO genereate msg-format for that
 const PROCESSINGMODE = {
@@ -18,10 +19,10 @@ class ProcessingModule {
                     tags = [],
                     description = '',
                     processFrequency = 30, // eg. 30 Hz; only used in PROCESSINGMODE.ATFREQUENCY
-                    onProcessing = '',    // function name to call when processing client should process
-                    onCreated = '',    // function name to call when processingModule is created
-                    inputFormats = [],  // lockstep: inputdata; others: topics to subscribe to
-                    outputFormats = [], // lockstep: ouputdata; others: topics to publish to
+                    onProcessing = '',    // functions' class followed by .functionname to call when processing client should process
+                    onCreated = '',    // functions' class followed by .functionname to call when processingModule is created
+                    input = [],  // lockstep: inputdata(TopicDataRecordList); others: topics to subscribe to
+                    output = [], // lockstep: ouputdata(TopicDataRecordList); others: topics to publish to
                     processingMode = PROCESSINGMODE.LOCKSTEP
                 }) {
 
@@ -33,9 +34,10 @@ class ProcessingModule {
         this.processFrequency = processFrequency;
         this.onProcessing = onProcessing;
         this.onCreated = onCreated;
-        this.inputFormats = inputFormats;
-        this.outputFormats = outputFormats;
+        this.input = input;
+        this.output = output;
         this.processingMode = processingMode;
+        this.status = InteractionStatus.CREATED;
     }
 
 
@@ -49,9 +51,10 @@ class ProcessingModule {
             processFrequency: this.processFrequency,
             onProcessing: this.onProcessing,
             onCreated: this.onCreated,
-            inputFormats: this.inputFormats,
-            outputFormats: this.outputFormats,
-            processingMode: this.processingMode
+            input: this.input,
+            output: this.output,
+            processingMode: this.processingMode,
+            status: this.status
         };
     }
 }
