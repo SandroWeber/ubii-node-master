@@ -5,7 +5,11 @@ const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 class SubscriptionService extends Service {
   constructor(clientManager, topicData) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION);
+    super(
+      DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
+      'ubii.services.request.TopicSubscription',
+      'ubii.general.Success, ubii.general.Error'
+    );
 
     this.clientManager = clientManager;
     this.topicData = topicData;
