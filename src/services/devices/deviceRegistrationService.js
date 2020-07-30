@@ -1,13 +1,15 @@
-const {
-  Service
-} = require('../service.js');
-const namida = require("@tum-far/namida");
+const { Service } = require('../service.js');
+const namida = require('@tum-far/namida');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class DeviceRegistrationService extends Service {
   constructor(clientManager, deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION);
+    super(
+      DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
+      MSG_TYPES.DEVICE,
+      MSG_TYPES.DEVICE + ', ' + MSG_TYPES.ERROR
+    );
 
     this.clientManager = clientManager;
     this.deviceManager = deviceManager;
@@ -21,8 +23,10 @@ class DeviceRegistrationService extends Service {
     if (!this.clientManager.verifyClient(message.clientId)) {
       // Prepare the context.
       // Update the context feedback.
-      context.feedback.message = `There is no Client registered with the id ${namida.style.messageHighlight(message.clientId)}. ` +
-        `Message processing was aborted due to an unregistered client.`;
+      context.feedback.message =
+        `There is no Client registered with the id ${namida.style.messageHighlight(
+          message.clientId
+        )}. ` + `Message processing was aborted due to an unregistered client.`;
       context.feedback.title = 'DeviceRegistrationService ERROR';
 
       namida.logFailure(context.feedback.title, context.feedback.message);
@@ -65,5 +69,5 @@ class DeviceRegistrationService extends Service {
 }
 
 module.exports = {
-  'DeviceRegistrationService': DeviceRegistrationService,
+  DeviceRegistrationService: DeviceRegistrationService
 };

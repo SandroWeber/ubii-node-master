@@ -1,11 +1,11 @@
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../../service.js');
 const topicMuxDatabase = require('../../../storage/topicMuxDatabase');
 
 class TopicMuxDatabaseAddService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_DATABASE_ADD);
+    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_DATABASE_ADD, MSG_TYPES.TOPIC_MUX, MSG_TYPES.TOPIC_MUX);
   }
 
   reply(specs) {
@@ -15,8 +15,7 @@ class TopicMuxDatabaseAddService extends Service {
       return {
         topicMux: muxSpecs
       };
-    }
-    catch (error) {
+    } catch (error) {
       return {
         error: {
           title: 'TopicMuxDatabaseAddService Error',
@@ -29,5 +28,5 @@ class TopicMuxDatabaseAddService extends Service {
 }
 
 module.exports = {
-  'TopicMuxDatabaseAddService': TopicMuxDatabaseAddService,
+  TopicMuxDatabaseAddService: TopicMuxDatabaseAddService
 };

@@ -1,13 +1,15 @@
-const {
-  Service
-} = require('./service.js');
-const namida = require("@tum-far/namida");
+const { Service } = require('./service.js');
+const namida = require('@tum-far/namida');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class ClientDeregistrationService extends Service {
   constructor(clientManager, deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.CLIENT_DEREGISTRATION);
+    super(
+      DEFAULT_TOPICS.SERVICES.CLIENT_DEREGISTRATION,
+      MSG_TYPES.CLIENT,
+      MSG_TYPES.SUCCESS + ', ' + MSG_TYPES.ERROR
+    );
 
     this.clientManager = clientManager;
     this.deviceManager = deviceManager;
@@ -18,8 +20,7 @@ class ClientDeregistrationService extends Service {
     try {
       this.deviceManager.removeClientDevices(message.id);
       this.clientManager.removeClient(message.id);
-    }
-    catch (error) {
+    } catch (error) {
       namida.logFailure('ClientDeregistrationService ERROR', error.toString());
       return {
         error: {
@@ -30,16 +31,19 @@ class ClientDeregistrationService extends Service {
       };
     }
 
-    namida.logSuccess('ClientDeregistrationService SUCCESS', 'Client with ID ' + message.id + ' was successfully removed');
+    namida.logSuccess(
+      'ClientDeregistrationService SUCCESS',
+      'Client with ID ' + message.id + ' was successfully removed'
+    );
     return {
       success: {
         title: 'ClientDeregistrationService SUCCESS',
         message: 'Client with ID ' + message.id + ' was successfully removed'
       }
-    }
+    };
   }
 }
 
 module.exports = {
-  'ClientDeregistrationService': ClientDeregistrationService,
+  ClientDeregistrationService: ClientDeregistrationService
 };

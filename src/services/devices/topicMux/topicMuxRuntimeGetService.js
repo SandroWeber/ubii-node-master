@@ -1,10 +1,10 @@
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../../service.js');
 
 class TopicMuxRuntimeGetService extends Service {
   constructor(deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_GET);
+    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_GET, MSG_TYPES.TOPIC_MUX, MSG_TYPES.TOPIC_MUX);
 
     this.deviceManager = deviceManager;
   }
@@ -16,8 +16,7 @@ class TopicMuxRuntimeGetService extends Service {
       return {
         topicMux: muxSpecs
       };
-    }
-    catch (error) {
+    } catch (error) {
       return {
         error: {
           title: 'TopicMuxRuntimeGetService Error',
@@ -30,5 +29,5 @@ class TopicMuxRuntimeGetService extends Service {
 }
 
 module.exports = {
-  'TopicMuxRuntimeGetService': TopicMuxRuntimeGetService,
+  TopicMuxRuntimeGetService: TopicMuxRuntimeGetService
 };

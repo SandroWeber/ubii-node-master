@@ -1,11 +1,15 @@
 const { Service } = require('../service.js');
 const SessionDatabase = require('../../storage/sessionDatabase');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class SessionDatabaseDeleteService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.SESSION_DATABASE_DELETE);
+    super(
+      DEFAULT_TOPICS.SERVICES.SESSION_DATABASE_DELETE,
+      MSG_TYPES.SESSION,
+      MSG_TYPES.SUCCESS + ', ' + MSG_TYPES.ERROR
+    );
   }
 
   reply(sessionMessage) {

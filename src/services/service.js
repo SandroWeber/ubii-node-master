@@ -23,6 +23,16 @@ class Service {
       success: false
     };
   }
+
+  toProtobuf() {
+    return {
+      topic: this.topic,
+      requestMessageFormat: this.requestMessageFormat,
+      responseMessageFormat: this.responseMessageFormat,
+      tags: this.tags,
+      description: this.description
+    };
+  }
 }
 
 module.exports = {
