@@ -7,13 +7,13 @@ class XRHubRoomDataGetService extends Service {
     super("/services/xr-hub/room/get");
   }
 
-  reply(roomId){
-    if(!roomId){
+  reply(roomObject){
+    if(XRHubRoomDatabase.getRoom(roomObject.roomId)){
+      return {success: XRHubRoomDatabase.getRoom(roomObject.roomId)};
+    } else{
       const baseRoom = XRHubRoomDatabase.getRoom("BaseRoom");
       const newRoom = XRHubRoomDatabase.addRoom(baseRoom);
       return  {success: newRoom};
-    } else{
-      return {success: XRHubRoomDatabase.getRoom("roomId")};
     }
   }
 }
