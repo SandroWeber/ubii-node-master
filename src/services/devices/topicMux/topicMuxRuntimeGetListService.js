@@ -4,7 +4,11 @@ const { Service } = require('../../service.js');
 
 class TopicMuxRuntimeGetListService extends Service {
   constructor(deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_GET_LIST, undefined, MSG_TYPES.TOPIC_MUX_LIST);
+    super(
+      DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_GET_LIST,
+      undefined,
+      MSG_TYPES.TOPIC_MUX_LIST + ', ' + MSG_TYPES.ERROR
+    );
 
     this.deviceManager = deviceManager;
   }

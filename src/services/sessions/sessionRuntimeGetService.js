@@ -1,11 +1,15 @@
-const {Service} = require('./../service.js');
+const { Service } = require('./../service.js');
 const SessionDatabase = require('../../storage/sessionDatabase');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class SessionRuntimeGetService extends Service {
   constructor(sessionManager) {
-    super(DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_GET);
+    super(
+      DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_GET,
+      MSG_TYPES.SESSION,
+      MSG_TYPES.SESSION + ', ' + MSG_TYPES.ERROR
+    );
     this.sessionManager = sessionManager;
   }
 
@@ -20,11 +24,11 @@ class SessionRuntimeGetService extends Service {
         }
       };
     } else {
-      return {session: session.toProtobuf()};
+      return { session: session.toProtobuf() };
     }
   }
 }
 
 module.exports = {
-  'SessionRuntimeGetService': SessionRuntimeGetService
+  SessionRuntimeGetService: SessionRuntimeGetService
 };

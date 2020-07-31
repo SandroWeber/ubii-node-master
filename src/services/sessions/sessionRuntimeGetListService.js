@@ -1,10 +1,14 @@
-const {Service} = require('./../service.js');
+const { Service } = require('./../service.js');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class SessionRuntimeGetListService extends Service {
   constructor(sessionManager) {
-    super(DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_GET_LIST);
+    super(
+      DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_GET_LIST,
+      undefined,
+      MSG_TYPES.SESSION_LIST + ', ' + MSG_TYPES.ERROR
+    );
 
     this.sessionManager = sessionManager;
   }
@@ -27,5 +31,5 @@ class SessionRuntimeGetListService extends Service {
 }
 
 module.exports = {
-  'SessionRuntimeGetListService': SessionRuntimeGetListService
+  SessionRuntimeGetListService: SessionRuntimeGetListService
 };

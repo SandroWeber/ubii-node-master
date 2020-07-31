@@ -4,7 +4,11 @@ const { Service } = require('../../service.js');
 
 class TopicMuxRuntimeGetService extends Service {
   constructor(deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_GET, MSG_TYPES.TOPIC_MUX, MSG_TYPES.TOPIC_MUX);
+    super(
+      DEFAULT_TOPICS.SERVICES.TOPIC_MUX_RUNTIME_GET,
+      MSG_TYPES.TOPIC_MUX,
+      MSG_TYPES.TOPIC_MUX + ', ' + MSG_TYPES.ERROR
+    );
 
     this.deviceManager = deviceManager;
   }

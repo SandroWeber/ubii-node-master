@@ -4,7 +4,11 @@ const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class ClientRegistrationService extends Service {
   constructor(clientManager) {
-    super(DEFAULT_TOPICS.SERVICES.CLIENT_REGISTRATION, MSG_TYPES.CLIENT, MSG_TYPES.CLIENT);
+    super(
+      DEFAULT_TOPICS.SERVICES.CLIENT_REGISTRATION,
+      MSG_TYPES.CLIENT,
+      MSG_TYPES.CLIENT + ', ' + MSG_TYPES.ERROR
+    );
 
     this.clientManager = clientManager;
   }

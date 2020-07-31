@@ -1,11 +1,15 @@
 const { Service } = require('../service.js');
 const InteractionDatabase = require('../../storage/interactionDatabase');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class InteractionDatabaseDeleteService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_DELETE);
+    super(
+      DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_DELETE,
+      MSG_TYPES.INTERACTION,
+      MSG_TYPES.SUCCESS + ', ' + MSG_TYPES.ERROR
+    );
   }
 
   reply(interactionMessage) {

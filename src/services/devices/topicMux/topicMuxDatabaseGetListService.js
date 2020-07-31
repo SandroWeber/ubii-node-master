@@ -5,7 +5,11 @@ const topicMuxDatabase = require('../../../storage/topicMuxDatabase');
 
 class TopicMuxDatabaseGetListService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_MUX_DATABASE_GET_LIST, undefined, MSG_TYPES.TOPIC_MUX_LIST);
+    super(
+      DEFAULT_TOPICS.SERVICES.TOPIC_MUX_DATABASE_GET_LIST,
+      undefined,
+      MSG_TYPES.TOPIC_MUX_LIST + ', ' + MSG_TYPES.ERROR
+    );
   }
 
   reply() {

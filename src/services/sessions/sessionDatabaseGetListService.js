@@ -5,7 +5,11 @@ const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class SessionDatabaseGetListService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.SESSION_DATABASE_GET_LIST, undefined, MSG_TYPES.SESSION_LIST);
+    super(
+      DEFAULT_TOPICS.SERVICES.SESSION_DATABASE_GET_LIST,
+      undefined,
+      MSG_TYPES.SESSION_LIST + ', ' + MSG_TYPES.ERROR
+    );
   }
 
   reply() {

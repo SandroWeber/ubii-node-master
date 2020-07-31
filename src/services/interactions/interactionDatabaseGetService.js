@@ -1,11 +1,15 @@
-const {Service} = require('./../service.js');
+const { Service } = require('./../service.js');
 const InteractionDatabase = require('../../storage/interactionDatabase');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class InteractionDatabaseGetService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_GET);
+    super(
+      DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_GET,
+      MSG_TYPES.INTERACTION,
+      MSG_TYPES.INTERACTION_LIST + ', ' + MSG_TYPES.ERROR
+    );
   }
 
   reply(interactionMessage) {
@@ -18,11 +22,11 @@ class InteractionDatabaseGetService extends Service {
         }
       };
     } else {
-      return {interaction: interaction};
+      return { interaction: interaction };
     }
   }
 }
 
 module.exports = {
-  'InteractionDatabaseGetService': InteractionDatabaseGetService
+  InteractionDatabaseGetService: InteractionDatabaseGetService
 };
