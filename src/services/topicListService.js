@@ -1,10 +1,10 @@
 const { Service } = require('./service.js');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class TopicListService extends Service {
   constructor(topicData, serviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_LIST);
+    super(DEFAULT_TOPICS.SERVICES.TOPIC_LIST, undefined, MSG_TYPES.DATASTRUCTURE_STRING_LIST);
 
     this.topicData = topicData;
     this.serviceManager = serviceManager;
@@ -16,7 +16,7 @@ class TopicListService extends Service {
 
     return {
       stringList: {
-        list: serviceTopics.concat(dataTopics)
+        elements: serviceTopics.concat(dataTopics)
       }
     };
   }

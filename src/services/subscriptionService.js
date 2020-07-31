@@ -1,11 +1,15 @@
 const { Service } = require('./service.js');
 const namida = require('@tum-far/namida');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class SubscriptionService extends Service {
   constructor(clientManager, topicData) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION);
+    super(
+      DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
+      MSG_TYPES.TOPIC_SUBSCRIPTION,
+      MSG_TYPES.SUCCESS + ', ' + MSG_TYPES.ERROR
+    );
 
     this.clientManager = clientManager;
     this.topicData = topicData;

@@ -1,11 +1,15 @@
 const { Service } = require('../service.js');
 const SessionDatabase = require('../../storage/sessionDatabase');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class SessionDatabaseSaveService extends Service {
   constructor(sessionManager) {
-    super(DEFAULT_TOPICS.SERVICES.SESSION_DATABASE_SAVE);
+    super(
+      DEFAULT_TOPICS.SERVICES.SESSION_DATABASE_SAVE,
+      MSG_TYPES.SESSION + ', ' + MSG_TYPES.SESSION_LIST,
+      MSG_TYPES.SESSION_LIST + ', ' + MSG_TYPES.ERROR
+    );
 
     this.sessionManager = sessionManager;
   }

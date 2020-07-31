@@ -2,11 +2,15 @@ const { Service } = require('../service.js');
 const { Interaction } = require('../../sessions/interaction.js');
 const InteractionDatabase = require('../../storage/interactionDatabase');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class InteractionDatabaseSaveService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_SAVE);
+    super(
+      DEFAULT_TOPICS.SERVICES.INTERACTION_DATABASE_SAVE,
+      MSG_TYPES.INTERACTION + ', ' + MSG_TYPES.INTERACTION_LIST,
+      MSG_TYPES.INTERACTION_LIST + ', ' + MSG_TYPES.ERROR
+    );
   }
 
   reply(interactionSpecs) {

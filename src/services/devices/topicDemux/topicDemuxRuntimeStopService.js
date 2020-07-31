@@ -1,10 +1,14 @@
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../../service.js');
 
 class TopicDemuxRuntimeStopService extends Service {
   constructor(deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_DEMUX_RUNTIME_STOP);
+    super(
+      DEFAULT_TOPICS.SERVICES.TOPIC_DEMUX_RUNTIME_STOP,
+      MSG_TYPES.TOPIC_DEMUX,
+      MSG_TYPES.SUCCESS + ', ' + MSG_TYPES.ERROR
+    );
 
     this.deviceManager = deviceManager;
   }
@@ -19,8 +23,7 @@ class TopicDemuxRuntimeStopService extends Service {
           message: 'Stop topic demux (ID ' + specs.id + ') SUCCESS'
         }
       };
-    }
-    catch (error) {
+    } catch (error) {
       return {
         error: {
           title: 'TopicDemuxRuntimeStopService Error',
@@ -33,5 +36,5 @@ class TopicDemuxRuntimeStopService extends Service {
 }
 
 module.exports = {
-  'TopicDemuxRuntimeStopService': TopicDemuxRuntimeStopService,
+  TopicDemuxRuntimeStopService: TopicDemuxRuntimeStopService
 };

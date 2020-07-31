@@ -1,10 +1,14 @@
 const { Service } = require('./../service.js');
 
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class SessionStopService extends Service {
   constructor(sessionManager) {
-    super(DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_STOP);
+    super(
+      DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_STOP,
+      MSG_TYPES.SESSION,
+      MSG_TYPES.SUCCESS + ', ' + MSG_TYPES.ERROR
+    );
 
     this.sessionManager = sessionManager;
   }

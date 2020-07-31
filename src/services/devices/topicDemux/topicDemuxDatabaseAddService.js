@@ -1,11 +1,15 @@
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../../service.js');
 const topicDemuxDatabase = require('../../../storage/topicDemuxDatabase');
 
 class TopicDemuxDatabaseAddService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_DEMUX_DATABASE_ADD);
+    super(
+      DEFAULT_TOPICS.SERVICES.TOPIC_DEMUX_DATABASE_ADD,
+      MSG_TYPES.TOPIC_DEMUX,
+      MSG_TYPES.TOPIC_DEMUX + ', ' + MSG_TYPES.ERROR
+    );
   }
 
   reply(specs) {
@@ -14,20 +18,19 @@ class TopicDemuxDatabaseAddService extends Service {
 
       return {
         topicDemux: demuxSpecs.toProtobuf()
-      }
-    }
-    catch (error) {
+      };
+    } catch (error) {
       return {
         error: {
           title: 'TopicDemuxDatabaseAddService Error',
           message: error.toString(),
           stack: error.stack && error.stack.toString()
         }
-      }
+      };
     }
   }
 }
 
 module.exports = {
-  'TopicDemuxDatabaseAddService': TopicDemuxDatabaseAddService,
+  TopicDemuxDatabaseAddService: TopicDemuxDatabaseAddService
 };

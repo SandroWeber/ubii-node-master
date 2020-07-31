@@ -1,11 +1,15 @@
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../../service.js');
 const topicDemuxDatabase = require('../../../storage/topicDemuxDatabase');
 
 class TopicDemuxRuntimeStartService extends Service {
   constructor(deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_DEMUX_RUNTIME_START);
+    super(
+      DEFAULT_TOPICS.SERVICES.TOPIC_DEMUX_RUNTIME_START,
+      MSG_TYPES.TOPIC_DEMUX,
+      MSG_TYPES.TOPIC_DEMUX + ', ' + MSG_TYPES.ERROR
+    );
 
     this.deviceManager = deviceManager;
   }
@@ -22,8 +26,7 @@ class TopicDemuxRuntimeStartService extends Service {
       return {
         topicDemux: demuxSpecs
       };
-    }
-    catch (error) {
+    } catch (error) {
       return {
         error: {
           title: 'TopicDemuxRuntimeStartService Error',
@@ -36,5 +39,5 @@ class TopicDemuxRuntimeStartService extends Service {
 }
 
 module.exports = {
-  'TopicDemuxRuntimeStartService': TopicDemuxRuntimeStartService,
+  TopicDemuxRuntimeStartService: TopicDemuxRuntimeStartService
 };

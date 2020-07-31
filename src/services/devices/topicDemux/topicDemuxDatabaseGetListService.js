@@ -1,11 +1,15 @@
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../../service.js');
 const topicDemuxDatabase = require('../../../storage/topicDemuxDatabase');
 
 class TopicDemuxDatabaseGetListService extends Service {
   constructor() {
-    super(DEFAULT_TOPICS.SERVICES.TOPIC_DEMUX_DATABASE_GET_LIST);
+    super(
+      DEFAULT_TOPICS.SERVICES.TOPIC_DEMUX_DATABASE_GET_LIST,
+      undefined,
+      MSG_TYPES.TOPIC_DEMUX_LIST
+    );
   }
 
   reply() {
@@ -14,20 +18,19 @@ class TopicDemuxDatabaseGetListService extends Service {
 
       return {
         topicDemuxList: demuxSpecsList
-      }
-    }
-    catch (error) {
+      };
+    } catch (error) {
       return {
         error: {
           title: 'TopicDemuxDatabaseGetListService Error',
           message: error.toString(),
           stack: error.stack && error.stack.toString()
         }
-      }
+      };
     }
   }
 }
 
 module.exports = {
-  'TopicDemuxDatabaseGetListService': TopicDemuxDatabaseGetListService,
+  TopicDemuxDatabaseGetListService: TopicDemuxDatabaseGetListService
 };

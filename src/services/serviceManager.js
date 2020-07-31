@@ -23,6 +23,7 @@ const {
 const { SubscriptionService } = require('./subscriptionService.js');
 const { ServerConfigService } = require('./serverConfigService.js');
 const { TopicListService } = require('./topicListService');
+const { ServiceListService } = require('./serviceListService');
 const { SessionDatabaseDeleteService } = require('./sessions/sessionDatabaseDeleteService.js');
 const { SessionDatabaseGetListService } = require('./sessions/sessionDatabaseGetListService.js');
 const { SessionDatabaseGetService } = require('./sessions/sessionDatabaseGetService.js');
@@ -52,6 +53,7 @@ class ServiceManager {
       new ServerConfigService('generic_server_id', 'generic_server_name', this.connectionManager)
     );
     this.addService(new TopicListService(this.topicData, this));
+    this.addService(new ServiceListService(this));
     /* add client services */
     this.addService(new ClientRegistrationService(this.clientManager));
     this.addService(new ClientDeregistrationService(this.clientManager, this.deviceManager));
@@ -117,6 +119,15 @@ class ServiceManager {
     let list = [];
     this.services.forEach((service, topic) => {
       list.push(topic);
+    });
+
+    return list;
+  }
+
+  getServiceListProtoSpecs() {
+    let list = [];
+    this.services.forEach((service, topic) => {
+      list.push(service.toProtobuf());
     });
 
     return list;
