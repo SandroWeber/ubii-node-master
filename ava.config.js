@@ -1,10 +1,12 @@
 export default {
   files: [
-    'test/node/master-client-web.js',
-    'test/node/master-client-zmq.js',
-    'test/devices/**/*',
-    'test/sessions/**/*',
+    '!test/clients/integration-tests/*.js', //regexSubscriptions
+    '!test/node/master-client-web.js',
+    '!test/node/master-client-zmq.js',
+    '!test/devices/**/*',
+    '!test/sessions/**/*',
     'test/clients/**/*',
+    // not part of the tests
     '!test/files/**/*',
     '!test/mocks/*',
     '!test/sessions/testUtility.js'
@@ -13,7 +15,7 @@ export default {
   failFast: false,
   failWithoutAssertions: false,
   tap: false,
-  verbose: false,
+  verbose: true,
   serial: true,
   compileEnhancements: false
 };

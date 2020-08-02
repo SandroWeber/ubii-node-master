@@ -125,34 +125,45 @@ import { ServerMock } from '../../mocks/serverMock';
     let topics = t.context.topics;
     let server = t.context.server;
 
-    let regexString = '/my/topics/*';
+    let topicA = '/my';
+    let topicB = '/my/topics/b';
+    let topicC = '/my/topics/c';
+    let regexX = '/*';
+    let regexY = '/my/*';
+    let regexZ = '/my/topics/*';
 
-    // subscribe
-    client.subscribeRegex(regexString);
-    //publish
-    topicData.publish(topics[0].topic, true, 'boolean');
-    topicData.publish(topics[1].topic, true, 'boolean');
-    // check subscriptions to existing topics matching regex
-    t.true(client.topicSubscriptionTokens.has(topics[0].topic));
-    t.true(client.topicSubscriptionTokens.has(topics[1].topic));
+    // publish on all topics
+    topicData.publish(topicA, true, 'boolean');
+    topicData.publish(topicB, true, 'boolean');
+    topicData.publish(topicC, true, 'boolean');
 
-    // unsubscribe
-    let callCountSendBeforeUnsubscribe = server.send.callCount;
-    client.unsubscribeRegex(regexString);
-    // check that subscriptions are gone
-    t.false(client.topicSubscriptionTokens.has(topics[0].topic));
-    t.false(client.topicSubscriptionTokens.has(topics[1].topic));
-    //publish again
-    topicData.publish(topics[0].topic, true, 'boolean');
-    topicData.publish(topics[1].topic, true, 'boolean');
-    // should not send out any more messages
-    t.is(server.send.callCount, callCountSendBeforeUnsubscribe);
-    // check subscriptions again, should not resubscribe after publishing
-    t.false(client.topicSubscriptionTokens.has(topics[0].topic));
-    t.false(client.topicSubscriptionTokens.has(topics[1].topic));
+    // subscribe to all topics and regExes
+    client.subscribeTopic(topicA);
+    client.subscribeTopic(topicB);
+    client.subscribeTopic(topicC);
+    client.subscribeRegex(regexX);
+    client.subscribeRegex(regexY);
+    client.subscribeRegex(regexZ);
 
-    // publish new topic matching regex, should not subscribe to it
-    topicData.publish(topics[2].topic, true, 'boolean');
-    t.false(client.topicSubscriptionTokens.has(topics[2].topic));
+    // check each topic is subscribed explicitly and by respective regular expressions
+    t.deepEqual(client.topicSubscriptions.get(topicA), {
+      explicit: true,
+      regExes: [regexX, regexY]
+    });
+    [topicB, topicC].forEach((topic) => {
+      t.deepEqual(client.topicSubscriptions.get(topic), {
+        explicit: true,
+        regExes: [regexX, regexY, regexZ]
+      });
+    });
+    // check each topic has a subscription token
+    [topicA, topicB, topicC].forEach((topic) => {
+      t.true(client.topicSubscriptionTokens.has(topic));
+    });
+
+    // unsubscribe all topics
+    client.unsubscribeTopic(topicA);
+    client.unsubscribeTopic(topicB);
+    client.unsubscribeTopic(topicC);
   });
 })();

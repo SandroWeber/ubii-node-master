@@ -31,7 +31,6 @@ class Client {
     this.registrationDate = new Date();
     this.lastSignOfLife = null;
     this.topicSubscriptionTokens = new Map();
-    this.explicitTopicSubscriptions = [];
     this.topicSubscriptions = new Map();
     this.regexSubscriptions = new Map();
 
@@ -285,10 +284,6 @@ class Client {
     }
   }
 
-  /*hasExplicitTopicSubscription(topic) {
-    return this.explicitTopicSubscriptions.includes(topic);
-  }*/
-
   /**
    * Subscribe to a regular expression
    * @param {String} regexString
@@ -384,6 +379,7 @@ class Client {
       // if no subscriptions remain, unsubscribe at TopicData
       if (!subs.explicit && subs.regExes.length === 0) {
         this.unsubscribeAtTopicData(topic);
+        this.topicSubscriptions.delete(topic);
       }
     });
   }
