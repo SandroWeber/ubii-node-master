@@ -1,11 +1,11 @@
 export default {
   files: [
-    'test/clients/integration-tests/*.js', //regexSubscriptions
+    'test/devices/**/*',
+    'test/sessions/**/*',
+    'test/clients/**/*',
+    // outdated client integration tests, replaced by actual clients from web-frontend and Unity with their integration tests and demos
     '!test/node/master-client-web.js',
     '!test/node/master-client-zmq.js',
-    '!test/devices/**/*',
-    '!test/sessions/**/*',
-    'test/clients/**/*',
     // not part of the tests
     '!test/files/**/*',
     '!test/mocks/*',
@@ -15,7 +15,7 @@ export default {
   failFast: false,
   failWithoutAssertions: false,
   tap: false,
-  verbose: true,
+  verbose: false,
   serial: true,
   compileEnhancements: false
 };

@@ -7,6 +7,7 @@ const WebsocketServer = require('./websocketServer');
 const RESTServer = require('./restServer');
 
 const configService = require('../config/configService');
+const namida = require('@tum-far/namida/src/namida');
 
 class ServerConnectionsManager {
   constructor() {
@@ -15,6 +16,7 @@ class ServerConnectionsManager {
     this.serviceRequestTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
 
+    this.ready = false;
     this.openConnections();
   }
 
@@ -24,7 +26,7 @@ class ServerConnectionsManager {
     // ZMQ Service Server Component:
     this.connections.serviceZMQ = new ZmqReply(
       configService.getPortServiceZMQ(),
-      message => {},
+      (message) => {},
       true
     );
 
@@ -46,6 +48,52 @@ class ServerConnectionsManager {
       configService.getPortTopicdataWS(),
       configService.useHTTPS()
     );
+
+    let timeoutDate = Date.now() + 3000;
+    let checkConnectionsReady = () => {
+      if (
+        this.connections.serviceZMQ.ready &&
+        this.connections.serviceREST.ready &&
+        this.connections.topicDataZMQ.ready &&
+        this.connections.topicDataWS.ready
+      ) {
+        let https = configService.useHTTPS() ? 'HTTPS' : 'HTTP';
+        namida.logSuccess(
+          'Connection Manager',
+          'all connections ready - using ' +
+            https +
+            ' - PORTS:' +
+            '\nZMQ services = ' +
+            this.connections.serviceZMQ.port +
+            '\nREST services = ' +
+            this.connections.serviceREST.port +
+            '\nZMQ topic data = ' +
+            this.connections.topicDataZMQ.port +
+            '\nWS topic data = ' +
+            this.connections.topicDataWS.port
+        );
+
+        this.ready = true;
+      } else {
+        if (Date.now() > timeoutDate) {
+          namida.logFailure(
+            'Connection Manager',
+            'not all connections ready:' +
+              '\nZMQ services: ' +
+              this.connections.serviceZMQ.ready +
+              '\nREST services: ' +
+              this.connections.serviceREST.ready +
+              '\nZMQ topic data: ' +
+              this.connections.topicDataZMQ.ready +
+              '\nWS topic data: ' +
+              this.connections.topicDataWS.ready
+          );
+        } else {
+          setTimeout(checkConnectionsReady, 500);
+        }
+      }
+    };
+    checkConnectionsReady(timeoutDate);
   }
 
   onServiceMessageZMQ(callback) {

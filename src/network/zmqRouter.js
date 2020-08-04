@@ -15,6 +15,7 @@ class ZmqRouter {
     this.identity = identity;
     this.port = port;
     this.onReceive = onReceive;
+    this.ready = false;
 
     this.socket = {};
 
@@ -54,16 +55,11 @@ class ZmqRouter {
     });
 
     // bind
-    this.socket.bind('tcp://*:' + this.port + '', err => {
+    this.socket.bind('tcp://*:' + this.port + '', (err) => {
       if (err) {
         console.log('Error: ' + err);
       } else {
-        console.log(
-          '[' +
-            new Date() +
-            '] ZMQ Topicdata connection (Router): Listening on tcp://*:' +
-            this.port
-        );
+        this.ready = true;
       }
     });
   }
@@ -92,6 +88,7 @@ class ZmqRouter {
    * Stop the router and close the socket.
    */
   stop() {
+    this.ready = false;
     this.socket.close();
   }
 }

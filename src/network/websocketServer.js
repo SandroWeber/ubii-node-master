@@ -18,6 +18,7 @@ class WebsocketServer {
     this.port = port;
     this.useHTTPS = useHTTPS;
 
+    this.ready = false;
     this.clients = new Map();
 
     this.waitingPongCallbacks = new Map();
@@ -35,20 +36,15 @@ class WebsocketServer {
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
         cert: fs.readFileSync(configService.getPathCertificate()),
-        key: fs.readFileSync(configService.getPathPrivateKey()),
+        key: fs.readFileSync(configService.getPathPrivateKey())
       };
       this.server = https.createServer(credentials);
       this.server.listen(this.port);
       this.wsServer = new WebSocket.Server({ server: this.server });
-      console.log(
-        '[' + new Date() + '] WebSocket Topicdata connection: Listening on wss://*:' + this.port
-      );
     } else {
       this.wsServer = new WebSocket.Server({ port: this.port });
-      console.log(
-        '[' + new Date() + '] WebSocket Topicdata connection: Listening on ws://*:' + this.port
-      );
     }
+    this.ready = true;
 
     this.wsServer.on('connection', (websocket, request) => {
       this._onConnection(websocket, request);
@@ -59,6 +55,7 @@ class WebsocketServer {
    * Stop the server and close the socket.
    */
   stop() {
+    this.ready = false;
     this.wsServer.clients.forEach((websocket) => {
       websocket.close();
     });
@@ -73,9 +70,9 @@ class WebsocketServer {
    */
   _onConnection(websocket, request) {
     const {
-      query: { clientID },
+      query: { clientID }
     } = url.parse(request.url, true);
-    console.log('[' + new Date() + '] websocket connection accepted from ID ' + clientID);
+    //console.log('[' + new Date() + '] websocket connection accepted from ID ' + clientID);
 
     //TODO: get proper client ID specification
     //let clientID = request.headers['sec-websocket-key'];
@@ -87,7 +84,7 @@ class WebsocketServer {
     });
 
     websocket.on('close', () => {
-      console.log('[' + new Date() + '] websocket peer disconnected.');
+      //console.log('[' + new Date() + '] websocket peer disconnected.');
     });
   }
 
