@@ -178,8 +178,6 @@ class Client {
    */
   subscribeAtTopicData(topic) {
     if (this.topicSubscriptionTokens.has(topic)) {
-      /*namida.logFailure(`Topic Data subscription rejected`,
-        `Client with id ${this.id} is already subscribed to this topic.`);*/
       return false;
     }
 
@@ -212,10 +210,6 @@ class Client {
    */
   unsubscribeAtTopicData(topic) {
     if (!this.topicSubscriptionTokens.has(topic)) {
-      /*namida.logFailure(
-        `Topic Data unsubscription rejected`,
-        `Client with ID ${this.id} is not subscribed to this topic.`
-      );*/
       return false;
     }
 

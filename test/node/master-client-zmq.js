@@ -52,7 +52,7 @@ const { ClientNodeZMQ } = require('../files/testNodes/clientNodeZMQ');
       });
   });
 
-  /*test.cb('publish', (t) => {
+  test.cb('publish', (t) => {
     configService.config.ports = {
       serviceZMQ: 8691,
       serviceREST: 8692,
@@ -84,7 +84,7 @@ const { ClientNodeZMQ } = require('../files/testNodes/clientNodeZMQ');
           t.end();
         }, 1000);
       });
-  });*/
+  });
 
   test.cb('subscribe then', (t) => {
     configService.config.ports = {
