@@ -36,7 +36,7 @@ class DeviceManager {
 
   removeDevice(id) {
     if (this.hasParticipant(id)) {
-      this.getParticipant(id).components.forEach(component => {
+      this.getParticipant(id).components.forEach((component) => {
         this.topicData.remove(component.topic);
       });
       this.removeParticipant(id);
@@ -46,12 +46,12 @@ class DeviceManager {
   }
 
   removeClientDevices(clientID) {
-    this.participants.forEach(participant => {
+    this.participants.forEach((participant) => {
       if (participant.clientId === clientID) {
         this.removeDevice(participant.id);
       }
     });
-    this.watchers.forEach(watcher => {
+    this.watchers.forEach((watcher) => {
       if (watcher.clientId === clientID) {
         this.removeDevice(watcher.id);
       }
@@ -152,7 +152,6 @@ class DeviceManager {
   removeWatcher(deviceIdentifier) {
     this.getWatcher(deviceIdentifier).deactivate();
     this.watchers.delete(deviceIdentifier);
-    console.info('removeWatcher - ' + deviceIdentifier);
   }
 
   /**
@@ -232,12 +231,16 @@ class DeviceManager {
     // Check if the device is already registered as participant...
     if (deviceID && this.hasParticipant(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
-      if (this.clientManager.getClient(clientID).registrationDate < this.getParticipant(deviceID).lastSignOfLife
-        || deviceSpecification.deviceType !== 'PARTICIPANT') {
+      if (
+        this.clientManager.getClient(clientID).registrationDate <
+          this.getParticipant(deviceID).lastSignOfLife ||
+        deviceSpecification.deviceType !== 'PARTICIPANT'
+      ) {
         // -> REregistering is not an option: Reject the registration.
 
         // Update the context feedback.
-        context.feedback.message = `The Device with id ${namida.style.messageHighlight(deviceID)} ` +
+        context.feedback.message =
+          `The Device with id ${namida.style.messageHighlight(deviceID)} ` +
           'is already registered as participant.';
         context.feedback.title = REJECT_REGISTRATION_FEEDBBACK_TITLE;
         context.success = false;
@@ -250,7 +253,8 @@ class DeviceManager {
         // -> REregistering is possible: Prepare the registration.
 
         // Update the context feedback.
-        context.feedback.message = `Reregistration of Participant with id ${namida.style.messageHighlight(deviceID)} ` +
+        context.feedback.message =
+          `Reregistration of Participant with id ${namida.style.messageHighlight(deviceID)} ` +
           'initialized because it is already registered but the corresponding client was reregistered since ' +
           'the last sign of life of this device.';
         context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
@@ -262,7 +266,9 @@ class DeviceManager {
         this.removeParticipant(deviceID);
 
         // Update the feedback.
-        context.feedback.message = `Participant with id ${namida.style.messageHighlight(deviceID)} reregistered.`;
+        context.feedback.message = `Participant with id ${namida.style.messageHighlight(
+          deviceID
+        )} reregistered.`;
         context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
 
         // Continue with the normal registration process...
@@ -272,12 +278,16 @@ class DeviceManager {
     // ... or watcher.
     if (deviceID && this.hasWatcher(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
-      if (this.clientManager.getClient(clientID).registrationDate < this.getWatcher(deviceID).lastSignOfLife
-        || deviceSpecification.deviceType !== 'WATCHER') {
+      if (
+        this.clientManager.getClient(clientID).registrationDate <
+          this.getWatcher(deviceID).lastSignOfLife ||
+        deviceSpecification.deviceType !== 'WATCHER'
+      ) {
         // -> REregistering is not an option: Reject the registration.
 
         // Update the context feedback.
-        context.feedback.message = `The Device with id ${namida.style.messageHighlight(deviceID)} ` +
+        context.feedback.message =
+          `The Device with id ${namida.style.messageHighlight(deviceID)} ` +
           'is already registered as watcher.';
         context.feedback.title = REJECT_REGISTRATION_FEEDBBACK_TITLE;
         context.success = false;
@@ -290,7 +300,8 @@ class DeviceManager {
         // -> REregistering is possible: Prepare the registration.
 
         // Update the context feedback.
-        context.feedback.message = `Reregistration of Watcher with id ${namida.style.messageHighlight(deviceID)} ` +
+        context.feedback.message =
+          `Reregistration of Watcher with id ${namida.style.messageHighlight(deviceID)} ` +
           'initialized because it is already registered but the corresponding client was reregistered since ' +
           'the last sign of life of this device.';
         context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
@@ -309,22 +320,28 @@ class DeviceManager {
     let currentDevice = {};
     // Handle the registration of a participant.
     if (deviceSpecification.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
-      currentDevice = new Participant(deviceSpecification,
+      currentDevice = new Participant(
+        deviceSpecification,
         this.clientManager.getClient(clientID),
-        this.topicData);
+        this.topicData
+      );
       this.registerParticipant(currentDevice);
     }
 
     // Handle the registration of a watcher.
     if (deviceSpecification.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
-      currentDevice = new Watcher(deviceSpecification,
+      currentDevice = new Watcher(
+        deviceSpecification,
         this.clientManager.getClient(clientID),
-        this.topicData);
+        this.topicData
+      );
       this.registerWatcher(currentDevice);
     }
 
     // Update the feedback to the default registartion feedback.
-    context.feedback.message = `New Device with id ${namida.style.messageHighlight(currentDevice.id)} registered.`;
+    context.feedback.message = `New Device with id ${namida.style.messageHighlight(
+      currentDevice.id
+    )} registered.`;
     context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
     context.success = true;
 
@@ -354,11 +371,15 @@ class DeviceManager {
   }
 
   hasTopicMux(id) {
-    return this.topicMuxers.some((mux) => { return mux.id === id; });
+    return this.topicMuxers.some((mux) => {
+      return mux.id === id;
+    });
   }
 
   getTopicMux(id) {
-    return this.topicMuxers.find((mux) => { return mux.id === id; });
+    return this.topicMuxers.find((mux) => {
+      return mux.id === id;
+    });
   }
 
   getTopicMuxList() {
@@ -381,11 +402,15 @@ class DeviceManager {
   }
 
   hasTopicDemux(id) {
-    return this.topicDemuxers.some((demux) => { return demux.id === id; });
+    return this.topicDemuxers.some((demux) => {
+      return demux.id === id;
+    });
   }
 
   getTopicDemux(id) {
-    return this.topicDemuxers.find((demux) => { return demux.id === id; });
+    return this.topicDemuxers.find((demux) => {
+      return demux.id === id;
+    });
   }
 
   getTopicDemuxList() {
@@ -394,5 +419,5 @@ class DeviceManager {
 }
 
 module.exports = {
-  'DeviceManager': DeviceManager,
+  DeviceManager: DeviceManager
 };

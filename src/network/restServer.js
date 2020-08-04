@@ -30,9 +30,11 @@ class RESTServer {
         'http://' + ipWifi + ':8080',
         'http://' + ipWifi + ':8081',
         'http://localhost:8080',
-        'http://localhost:8081',
+        'http://localhost:8081'
       ];
     }
+
+    this.ready = false;
 
     if (autoBind) {
       this.start();
@@ -47,7 +49,7 @@ class RESTServer {
       var credentials = {
         //ca: [fs.readFileSync(PATH_TO_BUNDLE_CERT_1), fs.readFileSync(PATH_TO_BUNDLE_CERT_2)],
         cert: fs.readFileSync(configService.getPathCertificate()),
-        key: fs.readFileSync(configService.getPathPrivateKey()),
+        key: fs.readFileSync(configService.getPathPrivateKey())
       };
       this.server = https.createServer(credentials, this.app);
     } else {
@@ -75,11 +77,12 @@ class RESTServer {
     this.app.use(bodyParser.json());
 
     this.server.listen(this.port, () => {
-      console.info('[' + new Date() + '] REST Service connection: Listening on *:' + this.port);
+      this.ready = true;
     });
   }
 
   stop() {
+    this.ready = false;
     this.server.close();
   }
 

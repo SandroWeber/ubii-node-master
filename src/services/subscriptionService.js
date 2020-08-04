@@ -49,12 +49,12 @@ class SubscriptionService extends Service {
     // Process subscribe topics and unsubscribe topics
     message.subscribeTopics &&
       message.subscribeTopics.forEach((subscribeTopic) => {
-        client.subscribe(subscribeTopic);
+        client.subscribeTopic(subscribeTopic);
       });
 
     message.unsubscribeTopics &&
       message.unsubscribeTopics.forEach((unsubscribeTopic) => {
-        client.unsubscribe(unsubscribeTopic);
+        client.unsubscribeTopic(unsubscribeTopic);
       });
 
     // process (un)subscribe regexp

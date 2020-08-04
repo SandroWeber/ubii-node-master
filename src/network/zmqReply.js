@@ -10,13 +10,14 @@ class ZmqReply {
    */
   constructor(
     port = 5555,
-    onReceive = request => {
+    onReceive = (request) => {
       return request;
     },
     autoBind = true
   ) {
     this.port = port;
     this.onReceive = onReceive;
+    this.ready = false;
 
     this.socket = {};
 
@@ -30,24 +31,23 @@ class ZmqReply {
     this.socket = zmq.socket('rep');
 
     // add callbacks
-    this.socket.on('message', request => {
+    this.socket.on('message', (request) => {
       let replyBuffer = this.onReceive(request);
       this.socket.send(replyBuffer);
     });
 
     // bind
-    this.socket.bind('tcp://*:' + this.port + '', err => {
+    this.socket.bind('tcp://*:' + this.port + '', (err) => {
       if (err) {
         console.log('Error: ' + err);
       } else {
-        console.log(
-          '[' + new Date() + '] ZMQ Service connection (Reply): Listening on tcp://*:' + this.port
-        );
+        this.ready = true;
       }
     });
   }
 
   stop() {
+    this.ready = false;
     this.socket.close();
   }
 }
