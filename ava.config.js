@@ -1,6 +1,6 @@
 export default {
   files: [
-    '!test/clients/integration-tests/*.js', //regexSubscriptions
+    'test/clients/integration-tests/*.js', //regexSubscriptions
     '!test/node/master-client-web.js',
     '!test/node/master-client-zmq.js',
     '!test/devices/**/*',
