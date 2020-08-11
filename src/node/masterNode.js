@@ -8,6 +8,9 @@ const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
 
+const XRHubRoomDatabase = require('../storage/xrHubRoomDatabase');
+const XR_HUB_ROOM_WEBSOCKET_TOPIC_PREFIX = 'xr-hub/room/';
+
 class MasterNode {
   constructor() {
     // Translators:
@@ -267,7 +270,15 @@ class MasterNode {
 
   processTopicDataMessage(topicDataMessage) {
     let record = topicDataMessage.topicDataRecord;
+    if(record.topic.includes(XR_HUB_ROOM_WEBSOCKET_TOPIC_PREFIX)){
+      this.updateRoom(record);
+    }
     this.topicData.publish(record.topic, record[record.type], record.type);
+  }
+
+  updateRoom(record){
+    const roomId = record.topic.split("/").pop();
+    XRHubRoomDatabase.updateRoom(roomId, record[record.type]);
   }
 }
 

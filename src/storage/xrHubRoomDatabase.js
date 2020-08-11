@@ -68,15 +68,52 @@ class XRHubRoomDatabase extends Storage {
 
   /**
    * Update a room specification that is already present in the specifications list with a new value.
-   * @param {Object} partialSpec partial specification of the room.
    * @param {String} roomId id of the room the partial specification belongs to
+   * @param {Object} newObjectString partial specification of the room.
    */
-  updateRoom(partialSpec, roomId) {
-    if (!this.hasRoom(roomId)) {
+  updateRoom(roomId, newObjectString) {
+    console.log("updating room");
+    let room = this.getRoom(roomId);
+    if (!room) {
       throw 'room with id ${roomId} could not be found';
     }
-    // TODO: implement update of room upodating the Object3D values individually
-    this.updateSpecification(specification);
+    const newObject = JSON.parse(newObjectString).object;
+    let sceneObject = room.webGL.object;
+    if(newObject.userData.url){
+      sceneObject = room.css3D.object;
+    }
+    const updatedObject = this.findAndUpdateChildObject(sceneObject, newObject);
+    if(updatedObject){
+     console.debug("Successfully updated object in room", updatedObject);
+    } else{
+      console.debug("Couldn't find object in room", newObject);
+    }
+    this.updateSpecification(room);
+  }
+
+
+  /**
+   * Recursively searches for the object in the children of the given object, if found it replaces it with the updatedObject and returns it
+   * If not found it returns undefined
+   * @param parentObject
+   * @param objectToUpdate
+   * @returns object
+   */
+  findAndUpdateChildObject(parentObject, objectToUpdate){
+    if(!parentObject.children){
+      return undefined;
+    }
+    for(const [index, child] of parentObject.children.entries()){
+      if(child.uuid === objectToUpdate.uuid){
+        parentObject.children[index] = objectToUpdate;
+        return parentObject.children[index];
+      }
+      const childSearchResult = this.findAndUpdateChildObject(child, objectToUpdate);
+      if(childSearchResult){
+        return childSearchResult;
+      }
+    }
+    return undefined;
   }
 }
 
