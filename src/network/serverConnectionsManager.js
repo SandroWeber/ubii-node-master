@@ -8,6 +8,7 @@ const RESTServer = require('./restServer');
 
 const configService = require('../config/configService');
 const namida = require('@tum-far/namida/src/namida');
+const { env } = require('yargs');
 
 class ServerConnectionsManager {
   constructor() {
@@ -54,7 +55,7 @@ class ServerConnectionsManager {
     this.connections.topicDataIPC = new ZmqRouter(
       'server_zmq_icp_topicdata',
       'ipc',
-      configService.config.ipc.ipcEndpointTopicData
+      process.env.PWD + configService.config.ipc.ipcEndpointTopicData
     );
 
     let timeoutDate = Date.now() + 3000;
