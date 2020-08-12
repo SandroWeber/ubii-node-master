@@ -52,11 +52,15 @@ class ServerConnectionsManager {
     );
 
     // Inter-Process Communication Topic Data Component:
-    this.connections.topicDataIPC = new ZmqRouter(
-      'server_zmq_icp_topicdata',
-      'ipc',
-      process.env.PWD + configService.config.ipc.ipcEndpointTopicData
-    );
+    let ipcSocketSupported = process.platform !== 'win32';
+    if (ipcSocketSupported) {
+      let pwd = process.env.PWD || process.env.INIT_CWD;
+      this.connections.topicDataIPC = new ZmqRouter(
+        'server_zmq_icp_topicdata',
+        'ipc',
+        pwd + configService.config.ipc.ipcEndpointTopicData
+      );
+    }
 
     let timeoutDate = Date.now() + 3000;
     let checkConnectionsReady = () => {
@@ -72,25 +76,20 @@ class ServerConnectionsManager {
         (!this.connections.topicDataIPC || this.connections.topicDataIPC.ready)
       ) {
         let httpsEnabled = configService.useHTTPS() ? 'enabled' : 'disabled';
-        namida.logSuccess(
-          'Connection Manager',
-          'all connections ready - HTTPS ' +
-            httpsEnabled +
-            ' - endpoints:' +
-            '\nZMQ services = ' +
-            this.connections.serviceZMQ.endpoint +
-            '\nREST services = ' +
-            this.connections.serviceREST.endpoint +
-            ' (POST to ' +
-            this.connections.serviceREST.endpoint +
-            '/services)' +
-            '\nZMQ topic data = ' +
-            this.connections.topicDataZMQ.endpoint +
-            '\nWS topic data = ' +
-            this.connections.topicDataWS.endpoint +
-            '\nZMQ ICP topic data = ' +
-            this.connections.topicDataIPC.endpoint
-        );
+        let message = 'all connections ready - HTTPS ' + httpsEnabled + ' - endpoints:';
+        message += '\nZMQ services = ' + this.connections.serviceZMQ.endpoint;
+        message +=
+          '\nREST services = ' +
+          this.connections.serviceREST.endpoint +
+          ' (POST to ' +
+          this.connections.serviceREST.endpoint +
+          '/services)';
+        message += '\nZMQ topic data = ' + this.connections.topicDataZMQ.endpoint;
+        message += '\nWS topic data = ' + this.connections.topicDataWS.endpoint;
+        if (this.connections.topicDataIPC && this.connections.topicDataIPC.ready) {
+          message += '\nZMQ ICP topic data = ' + this.connections.topicDataIPC.endpoint;
+        }
+        namida.logSuccess('Connection Manager', message);
 
         this.ready = true;
       } else {
