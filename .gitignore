@@ -1,4 +1,5 @@
 node_modules/
 certificates/*
+config.json
 .idea/
 .vscode/
