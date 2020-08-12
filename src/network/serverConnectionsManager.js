@@ -23,7 +23,7 @@ class ServerConnectionsManager {
   openConnections() {
     this.connections = {};
 
-    // ZMQ Service Server Component:
+    // ZMQ Service Component:
     this.connections.serviceZMQ = new ZmqReply(
       'tcp',
       '*:' + configService.getPortServiceZMQ(),
@@ -31,32 +31,44 @@ class ServerConnectionsManager {
       true
     );
 
-    // REST Service Server Component:
+    // REST Service Component:
     this.connections.serviceREST = new RESTServer(
       configService.getPortServiceREST(),
       configService.useHTTPS()
     );
 
-    // ZMQ Topic Data Server Component:
+    // ZMQ Topic Data Component:
     this.connections.topicDataZMQ = new ZmqRouter(
       'server_zmq',
       'tcp',
       '*:' + configService.getPortTopicdataZMQ()
     );
 
-    // Websocket Topic Data Server Component:
+    // Websocket Topic Data Component:
     this.connections.topicDataWS = new WebsocketServer(
       configService.getPortTopicdataWS(),
       configService.useHTTPS()
     );
 
+    // Inter-Process Communication Topic Data Component:
+    this.connections.topicDataIPC = new ZmqRouter(
+      'server_zmq_icp_topicdata',
+      'ipc',
+      configService.config.ipc.ipcEndpointTopicData
+    );
+
     let timeoutDate = Date.now() + 3000;
     let checkConnectionsReady = () => {
       if (
+        this.connections.serviceZMQ &&
         this.connections.serviceZMQ.ready &&
+        this.connections.serviceREST &&
         this.connections.serviceREST.ready &&
+        this.connections.topicDataZMQ &&
         this.connections.topicDataZMQ.ready &&
-        this.connections.topicDataWS.ready
+        this.connections.topicDataWS &&
+        this.connections.topicDataWS.ready &&
+        (!this.connections.topicDataIPC || this.connections.topicDataIPC.ready)
       ) {
         let httpsEnabled = configService.useHTTPS() ? 'enabled' : 'disabled';
         namida.logSuccess(
@@ -74,7 +86,9 @@ class ServerConnectionsManager {
             '\nZMQ topic data = ' +
             this.connections.topicDataZMQ.endpoint +
             '\nWS topic data = ' +
-            this.connections.topicDataWS.endpoint
+            this.connections.topicDataWS.endpoint +
+            '\nZMQ ICP topic data = ' +
+            this.connections.topicDataIPC.endpoint
         );
 
         this.ready = true;
@@ -90,7 +104,9 @@ class ServerConnectionsManager {
               '\nZMQ topic data: ' +
               this.connections.topicDataZMQ.ready +
               '\nWS topic data: ' +
-              this.connections.topicDataWS.ready
+              this.connections.topicDataWS.ready +
+              '\nZMQ IPC topic data: ' +
+              this.connections.topicDataIPC.ready
           );
         } else {
           setTimeout(checkConnectionsReady, 500);
