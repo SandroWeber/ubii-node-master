@@ -52,8 +52,10 @@ class RESTServer {
         key: fs.readFileSync(configService.getPathPrivateKey())
       };
       this.server = https.createServer(credentials, this.app);
+      this.endpoint = 'https://*:' + this.port;
     } else {
       this.server = http.createServer(this.app);
+      this.endpoint = 'http://*:' + this.port;
     }
 
     // CORS

@@ -9,13 +9,15 @@ class ZmqReply {
    * If not, the start method must be called manually.
    */
   constructor(
-    port = 5555,
+    transportProtocol = 'tcp',
+    address = '*:5555',
     onReceive = (request) => {
       return request;
     },
     autoBind = true
   ) {
-    this.port = port;
+    this.transportProtocol = transportProtocol;
+    this.address = address;
     this.onReceive = onReceive;
     this.ready = false;
 
@@ -37,7 +39,8 @@ class ZmqReply {
     });
 
     // bind
-    this.socket.bind('tcp://*:' + this.port + '', (err) => {
+    this.endpoint = this.transportProtocol + '://' + this.address;
+    this.socket.bind(this.endpoint, (err) => {
       if (err) {
         console.log('Error: ' + err);
       } else {

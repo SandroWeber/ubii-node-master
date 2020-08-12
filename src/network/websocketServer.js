@@ -41,8 +41,10 @@ class WebsocketServer {
       this.server = https.createServer(credentials);
       this.server.listen(this.port);
       this.wsServer = new WebSocket.Server({ server: this.server });
+      this.endpoint = 'wss://*:' + this.port;
     } else {
       this.wsServer = new WebSocket.Server({ port: this.port });
+      this.endpoint = 'ws://*:' + this.port;
     }
     this.ready = true;
 

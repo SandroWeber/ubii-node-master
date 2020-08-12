@@ -5,7 +5,7 @@
     "topicdataZMQ": 8103,
     "topicdataWS": 8104
   },
-  "processingModules": {
+  "ipc": {
     "ipcEndpointTopicData": "ubii-ipc-topicdata"
   },
   "https": {

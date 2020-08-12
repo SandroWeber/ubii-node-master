@@ -25,7 +25,8 @@ class ServerConnectionsManager {
 
     // ZMQ Service Server Component:
     this.connections.serviceZMQ = new ZmqReply(
-      configService.getPortServiceZMQ(),
+      'tcp',
+      '*:' + configService.getPortServiceZMQ(),
       (message) => {},
       true
     );
@@ -39,8 +40,8 @@ class ServerConnectionsManager {
     // ZMQ Topic Data Server Component:
     this.connections.topicDataZMQ = new ZmqRouter(
       'server_zmq',
-      configService.getPortTopicdataZMQ(),
-      (envelope, message) => {}
+      'tcp',
+      '*:' + configService.getPortTopicdataZMQ()
     );
 
     // Websocket Topic Data Server Component:
@@ -57,20 +58,23 @@ class ServerConnectionsManager {
         this.connections.topicDataZMQ.ready &&
         this.connections.topicDataWS.ready
       ) {
-        let https = configService.useHTTPS() ? 'HTTPS' : 'HTTP';
+        let httpsEnabled = configService.useHTTPS() ? 'enabled' : 'disabled';
         namida.logSuccess(
           'Connection Manager',
-          'all connections ready - using ' +
-            https +
-            ' - PORTS:' +
+          'all connections ready - HTTPS ' +
+            httpsEnabled +
+            ' - endpoints:' +
             '\nZMQ services = ' +
-            this.connections.serviceZMQ.port +
+            this.connections.serviceZMQ.endpoint +
             '\nREST services = ' +
-            this.connections.serviceREST.port +
+            this.connections.serviceREST.endpoint +
+            ' (POST to ' +
+            this.connections.serviceREST.endpoint +
+            '/services)' +
             '\nZMQ topic data = ' +
-            this.connections.topicDataZMQ.port +
+            this.connections.topicDataZMQ.endpoint +
             '\nWS topic data = ' +
-            this.connections.topicDataWS.port
+            this.connections.topicDataWS.endpoint
         );
 
         this.ready = true;
