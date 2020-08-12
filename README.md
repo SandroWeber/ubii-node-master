@@ -2,17 +2,18 @@
 
 ## Project setup
 
-
 ### Windows pre-requisists before "npm install"
 
 #### windows build tools
 
 from admin shell:
+
 ```
 npm install -g windows-build-tools
 ```
 
 if it complains about not being able to find v140 of build tools, try
+
 ```
 npm install --vs2015 -g windows-build-tools
 ```
@@ -30,6 +31,9 @@ npm install
 ```
 
 ### run with default config
+
+Create a copy of "config.json.template" called "config.json" and adjust settings to your needs (or keep as is). Then run:
+
 ```
 npm start
 ```

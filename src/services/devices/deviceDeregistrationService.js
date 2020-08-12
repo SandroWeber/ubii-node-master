@@ -42,7 +42,9 @@ class DeviceDeregistrationService extends Service {
 
     // Process the registration of the sepcified device at the device manager
     try {
-      device = this.deviceManager.removeDevice(message.id);
+      this.deviceManager.removeDevice(message.id);
+
+      namida.logSuccess('DeviceDeregistrationService', 'successfully removed device ' + message.id);
 
       return {
         success: {
