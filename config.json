@@ -6,7 +6,7 @@
     "topicdataWS": 8104
   },
   "processingModules": {
-    "ipcTopicDataEndpoint": "ubii-ipc-topicdata"
+    "ipcEndpointTopicData": "ubii-ipc-topicdata"
   },
   "https": {
     "enabled": true,
