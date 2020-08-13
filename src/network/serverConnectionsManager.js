@@ -8,7 +8,6 @@ const RESTServer = require('./restServer');
 
 const configService = require('../config/configService');
 const namida = require('@tum-far/namida/src/namida');
-const { env } = require('yargs');
 
 class ServerConnectionsManager {
   constructor() {
@@ -25,18 +24,10 @@ class ServerConnectionsManager {
     this.connections = {};
 
     // ZMQ Service Component:
-    this.connections.serviceZMQ = new ZmqReply(
-      'tcp',
-      '*:' + configService.getPortServiceZMQ(),
-      (message) => {},
-      true
-    );
+    this.connections.serviceZMQ = new ZmqReply('tcp', '*:' + configService.getPortServiceZMQ());
 
     // REST Service Component:
-    this.connections.serviceREST = new RESTServer(
-      configService.getPortServiceREST(),
-      configService.useHTTPS()
-    );
+    this.connections.serviceREST = new RESTServer(configService.getPortServiceREST());
 
     // ZMQ Topic Data Component:
     this.connections.topicDataZMQ = new ZmqRouter(
@@ -46,10 +37,7 @@ class ServerConnectionsManager {
     );
 
     // Websocket Topic Data Component:
-    this.connections.topicDataWS = new WebsocketServer(
-      configService.getPortTopicdataWS(),
-      configService.useHTTPS()
-    );
+    this.connections.topicDataWS = new WebsocketServer(configService.getPortTopicdataWS());
 
     // Inter-Process Communication Topic Data Component:
     let ipcSocketSupported = process.platform !== 'win32';
@@ -117,7 +105,7 @@ class ServerConnectionsManager {
   }
 
   onServiceMessageZMQ(callback) {
-    this.connections.serviceZMQ.onReceive = callback;
+    this.connections.serviceZMQ.onMessageReceived(callback);
   }
 
   onServiceMessageREST(callback) {
@@ -127,7 +115,7 @@ class ServerConnectionsManager {
   }
 
   onTopicDataMessageZMQ(callback) {
-    this.connections.topicDataZMQ.onReceive = callback;
+    this.connections.topicDataZMQ.onMessageReceived(callback);
   }
 
   onTopicDataMessageWS(callback) {

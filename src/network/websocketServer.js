@@ -14,9 +14,8 @@ class WebsocketServer {
    * @param {*} autoconnect Should the socket connect directly after the initialization of the object?
    * If not, the start method must be called manually.
    */
-  constructor(port = 5555, useHTTPS = true, autoconnect = true) {
+  constructor(port = 5555, autoconnect = true) {
     this.port = port;
-    this.useHTTPS = useHTTPS;
 
     this.ready = false;
     this.clients = new Map();
@@ -46,11 +45,12 @@ class WebsocketServer {
       this.wsServer = new WebSocket.Server({ port: this.port });
       this.endpoint = 'ws://*:' + this.port;
     }
-    this.ready = true;
 
     this.wsServer.on('connection', (websocket, request) => {
       this._onConnection(websocket, request);
     });
+
+    this.open = true;
   }
 
   /**
@@ -82,7 +82,25 @@ class WebsocketServer {
     this.clients.set(clientID, websocket);
 
     websocket.on('message', (message) => {
-      this._onMessage(clientID, message);
+      /*if (message.toString() === PONG_MESSAGE) {
+       // Check if callback for pong device
+       if (this.waitingPongCallbacks.has(request.origin.toString())) {
+       // call callback
+       this.waitingPongCallbacks.get(request.origin.toString())();
+       // remove callback
+       this.waitingPongCallbacks.delete(request.origin.toString());
+  
+       return;
+       }
+  
+       return;
+       }*/
+
+      if (!this.onMessage) {
+        namida.logFailure('Websocket Server', 'no callback for message handling set!');
+      } else {
+        this.onMessage(clientID, message);
+      }
     });
 
     websocket.on('close', () => {
@@ -90,38 +108,14 @@ class WebsocketServer {
     });
   }
 
-  _onMessage(clientID, message) {
-    /*if (message.toString() === PONG_MESSAGE) {
-     // Check if callback for pong device
-     if (this.waitingPongCallbacks.has(request.origin.toString())) {
-     // call callback
-     this.waitingPongCallbacks.get(request.origin.toString())();
-     // remove callback
-     this.waitingPongCallbacks.delete(request.origin.toString());
-
-     return;
-     }
-
-     return;
-     }*/
-
-    if (!this.processMessage) {
-      console.warn(
-        '[' +
-          new Date() +
-          '] WebsocketServer.onMessageReceived() has not been set!' +
-          '\nClient ID:\n' +
-          clientID +
-          '\nMessage received:\n' +
-          message
-      );
-    } else {
-      this.processMessage(clientID, message);
-    }
-  }
-
+  /**
+   * Set the message handling function to be called upon receiving a message. Also marks the this socket as ready to receive.
+   * @param {*} callback Callback function that is called when a new message is received from a websocket client.
+   * Callback should accept an ID parameter containing the client identity and a message parameter with the received message buffer.
+   */
   onMessageReceived(callback) {
-    this.processMessage = callback;
+    this.onMessage = callback;
+    this.ready = true;
   }
 
   /**
