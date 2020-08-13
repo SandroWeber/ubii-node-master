@@ -5,11 +5,12 @@ const configService = require('../config/configService');
 const NetworkConfigManager = require('../network/networkConfigManager');
 
 class ServerConfigService extends Service {
-  constructor(id, name) {
+  constructor(id, name, connectionManager) {
     super(DEFAULT_TOPICS.SERVICES.SERVER_CONFIG, undefined, MSG_TYPES.SERVER);
 
     this.id = id;
     this.name = name;
+    this.connectionManager = connectionManager;
   }
 
   reply() {

@@ -47,8 +47,9 @@ class MasterNode {
     this.serviceManager = new ServiceManager(
       this.clientManager,
       this.deviceManager,
-      this.topicData,
-      this.sessionManager
+      this.sessionManager,
+      this.connectionsManager,
+      this.topicData
     );
   }
 
