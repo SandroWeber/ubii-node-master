@@ -93,9 +93,14 @@ class RESTServer {
    * @param {*} callback Callback function that is called when a new message is received.
    * Callback should accept a request parameter and a response paramter.
    */
+  onServiceMessageReceived(callback) {
+    this.setRoutePOST('/services', callback);
+    this.endpointServices = this.endpoint + '/services';
+    this.ready = true;
+  }
+
   setRoutePOST(route, callback) {
     this.app.post(route, callback);
-    this.ready = true;
   }
 }
 

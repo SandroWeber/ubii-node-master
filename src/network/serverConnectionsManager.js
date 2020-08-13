@@ -66,12 +66,7 @@ class ServerConnectionsManager {
         let httpsEnabled = configService.useHTTPS() ? 'enabled' : 'disabled';
         let message = 'all connections ready - HTTPS ' + httpsEnabled + ' - endpoints:';
         message += '\nZMQ services = ' + this.connections.serviceZMQ.endpoint;
-        message +=
-          '\nREST services = ' +
-          this.connections.serviceREST.endpoint +
-          ' (POST to ' +
-          this.connections.serviceREST.endpoint +
-          '/services)';
+        message += '\nREST services = ' + this.connections.serviceREST.endpointServices + ' (POST)';
         message += '\nZMQ topic data = ' + this.connections.topicDataZMQ.endpoint;
         message += '\nWS topic data = ' + this.connections.topicDataWS.endpoint;
         if (this.connections.topicDataIPC && this.connections.topicDataIPC.ready) {
@@ -109,9 +104,7 @@ class ServerConnectionsManager {
   }
 
   onServiceMessageREST(callback) {
-    this.connections.serviceREST.setRoutePOST('/services', (request, response) => {
-      callback(request, response);
-    });
+    this.connections.serviceREST.onServiceMessageReceived(callback);
   }
 
   onTopicDataMessageZMQ(callback) {
