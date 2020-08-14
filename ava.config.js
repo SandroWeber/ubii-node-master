@@ -1,8 +1,9 @@
 export default {
   files: [
-    'test/devices/**/*',
-    'test/sessions/**/*',
-    'test/clients/**/*',
+    '!test/devices/**/*',
+    '!test/sessions/**/*',
+    '!test/clients/**/*',
+    'test/processing/**/*',
     // outdated client integration tests, replaced by actual clients from web-frontend and Unity with their integration tests and demos
     '!test/node/master-client-web.js',
     '!test/node/master-client-zmq.js',
@@ -15,7 +16,7 @@ export default {
   failFast: false,
   failWithoutAssertions: false,
   tap: false,
-  verbose: false,
+  verbose: true,
   serial: true,
   compileEnhancements: false
 };

@@ -14,6 +14,8 @@ const { SessionManager } = require('./sessions/sessionManager');
 const { Interaction } = require('./sessions/interaction');
 const { INTERACTION_LIFECYCLE_EVENTS } = require('./sessions/constants');
 
+const { ProcessingModule } = require('./processing/processingModule');
+
 const { ServiceManager } = require('./services/serviceManager');
 const { ClientRegistrationService } = require('./services/clientRegistrationService');
 const { DeviceRegistrationService } = require('./services/devices/deviceRegistrationService');
@@ -31,6 +33,7 @@ module.exports = {
   Session: Session,
   SessionManager: SessionManager,
   Interaction: Interaction,
+  ProcessingModule: ProcessingModule,
   ServiceManager: ServiceManager,
   ClientRegistrationService: ClientRegistrationService,
   DeviceRegistrationService: DeviceRegistrationService,
