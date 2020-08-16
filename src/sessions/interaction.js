@@ -10,7 +10,7 @@ const Utils = require('../utilities');
 class Interaction extends EventEmitter {
   constructor({
     id = uuidv4(),
-    name = '',
+    name = 'new-interaction',
     authors = [],
     tags = [],
     description = '',
@@ -39,12 +39,7 @@ class Interaction extends EventEmitter {
     Object.defineProperty(this.state, 'modules', {
       // modules are read-only
       get: () => {
-        return InteractModulesService.getModulesObject(); /*{
-          tf: tf,
-          cocoSsd: cocoSsd,
-          emgClassifier: emgClassifier,
-          fs: fs
-        }*/
+        return InteractModulesService.getModulesObject();
       },
       configurable: true
     });
