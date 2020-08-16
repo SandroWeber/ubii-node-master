@@ -16,7 +16,15 @@ class ExtendedProcessingModule extends ProcessingModule {
 
 /* run tests */
 
-test('extending ProcessingModule and overwriting lifecycle functions', (t) => {
+test('passing specifications to constructor', (t) => {
+  let specs = {
+    name: 'test-extended-pm'
+  };
+  let module = new ExtendedProcessingModule(specs);
+  t.is(module.name, specs.name);
+});
+
+test('overwritten lifecycle functions', (t) => {
   let module = new ExtendedProcessingModule();
   module.onCreated();
   t.is(module.state.counter, 0);
