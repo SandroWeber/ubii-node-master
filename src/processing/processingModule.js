@@ -20,10 +20,11 @@ class ProcessingModule extends EventEmitter {
   ) {
     super();
 
+    // check that language specification for module is correct
     if (specs.language === undefined) specs.language = ProcessingModuleProto.Language.JS;
     if (specs.language !== ProcessingModuleProto.Language.JS) {
       namida.error(
-        'ProcessingModule',
+        'ProcessingModule ' + this.toString(),
         'trying to create module under javascript, but specification says ' +
           ProcessingModuleProto.Language[specs.language]
       );
@@ -35,7 +36,6 @@ class ProcessingModule extends EventEmitter {
     }
 
     // take over specs and add ID if missing
-    //this.specs = specs;
     Object.assign(this, specs);
     if (!this.id) {
       this.id = uuidv4();
@@ -77,17 +77,19 @@ class ProcessingModule extends EventEmitter {
 
   onCreated() {}
 
+  /**
+   * Lifecycle function to be called when module is supposed to process data.
+   * Needs to be overwritten when extending this class, specified as a stringified version for the constructor or
+   * set via setOnProcessing() before onProcessing() is called.
+   * Signature
+   */
   onProcessing() {
     namida.error(
-      'ProcessingModule',
-      'onProcessing callback is not specified, module ' + this.name + ' will not do anything?'
+      'ProcessingModule ' + this.toString(),
+      'onProcessing callback is not specified, module will not do anything?'
     );
     throw new Error(
-      'ProcessingModule ' +
-        this.name +
-        ' (' +
-        this.id +
-        ') - onProcessing() callback is not specified'
+      'ProcessingModule ' + this.toString() + ' - onProcessing() callback is not specified'
     );
   }
 
@@ -98,9 +100,6 @@ class ProcessingModule extends EventEmitter {
   /* lifecycle functions end*/
 
   /* I/O functions */
-  setTopicData(topicData) {
-    this.topicData = topicData;
-  }
 
   hasInput(name) {
     return this.inputs.some((input) => {
@@ -126,102 +125,48 @@ class ProcessingModule extends EventEmitter {
     });
   }
 
-  connectInputTopic(internalName, externalTopic) {
-    if (!this.topicData) {
+  setInputGetter(internalName, getter, overwrite = false) {
+    if (this.hasOwnProperty(internalName) && !overwrite) {
       namida.error(
-        'ProcessingModule',
-        'Module ' +
-          this.id +
-          ' is trying to connect input ' +
+        'ProcessingModule ' + this.toString(),
+        'trying to set input getter for ' +
           internalName +
-          ' to topic ' +
-          externalTopic +
-          ' but TopicData is not set!'
+          ' but property is already defined (no overwrite)'
       );
       return false;
     }
 
-    if (this.inputProxy[internalName]) {
-      delete this.inputProxy[internalName];
-    }
-    Object.defineProperty(this.inputProxy, internalName, {
-      // input is read-only
-      get: () => {
-        let entry = this.topicData.pull(externalTopic);
-        return entry && entry.data;
-      },
-      configurable: true
-    });
-
-    return true;
-  }
-
-  disconnectInputTopic(internalName) {
-    delete this.inputProxy[internalName];
-  }
-
-  connectOutputTopic(internalName, externalTopic) {
-    if (!this.topicData) {
+    if (internalName === '') {
       namida.error(
-        'ProcessingModule',
-        'Module ' +
-          this.id +
-          ' is trying to connect output ' +
-          internalName +
-          ' to topic ' +
-          externalTopic +
-          ' but TopicData is not set!'
+        'ProcessingModule ' + this.toString(),
+        'trying to set input getter for empty internal name ' + internalName
       );
       return false;
     }
 
-    if (this.outputProxy[internalName]) {
-      delete this.outputProxy[internalName];
+    if (getter === undefined) {
+      namida.error(
+        'ProcessingModule ' + this.toString(),
+        'trying to set input getter for ' + internalName + ' but getter is undefined'
+      );
+      return false;
     }
 
-    let type = Utils.getTopicDataTypeFromMessageFormat(this.getOutput(internalName).messageFormat);
-    Object.defineProperty(this.outputProxy, internalName, {
-      // output is write-only
-      set: (value) => {
-        this.topicData.publish(externalTopic, value, type);
-      },
-      configurable: true
-    });
-
-    return true;
-  }
-
-  disconnectOutputTopic(internalName) {
-    delete this.outputProxy[internalName];
-  }
-
-  connectMultiplexer(internalName, multiplexer) {
-    if (this.inputProxy[internalName]) {
-      delete this.inputProxy[internalName];
+    if (typeof getter !== 'function') {
+      namida.error(
+        'ProcessingModule ' + this.toString(),
+        'trying to set input getter for ' + internalName + ' but getter is not a function'
+      );
+      return false;
     }
 
-    Object.defineProperty(this.inputProxy, internalName, {
-      // input is read-only
+    if (this[internalName]) {
+      delete this[internalName];
+    }
+    // input is read-only
+    Object.defineProperty(this, internalName, {
       get: () => {
-        return multiplexer.get();
-      },
-      configurable: true
-    });
-  }
-
-  disconnectMultiplexer(internalName) {
-    delete this.inputProxy[internalName];
-  }
-
-  connectDemultiplexer(internalName, demultiplexer) {
-    if (this.outputProxy[internalName]) {
-      delete this.outputProxy[internalName];
-    }
-
-    Object.defineProperty(this.outputProxy, internalName, {
-      // output is write-only
-      set: (value) => {
-        demultiplexer.push(value);
+        return getter();
       },
       configurable: true
     });
@@ -229,15 +174,78 @@ class ProcessingModule extends EventEmitter {
     return true;
   }
 
-  disconnectDemultiplexer(internalName) {
-    delete this.outputProxy[internalName];
+  removeInputGetter(internalName) {
+    delete this[internalName];
   }
 
-  disconnectIO() {
-    this.inputProxy = {};
-    this.outputProxy = {};
+  setOutputSetter(internalName, setter, overwrite = false) {
+    if (this.hasOwnProperty(internalName) && !overwrite) {
+      namida.error(
+        'ProcessingModule ' + this.toString(),
+        'trying to set output setter for ' + internalName + ' but property is already defined'
+      );
+      return false;
+    }
+
+    if (internalName === '') {
+      namida.error(
+        'ProcessingModule ' + this.toString(),
+        'trying to set output setter for empty internal name ' + internalName
+      );
+      return false;
+    }
+
+    if (setter === undefined) {
+      namida.error(
+        'ProcessingModule ' + this.toString(),
+        'trying to set output setter for ' + internalName + ' but setter is undefined'
+      );
+      return false;
+    }
+
+    if (typeof setter !== 'function') {
+      namida.error(
+        'ProcessingModule ' + this.toString(),
+        'trying to set output setter for ' + internalName + ' but setter is not a function'
+      );
+      return false;
+    }
+
+    if (this[internalName]) {
+      delete this[internalName];
+    }
+    // output is write-only
+    Object.defineProperty(this, internalName, {
+      set: (value) => {
+        setter(value);
+      },
+      configurable: true
+    });
+
+    return true;
+  }
+
+  removeOutputSetter(internalName) {
+    delete this[internalName];
+  }
+
+  removeAllIOSettersGetters() {
+    this.inputs.forEach((input) => {
+      this.remoteInputGetter(input.internalName);
+    });
+    this.outputs.forEach((output) => {
+      this.removeOutputSetter(output.internalName);
+    });
   }
   /* I/O functions end */
+
+  /* helper functions */
+
+  toString() {
+    return this.name + ' (ID ' + this.id + ')';
+  }
+
+  /* helper functions end */
 }
 
 module.exports = { ProcessingModule: ProcessingModule };
