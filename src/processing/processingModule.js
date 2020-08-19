@@ -12,10 +12,19 @@ class ProcessingModule extends EventEmitter {
       authors: [],
       tags: [],
       description: '',
+      clientId: undefined,
+      language: ProcessingModuleProto.Language.JS,
       inputs: [],
       outputs: [],
-      clientId: undefined,
-      language: ProcessingModuleProto.Language.JS
+      processingMode: {
+        frequency: {
+          hertz: 30
+        }
+      },
+      onCreatedStringified: undefined,
+      onProcessingStringified: undefined,
+      onHaltedStringified: undefined,
+      onDestroyedStringified: undefined
     }
   ) {
     super();
@@ -55,6 +64,8 @@ class ProcessingModule extends EventEmitter {
     }
 
     this.status = ProcessingModuleProto.Status.CREATED;
+
+    this.ioProxy = {};
   }
 
   /* lifecycle functions */
@@ -101,49 +112,13 @@ class ProcessingModule extends EventEmitter {
 
   /* I/O functions */
 
-  hasInput(name) {
-    return this.inputs.some((input) => {
-      return input.internalName === name;
-    });
-  }
-
-  getInput(name) {
-    return this.inputs.find((input) => {
-      input.internalName === name;
-    });
-  }
-
-  hasOutput(name) {
-    return this.outputs.some((output) => {
-      return output.internalName === name;
-    });
-  }
-
-  getOutput(name) {
-    return this.outputs.find((output) => {
-      return output.internalName === name;
-    });
-  }
-
   setInputGetter(internalName, getter, overwrite = false) {
-    if (this.hasOwnProperty(internalName) && !overwrite) {
-      namida.error(
-        'ProcessingModule ' + this.toString(),
-        'trying to set input getter for ' +
-          internalName +
-          ' but property is already defined (no overwrite)'
-      );
+    // check internal naming is viable
+    if (!this.checkInternalName(internalName, overwrite)) {
       return false;
     }
 
-    if (internalName === '') {
-      namida.error(
-        'ProcessingModule ' + this.toString(),
-        'trying to set input getter for empty internal name ' + internalName
-      );
-      return false;
-    }
-
+    // make sure getter is defined
     if (getter === undefined) {
       namida.error(
         'ProcessingModule ' + this.toString(),
@@ -151,7 +126,7 @@ class ProcessingModule extends EventEmitter {
       );
       return false;
     }
-
+    // make sure getter is a function
     if (typeof getter !== 'function') {
       namida.error(
         'ProcessingModule ' + this.toString(),
@@ -160,41 +135,29 @@ class ProcessingModule extends EventEmitter {
       return false;
     }
 
-    if (this[internalName]) {
-      delete this[internalName];
-    }
-    // input is read-only
-    Object.defineProperty(this, internalName, {
-      get: () => {
-        return getter();
-      },
-      configurable: true
+    // make sure we're clean
+    this.removeIOAccessor(internalName);
+    // define getter for both ioProxy and module itself (as shortcut), input is read-only
+    [this.ioProxy, this].forEach((object) => {
+      Object.defineProperty(object, internalName, {
+        get: () => {
+          return getter();
+        },
+        configurable: true,
+        enumerable: true
+      });
     });
 
     return true;
   }
 
-  removeInputGetter(internalName) {
-    delete this[internalName];
-  }
-
   setOutputSetter(internalName, setter, overwrite = false) {
-    if (this.hasOwnProperty(internalName) && !overwrite) {
-      namida.error(
-        'ProcessingModule ' + this.toString(),
-        'trying to set output setter for ' + internalName + ' but property is already defined'
-      );
+    // check internal naming is viable
+    if (!this.checkInternalName(internalName, overwrite)) {
       return false;
     }
 
-    if (internalName === '') {
-      namida.error(
-        'ProcessingModule ' + this.toString(),
-        'trying to set output setter for empty internal name ' + internalName
-      );
-      return false;
-    }
-
+    // make sure setter is defined
     if (setter === undefined) {
       namida.error(
         'ProcessingModule ' + this.toString(),
@@ -202,7 +165,7 @@ class ProcessingModule extends EventEmitter {
       );
       return false;
     }
-
+    // make sure setter is a function
     if (typeof setter !== 'function') {
       namida.error(
         'ProcessingModule ' + this.toString(),
@@ -211,32 +174,76 @@ class ProcessingModule extends EventEmitter {
       return false;
     }
 
-    if (this[internalName]) {
-      delete this[internalName];
-    }
-    // output is write-only
-    Object.defineProperty(this, internalName, {
-      set: (value) => {
-        setter(value);
-      },
-      configurable: true
+    // make sure we're clean
+    this.removeIOAccessor(internalName);
+    // define setter for both ioProxy and module itself (as shortcut), output is write-only
+    [this.ioProxy, this].forEach((object) => {
+      Object.defineProperty(object, internalName, {
+        set: (value) => {
+          setter(value);
+        },
+        configurable: true,
+        enumerable: true
+      });
     });
 
     return true;
   }
 
-  removeOutputSetter(internalName) {
-    delete this[internalName];
+  removeIOAccessor(internalName) {
+    if (this.ioProxy.hasOwnProperty(internalName)) {
+      delete this.ioProxy[internalName];
+      delete this[internalName];
+    }
   }
 
-  removeAllIOSettersGetters() {
-    this.inputs.forEach((input) => {
-      this.remoteInputGetter(input.internalName);
-    });
-    this.outputs.forEach((output) => {
-      this.removeOutputSetter(output.internalName);
-    });
+  removeAllIOAccessors() {
+    for (let key in this.ioProxy) {
+      this.removeIOAccessor(key);
+    }
   }
+
+  checkInternalName(internalName, overwrite = false) {
+    // check we're not using an internal name that conflicts with already defined internal properties
+    if (this.hasOwnProperty(internalName) && !this.ioProxy.hasOwnProperty(internalName)) {
+      namida.error(
+        'ProcessingModule ' + this.toString(),
+        'the internal I/O naming "' +
+          internalName +
+          '" should not be used as it conflicts with internal properties'
+      );
+      return false;
+    }
+    // check we're not using an already defined name without specifying to overwrite
+    if (this.ioProxy.hasOwnProperty(internalName) && !overwrite) {
+      namida.error(
+        'ProcessingModule ' + this.toString(),
+        'the internal I/O naming "' +
+          internalName +
+          '" is already defined (overwrite not specified)'
+      );
+      return false;
+    }
+    // check the internal name is not empty
+    if (internalName === '') {
+      namida.error(
+        'ProcessingModule ' + this.toString(),
+        'the internal I/O naming "' + internalName + '" can\'t be used (empty)'
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  readInput(name) {
+    return this.ioProxy[name];
+  }
+
+  writeOutput(name, value) {
+    this.ioProxy[name] = value;
+  }
+
   /* I/O functions end */
 
   /* helper functions */

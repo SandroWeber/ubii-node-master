@@ -17,6 +17,6 @@ export default {
   failWithoutAssertions: false,
   tap: false,
   verbose: true,
-  serial: false,
+  serial: true,
   compileEnhancements: false
 };

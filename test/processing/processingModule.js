@@ -1,4 +1,5 @@
 import test from 'ava';
+import sinon from 'sinon';
 
 import { proto } from '@tum-far/ubii-msg-formats';
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
@@ -9,9 +10,38 @@ import Utils from '../../src/utilities';
 /* prepare tests */
 
 test.beforeEach((t) => {
-  t.context.processingModule = new ProcessingModule({
-    name: 'test-module'
-  });
+  t.context.moduleSpecs = {
+    name: 'test-module',
+    inputs: [
+      {
+        internalName: 'inString',
+        messageFormat: 'string'
+      },
+      {
+        internalName: 'inBool',
+        messageFormat: 'bool'
+      },
+      {
+        internalName: 'inInt',
+        messageFormat: 'int32'
+      }
+    ],
+    outputs: [
+      {
+        internalName: 'outString',
+        messageFormat: 'string'
+      },
+      {
+        internalName: 'outBool',
+        messageFormat: 'bool'
+      },
+      {
+        internalName: 'outInt',
+        messageFormat: 'int32'
+      }
+    ]
+  };
+  t.context.processingModule = new ProcessingModule(t.context.moduleSpecs);
 });
 
 /* run tests */
@@ -105,39 +135,53 @@ test('setInputGetter()', (t) => {
     inputBool = true,
     inputInt = 42,
     inputObject = { boolean: true, string: 'string' },
-    inputFunction = () => {
+    inputFunctionObject = () => {
       return inputObject;
     },
-    inputFunction2 = () => {
+    inputFunctionString = () => {
       return inputString;
     };
   let internalName = 'myInput';
 
+  // try to use internal name that conflicts with another property
+  let takenPropertyName = 'id';
+  t.false(module.setInputGetter(takenPropertyName, inputFunctionObject));
+  t.is(module.ioProxy[takenPropertyName], undefined);
   // try to set empty internal name
-  t.false(module.setInputGetter('', inputString));
+  t.false(module.setInputGetter('', inputFunctionObject));
+  t.is(module.ioProxy.myInput, undefined);
   t.is(module.myInput, undefined);
   // try to set undefined getter
   t.false(module.setInputGetter(internalName, undefined));
+  t.is(module.ioProxy.myInput, undefined);
   t.is(module.myInput, undefined);
   // try to set getter to things other than a function
   t.false(module.setInputGetter(internalName, inputString));
+  t.is(module.ioProxy.myInput, undefined);
   t.is(module.myInput, undefined);
   t.false(module.setInputGetter(internalName, inputBool));
+  t.is(module.ioProxy.myInput, undefined);
   t.is(module.myInput, undefined);
   t.false(module.setInputGetter(internalName, inputInt));
+  t.is(module.ioProxy.myInput, undefined);
   t.is(module.myInput, undefined);
   t.false(module.setInputGetter(internalName, inputObject));
+  t.is(module.ioProxy.myInput, undefined);
   t.is(module.myInput, undefined);
   // proper call with function
-  t.true(module.setInputGetter(internalName, inputFunction, true));
-  t.deepEqual(module.myInput, inputFunction());
+  t.true(module.setInputGetter(internalName, inputFunctionObject));
+  t.deepEqual(module.ioProxy.myInput, inputObject);
+  // check that shortcut result is the same
+  t.deepEqual(module.myInput, inputObject);
+  t.is(module.myInput, module.ioProxy.myInput);
 
   // try to set same input again without overwrite
-  t.false(module.setInputGetter(internalName, inputFunction2));
-  t.deepEqual(module.myInput, inputFunction());
+  t.false(module.setInputGetter(internalName, inputFunctionString));
+  t.deepEqual(module.ioProxy.myInput, inputObject);
   // this time with overwrite
-  t.true(module.setInputGetter(internalName, inputFunction2, true));
-  t.deepEqual(module.myInput, inputString);
+  t.true(module.setInputGetter(internalName, inputFunctionString, true));
+  t.is(module.ioProxy.myInput, inputString);
+  t.is(module.myInput, inputString);
 });
 
 test('setOutputSetter()', (t) => {
@@ -145,7 +189,6 @@ test('setOutputSetter()', (t) => {
   let outputVerifier = 1;
   let outputString = 'some string',
     outputBool = true,
-    outputInt = 42,
     outputObject = { boolean: true, string: 'string' },
     outputFunction = (value) => {
       outputVerifier = value;
@@ -154,47 +197,64 @@ test('setOutputSetter()', (t) => {
 
   // try to set empty internal name
   t.false(module.setOutputSetter('', outputVerifier));
-  t.is(module.myOutput, undefined);
+  t.is(module[internalName], undefined);
   // try to set undefined setter
   t.false(module.setOutputSetter(internalName, undefined));
-  t.is(module.myOutput, undefined);
+  t.is(module[internalName], undefined);
+  // try to use internal name that conflicts with another property
+  t.false(module.setOutputSetter('id', outputFunction));
+  t.is(module[internalName], undefined);
   // try to set setter to things other than a function
   t.false(module.setOutputSetter(internalName, outputVerifier));
-  module.myOutput = outputString;
-  t.is(outputVerifier, 1);
-  module.myOutput = outputBool;
-  t.is(outputVerifier, 1);
-  module.myOutput = outputInt;
-  t.is(outputVerifier, 1);
-  module.myOutput = outputObject;
+  module[internalName] = outputString;
   t.is(outputVerifier, 1);
   // proper call with function
+  delete module[internalName];
   t.true(module.setOutputSetter(internalName, outputFunction));
-  module.myOutput = outputObject;
+  module.ioProxy[internalName] = outputObject;
   t.deepEqual(outputVerifier, outputObject);
-
-  /*module.setOutputSetter(internalName, outputVerifier);
-  // proper call with string
-  module.myOutput = outputString;
-  t.is(outputVerifier, outputString);
-  // proper call with bool
-  module.myOutput = outputBool;
+  // check that shortcut result is the same
+  module[internalName] = outputBool;
   t.is(outputVerifier, outputBool);
-  // proper call with int
-  module.myOutput = outputInt;
-  t.is(outputVerifier, outputInt);
-  // proper call with object
-  module.myOutput = outputObject;
-  t.is(outputVerifier, outputObject);
-  // proper call with object
-  module.myOutput = outputObject;
-  t.is(outputVerifier, outputObject);
-  // proper call with function (overwrite)
-  outputVerifier = undefined;
-  module.setOutputSetter(internalName, outputFunction, true);
-  module.myOutput = outputObject;
-  t.deepEqual(outputVerifier, outputObject);
-
   // try to set same input again without overwrite
-  t.false(module.setOutputSetter(internalName, outputFunction));*/
+  t.false(module.setOutputSetter(internalName, outputFunction));
+});
+
+test('removeIOAccessor()', (t) => {
+  let module = t.context.processingModule;
+  // check for input getter
+  let inputFunction = sinon.fake.returns(true);
+  t.true(module.setInputGetter('myInput', inputFunction));
+  t.true(module.myInput !== undefined);
+  t.is(inputFunction.callCount, 1);
+  module.removeIOAccessor('myInput');
+  t.is(module.ioProxy.myInput, undefined);
+  t.is(module.myInput, undefined);
+  t.is(inputFunction.callCount, 1);
+  // check for output setter
+  let outputFunction = sinon.fake();
+  module.setOutputSetter('myOutput', outputFunction);
+  module.myOutput = true;
+  t.is(outputFunction.callCount, 1);
+  module.removeIOAccessor('myOutput');
+  t.is(module.ioProxy.myOutput, undefined);
+  t.is(module.myOutput, undefined);
+  module.myOutput = true;
+  t.is(outputFunction.callCount, 1);
+});
+
+test('removeAllIOAccessors()', (t) => {
+  let module = t.context.processingModule;
+  // set getter/setter
+  let inputFunction = sinon.fake(() => {});
+  t.true(module.setInputGetter('myInput', inputFunction));
+  let outputFunction = sinon.fake();
+  t.true(module.setOutputSetter('myOutput', outputFunction));
+  module.removeAllIOAccessors();
+  // call getter/setter
+  t.is(module.myInput, undefined);
+  module.myOutput = true;
+  // callbacks should not have been called
+  t.false(inputFunction.calledOnce);
+  t.false(outputFunction.calledOnce);
 });
