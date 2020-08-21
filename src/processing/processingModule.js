@@ -204,7 +204,8 @@ class ProcessingModule extends EventEmitter {
   }
 
   checkInternalName(internalName, overwrite = false) {
-    // check we're not using an internal name that conflicts with already defined internal properties
+    // case: name that is a property of this class and explicitly not an otherwise viable internal name
+    // and should therefore never be overwritten
     if (this.hasOwnProperty(internalName) && !this.ioProxy.hasOwnProperty(internalName)) {
       namida.error(
         'ProcessingModule ' + this.toString(),
@@ -214,7 +215,7 @@ class ProcessingModule extends EventEmitter {
       );
       return false;
     }
-    // check we're not using an already defined name without specifying to overwrite
+    // case: we're not using an already defined name without specifying to overwrite
     if (this.ioProxy.hasOwnProperty(internalName) && !overwrite) {
       namida.error(
         'ProcessingModule ' + this.toString(),
@@ -224,7 +225,7 @@ class ProcessingModule extends EventEmitter {
       );
       return false;
     }
-    // check the internal name is not empty
+    // case: the internal name is empty
     if (internalName === '') {
       namida.error(
         'ProcessingModule ' + this.toString(),
@@ -247,6 +248,12 @@ class ProcessingModule extends EventEmitter {
   /* I/O functions end */
 
   /* helper functions */
+
+  getIOMessageFormat(name) {
+    return [...this.inputs, ...this.outputs].find((input) => {
+      return input.internalName === name;
+    }).messageFormat;
+  }
 
   toString() {
     return this.name + ' (ID ' + this.id + ')';

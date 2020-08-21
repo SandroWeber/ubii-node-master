@@ -14,11 +14,13 @@ class Session {
       id,
       name = '',
       interactions = [],
+      processingModules = [],
       ioMappings = [],
       processMode = ProcessMode.CYCLE_INTERACTIONS
     },
     topicData,
-    deviceManager
+    deviceManager,
+    processingModuleManager
   ) {
     this.id = id ? id : uuidv4();
     this.name = name;
@@ -26,12 +28,15 @@ class Session {
     this.processMode = processMode;
     this.isProcessing = false;
     this.interactions = interactions;
+    this.processingModules = processingModules;
     this.ioMappings = ioMappings;
 
     this.topicData = topicData;
     this.deviceManager = deviceManager;
+    this.processingModuleManager = processingModuleManager;
 
     this.runtimeInteractions = [];
+    this.runtimeProcessingModules = [];
   }
 
   start() {
@@ -43,8 +48,13 @@ class Session {
     for (let interactionSpecs of this.interactions) {
       this.addInteraction(interactionSpecs);
     }
-
     this.applyIOMappings();
+
+    // setup for processing modules
+    for (let pmSpecs of this.processingModules) {
+      this.processingModuleManager.createModule(pmSpecs);
+    }
+    this.processingModuleManager.applyIOMappings(this.ioMappings);
 
     this.status = SessionStatus.RUNNING;
     this.isProcessing = true;

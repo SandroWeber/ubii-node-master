@@ -6,6 +6,7 @@ const namida = require('@tum-far/namida');
 const { Session } = require('./session.js');
 const { EVENTS_SESSION_MANAGER } = require('./constants');
 const Utils = require('../utilities');
+const ProcessingModuleManager = require('../processing/processingModuleManager.js');
 
 class SessionManager extends EventEmitter {
   constructor(topicData, deviceManager) {
@@ -16,6 +17,8 @@ class SessionManager extends EventEmitter {
     this.sessions = [];
 
     this.addEventListeners();
+
+    this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
   }
 
   createSession(specs = {}) {
@@ -31,7 +34,12 @@ class SessionManager extends EventEmitter {
       );
     }
 
-    let session = new Session(specs, this.topicData, this.deviceManager);
+    let session = new Session(
+      specs,
+      this.topicData,
+      this.deviceManager,
+      this.processingModuleManager
+    );
     this.addSession(session);
     this.emit(EVENTS_SESSION_MANAGER.NEW_SESSION, session.toProtobuf());
 

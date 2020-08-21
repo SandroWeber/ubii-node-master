@@ -258,3 +258,44 @@ test('removeAllIOAccessors()', (t) => {
   t.false(inputFunction.calledOnce);
   t.false(outputFunction.calledOnce);
 });
+
+test('readInput()', (t) => {
+  let module = t.context.processingModule;
+  let inputFunction = sinon.fake.returns(42);
+  t.true(module.setInputGetter('myInput', inputFunction));
+  t.is(module.readInput('myInput'), 42);
+  t.true(inputFunction.calledOnce);
+});
+
+test('writeOutput()', (t) => {
+  let module = t.context.processingModule;
+  let verifier = undefined;
+  let outputFunction = sinon.fake((value) => {
+    verifier = value;
+  });
+  t.true(module.setOutputSetter('myOutput', outputFunction));
+  module.writeOutput('myOutput', 42);
+  t.is(verifier, 42);
+  t.true(outputFunction.calledOnce);
+});
+
+test('getIOMessageFormat()', (t) => {
+  let module = t.context.processingModule;
+  t.is(module.getIOMessageFormat('inString'), 'string');
+  t.is(module.getIOMessageFormat('outBool'), 'bool');
+});
+
+test('checkInternalName()', (t) => {
+  let module = t.context.processingModule;
+  // class porperties should not be valid, even if not used as I/O names yet
+  t.false(module.checkInternalName('id'));
+  // empty internal name should not be valid
+  t.false(module.checkInternalName(''));
+  // a viable name
+  t.true(module.checkInternalName('myInternalVariable'));
+  // something that is already taken
+  module.ioProxy.myInternalVariable = true;
+  t.false(module.checkInternalName('myInternalVariable'));
+  // something that is already taken but with overwrite
+  t.true(module.checkInternalName('myInternalVariable', true));
+});
