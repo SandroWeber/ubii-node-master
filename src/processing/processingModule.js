@@ -2,6 +2,7 @@ const EventEmitter = require('events');
 const uuidv4 = require('uuid/v4');
 const { proto, DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
+const ProcessingMode = proto.ubii.processing.ProcessingMode;
 const namida = require('@tum-far/namida/src/namida');
 
 class ProcessingModule extends EventEmitter {
@@ -66,6 +67,33 @@ class ProcessingModule extends EventEmitter {
     this.status = ProcessingModuleProto.Status.CREATED;
 
     this.ioProxy = {};
+  }
+
+  start() {
+    this.status = ProcessingModuleProto.Status.PROCESSING;
+    // processing based on frequency
+    if (this.processingMode.frequency) {
+      processByFrequency();
+    }
+  }
+
+  processByFrequency() {
+    let msFrequency = 1000 / this.processingMode.frequency.hertz;
+    let processIteration = () => {
+      this.onProcessing(this.ioProxy, this.state);
+      if (this.status === ProcessingModuleProto.Status.PROCESSING) {
+        setTimeout(() => {
+          this.processByFrequency();
+        }, msFrequency);
+      }
+    };
+    processIteration();
+  }
+
+  processByTriggerOnInput() {
+    this.on('new_input', () => {
+      this.onProcessing(this.ioProxy, this.state);
+    });
   }
 
   /* lifecycle functions */
