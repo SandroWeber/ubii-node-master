@@ -1,12 +1,40 @@
 const EventEmitter = require('events');
 
-const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
 
 const { Session } = require('./session.js');
 const { EVENTS_SESSION_MANAGER } = require('./constants');
 const Utils = require('../utilities');
 const ProcessingModuleManager = require('../processing/processingModuleManager.js');
+
+// TEMPORARY - migration from Interactions to ProcessingModules
+let mapSpecsInteraction2ProcessingModule = (interactionSpecs) => {
+  let pmSpecs = {};
+  pmSpecs.id = interactionSpecs.id;
+  pmSpecs.name = interactionSpecs.name;
+  pmSpecs.authors = interactionSpecs.authors;
+  pmSpecs.tags = interactionSpecs.tags;
+  pmSpecs.description = interactionSpecs.description;
+  pmSpecs.clientId = 'server';
+
+  if (interactionSpecs.processFrequency) {
+    pmSpecs.processingMode = {
+      frequency: {
+        hertz: interactionSpecs.processFrequency
+      }
+    };
+  }
+  pmSpecs.inputs = interactionSpecs.inputFormats;
+  pmSpecs.outputs = interactionSpecs.outputFormats;
+  pmSpecs.language = proto.ubii.processing.ProcessingModule.Language.JS;
+
+  pmSpecs.onProcessingStringified = interactionSpecs.processingCallback;
+  pmSpecs.onCreatedStringified = interactionSpecs.onCreated;
+
+  return pmSpecs;
+};
+// TEMPORARY - migration from Interactions to ProcessingModules
 
 class SessionManager extends EventEmitter {
   constructor(topicData, deviceManager) {
@@ -19,9 +47,11 @@ class SessionManager extends EventEmitter {
     this.addEventListeners();
 
     this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
+    this.translateToProcessingModules = true; // TEMPORARY - migration from Interactions to ProcessingModules
   }
 
   createSession(specs = {}) {
+    console.info('SessionManager - createSession()');
     if (specs.id && this.getSession(specs.id)) {
       namida.error('SessionManager', 'Session ID already exists: ' + specs.id);
       throw 'Session with ID ' + specs.id + ' already exists.';
@@ -32,6 +62,21 @@ class SessionManager extends EventEmitter {
         'SessionManager',
         'Session ' + specs.id + ' has no I/O Mappings (topics <-> interactions)'
       );
+    }
+
+    console.info('SessionManager - before checking for processing module mapping');
+    // TEMPORARY - migration from Interactions to ProcessingModules
+    if (this.translateToProcessingModules) {
+      console.info('SessionManager - mapping interactions to processing modules');
+      let processingModuleSpecs = [];
+      specs.interactions.forEach((interactionSpecs) => {
+        processingModuleSpecs.push(mapSpecsInteraction2ProcessingModule(interactionSpecs));
+      });
+
+      specs.processingModules = processingModuleSpecs;
+      specs.interactions = [];
+    } else {
+      console.info('SessionManager - NOT translating interaction to processing modules');
     }
 
     let session = new Session(
@@ -88,6 +133,7 @@ class SessionManager extends EventEmitter {
   }
 
   startSession(session) {
+    console.info('SessionManager - startSession()');
     let success = session && session.start();
     if (success) {
       this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());

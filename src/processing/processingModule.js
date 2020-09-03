@@ -2,8 +2,9 @@ const EventEmitter = require('events');
 const uuidv4 = require('uuid/v4');
 const { proto, DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
-const ProcessingMode = proto.ubii.processing.ProcessingMode;
 const namida = require('@tum-far/namida/src/namida');
+
+const Utils = require('../utilities');
 
 class ProcessingModule extends EventEmitter {
   constructor(
@@ -52,16 +53,16 @@ class ProcessingModule extends EventEmitter {
     }
 
     if (this.onCreatedStringified) {
-      this.onCreated = Utils.createFunctionFromString(onCreatedStringified);
+      this.onCreated = Utils.createFunctionFromString(this.onCreatedStringified);
     }
     if (this.onProcessingStringified) {
-      this.onProcessing = Utils.createFunctionFromString(onProcessingStringified);
+      this.onProcessing = Utils.createFunctionFromString(this.onProcessingStringified);
     }
     if (this.onHaltedStringified) {
-      this.onHalted = Utils.createFunctionFromString(onHaltedStringified);
+      this.onHalted = Utils.createFunctionFromString(this.onHaltedStringified);
     }
     if (this.onDestroyedStringified) {
-      this.onDestroyed = Utils.createFunctionFromString(onDestroyedStringified);
+      this.onDestroyed = Utils.createFunctionFromString(this.onDestroyedStringified);
     }
 
     this.status = ProcessingModuleProto.Status.CREATED;
@@ -75,14 +76,19 @@ class ProcessingModule extends EventEmitter {
     this.status = ProcessingModuleProto.Status.PROCESSING;
     // processing based on frequency
     if (this.processingMode.frequency) {
-      processByFrequency();
+      console.info('ProcessingModule - processByFrequency');
+      this.processByFrequency();
     }
+  }
+
+  stop() {
+    this.status = ProcessingModuleProto.Status.HALTED;
   }
 
   processByFrequency() {
     let msFrequency = 1000 / this.processingMode.frequency.hertz;
     let processIteration = () => {
-      this.onProcessing(this.ioProxy, this.state);
+      this.onProcessing(this.ioProxy, this.ioProxy, this.state);
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
           this.processByFrequency();
@@ -145,6 +151,7 @@ class ProcessingModule extends EventEmitter {
   /* I/O functions */
 
   setInputGetter(internalName, getter, overwrite = false) {
+    console.info('PM setInputGetter - ' + internalName);
     // check internal naming is viable
     if (!this.checkInternalName(internalName, overwrite)) {
       return false;
@@ -184,6 +191,7 @@ class ProcessingModule extends EventEmitter {
   }
 
   setOutputSetter(internalName, setter, overwrite = false) {
+    console.info('PM setOutputSetter - ' + internalName);
     // check internal naming is viable
     if (!this.checkInternalName(internalName, overwrite)) {
       return false;
@@ -282,9 +290,18 @@ class ProcessingModule extends EventEmitter {
   /* helper functions */
 
   getIOMessageFormat(name) {
-    return [...this.inputs, ...this.outputs].find((input) => {
-      return input.internalName === name;
-    }).messageFormat;
+    console.info('getIOMessageFormat: ' + name);
+    let ios = [...this.inputs, ...this.outputs];
+    let io = ios.find((io) => {
+      console.info(io);
+      console.info(io.internalName + ' vs ' + name);
+      console.info(io.internalName === name);
+      return io.internalName === name;
+    });
+    console.info('found IO:');
+    console.info(io);
+
+    return io.messageFormat;
   }
 
   toString() {

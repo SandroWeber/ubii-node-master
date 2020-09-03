@@ -10,45 +10,63 @@ class ProcessingModuleManager {
   }
 
   createModule(specs) {
-    let module = new ProcessingModule(specs);
-    this.modules.set(module.id, module);
+    console.info('PM Manager createModule() - specs:');
+    console.info(specs);
+    let pm = new ProcessingModule(specs);
+    console.info('PM Manager createModule() - module instantiated:');
+    console.info(pm);
+    this.modules.set(pm.id, pm);
 
-    return module;
+    return pm;
   }
 
   applyIOMappings(ioMappings) {
+    console.info('PMManager - applyIOMappings()');
     if (this.topicdataBuffer) {
       this.configureIODirectTopicdataAccess(ioMappings);
     }
   }
 
   configureIODirectTopicdataAccess(ioMappings) {
+    console.info('PMManager configureIODirectTopicdataAccess()');
     //TODO: refactor session.proto for more abstract naming (get rid of interaction references)
     ioMappings.forEach((mapping) => {
-      let module = this.modules.get(mapping.interactionId);
+      let processingModule = this.modules.get(mapping.interactionId);
+      console.info('PM id: ' + processingModule.id);
       // connect inputs
       mapping.inputMappings.forEach((inputMapping) => {
-        if (inputMapping.topic) {
-          module.setInputGetter(inputMapping.name, () => {
-            let entry = this.topicdataBuffer.pull(inputMapping.topic);
+        console.info('inputMapping:');
+        console.info(inputMapping);
+        let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
+        console.info(topicSource);
+        if (typeof topicSource === 'string') {
+          processingModule.setInputGetter(inputMapping.name, () => {
+            let entry = this.topicdataBuffer.pull(topicSource);
             return entry && entry.data;
           });
-        } else if (inputMapping.topicMux) {
-          let multiplexer = this.deviceManager.getTopicMux(inputMapping.topicMux.id);
-          module.setInputGetter(inputMapping.name, multiplexer.get);
+        } else if (typeof topicSource === 'object') {
+          let multiplexer = this.deviceManager.getTopicMux(topicSource.id);
+          processingModule.setInputGetter(inputMapping.name, multiplexer.get);
         }
       });
       // connect outputs
       mapping.outputMappings.forEach((outputMapping) => {
-        if (outputMapping.topic) {
-          let messageFormat = module.getIOMessageFormat(outputMapping.name).messageFormat;
+        console.info('outputMapping:');
+        console.info(outputMapping);
+        let topicDestination =
+          outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
+        console.info(topicDestination);
+        if (typeof topicDestination === 'string') {
+          let messageFormat = processingModule.getIOMessageFormat(outputMapping.name);
+          console.info('messageFormat: ' + messageFormat);
           let type = Utils.getTopicDataTypeFromMessageFormat(messageFormat);
-          module.setOutputSetter(outputMapping.name, (value) => {
-            this.topicdataBuffer.publish(outputMapping.topic, value, type);
+          console.info('type: ' + type);
+          processingModule.setOutputSetter(outputMapping.name, (value) => {
+            this.topicdataBuffer.publish(topicDestination, value, type);
           });
-        } else if (outputMapping.topicDemux) {
-          let demultiplexer = this.deviceManager.getTopicDemux(outputMapping.topicDemux.id);
-          module.setOutputSetter(outputMapping.name, demultiplexer.push);
+        } else if (typeof topicDestination === 'object') {
+          let demultiplexer = this.deviceManager.getTopicDemux(topicDestination.id);
+          processingModule.setOutputSetter(outputMapping.name, demultiplexer.push);
         }
       });
     });

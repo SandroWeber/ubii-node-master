@@ -67,6 +67,7 @@ class SessionStartService extends Service {
 
     // try creating new session from message
     try {
+      console.info('SessionStartService - new session from message');
       sessionSpecs.id = undefined; // ID is assigned by server upon creation
       let session = this.sessionManager.createSession(sessionSpecs);
       this.sessionManager.startSessionByID(session.id);

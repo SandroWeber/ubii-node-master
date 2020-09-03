@@ -6,13 +6,16 @@ const SessionStatus = proto.ubii.sessions.SessionStatus;
 const InteractionStatus = proto.ubii.interactions.InteractionStatus;
 
 const { Interaction } = require('./interaction');
-const namida = require('@tum-far/namida/src/namida');
+const namida = require('@tum-far/namida');
 
 class Session {
   constructor(
     {
       id,
       name = '',
+      tags = [],
+      description = '',
+      authors = [],
       interactions = [],
       processingModules = [],
       ioMappings = [],
@@ -24,6 +27,9 @@ class Session {
   ) {
     this.id = id ? id : uuidv4();
     this.name = name;
+    this.tags = tags;
+    this.description = description;
+    this.authors = authors;
     this.status = SessionStatus.CREATED;
     this.processMode = processMode;
     this.isProcessing = false;
@@ -40,6 +46,9 @@ class Session {
   }
 
   start() {
+    console.info('Session - start()');
+    //console.info(this.interactions);
+    //console.info(this.processingModules);
     if (this.isProcessing) {
       namida.logFailure('Session ' + this.id, "can't be started again, already processing");
       return false;
@@ -48,11 +57,34 @@ class Session {
     for (let interactionSpecs of this.interactions) {
       this.addInteraction(interactionSpecs);
     }
-    this.applyIOMappings();
+    if (this.runtimeInteractions.length > 0) {
+      this.applyIOMappings();
+    }
 
+    console.info('Session start() - setting up PMs');
     // setup for processing modules
     for (let pmSpecs of this.processingModules) {
-      this.processingModuleManager.createModule(pmSpecs);
+      let module = this.processingModuleManager.createModule(pmSpecs);
+      if (module) {
+        console.info(
+          'Start Session ' +
+            this.toString() +
+            ' - instantiated module ' +
+            module.name +
+            ' for session ' +
+            this.name
+        );
+        this.runtimeProcessingModules.push(module);
+      } else {
+        console.info(
+          'Start Session ' +
+            this.toString() +
+            ' - could not instantiate module ' +
+            module.name +
+            ' for session ' +
+            this.name
+        );
+      }
     }
     this.processingModuleManager.applyIOMappings(this.ioMappings);
 
@@ -72,6 +104,10 @@ class Session {
       });
     }
 
+    this.runtimeProcessingModules.forEach((pm) => {
+      pm.start();
+    });
+
     return true;
   }
 
@@ -85,6 +121,10 @@ class Session {
 
     for (let interaction of this.runtimeInteractions) {
       interaction.status = InteractionStatus.HALTED;
+    }
+
+    for (let processingModule of this.runtimeProcessingModules) {
+      processingModule.stop();
     }
 
     return true;
@@ -235,9 +275,17 @@ class Session {
     return {
       id: this.id,
       name: this.name,
+      authors: this.authors,
+      tags: this.tags,
+      description: this.description,
       interactions: this.interactions,
+      processingModules: this.processingModules,
       ioMappings: this.ioMappings
     };
+  }
+
+  toString() {
+    return this.name + ' (ID ' + this.id + ')';
   }
 }
 
