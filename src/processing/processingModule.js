@@ -69,6 +69,8 @@ class ProcessingModule extends EventEmitter {
     this.ioProxy = {};
   }
 
+  /* execution control */
+
   start() {
     this.status = ProcessingModuleProto.Status.PROCESSING;
     // processing based on frequency
@@ -95,6 +97,8 @@ class ProcessingModule extends EventEmitter {
       this.onProcessing(this.ioProxy, this.state);
     });
   }
+
+  /* execution control end */
 
   /* lifecycle functions */
 
@@ -289,5 +293,11 @@ class ProcessingModule extends EventEmitter {
 
   /* helper functions end */
 }
+
+ProcessingModule.EVENTS = Object.freeze({
+  NEW_INPUT: 1,
+  PROCESSED: 2,
+  wednesday: 3
+});
 
 module.exports = { ProcessingModule: ProcessingModule };
