@@ -66,11 +66,11 @@ class Session {
       for (let pmSpecs of this.processingModules) {
         let module = this.processingModuleManager.createModule(pmSpecs);
         if (module) {
-          console.info('Start ' + this.toString() + ' - instantiated module ' + module.name);
           this.runtimeProcessingModules.push(module);
         } else {
-          console.info(
-            'Start ' + this.toString() + ' - could not instantiate module ' + module.name
+          namida.logFailure(
+            this.toString(),
+            'could not instantiate processing module ' + pmSpecs.name
           );
         }
       }
@@ -83,15 +83,16 @@ class Session {
 
     if (this.runtimeInteractions.length > 0) {
       if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
-        console.info(this.toString() + ' processing interactions in cycles');
         this.processInteractionsCycle().then(
           () => {},
           (rejected) => {
-            console.info(rejected);
+            namida.logFailure(
+              this.toString(),
+              'interaction cyclic processing rejection:\n' + rejected
+            );
           }
         );
       } else if (this.processMode === ProcessMode.INDIVIDUAL_PROCESS_FREQUENCIES) {
-        console.info(this.toString() + ' processing interactions via frequencies');
         this.runtimeInteractions.forEach((interaction) => {
           interaction.run();
         });
@@ -168,8 +169,9 @@ class Session {
 
       return interaction;
     } else {
-      console.warn(
-        'Session ' + this.id + " - can't add interaction, ID " + specs.id + ' already exists'
+      namida.logFailure(
+        this.toString(),
+        "can't add interaction " + specs.name + ', ID ' + specs.id + ' already exists'
       );
     }
   }
