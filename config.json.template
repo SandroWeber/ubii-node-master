@@ -5,13 +5,14 @@
     "topicdataZMQ": 8103,
     "topicdataWS": 8104
   },
+  "ipc": {
+    "ipcEndpointTopicData": "/ubii-ipc-topicdata"
+  },
   "https": {
     "enabled": true,
     "pathCert": "./certificates/ubii.cert.pem",
     "pathPrivateKey": "./certificates/ubii.private-key.pem",
     "pathPublicKey": "./certificates/ubii.public-key.pem",
-    "allowedOrigins": [
-      "https://localhost"
-    ]
+    "allowedOrigins": ["https://localhost"]
   }
 }

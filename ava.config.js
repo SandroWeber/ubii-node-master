@@ -3,6 +3,7 @@ export default {
     'test/devices/**/*',
     'test/sessions/**/*',
     'test/clients/**/*',
+    'test/processing/**/*',
     // outdated client integration tests, replaced by actual clients from web-frontend and Unity with their integration tests and demos
     '!test/node/master-client-web.js',
     '!test/node/master-client-zmq.js',

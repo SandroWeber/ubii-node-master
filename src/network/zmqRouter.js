@@ -5,16 +5,15 @@ class ZmqRouter {
   /**
    * Communication endpoint implementing the zmq router pattern.
    * @param {*} identity ID string to uniquely identify this object. This id is used to route messages to this socket.
-   * @param {*} port Port to bind.
-   * @param {*} onReceive Callback function that is called when a new message is received from a dealer.
-   * Accepts an envelope parameter containing the client identity and a string parameter with the received message
+   * @param {*} transportProtocol Transport protocol to bind to.
+   * @param {*} address Address to bind to.
    * @param {*} autoBind Should the socket bind directly after the initialization of the object?
    * If not, the start method must be called manually.
    */
-  constructor(identity, port = 5555, onReceive = (envelope, payload) => {}, autoBind = true) {
+  constructor(identity, transportProtocol = 'tcp', address = '*:6666', autoBind = true) {
     this.identity = identity;
-    this.port = port;
-    this.onReceive = onReceive;
+    this.transportProtocol = transportProtocol;
+    this.address = address;
     this.ready = false;
 
     this.socket = {};
@@ -51,17 +50,40 @@ class ZmqRouter {
         return;
       }
 
-      this.onReceive(envelope, payload);
+      if (!this.onMessage) {
+        namida.logFailure('ZMQ router socket', 'no callback for message handling set!');
+      } else {
+        this.onMessage(envelope, payload);
+      }
     });
 
     // bind
-    this.socket.bind('tcp://*:' + this.port + '', (err) => {
+    this.endpoint = this.transportProtocol + '://' + this.address;
+    this.socket.bind(this.endpoint, (err) => {
       if (err) {
-        console.log('Error: ' + err);
+        console.info('Error: ' + err);
       } else {
         this.ready = true;
       }
     });
+  }
+
+  /**
+   * Stop the router and close the socket.
+   */
+  stop() {
+    this.ready = false;
+    this.socket.close();
+  }
+
+  /**
+   * Set the message handling function to be called upon receiving a message. Also marks the this socket as ready to receive.
+   * @param {*} callback Callback function that is called when a new message is received from a dealer socket.
+   * Callback should accept an envelope parameter containing the client identity and a message parameter with the received message buffer.
+   */
+  onMessageReceived(callback) {
+    this.onMessage = callback;
+    this.ready = true;
   }
 
   /**
@@ -84,12 +106,10 @@ class ZmqRouter {
     this.send(toClientId, PING_MESSAGE);
   }
 
-  /**
-   * Stop the router and close the socket.
-   */
-  stop() {
-    this.ready = false;
-    this.socket.close();
+  toString() {
+    let status = this.ready ? 'ready' : 'not ready';
+
+    return this.identity + ' | ' + status + ' | ZMQ-ROUTER ' + this.endpoint;
   }
 }
 

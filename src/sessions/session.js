@@ -6,32 +6,43 @@ const SessionStatus = proto.ubii.sessions.SessionStatus;
 const InteractionStatus = proto.ubii.interactions.InteractionStatus;
 
 const { Interaction } = require('./interaction');
-const namida = require('@tum-far/namida/src/namida');
+const namida = require('@tum-far/namida');
 
 class Session {
   constructor(
     {
       id,
       name = '',
+      tags = [],
+      description = '',
+      authors = [],
       interactions = [],
+      processingModules = [],
       ioMappings = [],
       processMode = ProcessMode.CYCLE_INTERACTIONS
     },
     topicData,
-    deviceManager
+    deviceManager,
+    processingModuleManager
   ) {
     this.id = id ? id : uuidv4();
     this.name = name;
+    this.tags = tags;
+    this.description = description;
+    this.authors = authors;
     this.status = SessionStatus.CREATED;
     this.processMode = processMode;
     this.isProcessing = false;
     this.interactions = interactions;
+    this.processingModules = processingModules;
     this.ioMappings = ioMappings;
 
     this.topicData = topicData;
     this.deviceManager = deviceManager;
+    this.processingModuleManager = processingModuleManager;
 
     this.runtimeInteractions = [];
+    this.runtimeProcessingModules = [];
   }
 
   start() {
@@ -43,23 +54,49 @@ class Session {
     for (let interactionSpecs of this.interactions) {
       this.addInteraction(interactionSpecs);
     }
-
-    this.applyIOMappings();
+    if (this.runtimeInteractions.length > 0) {
+      this.applyIOMappings();
+    }
 
     this.status = SessionStatus.RUNNING;
     this.isProcessing = true;
 
-    if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
-      this.processInteractionsCycle().then(
-        () => {},
-        (rejected) => {
-          console.info(rejected);
+    // setup for processing modules
+    if (this.processingModules.length > 0) {
+      for (let pmSpecs of this.processingModules) {
+        let module = this.processingModuleManager.createModule(pmSpecs);
+        if (module) {
+          this.runtimeProcessingModules.push(module);
+        } else {
+          namida.logFailure(
+            this.toString(),
+            'could not instantiate processing module ' + pmSpecs.name
+          );
         }
-      );
-    } else if (this.processMode === ProcessMode.INDIVIDUAL_PROCESS_FREQUENCIES) {
-      this.runtimeInteractions.forEach((interaction) => {
-        interaction.run();
+      }
+      this.processingModuleManager.applyIOMappings(this.ioMappings);
+
+      this.runtimeProcessingModules.forEach((pm) => {
+        pm.start();
       });
+    }
+
+    if (this.runtimeInteractions.length > 0) {
+      if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
+        this.processInteractionsCycle().then(
+          () => {},
+          (rejected) => {
+            namida.logFailure(
+              this.toString(),
+              'interaction cyclic processing rejection:\n' + rejected
+            );
+          }
+        );
+      } else if (this.processMode === ProcessMode.INDIVIDUAL_PROCESS_FREQUENCIES) {
+        this.runtimeInteractions.forEach((interaction) => {
+          interaction.run();
+        });
+      }
     }
 
     return true;
@@ -75,6 +112,10 @@ class Session {
 
     for (let interaction of this.runtimeInteractions) {
       interaction.status = InteractionStatus.HALTED;
+    }
+
+    for (let processingModule of this.runtimeProcessingModules) {
+      processingModule.stop();
     }
 
     return true;
@@ -128,8 +169,9 @@ class Session {
 
       return interaction;
     } else {
-      console.warn(
-        'Session ' + this.id + " - can't add interaction, ID " + specs.id + ' already exists'
+      namida.logFailure(
+        this.toString(),
+        "can't add interaction " + specs.name + ', ID ' + specs.id + ' already exists'
       );
     }
   }
@@ -225,9 +267,17 @@ class Session {
     return {
       id: this.id,
       name: this.name,
+      authors: this.authors,
+      tags: this.tags,
+      description: this.description,
       interactions: this.interactions,
+      processingModules: this.processingModules,
       ioMappings: this.ioMappings
     };
+  }
+
+  toString() {
+    return 'Session ' + this.name + ' (ID ' + this.id + ')';
   }
 }
 

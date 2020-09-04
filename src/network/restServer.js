@@ -15,9 +15,8 @@ class RESTServer {
    * @param {*} autoBind Should the socket bind directly after the initialization of the object?
    * If not, the start method must be called manually.
    */
-  constructor(port = 5555, useHTTPS = true, autoBind = true) {
+  constructor(port = 5555, autoBind = true) {
     this.port = port;
-    this.useHTTPS = useHTTPS;
 
     let ipLan = NetworkConfigManager.hostAdresses.ethernet;
     let ipWifi = NetworkConfigManager.hostAdresses.wifi;
@@ -52,8 +51,10 @@ class RESTServer {
         key: fs.readFileSync(configService.getPathPrivateKey())
       };
       this.server = https.createServer(credentials, this.app);
+      this.endpoint = 'https://*:' + this.port;
     } else {
       this.server = http.createServer(this.app);
+      this.endpoint = 'http://*:' + this.port;
     }
 
     // CORS
@@ -77,7 +78,7 @@ class RESTServer {
     this.app.use(bodyParser.json());
 
     this.server.listen(this.port, () => {
-      this.ready = true;
+      this.open = true;
     });
   }
 
@@ -86,8 +87,26 @@ class RESTServer {
     this.server.close();
   }
 
+  /**
+   * Set the message handling function to be called upon receiving a message. Also marks the this socket as ready to receive.
+   * @param {*} route The route suffix after the endpoint where messages can be POSTed.
+   * @param {*} callback Callback function that is called when a new message is received.
+   * Callback should accept a request parameter and a response paramter.
+   */
+  onServiceMessageReceived(callback) {
+    this.setRoutePOST('/services', callback);
+    this.endpointServices = this.endpoint + '/services';
+    this.ready = true;
+  }
+
   setRoutePOST(route, callback) {
     this.app.post(route, callback);
+  }
+
+  toString() {
+    let status = this.ready ? 'ready' : 'not ready';
+
+    return 'REST-Server | ' + status + ' | POST service route ' + this.endpointServices;
   }
 }
 

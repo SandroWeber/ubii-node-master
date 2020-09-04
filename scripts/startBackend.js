@@ -1,5 +1,5 @@
 const { MasterNode } = require('../src/index.js');
-const InteractModulesService = require('../src/sessions/interactionModulesService');
+const ExternalLibrariesService = require('../src/sessions/externalLibrariesService');
 
 const tf = require('@tensorflow/tfjs-node');
 const cocoSsd = require('@tensorflow-models/coco-ssd');
@@ -7,10 +7,10 @@ const emgClassifier = require('@baumlos/emg-classifier');
 const fs = require('fs');
 
 (function () {
-  InteractModulesService.addModule('tf', tf);
-  InteractModulesService.addModule('cocoSsd', cocoSsd);
-  InteractModulesService.addModule('emgClassifier', emgClassifier);
-  InteractModulesService.addModule('fs', fs);
+  ExternalLibrariesService.addExternalLibrary('tf', tf);
+  ExternalLibrariesService.addExternalLibrary('cocoSsd', cocoSsd);
+  ExternalLibrariesService.addExternalLibrary('emgClassifier', emgClassifier);
+  ExternalLibrariesService.addExternalLibrary('fs', fs);
 
   let master = new MasterNode();
 })();
