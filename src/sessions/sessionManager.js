@@ -64,7 +64,6 @@ class SessionManager extends EventEmitter {
       );
     }
 
-    console.info('SessionManager - before checking for processing module mapping');
     // TEMPORARY - migration from Interactions to ProcessingModules
     if (this.translateToProcessingModules) {
       console.info('SessionManager - mapping interactions to processing modules');
@@ -133,13 +132,13 @@ class SessionManager extends EventEmitter {
   }
 
   startSession(session) {
-    console.info('SessionManager - startSession()');
+    //console.info('SessionManager - startSession()');
     let success = session && session.start();
     if (success) {
       this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
-      namida.logSuccess('SessionManager', 'succesfully started session ID ' + session.id);
+      namida.logSuccess('SessionManager', 'succesfully started ' + session.toString());
     } else {
-      namida.logFailure('SessionManager', 'failed to start session ID ' + session.id);
+      namida.logFailure('SessionManager', 'failed to start ' + session.toString());
     }
 
     return success;

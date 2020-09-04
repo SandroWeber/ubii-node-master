@@ -46,9 +46,6 @@ class Session {
   }
 
   start() {
-    console.info('Session - start()');
-    //console.info(this.interactions);
-    //console.info(this.processingModules);
     if (this.isProcessing) {
       namida.logFailure('Session ' + this.id, "can't be started again, already processing");
       return false;
@@ -61,52 +58,45 @@ class Session {
       this.applyIOMappings();
     }
 
-    console.info('Session start() - setting up PMs');
-    // setup for processing modules
-    for (let pmSpecs of this.processingModules) {
-      let module = this.processingModuleManager.createModule(pmSpecs);
-      if (module) {
-        console.info(
-          'Start Session ' +
-            this.toString() +
-            ' - instantiated module ' +
-            module.name +
-            ' for session ' +
-            this.name
-        );
-        this.runtimeProcessingModules.push(module);
-      } else {
-        console.info(
-          'Start Session ' +
-            this.toString() +
-            ' - could not instantiate module ' +
-            module.name +
-            ' for session ' +
-            this.name
-        );
-      }
-    }
-    this.processingModuleManager.applyIOMappings(this.ioMappings);
-
     this.status = SessionStatus.RUNNING;
     this.isProcessing = true;
 
-    if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
-      this.processInteractionsCycle().then(
-        () => {},
-        (rejected) => {
-          console.info(rejected);
+    // setup for processing modules
+    if (this.processingModules.length > 0) {
+      for (let pmSpecs of this.processingModules) {
+        let module = this.processingModuleManager.createModule(pmSpecs);
+        if (module) {
+          console.info('Start ' + this.toString() + ' - instantiated module ' + module.name);
+          this.runtimeProcessingModules.push(module);
+        } else {
+          console.info(
+            'Start ' + this.toString() + ' - could not instantiate module ' + module.name
+          );
         }
-      );
-    } else if (this.processMode === ProcessMode.INDIVIDUAL_PROCESS_FREQUENCIES) {
-      this.runtimeInteractions.forEach((interaction) => {
-        interaction.run();
+      }
+      this.processingModuleManager.applyIOMappings(this.ioMappings);
+
+      this.runtimeProcessingModules.forEach((pm) => {
+        pm.start();
       });
     }
 
-    this.runtimeProcessingModules.forEach((pm) => {
-      pm.start();
-    });
+    if (this.runtimeInteractions.length > 0) {
+      if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
+        console.info(this.toString() + ' processing interactions in cycles');
+        this.processInteractionsCycle().then(
+          () => {},
+          (rejected) => {
+            console.info(rejected);
+          }
+        );
+      } else if (this.processMode === ProcessMode.INDIVIDUAL_PROCESS_FREQUENCIES) {
+        console.info(this.toString() + ' processing interactions via frequencies');
+        this.runtimeInteractions.forEach((interaction) => {
+          interaction.run();
+        });
+      }
+    }
 
     return true;
   }
@@ -285,7 +275,7 @@ class Session {
   }
 
   toString() {
-    return this.name + ' (ID ' + this.id + ')';
+    return 'Session ' + this.name + ' (ID ' + this.id + ')';
   }
 }
 

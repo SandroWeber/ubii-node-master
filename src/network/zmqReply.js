@@ -60,6 +60,12 @@ class ZmqReply {
     this.onMessage = callback;
     this.ready = true;
   }
+
+  toString() {
+    let status = this.ready ? 'ready' : 'not ready';
+
+    return 'ZMQ-Service | ' + status + ' | ZMQ-REPLY ' + this.endpoint;
+  }
 }
 
 module.exports = ZmqReply;

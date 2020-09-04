@@ -145,6 +145,12 @@ class WebsocketServer {
     this.waitingPongCallbacks.set(toClientId.toString(), callback);
     this.send(toClientId, PING_MESSAGE);
   }
+
+  toString() {
+    let status = this.ready ? 'ready' : 'not ready';
+
+    return 'WS-Topicdata | ' + status + ' | websocket ' + this.endpoint;
+  }
 }
 
 module.exports = WebsocketServer;

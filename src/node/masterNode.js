@@ -2,7 +2,7 @@ const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
 
-const { ServerConnectionsManager } = require('../network/serverConnectionsManager.js');
+const { NetworkConnectionsManager } = require('../network/networkConnectionsManager.js');
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
@@ -18,7 +18,7 @@ class MasterNode {
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
 
-    this.connectionsManager = new ServerConnectionsManager();
+    this.connectionsManager = new NetworkConnectionsManager();
     this.connectionsManager.onServiceMessageREST((...params) =>
       this.onServiceMessageREST(...params)
     );

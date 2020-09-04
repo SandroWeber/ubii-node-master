@@ -3,7 +3,7 @@ const uuidv4 = require('uuid/v4');
 const { proto, DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const InteractionStatus = proto.ubii.interactions.InteractionStatus;
 
-const InteractModulesService = require('./interactionModulesService');
+const ExternalLibrariesService = require('./externalLibrariesService');
 const { INTERACTION_LIFECYCLE_EVENTS } = require('./constants');
 const Utils = require('../utilities');
 
@@ -39,7 +39,7 @@ class Interaction extends EventEmitter {
     Object.defineProperty(this.state, 'modules', {
       // modules are read-only
       get: () => {
-        return InteractModulesService.getModulesObject();
+        return ExternalLibrariesService.getExternalLibraries();
       },
       configurable: true
     });

@@ -102,6 +102,12 @@ class RESTServer {
   setRoutePOST(route, callback) {
     this.app.post(route, callback);
   }
+
+  toString() {
+    let status = this.ready ? 'ready' : 'not ready';
+
+    return 'REST-Server | ' + status + ' | POST service route ' + this.endpointServices;
+  }
 }
 
 module.exports = RESTServer;

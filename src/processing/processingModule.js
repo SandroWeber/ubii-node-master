@@ -2,7 +2,9 @@ const EventEmitter = require('events');
 const uuidv4 = require('uuid/v4');
 const { proto, DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
-const namida = require('@tum-far/namida/src/namida');
+const namida = require('@tum-far/namida');
+
+const ExternalLibrariesService = require('../sessions/externalLibrariesService');
 
 const Utils = require('../utilities');
 
@@ -68,6 +70,17 @@ class ProcessingModule extends EventEmitter {
     this.status = ProcessingModuleProto.Status.CREATED;
 
     this.ioProxy = {};
+
+    //TODO: refactor away from old "interactions" setup
+    // only kept for backwards compatibility testing
+    this.state = {};
+    Object.defineProperty(this.state, 'modules', {
+      // modules are read-only
+      get: () => {
+        return ExternalLibrariesService.getExternalLibraries();
+      },
+      configurable: true
+    });
   }
 
   /* execution control */
@@ -75,9 +88,10 @@ class ProcessingModule extends EventEmitter {
   start() {
     this.status = ProcessingModuleProto.Status.PROCESSING;
     // processing based on frequency
-    if (this.processingMode.frequency) {
-      console.info('ProcessingModule - processByFrequency');
-      this.processByFrequency();
+    if (this.processingMode && this.processingMode.frequency) {
+      this.startProcessingByFrequency();
+    } else if (this.processingMode === undefined) {
+      this.startProcessingByCycles();
     }
   }
 
@@ -85,23 +99,38 @@ class ProcessingModule extends EventEmitter {
     this.status = ProcessingModuleProto.Status.HALTED;
   }
 
-  processByFrequency() {
+  startProcessingByFrequency() {
+    namida.log(this.toString(), 'start processing by frequency');
     let msFrequency = 1000 / this.processingMode.frequency.hertz;
     let processIteration = () => {
       this.onProcessing(this.ioProxy, this.ioProxy, this.state);
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
-          this.processByFrequency();
+          processIteration();
         }, msFrequency);
       }
     };
     processIteration();
   }
 
-  processByTriggerOnInput() {
+  startProcessingByTriggerOnInput() {
+    namida.log(this.toString(), 'start processing triggered on input');
     this.on('new_input', () => {
-      this.onProcessing(this.ioProxy, this.state);
+      this.onProcessing(this.ioProxy, this.ioProxy, this.state);
     });
+  }
+
+  startProcessingByCycles() {
+    namida.log(this.toString(), 'start processing by cycles with minimal delay');
+    let processIteration = () => {
+      this.onProcessing(this.ioProxy, this.ioProxy, this.state);
+      if (this.status === ProcessingModuleProto.Status.PROCESSING) {
+        setTimeout(() => {
+          processIteration();
+        }, 0);
+      }
+    };
+    processIteration();
   }
 
   /* execution control end */
@@ -134,24 +163,21 @@ class ProcessingModule extends EventEmitter {
    */
   onProcessing() {
     namida.error(
-      'ProcessingModule ' + this.toString(),
+      this.toString(),
       'onProcessing callback is not specified, module will not do anything?'
     );
-    throw new Error(
-      'ProcessingModule ' + this.toString() + ' - onProcessing() callback is not specified'
-    );
+    throw new Error(this.toString() + ' - onProcessing() callback is not specified');
   }
 
   onHalted() {}
 
   onDestroyed() {}
 
-  /* lifecycle functions end*/
+  /* lifecycle functions end */
 
   /* I/O functions */
 
   setInputGetter(internalName, getter, overwrite = false) {
-    console.info('PM setInputGetter - ' + internalName);
     // check internal naming is viable
     if (!this.checkInternalName(internalName, overwrite)) {
       return false;
@@ -160,7 +186,7 @@ class ProcessingModule extends EventEmitter {
     // make sure getter is defined
     if (getter === undefined) {
       namida.error(
-        'ProcessingModule ' + this.toString(),
+        this.toString(),
         'trying to set input getter for ' + internalName + ' but getter is undefined'
       );
       return false;
@@ -168,7 +194,7 @@ class ProcessingModule extends EventEmitter {
     // make sure getter is a function
     if (typeof getter !== 'function') {
       namida.error(
-        'ProcessingModule ' + this.toString(),
+        this.toString(),
         'trying to set input getter for ' + internalName + ' but getter is not a function'
       );
       return false;
@@ -191,7 +217,6 @@ class ProcessingModule extends EventEmitter {
   }
 
   setOutputSetter(internalName, setter, overwrite = false) {
-    console.info('PM setOutputSetter - ' + internalName);
     // check internal naming is viable
     if (!this.checkInternalName(internalName, overwrite)) {
       return false;
@@ -200,7 +225,7 @@ class ProcessingModule extends EventEmitter {
     // make sure setter is defined
     if (setter === undefined) {
       namida.error(
-        'ProcessingModule ' + this.toString(),
+        this.toString(),
         'trying to set output setter for ' + internalName + ' but setter is undefined'
       );
       return false;
@@ -208,7 +233,7 @@ class ProcessingModule extends EventEmitter {
     // make sure setter is a function
     if (typeof setter !== 'function') {
       namida.error(
-        'ProcessingModule ' + this.toString(),
+        this.toString(),
         'trying to set output setter for ' + internalName + ' but setter is not a function'
       );
       return false;
@@ -248,7 +273,7 @@ class ProcessingModule extends EventEmitter {
     // and should therefore never be overwritten
     if (this.hasOwnProperty(internalName) && !this.ioProxy.hasOwnProperty(internalName)) {
       namida.error(
-        'ProcessingModule ' + this.toString(),
+        this.toString(),
         'the internal I/O naming "' +
           internalName +
           '" should not be used as it conflicts with internal properties'
@@ -258,7 +283,7 @@ class ProcessingModule extends EventEmitter {
     // case: we're not using an already defined name without specifying to overwrite
     if (this.ioProxy.hasOwnProperty(internalName) && !overwrite) {
       namida.error(
-        'ProcessingModule ' + this.toString(),
+        this.toString(),
         'the internal I/O naming "' +
           internalName +
           '" is already defined (overwrite not specified)'
@@ -268,7 +293,7 @@ class ProcessingModule extends EventEmitter {
     // case: the internal name is empty
     if (internalName === '') {
       namida.error(
-        'ProcessingModule ' + this.toString(),
+        this.toString(),
         'the internal I/O naming "' + internalName + '" can\'t be used (empty)'
       );
       return false;
@@ -290,22 +315,16 @@ class ProcessingModule extends EventEmitter {
   /* helper functions */
 
   getIOMessageFormat(name) {
-    console.info('getIOMessageFormat: ' + name);
     let ios = [...this.inputs, ...this.outputs];
     let io = ios.find((io) => {
-      console.info(io);
-      console.info(io.internalName + ' vs ' + name);
-      console.info(io.internalName === name);
       return io.internalName === name;
     });
-    console.info('found IO:');
-    console.info(io);
 
     return io.messageFormat;
   }
 
   toString() {
-    return this.name + ' (ID ' + this.id + ')';
+    return 'ProcessingModule ' + this.name + ' (ID ' + this.id + ')';
   }
 
   /* helper functions end */
@@ -313,8 +332,7 @@ class ProcessingModule extends EventEmitter {
 
 ProcessingModule.EVENTS = Object.freeze({
   NEW_INPUT: 1,
-  PROCESSED: 2,
-  wednesday: 3
+  PROCESSED: 2
 });
 
 module.exports = { ProcessingModule: ProcessingModule };

@@ -9,7 +9,7 @@ const RESTServer = require('./restServer');
 const configService = require('../config/configService');
 const namida = require('@tum-far/namida/src/namida');
 
-class ServerConnectionsManager {
+class NetworkConnectionsManager {
   constructor() {
     // Translators:
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
@@ -31,7 +31,7 @@ class ServerConnectionsManager {
 
     // ZMQ Topic Data Component:
     this.connections.topicDataZMQ = new ZmqRouter(
-      'server_zmq',
+      'ZMQ-TCP-Topicdata',
       'tcp',
       '*:' + configService.getPortTopicdataZMQ()
     );
@@ -44,7 +44,7 @@ class ServerConnectionsManager {
     if (ipcSocketSupported) {
       let pwd = process.env.PWD || process.env.INIT_CWD;
       this.connections.topicDataIPC = new ZmqRouter(
-        'server_zmq_icp_topicdata',
+        'ZMQ-IPC-Topicdata',
         'ipc',
         pwd + configService.config.ipc.ipcEndpointTopicData
       );
@@ -60,37 +60,13 @@ class ServerConnectionsManager {
         this.connections.topicDataZMQ &&
         this.connections.topicDataZMQ.ready &&
         this.connections.topicDataWS &&
-        this.connections.topicDataWS.ready &&
-        (!this.connections.topicDataIPC || this.connections.topicDataIPC.ready)
+        this.connections.topicDataWS.ready
       ) {
-        let httpsEnabled = configService.useHTTPS() ? 'enabled' : 'disabled';
-        let message = 'all connections ready - HTTPS ' + httpsEnabled + ' - endpoints:';
-        message += '\nZMQ services = ' + this.connections.serviceZMQ.endpoint;
-        message += '\nREST services = ' + this.connections.serviceREST.endpointServices + ' (POST)';
-        message += '\nZMQ topic data = ' + this.connections.topicDataZMQ.endpoint;
-        message += '\nWS topic data = ' + this.connections.topicDataWS.endpoint;
-        if (this.connections.topicDataIPC && this.connections.topicDataIPC.ready) {
-          message += '\nZMQ ICP topic data = ' + this.connections.topicDataIPC.endpoint;
-        }
-        namida.logSuccess('Connection Manager', message);
-
         this.ready = true;
+        this.logConnectionStatus();
       } else {
         if (Date.now() > timeoutDate) {
-          namida.logFailure(
-            'Connection Manager',
-            'not all connections ready:' +
-              '\nZMQ services: ' +
-              this.connections.serviceZMQ.ready +
-              '\nREST services: ' +
-              this.connections.serviceREST.ready +
-              '\nZMQ topic data: ' +
-              this.connections.topicDataZMQ.ready +
-              '\nWS topic data: ' +
-              this.connections.topicDataWS.ready +
-              '\nZMQ IPC topic data: ' +
-              this.connections.topicDataIPC.ready
-          );
+          this.logConnectionStatus();
         } else {
           setTimeout(checkConnectionsReady, 500);
         }
@@ -124,8 +100,30 @@ class ServerConnectionsManager {
   }
 
   ping(clientID, callback) {}
+
+  logConnectionStatus() {
+    let httpsEnabled = configService.useHTTPS() ? 'enabled' : 'disabled';
+    let readyStatus = this.ready ? 'ready' : 'failed';
+    let message = 'status=' + readyStatus + ' | HTTPS=' + httpsEnabled + ' | connections:';
+
+    message += '\n' + this.connections.serviceZMQ.toString();
+    message += '\n' + this.connections.serviceREST.toString();
+    message += '\n' + this.connections.topicDataZMQ.toString();
+    message += '\n' + this.connections.topicDataWS.toString();
+    if (this.connections.topicDataIPC) {
+      message += '\n' + this.connections.topicDataIPC.toString();
+    } else {
+      message += '\nZMQ-IPC-Topicdata unavailable';
+    }
+
+    if (this.ready) {
+      namida.logSuccess('NetworkConnectionsManager', message);
+    } else {
+      namida.logFailure('NetworkConnectionsManager', message);
+    }
+  }
 }
 
 module.exports = {
-  ServerConnectionsManager: ServerConnectionsManager
+  NetworkConnectionsManager: NetworkConnectionsManager
 };

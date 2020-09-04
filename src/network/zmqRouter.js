@@ -61,9 +61,9 @@ class ZmqRouter {
     this.endpoint = this.transportProtocol + '://' + this.address;
     this.socket.bind(this.endpoint, (err) => {
       if (err) {
-        console.log('Error: ' + err);
+        console.info('Error: ' + err);
       } else {
-        this.open = true;
+        this.ready = true;
       }
     });
   }
@@ -104,6 +104,12 @@ class ZmqRouter {
   ping(toClientId, callback) {
     this.waitingPongCallbacks.set(toClientId.toString(), callback);
     this.send(toClientId, PING_MESSAGE);
+  }
+
+  toString() {
+    let status = this.ready ? 'ready' : 'not ready';
+
+    return this.identity + ' | ' + status + ' | ZMQ-ROUTER ' + this.endpoint;
   }
 }
 
