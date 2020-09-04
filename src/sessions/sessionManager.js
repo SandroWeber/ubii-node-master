@@ -47,7 +47,7 @@ class SessionManager extends EventEmitter {
     this.addEventListeners();
 
     this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
-    this.translateToProcessingModules = true; // TEMPORARY - migration from Interactions to ProcessingModules
+    this.translateToProcessingModules = false; // TEMPORARY - migration from Interactions to ProcessingModules
   }
 
   createSession(specs = {}) {

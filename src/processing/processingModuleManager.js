@@ -7,12 +7,12 @@ class ProcessingModuleManager {
     this.deviceManager = deviceManager;
     this.topicdataBuffer = topicdataBuffer;
 
-    this.modules = new Map();
+    this.processingModules = new Map();
   }
 
   createModule(specs) {
     let pm = new ProcessingModule(specs);
-    this.modules.set(pm.id, pm);
+    this.processingModules.set(pm.id, pm);
     pm.onCreated(pm.state);
 
     return pm;
@@ -27,7 +27,7 @@ class ProcessingModuleManager {
   configureIODirectTopicdataAccess(ioMappings) {
     //TODO: refactor session.proto for more abstract naming (get rid of interaction references)
     ioMappings.forEach((mapping) => {
-      let processingModule = this.modules.get(mapping.interactionId);
+      let processingModule = this.processingModules.get(mapping.interactionId);
       // connect inputs
       mapping.inputMappings.forEach((inputMapping) => {
         let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;

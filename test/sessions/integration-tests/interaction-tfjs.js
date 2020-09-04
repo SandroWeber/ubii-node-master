@@ -6,11 +6,11 @@ import * as tf from '@tensorflow/tfjs-node';
 
 import TestUtility from '../testUtility';
 import { SessionManager, DeviceManager } from '../../../src/index';
-import InteractionModulesService from '../../../src/sessions/interactionModulesService';
+import ExternalLibrariesService from '../../../src/sessions/externalLibrariesService';
 
 /* global setup */
 
-InteractionModulesService.addModule('tf', tf);
+ExternalLibrariesService.addExternalLibrary('tf', tf);
 
 /* helper functions */
 
@@ -35,7 +35,9 @@ let onCreatedCB = async (state) => {
 
   // Train the model using the data.
   await state.model.fit(xs, ys).then(() => {
-    state.expectedPrediction = state.model.predict(state.modules.tf.tensor2d([5], [1, 1])).dataSync()[0];
+    state.expectedPrediction = state.model
+      .predict(state.modules.tf.tensor2d([5], [1, 1]))
+      .dataSync()[0];
   });
 };
 
@@ -44,36 +46,41 @@ let interactionSpecs = {
   name: 'test-interaction',
   processingCallback: processCB.toString(),
   onCreated: onCreatedCB.toString(),
-  outputFormats: [{
-    internalName: 'prediction',
-    messageFormat: 'double'
-  }]
+  outputFormats: [
+    {
+      internalName: 'prediction',
+      messageFormat: 'double'
+    }
+  ]
 };
 
 let sessionSpecs = {
   name: 'test-session',
   interactions: [interactionSpecs],
-  ioMappings: [{
-    interactionId: interactionSpecs.id,
-    outputMappings: [{
-      name: interactionSpecs.outputFormats[0].internalName,
-      topicDestination: topicPrediction
-    }]
-  }]
+  ioMappings: [
+    {
+      interactionId: interactionSpecs.id,
+      outputMappings: [
+        {
+          name: interactionSpecs.outputFormats[0].internalName,
+          topicDestination: topicPrediction
+        }
+      ]
+    }
+  ]
 };
 
 /* initialize tests */
 
-test.beforeEach(t => {
+test.beforeEach((t) => {
   t.context.topicData = new RuntimeTopicData();
   t.context.deviceManager = new DeviceManager(undefined, t.context.topicData, undefined);
   t.context.sessionManager = new SessionManager(t.context.topicData, t.context.deviceManager);
 });
 
-
 /* run tests */
 
-test('execute interaction with TFjs example code', async t => {
+test('execute interaction with TFjs example code', async (t) => {
   let session = t.context.sessionManager.createSession(sessionSpecs);
   await t.context.sessionManager.startAllSessions();
   t.is(session.runtimeInteractions.length, 1);
