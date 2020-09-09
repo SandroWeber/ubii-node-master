@@ -1,7 +1,4 @@
-const {
-  clientStateEnum,
-  Client
-} = require('./client.js');
+const { clientStateEnum, Client } = require('./client.js');
 const namida = require('@tum-far/namida');
 const uuidv4 = require('uuid/v4');
 
@@ -43,9 +40,7 @@ class ClientManager {
     this.clients.set(client.id, client);
   }
 
-  reconnectClient(clientSpecs) {
-
-  }
+  reconnectClient(clientSpecs) {}
 
   /**
    * Remove the specified Client from the clients map.
@@ -92,49 +87,36 @@ class ClientManager {
    * @param {*} context Context for the feedback.
    * @returns Returns the payload of the process result. This can be the client specification or an error.
    */
-  processClientRegistration(clientSpecification, context) {
+  processClientRegistration(clientSpecification) {
     // Prepare some variables.
     let clientIdentifier = clientSpecification.id;
-
-    // Check the context
-    if (context.feedback === undefined) {
-      context.feedback = {};
-    }
 
     // Check if a client with the specified id is already registered...
     if (clientIdentifier && this.hasClient(clientIdentifier)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (this.getClient(clientIdentifier).getState() === clientStateEnum.active) {
         // => Re-registering is NOT an option: Reject the registration.
-
-        // Update the context feedback.
-        context.feedback.message = `Client with id ${namida.style.messageHighlight(clientIdentifier)} ` +
-          `is already registered and active.`;
-        context.feedback.title = REJECT_REGISTRATION_FEEDBACK_TITLE;
-        context.success = false;
+        let errorMessage =
+          'Client with ID ' + clientIdentifier + ' is already registered and active';
 
         // Ouput the feedback on the server console.
-        namida.logFailure(context.feedback.title, context.feedback.message);
+        namida.logFailure('ClientManager', errorMessage);
 
-        return undefined;
+        throw new Error(errorMessage);
       } else if (this.getClient(clientIdentifier).name === clientSpecification.name) {
         // => Re-registering is possible: Prepare the registration.
 
         // Update the context feedback.
-        context.feedback.message = `Reregistration of Client with id ${namida.style.messageHighlight(clientIdentifier)} ` +
-          `initialized because it is already registered but in standby or inactive.`;
-        context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
+        let errorMessage =
+          'Reregistration of Client with ID ' +
+          clientIdentifier +
+          ' initialized because it is already registered but in standby or inactive.';
 
         // Ouput the feedback on the server console.
-        namida.logWarn(context.feedback.title, context.feedback.message);
+        namida.logWarn('ClientManager', errorMessage);
 
         // Prepare the reregistration.
         this.clients.delete(clientIdentifier);
-
-        // Update the feedback.
-        context.feedback.message = `Client with id ${namida.style.messageHighlight(clientIdentifier)} reregistered.`;
-        context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
-        context.success = true;
 
         // Continue with the normal registration process...
       }
@@ -148,12 +130,8 @@ class ClientManager {
     // Update the client information.
     currentClient.updateInformation();
 
-    // Update the feedback to the default registartion feedback.
-    context.feedback.message = `New Client with id ${namida.style.messageHighlight(currentClient.id)} registered.`;
-    context.feedback.title = ACCEPT_REGISTRATION_FEEDBACK_TITLE;
-    context.success = true;
     // Ouput the feedback on the server console.
-    namida.logSuccess(context.feedback.title, context.feedback.message);
+    namida.logSuccess('ClientManager', 'New Client with ID ' + currentClient.id + ' registered');
 
     // Return the client
     return currentClient;
@@ -161,5 +139,5 @@ class ClientManager {
 }
 
 module.exports = {
-  'ClientManager': ClientManager
+  ClientManager: ClientManager
 };
