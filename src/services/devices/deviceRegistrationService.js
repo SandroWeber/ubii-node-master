@@ -16,26 +16,16 @@ class DeviceRegistrationService extends Service {
   }
 
   reply(message) {
-    let context = this.prepareContext();
-    context.success = false;
-
     // Verify the device and act accordingly.
     if (!this.clientManager.verifyClient(message.clientId)) {
-      // Prepare the context.
-      // Update the context feedback.
-      context.feedback.message =
-        `There is no Client registered with the id ${namida.style.messageHighlight(
-          message.clientId
-        )}. ` + `Message processing was aborted due to an unregistered client.`;
-      context.feedback.title = 'DeviceRegistrationService ERROR';
+      let message = 'There is no Client registered with the ID ' + message.clientId;
 
-      namida.logFailure(context.feedback.title, context.feedback.message);
+      namida.logFailure('DeviceRegistrationService', message);
 
       return {
         error: {
-          title: context.feedback.title,
-          message: context.feedback.message,
-          stack: context.feedback.stack
+          title: 'DeviceRegistrationService ERROR',
+          message: message
         }
       };
     }
@@ -43,8 +33,9 @@ class DeviceRegistrationService extends Service {
     // Process the registration of the sepcified device at the device manager
     let device = undefined;
     try {
-      device = this.deviceManager.processDeviceRegistration(message, context);
+      device = this.deviceManager.registerDeviceSpecs(message);
     } catch (error) {
+      namida.logFailure('DeviceRegistrationService', error.toString());
       return {
         error: {
           title: 'DeviceRegistrationService ERROR',
@@ -54,14 +45,13 @@ class DeviceRegistrationService extends Service {
       };
     }
 
-    if (context.success && device !== undefined) {
+    if (device !== undefined) {
       return { device: device.toProtobuf() };
     } else {
       return {
         error: {
-          title: context.feedback.title,
-          message: context.feedback.message,
-          stack: context.feedback.stack
+          title: 'DeviceRegistrationService ERROR',
+          message: 'device manager returned undefined'
         }
       };
     }
