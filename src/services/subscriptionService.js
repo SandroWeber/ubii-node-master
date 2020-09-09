@@ -43,9 +43,6 @@ class SubscriptionService extends Service {
 
     let client = this.clientManager.getClient(clientID);
 
-    // Update device information
-    client.updateLastSignOfLife();
-
     // Process subscribe topics and unsubscribe topics
     message.subscribeTopics &&
       message.subscribeTopics.forEach((subscribeTopic) => {
@@ -58,14 +55,16 @@ class SubscriptionService extends Service {
       });
 
     // process (un)subscribe regexp
-    // subscribe regex
     if (message.subscribeTopicRegexp) {
-      client.subscribeRegex(message.subscribeTopicRegexp);
+      message.subscribeTopicRegexp.forEach((regex) => {
+        client.subscribeRegex(regex);
+      });
     }
 
-    //unsubscribe regex
     if (message.unsubscribeTopicRegexp) {
-      //TODO
+      message.unsubscribeTopicRegexp.forEach((regex) => {
+        client.unsubscribeRegex(regex);
+      });
     }
 
     // Reply with success message
