@@ -14,20 +14,27 @@ class ClientRegistrationService extends Service {
   }
 
   reply(message) {
-    // Prepare the context.
-    let context = this.prepareContext();
-
+    let client = undefined;
     // Process the registration of the sepcified client at the client manager
-    let client = this.clientManager.processClientRegistration(message, context);
+    try {
+      client = this.clientManager.processClientRegistration(message);
+    } catch (error) {
+      return {
+        error: {
+          title: 'ClientRegistrationService',
+          message: error && error.toString(),
+          stack: error && error.stack && error.stack.toString()
+        }
+      };
+    }
 
-    if (context.success) {
+    if (client) {
       return { client: client.toProtobuf() };
     } else {
       return {
         error: {
-          title: context.feedback.title,
-          message: context.feedback.message,
-          stack: context.feedback.stack
+          title: 'ClientRegistrationService',
+          message: 'client manager returned undefined'
         }
       };
     }

@@ -13,17 +13,6 @@ class Service {
     this.responseMessageFormat = responseMessageFormat;
   }
 
-  prepareContext() {
-    return {
-      feedback: {
-        title: '',
-        message: '',
-        stack: ''
-      },
-      success: false
-    };
-  }
-
   toProtobuf() {
     return {
       topic: this.topic,

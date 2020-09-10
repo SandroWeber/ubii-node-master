@@ -51,7 +51,6 @@ class SessionManager extends EventEmitter {
   }
 
   createSession(specs = {}) {
-    console.info('SessionManager - createSession()');
     if (specs.id && this.getSession(specs.id)) {
       namida.error('SessionManager', 'Session ID already exists: ' + specs.id);
       throw 'Session with ID ' + specs.id + ' already exists.';
@@ -66,7 +65,7 @@ class SessionManager extends EventEmitter {
 
     // TEMPORARY - migration from Interactions to ProcessingModules
     if (this.translateToProcessingModules) {
-      console.info('SessionManager - mapping interactions to processing modules');
+      console.info('SessionManager - translating interactions to processing modules');
       let processingModuleSpecs = [];
       specs.interactions.forEach((interactionSpecs) => {
         processingModuleSpecs.push(mapSpecsInteraction2ProcessingModule(interactionSpecs));

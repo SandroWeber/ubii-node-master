@@ -1,76 +1,76 @@
 class ClientManagerMock {
-    constructor(verifyEverything) {
-        this.verifyEverything = verifyEverything;
-        
-        this.createClientSpecificationWithNewUuidCounter = 0;
-        this.processClientRegistrationCounter = 0;
-        this.verifyClientCounter = 0;
-    }
-    createClientSpecificationWithNewUuid () {
-        this.createClientSpecificationWithNewUuidCounter++;
-        return {};
-    };
+  constructor(verifyEverything) {
+    this.verifyEverything = verifyEverything;
 
-    processClientRegistration () {
-        this.processClientRegistrationCounter++;
-        return {};
-    };
+    this.createClientSpecificationWithNewUuidCounter = 0;
+    this.processClientRegistrationCounter = 0;
+    this.verifyClientCounter = 0;
+  }
+  createClientSpecificationWithNewUuid() {
+    this.createClientSpecificationWithNewUuidCounter++;
+    return {};
+  }
 
-    verifyClient () {
-        this.verifyClientCounter++;
+  processClientRegistration() {
+    this.processClientRegistrationCounter++;
+    return {};
+  }
 
-        return this.verifyEverything;
-    };
+  verifyClient() {
+    this.verifyClientCounter++;
+
+    return this.verifyEverything;
+  }
 }
 
 class DeviceManagerMock {
-    constructor(verifyEverything) {
-        this.verifyEverything = verifyEverything;
+  constructor(verifyEverything) {
+    this.verifyEverything = verifyEverything;
 
-        this.createDeviceSpecificationWithNewUuidCounter = 0;
-        this.processDeviceRegistrationCounter = 0;
-        this.verifyParticipantCounter = 0;
-        this.getParticipantCounter = 0;
-    }
-    createDeviceSpecificationWithNewUuid () {
-        this.createDeviceSpecificationWithNewUuidCounter++;
-        return {};
-    };
+    this.createDeviceSpecificationWithNewUuidCounter = 0;
+    this.processDeviceRegistrationCounter = 0;
+    this.verifyParticipantCounter = 0;
+    this.getParticipantCounter = 0;
+  }
+  createDeviceSpecificationWithNewUuid() {
+    this.createDeviceSpecificationWithNewUuidCounter++;
+    return {};
+  }
 
-    processDeviceRegistration () {
-        this.processDeviceRegistrationCounter++;
-        return {};
-    };
+  registerDeviceSpecs() {
+    this.processDeviceRegistrationCounter++;
+    return {};
+  }
 
-    verifyParticipant () {
-        this.verifyParticipantCounter++;
+  verifyParticipant() {
+    this.verifyParticipantCounter++;
 
-        return this.verifyEverything;
-    };
+    return this.verifyEverything;
+  }
 
-    getParticipant () {
-        this.getParticipantCounter++;
+  getParticipant() {
+    this.getParticipantCounter++;
 
-        return {
-            updateLastSignOfLife: ()=>{},
-            subscribe: ()=>{},
-            unsubscribe: ()=>{}
-        };
-    }
-}
-
-let createClientSpecificationMock = function(id){
     return {
-        id: id,
-        name: 'clientMock',
-        namespace: '',
-        targetHost: 'targetHost',
-        targetPort: '0000'
+      updateLastSignOfLife: () => {},
+      subscribe: () => {},
+      unsubscribe: () => {}
     };
+  }
 }
+
+let createClientSpecificationMock = function (id) {
+  return {
+    id: id,
+    name: 'clientMock',
+    namespace: '',
+    targetHost: 'targetHost',
+    targetPort: '0000'
+  };
+};
 
 module.exports = {
-    ClientManagerMock: ClientManagerMock,
-    DeviceManagerMock: DeviceManagerMock,
-    createClientSpecificationMock: createClientSpecificationMock
-}
+  ClientManagerMock: ClientManagerMock,
+  DeviceManagerMock: DeviceManagerMock,
+  createClientSpecificationMock: createClientSpecificationMock
+};

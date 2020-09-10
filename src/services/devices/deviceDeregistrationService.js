@@ -16,26 +16,17 @@ class DeviceDeregistrationService extends Service {
   }
 
   reply(message) {
-    let context = this.prepareContext();
-    context.success = false;
-
     // Verify the device and act accordingly.
     if (!this.clientManager.verifyClient(message.clientId)) {
-      // Prepare the context.
-      // Update the context feedback.
-      context.feedback.message =
-        `There is no Client registered with the id ${namida.style.messageHighlight(
-          message.clientId
-        )}. ` + `Message processing was aborted due to an unregistered client.`;
-      context.feedback.title = 'DeviceDeregistrationService ERROR';
+      let errorTitle = 'DeviceDeregistrationService';
+      let errorMessage = 'There is no Client registered with the ID ' + message.clientId;
 
-      namida.logFailure(context.feedback.title, context.feedback.message);
+      namida.logFailure(errorTitle, errorMessage);
 
       return {
         error: {
-          title: context.feedback.title,
-          message: context.feedback.message,
-          stack: context.feedback.stack
+          title: errorTitle,
+          message: errorMessage
         }
       };
     }
@@ -48,14 +39,14 @@ class DeviceDeregistrationService extends Service {
 
       return {
         success: {
-          title: 'DeviceDeregistrationService SUCCESS',
+          title: 'DeviceDeregistrationService',
           message: 'Device with ID ' + message.id + ' successfully removed.'
         }
       };
     } catch (error) {
       return {
         error: {
-          title: 'DeviceDeregistrationService ERROR',
+          title: 'DeviceDeregistrationService',
           message: error && error.toString(),
           stack: error.stack && error.stack.toString()
         }
