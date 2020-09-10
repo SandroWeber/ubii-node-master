@@ -23,7 +23,6 @@ class SubscriptionService extends Service {
     if (!this.clientManager.verifyClient(clientID)) {
       let errorTitle = 'SubscriptionService';
       let errorMessage = 'There is no client registered with the ID ' + clientID;
-      context.feedback.title = 'Subscription rejected';
 
       namida.logFailure(errorTitle, errorMessage);
 
