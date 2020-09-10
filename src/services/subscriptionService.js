@@ -7,7 +7,7 @@ class SubscriptionService extends Service {
   constructor(clientManager, topicData) {
     super(
       DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
-      MSG_TYPES.TOPIC_SUBSCRIPTION,
+      MSG_TYPES.SERVICE_REUEST_TOPIC_SUBSCRIPTION,
       MSG_TYPES.SUCCESS + ', ' + MSG_TYPES.ERROR
     );
 
