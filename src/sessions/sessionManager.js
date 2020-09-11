@@ -47,19 +47,19 @@ class SessionManager extends EventEmitter {
     this.addEventListeners();
 
     this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
-    this.translateToProcessingModules = false; // TEMPORARY - migration from Interactions to ProcessingModules
+    this.translateToProcessingModules = true; // TEMPORARY - migration from Interactions to ProcessingModules
   }
 
   createSession(specs = {}) {
     if (specs.id && this.getSession(specs.id)) {
-      namida.error('SessionManager', 'Session ID already exists: ' + specs.id);
-      throw 'Session with ID ' + specs.id + ' already exists.';
+      namida.logFailure('SessionManager', 'Session ID already exists: ' + specs.id);
+      throw new Errror('Session with ID ' + specs.id + ' already exists.');
     }
 
     if (!specs.ioMappings || specs.ioMappings.length === 0) {
       namida.warn(
         'SessionManager',
-        'Session ' + specs.id + ' has no I/O Mappings (topics <-> interactions)'
+        'Session ' + specs.id + ' has no I/O Mappings (topics <-> processing modules)'
       );
     }
 

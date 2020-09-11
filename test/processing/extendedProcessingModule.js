@@ -18,10 +18,16 @@ class ExtendedProcessingModule extends ProcessingModule {
 
 test('passing specifications to constructor', (t) => {
   let specs = {
-    name: 'test-extended-pm'
+    name: 'test-extended-pm',
+    processingMode: {
+      frequency: {
+        hertz: 15
+      }
+    }
   };
   let module = new ExtendedProcessingModule(specs);
   t.is(module.name, specs.name);
+  t.is(module.processingMode, specs.processingMode);
 });
 
 test('overwritten lifecycle functions', (t) => {
