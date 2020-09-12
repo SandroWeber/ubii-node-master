@@ -18,6 +18,15 @@ class ProcessingModuleManager {
     return pm;
   }
 
+  addModule(pm) {
+    if (!pm.id) {
+      namida.logFailure('ProcessingModuleManager', 'module ' + pm.name + ' does not have an ID');
+      return false;
+    }
+    this.processingModules.set(pm.id, pm);
+    return true;
+  }
+
   applyIOMappings(ioMappings) {
     if (this.topicdataBuffer) {
       this.configureIODirectTopicdataAccess(ioMappings);
@@ -25,9 +34,8 @@ class ProcessingModuleManager {
   }
 
   configureIODirectTopicdataAccess(ioMappings) {
-    //TODO: refactor session.proto for more abstract naming (get rid of interaction references)
     ioMappings.forEach((mapping) => {
-      let processingModule = this.processingModules.get(mapping.interactionId);
+      let processingModule = this.processingModules.get(mapping.processingModuleId);
       // connect inputs
       mapping.inputMappings.forEach((inputMapping) => {
         let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
@@ -37,8 +45,15 @@ class ProcessingModuleManager {
             return entry && entry.data;
           });
         } else if (typeof topicSource === 'object') {
-          let multiplexer = this.deviceManager.getTopicMux(topicSource.id);
-          processingModule.setInputGetter(inputMapping.name, multiplexer.get);
+          let multiplexer = undefined;
+          if (topicSource.id) {
+            multiplexer = this.deviceManager.getTopicMux(topicSource.id);
+          } else {
+            multiplexer = this.deviceManager.addTopicMux(topicSource);
+          }
+          processingModule.setInputGetter(inputMapping.name, () => {
+            return multiplexer.get();
+          });
         }
       });
       // connect outputs
@@ -52,11 +67,22 @@ class ProcessingModuleManager {
             this.topicdataBuffer.publish(topicDestination, value, type);
           });
         } else if (typeof topicDestination === 'object') {
-          let demultiplexer = this.deviceManager.getTopicDemux(topicDestination.id);
-          processingModule.setOutputSetter(outputMapping.name, demultiplexer.push);
+          let demultiplexer = undefined;
+          if (topicDestination.id) {
+            demultiplexer = this.deviceManager.getTopicDemux(topicDestination.id);
+          } else {
+            demultiplexer = this.deviceManager.addTopicDemux(topicDestination);
+          }
+          processingModule.setOutputSetter(outputMapping.name, (value) => {
+            demultiplexer.push(value);
+          });
         }
       });
     });
+  }
+
+  hasModuleID(id) {
+    return this.processingModules.has(id);
   }
 }
 

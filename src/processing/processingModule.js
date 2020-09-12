@@ -97,6 +97,7 @@ class ProcessingModule extends EventEmitter {
 
   stop() {
     this.status = ProcessingModuleProto.Status.HALTED;
+    this.onHalted && this.onHalted();
   }
 
   startProcessingByFrequency() {

@@ -2,13 +2,12 @@ import test from 'ava';
 const { proto } = require('@tum-far/ubii-msg-formats');
 const InteractionStatus = proto.ubii.interactions.InteractionStatus;
 
-import { Interaction } from '../../../src/index';
-import Utils from '../../../src/utilities';
-import MockTopicData from '../../mocks/mock-topicdata.js';
+import { Interaction } from '../../src/index';
+import Utils from '../../src/utilities';
+import MockTopicData from '../mocks/mock-topicdata.js';
 import sinon from 'sinon';
 
-
-test.beforeEach(t => {
+test.beforeEach((t) => {
   t.context.interaction = new Interaction({});
   t.context.topicData = new MockTopicData();
 
@@ -41,7 +40,7 @@ test.beforeEach(t => {
 
 /* run tests */
 
-test('constructor() - no params', t => {
+test('constructor() - no params', (t) => {
   let interaction = t.context.interaction;
   t.is(typeof interaction.id, 'string');
   t.not(interaction.id, '');
@@ -49,7 +48,7 @@ test('constructor() - no params', t => {
   t.is(interaction.processingCallback, undefined);
 });
 
-test('constructor() - with specs', t => {
+test('constructor() - with specs', (t) => {
   let specs = t.context.interactionSpecs;
   let interaction = new Interaction(specs);
   interaction.setTopicData(t.context.topicData);
@@ -62,14 +61,14 @@ test('constructor() - with specs', t => {
   t.not(interaction.state, undefined);
 });
 
-test('setTopicData()', t => {
+test('setTopicData()', (t) => {
   let interaction = t.context.interaction;
   let topicData = {};
   interaction.setTopicData(topicData);
   t.is(interaction.topicData, topicData);
 });
 
-test('connectInputTopic()', t => {
+test('connectInputTopic()', (t) => {
   let interaction = t.context.interaction;
 
   let inputName = 'inputName';
@@ -97,7 +96,7 @@ test('connectInputTopic()', t => {
   t.is(topicData.pull.lastArg, topicName);
 });
 
-test('disconnectInputTopic()', t => {
+test('disconnectInputTopic()', (t) => {
   let interaction = t.context.interaction;
 
   let inputName = 'inputName';
@@ -106,12 +105,14 @@ test('disconnectInputTopic()', t => {
   t.is(interaction.inputProxy[inputName], undefined);
 });
 
-test('connectOutputTopic()', t => {
+test('connectOutputTopic()', (t) => {
   let interaction = new Interaction(t.context.interactionSpecs);
 
   let outputName = interaction.outputFormats[0].internalName;
   let topicName = 'topicName';
-  let dataType = Utils.getTopicDataTypeFromMessageFormat(interaction.outputFormats[0].messageFormat);
+  let dataType = Utils.getTopicDataTypeFromMessageFormat(
+    interaction.outputFormats[0].messageFormat
+  );
 
   // no topic data defined yet
   t.is(interaction.outputProxy[outputName], undefined);
@@ -131,7 +132,7 @@ test('connectOutputTopic()', t => {
   t.deepEqual(topicData.publish.lastCall.args, [topicName, value, dataType]);
 });
 
-test('disconnectOutputTopic()', t => {
+test('disconnectOutputTopic()', (t) => {
   let interaction = t.context.interaction;
 
   let outputName = 'outputName';
@@ -140,7 +141,7 @@ test('disconnectOutputTopic()', t => {
   t.is(interaction.outputProxy[outputName], undefined);
 });
 
-test('disconnectIO()', t => {
+test('disconnectIO()', (t) => {
   let interaction = t.context.interaction;
 
   interaction.inputProxy.a = 1;
@@ -153,7 +154,7 @@ test('disconnectIO()', t => {
   t.deepEqual(interaction.outputProxy, {});
 });
 
-test('setProcessingCallback()', t => {
+test('setProcessingCallback()', (t) => {
   let interaction = t.context.interaction;
 
   // not a function
@@ -162,12 +163,12 @@ test('setProcessingCallback()', t => {
   t.is(interaction.processingCallback, undefined);
 
   // a function
-  callbackFunction = () => { };
+  callbackFunction = () => {};
   interaction.setProcessingCallback(callbackFunction);
   t.is(interaction.processingCallback, callbackFunction);
 });
 
-test('process()', t => {
+test('process()', (t) => {
   let interaction = t.context.interaction;
   t.context.interaction.setTopicData(t.context.topicData);
 
@@ -187,6 +188,9 @@ test('process()', t => {
   interaction.processingCallback = sinon.fake();
   interaction.status = InteractionStatus.PROCESSING;
   interaction.process();
-  t.deepEqual(interaction.processingCallback.lastCall.args, [interaction.inputProxy, interaction.outputProxy, interaction.state]);
+  t.deepEqual(interaction.processingCallback.lastCall.args, [
+    interaction.inputProxy,
+    interaction.outputProxy,
+    interaction.state
+  ]);
 });
-

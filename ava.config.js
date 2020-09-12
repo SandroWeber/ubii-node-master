@@ -13,10 +13,10 @@ export default {
     '!test/sessions/testUtility.js'
   ],
   cache: false,
-  failFast: false,
+  failFast: true,
   failWithoutAssertions: false,
   tap: false,
-  verbose: false,
+  verbose: true,
   serial: true,
   compileEnhancements: false
 };

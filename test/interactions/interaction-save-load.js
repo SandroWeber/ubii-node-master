@@ -1,12 +1,11 @@
 import test from 'ava';
 import fs from 'fs';
 
-import { Interaction } from '../../../src/index'
+import { Interaction } from '../../src/index';
 
-import TestUtility from '../testUtility';
+import TestUtility from '../sessions/testUtility';
 
-
-test.beforeEach(async t => {
+test.beforeEach(async (t) => {
   let interaction = new Interaction({
     name: 'test-interaction'
   });
@@ -46,30 +45,25 @@ test.beforeEach(async t => {
   t.context.interaction = interaction;
 });
 
-
 /* run tests */
 
-test('save to / load from FILE', async t => {
+test('save to / load from FILE', async (t) => {
   let interaction = t.context.interaction;
   let filepath = interaction.name + '.interaction';
 
-  await TestUtility.saveToFile(filepath, interaction.toProtobuf()).then(
-    () => {
-      t.is(fs.existsSync(filepath), true);
-    }
-  );
+  await TestUtility.saveToFile(filepath, interaction.toProtobuf()).then(() => {
+    t.is(fs.existsSync(filepath), true);
+  });
 
-  await TestUtility.loadJSONFromFile(filepath).then(
-    (json) => {
-      let newInteraction = new Interaction(json);
-      t.deepEqual(interaction.toProtobuf(), newInteraction.toProtobuf());
+  await TestUtility.loadJSONFromFile(filepath).then((json) => {
+    let newInteraction = new Interaction(json);
+    t.deepEqual(interaction.toProtobuf(), newInteraction.toProtobuf());
 
-      fs.unlinkSync(filepath);
-    }
-  );
+    fs.unlinkSync(filepath);
+  });
 });
 
-test('convert to / create from PROTOBUF', async t => {
+test('convert to / create from PROTOBUF', async (t) => {
   let interaction = t.context.interaction;
 
   let protobufMsg = interaction.toProtobuf();

@@ -41,7 +41,7 @@
     "@tensorflow-models/coco-ssd": "1.1.1",
     "@tum-far/namida": "0.1.1",
     "@tum-far/ubii-database": "0.1.1",
-    "@tum-far/ubii-msg-formats": "0.14.4",
+    "@tum-far/ubii-msg-formats": "0.15.0",
     "@tum-far/ubii-topic-data": "0.3.3",
     "body-parser": "1.18.3",
     "express": "4.16.4",

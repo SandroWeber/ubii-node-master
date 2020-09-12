@@ -1,11 +1,14 @@
 import test from 'ava';
-import sinon from 'sinon';
 
-import { Session } from '../../../src/index.js'
+const { proto } = require('@tum-far/ubii-msg-formats');
+const SessionStatus = proto.ubii.sessions.SessionStatus;
 
-import { MockInteractionIOMapping } from '../../mocks/mock-interaction-io-mapping.js'
+import { Session } from '../../../src/index.js';
+
+import { MockIOMapping } from '../../mocks/mock-io-mapping.js';
+import { MockProcessingModuleManager } from '../../mocks/mock-processing-module-manager.js';
+import { MockProcessingModule } from '../../mocks/mock-processing-module.js';
 import MockTopicData from '../../mocks/mock-topicdata.js';
-
 
 let runProcessing = (session, milliseconds) => {
   return new Promise((resolve, reject) => {
@@ -17,89 +20,100 @@ let runProcessing = (session, milliseconds) => {
   });
 };
 
-test.beforeEach(t => {
-  t.context.mockInteractionIOMappings = [];
-  t.context.mockInteractionIOMappings.push(new MockInteractionIOMapping());
-  t.context.mockInteractionIOMappings.push(new MockInteractionIOMapping());
-  t.context.mockInteractionIOMappings.push(new MockInteractionIOMapping());
+test.beforeEach((t) => {
+  t.context.mockIOMappings = [];
+  t.context.mockIOMappings.push(new MockIOMapping());
+  t.context.mockIOMappings.push(new MockIOMapping());
+  t.context.mockIOMappings.push(new MockIOMapping());
 
   t.context.topicData = new MockTopicData();
 
-  t.context.session = new Session({}, t.context.topicData);
+  t.context.mockProcessingModuleManager = new MockProcessingModuleManager();
+
+  t.context.session = new Session(
+    {},
+    t.context.topicData,
+    undefined,
+    t.context.mockProcessingModuleManager
+  );
 });
 
 /* run tests */
 
-test('constructor', t => {
+test('constructor', (t) => {
   let session = t.context.session;
-  let interactionIOMappings = t.context.mockInteractionIOMappings;
+  let ioMappings = t.context.mockIOMappings;
 
   t.is(typeof session.id, 'string');
   t.not(session.id, '');
   t.is(session.ioMappings.length, 0);
 
-  session = new Session({ ioMappings: interactionIOMappings });
+  session = new Session({ ioMappings: ioMappings });
   t.is(typeof session.id, 'string');
   t.not(session.id, '');
-  t.is(session.ioMappings.length, interactionIOMappings.length);
+  t.is(session.ioMappings.length, ioMappings.length);
 });
 
-test('add/remove interactions', t => {
+test('add/remove processing modules', (t) => {
   let session = t.context.session;
-  let interactionIOMappings = t.context.mockInteractionIOMappings;
 
-  t.is(session.ioMappings.length, 0);
-  interactionIOMappings.forEach((element) => {
-    session.addInteraction(element.interaction);
-    session.ioMappings.push(element);
-  });
-  t.is(session.ioMappings.length, interactionIOMappings.length);
+  let pm1 = new MockProcessingModule();
+  let pm2 = new MockProcessingModule();
 
-  // try adding the same interaction twice
-  session.addInteraction(interactionIOMappings[0].interaction);
-  t.is(session.ioMappings.length, interactionIOMappings.length);
+  t.is(session.runtimeProcessingModules.length, 0);
+  t.true(session.addProcessingModule(pm1));
+  t.true(session.addProcessingModule(pm2));
+  t.is(session.runtimeProcessingModules.length, 2);
+
+  // try adding the same module twice
+  t.false(session.addProcessingModule(pm1));
+  t.is(session.runtimeProcessingModules.length, 2);
 
   // remove one
-  let removeIndex = 1;
-  let removeID = session.ioMappings[removeIndex].interaction.id;
-  session.removeInteraction(interactionIOMappings[removeIndex].interaction.id);
-  t.is(session.ioMappings.length, interactionIOMappings.length);
-  t.is(session.ioMappings.some((element) => { return element.interaction.id === removeID; }), true);
+  t.true(session.removeProcessingModule(pm1));
+  t.is(session.runtimeProcessingModules.length, 1);
   // try removing the same element
-  session.removeInteraction(interactionIOMappings[removeIndex]);
-  t.is(session.ioMappings.length, interactionIOMappings.length);
+  t.false(session.removeProcessingModule(pm1));
+  t.is(session.runtimeProcessingModules.length, 1);
 });
 
-test('processing - promise with recursive calls, single interaction', async t => {
+test('start', async (t) => {
   let session = t.context.session;
 
-  let interaction = session.addInteraction({});
-  interaction.process = sinon.fake();
+  let pm1 = new MockProcessingModule();
+  let pm2 = new MockProcessingModule();
+  let pm3 = new MockProcessingModule();
+  t.true(session.addProcessingModule(pm1));
+  t.true(session.addProcessingModule(pm2));
+  t.true(session.addProcessingModule(pm3));
 
-  t.is(interaction.process.callCount, 0);
+  t.is(pm1.start.callCount, 0);
+  t.is(pm2.start.callCount, 0);
+  t.is(pm3.start.callCount, 0);
 
   await runProcessing(session, 100);
 
-  t.is(interaction.process.callCount > 0, true);
+  t.true(pm1.start.callCount > 0);
+  t.true(pm2.start.callCount > 0);
+  t.true(pm3.start.callCount > 0);
+
+  // start, then try to start again while already running
+  t.true(session.start());
+  t.is(session.status, SessionStatus.RUNNING);
+  t.false(session.start());
 });
 
-test('processing - promise with recursive calls, multiple interactions', async t => {
+test('stop', async (t) => {
   let session = t.context.session;
 
-  let interaction1 = session.addInteraction({});
-  let interaction2 = session.addInteraction({});
-  let interaction3 = session.addInteraction({});
-  interaction1.process = sinon.fake();
-  interaction2.process = sinon.fake();
-  interaction3.process = sinon.fake();
+  let pm1 = new MockProcessingModule();
+  t.true(session.addProcessingModule(pm1));
 
-  t.is(interaction1.process.callCount, 0);
-  t.is(interaction2.process.callCount, 0);
-  t.is(interaction3.process.callCount, 0);
-
-  await runProcessing(session, 100);
-
-  t.is(interaction1.process.callCount > 0, true);
-  t.is(interaction2.process.callCount > 0, true);
-  t.is(interaction3.process.callCount > 0, true);
+  t.is(session.status, SessionStatus.CREATED);
+  t.false(session.stop());
+  t.true(session.start());
+  t.is(pm1.start.callCount, 1);
+  t.is(session.status, SessionStatus.RUNNING);
+  t.true(session.stop());
+  t.is(pm1.stop.callCount, 1);
 });

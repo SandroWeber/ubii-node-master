@@ -4,9 +4,9 @@ import uuidv4 from 'uuid/v4';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 import * as tf from '@tensorflow/tfjs-node';
 
-import TestUtility from '../testUtility';
-import { SessionManager, DeviceManager } from '../../../src/index';
-import ExternalLibrariesService from '../../../src/sessions/externalLibrariesService';
+import TestUtility from '../sessions/testUtility';
+import { SessionManager, DeviceManager } from '../../src/index';
+import ExternalLibrariesService from '../../src/sessions/externalLibrariesService';
 
 /* global setup */
 

@@ -299,15 +299,21 @@ class DeviceManager {
   }
 
   hasTopicMux(id) {
-    return this.topicMuxers.some((mux) => {
-      return mux.id === id;
-    });
+    return (
+      this.topicMuxers &&
+      this.topicMuxers.some((mux) => {
+        return mux.id === id;
+      })
+    );
   }
 
   getTopicMux(id) {
-    return this.topicMuxers.find((mux) => {
-      return mux.id === id;
-    });
+    return (
+      this.topicMuxers &&
+      this.topicMuxers.find((mux) => {
+        return mux.id === id;
+      })
+    );
   }
 
   getTopicMuxList() {
