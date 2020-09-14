@@ -102,9 +102,12 @@ class ProcessingModule extends EventEmitter {
 
   startProcessingByFrequency() {
     //namida.log(this.toString(), 'start processing by frequency');
+    let tLastProcess = Date.now();
     let msFrequency = 1000 / this.processingMode.frequency.hertz;
     let processIteration = () => {
-      this.onProcessing(this.ioProxy, this.ioProxy, this.state);
+      let deltaTime = Date.now() - tLastProcess;
+      this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
+      tLastProcess = Date.now();
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
           processIteration();
@@ -116,15 +119,27 @@ class ProcessingModule extends EventEmitter {
 
   startProcessingByTriggerOnInput() {
     //namida.log(this.toString(), 'start processing triggered on input');
-    this.on('new_input', () => {
-      this.onProcessing(this.ioProxy, this.ioProxy, this.state);
+    let tLastProcess = Date.now();
+    this.on(this.EVENTS.NEW_INPUT, () => {
+      let deltaTime = Date.now() - tLastProcess;
+      this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
+      tLastProcess = Date.now();
+    });
+  }
+
+  startProcessingByLockstep() {
+    this.on(this.EVENTS.LOCKSTEP_PASS, (deltaTime, inputs, outputs) => {
+      this.onProcessing(deltaTime, inputs, outputs, this.state);
     });
   }
 
   startProcessingByCycles() {
     //namida.log(this.toString(), 'start processing by cycles with minimal delay');
+    let tLastProcess = Date.now();
     let processIteration = () => {
-      this.onProcessing(this.ioProxy, this.ioProxy, this.state);
+      let deltaTime = Date.now() - tLastProcess;
+      this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
+      tLastProcess = Date.now();
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
           processIteration();
@@ -160,13 +175,19 @@ class ProcessingModule extends EventEmitter {
    * Lifecycle function to be called when module is supposed to process data.
    * Needs to be overwritten when extending this class, specified as a stringified version for the constructor or
    * set via setOnProcessing() before onProcessing() is called.
-   * Signature
    */
-  onProcessing() {
-    namida.error(
-      this.toString(),
-      'onProcessing callback is not specified, module will not do anything?'
-    );
+  onProcessing(deltaTime, inputs, outputs, state) {
+    let errorMsg =
+      'onProcessing callback is not specified / overwritten, called with' +
+      '\ndeltaTime: ' +
+      deltaTime +
+      '\ninputs:\n' +
+      inputs +
+      '\noutputs:\n' +
+      outputs +
+      '\nstate:\n' +
+      state;
+    namida.error(this.toString(), errorMsg);
     throw new Error(this.toString() + ' - onProcessing() callback is not specified');
   }
 
@@ -333,7 +354,8 @@ class ProcessingModule extends EventEmitter {
 
 ProcessingModule.EVENTS = Object.freeze({
   NEW_INPUT: 1,
-  PROCESSED: 2
+  LOCKSTEP_PASS: 2,
+  PROCESSED: 3
 });
 
 module.exports = { ProcessingModule: ProcessingModule };

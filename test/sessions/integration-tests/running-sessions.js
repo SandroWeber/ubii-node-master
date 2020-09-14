@@ -15,7 +15,7 @@ let topicNameString = 'deviceB->stringTopic';
 let cause2IntegerCondition = 42;
 
 let getPM1Specs = () => {
-  let processCB = (input, output, state) => {
+  let processCB = (deltaT, input, output, state) => {
     if (state.counter === undefined) {
       state.counter = 0;
     } else {
@@ -29,7 +29,7 @@ let getPM1Specs = () => {
 };
 
 let getPM2Specs = () => {
-  let processCB = (input, output, state) => {
+  let processCB = (deltaT, input, output, state) => {
     if (input.integer === 42 && state.triggerToggle) {
       state.triggerToggle = false;
       state.outputNumber = state.outputNumber + 1;
@@ -63,7 +63,7 @@ let getGenericTopicOutputString = (session, pm) => {
 
 let setupGenericProcessingModules = (session, count, topicData) => {
   for (let i = 0; i < count; i = i + 1) {
-    let processCB = (input, output, state) => {
+    let processCB = (deltaT, input, output, state) => {
       state.counter = state.counter + 1;
       if (input.bool && state.counter % (i + 1) === 0) {
         output.string = state.counter.toString();

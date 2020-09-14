@@ -36,7 +36,7 @@ let topicDemuxSpecs = {
   outputTopicFormat: '/%s' + outputTopicSuffix
 };
 
-let processCB = (inputs, outputs, state) => {
+let processCB = (deltaT, inputs, outputs, state) => {
   let muxRecords = inputs.mux;
 
   let outputList = [];
