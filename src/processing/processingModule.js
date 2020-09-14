@@ -90,6 +90,10 @@ class ProcessingModule extends EventEmitter {
     // processing based on frequency
     if (this.processingMode && this.processingMode.frequency) {
       this.startProcessingByFrequency();
+    } else if (this.processingMode && this.processingMode.triggerOnInput) {
+      this.startProcessingByTriggerOnInput();
+    } else if (this.processingMode && this.processingMode.lockstep) {
+      this.startProcessingByLockstep();
     } else if (this.processingMode === undefined) {
       this.startProcessingByCycles();
     }
@@ -98,6 +102,9 @@ class ProcessingModule extends EventEmitter {
   stop() {
     this.status = ProcessingModuleProto.Status.HALTED;
     this.onHalted && this.onHalted();
+
+    this.removeAllListeners(ProcessingModule.EVENTS.NEW_INPUT);
+    this.removeAllListeners(ProcessingModule.EVENTS.LOCKSTEP_PASS);
   }
 
   startProcessingByFrequency() {
@@ -105,9 +112,12 @@ class ProcessingModule extends EventEmitter {
     let tLastProcess = Date.now();
     let msFrequency = 1000 / this.processingMode.frequency.hertz;
     let processIteration = () => {
-      let deltaTime = Date.now() - tLastProcess;
+      // timing
+      let tNow = Date.now();
+      let deltaTime = tNow - tLastProcess;
+      tLastProcess = tNow;
+      // processing
       this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
-      tLastProcess = Date.now();
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
           processIteration();
@@ -119,11 +129,36 @@ class ProcessingModule extends EventEmitter {
 
   startProcessingByTriggerOnInput() {
     //namida.log(this.toString(), 'start processing triggered on input');
+    let inputFlags = [];
+    let allInputsNeedUpdate = this.processingMode.triggerOnInput.allInputsNeedUpdate;
+
     let tLastProcess = Date.now();
-    this.on(this.EVENTS.NEW_INPUT, () => {
-      let deltaTime = Date.now() - tLastProcess;
+    let processingPass = () => {
+      // timing
+      let tNow = Date.now();
+      let deltaTime = tNow - tLastProcess;
+      tLastProcess = tNow;
+      // processing
       this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
-      tLastProcess = Date.now();
+    };
+
+    this.on(ProcessingModule.EVENTS.NEW_INPUT, (inputName) => {
+      if (allInputsNeedUpdate) {
+        if (
+          !inputFlags.includes(inputName) &&
+          this.inputs.some((element) => element.internalName === inputName)
+        ) {
+          inputFlags.push(inputName);
+        }
+
+        if (inputFlags.length === this.inputs.length) {
+          inputFlags = [];
+          processingPass();
+        }
+      } else {
+        processingPass();
+      }
+      console.info('processingPass ' + inputName);
     });
   }
 
@@ -137,9 +172,12 @@ class ProcessingModule extends EventEmitter {
     //namida.log(this.toString(), 'start processing by cycles with minimal delay');
     let tLastProcess = Date.now();
     let processIteration = () => {
-      let deltaTime = Date.now() - tLastProcess;
+      // timing
+      let tNow = Date.now();
+      let deltaTime = tNow - tLastProcess;
+      tLastProcess = tNow;
+      // processing
       this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
-      tLastProcess = Date.now();
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
           processIteration();
