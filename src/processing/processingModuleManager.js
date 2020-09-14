@@ -27,6 +27,14 @@ class ProcessingModuleManager {
     return true;
   }
 
+  hasModuleID(id) {
+    return this.processingModules.has(id);
+  }
+
+  getModuleByID(id) {
+    return this.processingModules.get(id);
+  }
+
   applyIOMappings(ioMappings) {
     if (this.topicdataBuffer) {
       this.configureIODirectTopicdataAccess(ioMappings);
@@ -37,52 +45,50 @@ class ProcessingModuleManager {
     ioMappings.forEach((mapping) => {
       let processingModule = this.processingModules.get(mapping.processingModuleId);
       // connect inputs
-      mapping.inputMappings.forEach((inputMapping) => {
-        let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
-        if (typeof topicSource === 'string') {
-          processingModule.setInputGetter(inputMapping.name, () => {
-            let entry = this.topicdataBuffer.pull(topicSource);
-            return entry && entry.data;
-          });
-        } else if (typeof topicSource === 'object') {
-          let multiplexer = undefined;
-          if (topicSource.id) {
-            multiplexer = this.deviceManager.getTopicMux(topicSource.id);
-          } else {
-            multiplexer = this.deviceManager.addTopicMux(topicSource);
+      mapping.inputMappings &&
+        mapping.inputMappings.forEach((inputMapping) => {
+          let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
+          if (typeof topicSource === 'string') {
+            processingModule.setInputGetter(inputMapping.name, () => {
+              let entry = this.topicdataBuffer.pull(topicSource);
+              return entry && entry.data;
+            });
+          } else if (typeof topicSource === 'object') {
+            let multiplexer = undefined;
+            if (topicSource.id) {
+              multiplexer = this.deviceManager.getTopicMux(topicSource.id);
+            } else {
+              multiplexer = this.deviceManager.addTopicMux(topicSource);
+            }
+            processingModule.setInputGetter(inputMapping.name, () => {
+              return multiplexer.get();
+            });
           }
-          processingModule.setInputGetter(inputMapping.name, () => {
-            return multiplexer.get();
-          });
-        }
-      });
+        });
       // connect outputs
-      mapping.outputMappings.forEach((outputMapping) => {
-        let topicDestination =
-          outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
-        if (typeof topicDestination === 'string') {
-          let messageFormat = processingModule.getIOMessageFormat(outputMapping.name);
-          let type = Utils.getTopicDataTypeFromMessageFormat(messageFormat);
-          processingModule.setOutputSetter(outputMapping.name, (value) => {
-            this.topicdataBuffer.publish(topicDestination, value, type);
-          });
-        } else if (typeof topicDestination === 'object') {
-          let demultiplexer = undefined;
-          if (topicDestination.id) {
-            demultiplexer = this.deviceManager.getTopicDemux(topicDestination.id);
-          } else {
-            demultiplexer = this.deviceManager.addTopicDemux(topicDestination);
+      mapping.outputMappings &&
+        mapping.outputMappings.forEach((outputMapping) => {
+          let topicDestination =
+            outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
+          if (typeof topicDestination === 'string') {
+            let messageFormat = processingModule.getIOMessageFormat(outputMapping.name);
+            let type = Utils.getTopicDataTypeFromMessageFormat(messageFormat);
+            processingModule.setOutputSetter(outputMapping.name, (value) => {
+              this.topicdataBuffer.publish(topicDestination, value, type);
+            });
+          } else if (typeof topicDestination === 'object') {
+            let demultiplexer = undefined;
+            if (topicDestination.id) {
+              demultiplexer = this.deviceManager.getTopicDemux(topicDestination.id);
+            } else {
+              demultiplexer = this.deviceManager.addTopicDemux(topicDestination);
+            }
+            processingModule.setOutputSetter(outputMapping.name, (value) => {
+              demultiplexer.push(value);
+            });
           }
-          processingModule.setOutputSetter(outputMapping.name, (value) => {
-            demultiplexer.push(value);
-          });
-        }
-      });
+        });
     });
-  }
-
-  hasModuleID(id) {
-    return this.processingModules.has(id);
   }
 }
 

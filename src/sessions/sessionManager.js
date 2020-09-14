@@ -47,7 +47,6 @@ class SessionManager extends EventEmitter {
     this.addEventListeners();
 
     this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
-    this.translateToProcessingModules = true; // TEMPORARY - migration from Interactions to ProcessingModules
   }
 
   createSession(specs = {}) {
@@ -61,20 +60,6 @@ class SessionManager extends EventEmitter {
         'SessionManager',
         'Session ' + specs.id + ' has no I/O Mappings (topics <-> processing modules)'
       );
-    }
-
-    // TEMPORARY - migration from Interactions to ProcessingModules
-    if (this.translateToProcessingModules) {
-      console.info('SessionManager - translating interactions to processing modules');
-      let processingModuleSpecs = [];
-      specs.interactions.forEach((interactionSpecs) => {
-        processingModuleSpecs.push(mapSpecsInteraction2ProcessingModule(interactionSpecs));
-      });
-
-      specs.processingModules = processingModuleSpecs;
-      specs.interactions = [];
-    } else {
-      console.info('SessionManager - NOT translating interaction to processing modules');
     }
 
     let session = new Session(

@@ -87,28 +87,36 @@ test('lifecycle functions should always be defined', (t) => {
   t.true(typeof t.context.processingModule.onDestroyed === 'function');
 });
 
-test('setOnCreated()', (t) => {
-  let cb = () => {};
+test('setOnCreated() / onCreated()', (t) => {
+  let cb = sinon.fake();
   t.context.processingModule.setOnCreated(cb);
   t.is(t.context.processingModule.onCreated, cb);
+  t.context.processingModule.onCreated();
+  t.is(cb.callCount, 1);
 });
 
-test('setOnProcessing()', (t) => {
-  let cb = () => {};
+test('setOnProcessing() / onProcessing()', (t) => {
+  let cb = sinon.fake();
   t.context.processingModule.setOnProcessing(cb);
   t.is(t.context.processingModule.onProcessing, cb);
+  t.context.processingModule.onProcessing();
+  t.is(cb.callCount, 1);
 });
 
-test('setOnHalted()', (t) => {
-  let cb = () => {};
+test('setOnHalted() / onHalted()', (t) => {
+  let cb = sinon.fake();
   t.context.processingModule.setOnHalted(cb);
   t.is(t.context.processingModule.onHalted, cb);
+  t.context.processingModule.onHalted();
+  t.is(cb.callCount, 1);
 });
 
-test('setOnDestroyed()', (t) => {
-  let cb = () => {};
+test('setOnDestroyed() / onDestroyed()', (t) => {
+  let cb = sinon.fake();
   t.context.processingModule.setOnDestroyed(cb);
   t.is(t.context.processingModule.onDestroyed, cb);
+  t.context.processingModule.onDestroyed();
+  t.is(cb.callCount, 1);
 });
 
 test('onProcessing(), should throw an error when not set/overwritten', (t) => {

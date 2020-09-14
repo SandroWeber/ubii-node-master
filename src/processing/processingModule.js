@@ -101,7 +101,7 @@ class ProcessingModule extends EventEmitter {
   }
 
   startProcessingByFrequency() {
-    namida.log(this.toString(), 'start processing by frequency');
+    //namida.log(this.toString(), 'start processing by frequency');
     let msFrequency = 1000 / this.processingMode.frequency.hertz;
     let processIteration = () => {
       this.onProcessing(this.ioProxy, this.ioProxy, this.state);
@@ -115,14 +115,14 @@ class ProcessingModule extends EventEmitter {
   }
 
   startProcessingByTriggerOnInput() {
-    namida.log(this.toString(), 'start processing triggered on input');
+    //namida.log(this.toString(), 'start processing triggered on input');
     this.on('new_input', () => {
       this.onProcessing(this.ioProxy, this.ioProxy, this.state);
     });
   }
 
   startProcessingByCycles() {
-    namida.log(this.toString(), 'start processing by cycles with minimal delay');
+    //namida.log(this.toString(), 'start processing by cycles with minimal delay');
     let processIteration = () => {
       this.onProcessing(this.ioProxy, this.ioProxy, this.state);
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {

@@ -47,9 +47,12 @@ class Session {
     // setup for processing modules
     if (this.processingModules.length > 0) {
       for (let pmSpecs of this.processingModules) {
-        let module = this.processingModuleManager.createModule(pmSpecs);
-        if (module) {
-          this.runtimeProcessingModules.push(module);
+        let pm = this.processingModuleManager.getModuleByID(pmSpecs.id);
+        if (!pm) {
+          pm = this.processingModuleManager.createModule(pmSpecs);
+        }
+        if (pm) {
+          this.runtimeProcessingModules.push(pm);
         } else {
           namida.logFailure(
             this.toString(),
