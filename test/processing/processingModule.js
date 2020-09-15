@@ -351,3 +351,42 @@ test('processingMode TriggerOnInput', (t) => {
   t.is(processingCB.callCount, 1);
   pm.stop();
 });
+
+test('processingMode Lockstep', async (t) => {
+  let pm = new ProcessingModule({
+    processingMode: {
+      lockstep: {}
+    }
+  });
+  t.is(pm.onProcessingLockstepPass(), undefined);
+
+  let lockstepDeltaTime = 10;
+  let lockstepInputs = {},
+    lockstepOutputs = {};
+  let outputBool = true,
+    outputInt = 42,
+    outputString = 'string',
+    outputObject = {};
+  let processingCB = sinon.fake((deltaT, inputs, outputs, state) => {
+    t.true(deltaT === lockstepDeltaTime);
+    t.true(inputs === lockstepInputs);
+    t.true(outputs === lockstepOutputs);
+    t.true(state === pm.state);
+
+    outputs.bool = outputBool;
+    outputs.int = outputInt;
+    outputs.string = outputString;
+    outputs.object = outputObject;
+  });
+  pm.setOnProcessing(processingCB);
+  pm.start();
+  await pm.onProcessingLockstepPass(lockstepDeltaTime, lockstepInputs, lockstepOutputs);
+
+  t.is(lockstepOutputs.bool, outputBool);
+  t.is(lockstepOutputs.int, outputInt);
+  t.is(lockstepOutputs.string, outputString);
+  t.is(lockstepOutputs.object, outputObject);
+
+  pm.stop();
+  t.is(pm.onProcessingLockstepPass(), undefined);
+});

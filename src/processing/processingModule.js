@@ -104,7 +104,9 @@ class ProcessingModule extends EventEmitter {
     this.onHalted && this.onHalted();
 
     this.removeAllListeners(ProcessingModule.EVENTS.NEW_INPUT);
-    this.removeAllListeners(ProcessingModule.EVENTS.LOCKSTEP_PASS);
+    this.onProcessingLockstepPass = () => {
+      return undefined;
+    };
   }
 
   startProcessingByFrequency() {
@@ -163,9 +165,16 @@ class ProcessingModule extends EventEmitter {
   }
 
   startProcessingByLockstep() {
-    this.on(this.EVENTS.LOCKSTEP_PASS, (deltaTime, inputs, outputs) => {
-      this.onProcessing(deltaTime, inputs, outputs, this.state);
-    });
+    this.onProcessingLockstepPass = (deltaTime, inputs, outputs) => {
+      return new Promise((resolve, reject) => {
+        try {
+          this.onProcessing(deltaTime, inputs, outputs, this.state);
+          return resolve(outputs);
+        } catch (error) {
+          return reject(error);
+        }
+      });
+    };
   }
 
   startProcessingByCycles() {
@@ -185,6 +194,10 @@ class ProcessingModule extends EventEmitter {
       }
     };
     processIteration();
+  }
+
+  onProcessingLockstepPass() {
+    return undefined;
   }
 
   /* execution control end */
