@@ -4,7 +4,7 @@ const { proto } = require('@tum-far/ubii-msg-formats');
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 const namida = require('@tum-far/namida');
 
-const ExternalLibrariesService = require('../sessions/externalLibrariesService');
+const ExternalLibrariesService = require('./externalLibrariesService');
 
 const Utils = require('../utilities');
 

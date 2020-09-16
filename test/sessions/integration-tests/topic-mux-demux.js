@@ -1,7 +1,7 @@
 import test from 'ava';
 import uuidv4 from 'uuid/v4';
 
-import TestUtility from '../testUtility';
+import TestUtility from '../../testUtility';
 import Utils from '../../../src/utilities';
 
 import { SessionManager, DeviceManager } from '../../../src/index';
@@ -55,13 +55,13 @@ let processingModuleSpecs = {
   id: uuidv4(),
   name: 'test-module',
   onProcessingStringified: processCB.toString(),
-  inputFormats: [
+  inputs: [
     {
       internalName: 'mux',
       messageFormat: 'double'
     }
   ],
-  outputFormats: [
+  outputs: [
     {
       internalName: 'demux',
       messageFormat: 'string'
@@ -77,13 +77,13 @@ let sessionSpecs = {
       processingModuleId: processingModuleSpecs.id,
       inputMappings: [
         {
-          name: processingModuleSpecs.inputFormats[0].internalName,
+          inputName: processingModuleSpecs.inputs[0].internalName,
           topicSource: topicMuxSpecs
         }
       ],
       outputMappings: [
         {
-          name: processingModuleSpecs.outputFormats[0].internalName,
+          outputName: processingModuleSpecs.outputs[0].internalName,
           topicDestination: topicDemuxSpecs
         }
       ]

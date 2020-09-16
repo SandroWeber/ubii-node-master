@@ -44,6 +44,14 @@ class ProcessingModuleManager {
   configureIODirectTopicdataAccess(ioMappings) {
     ioMappings.forEach((mapping) => {
       let processingModule = this.processingModules.get(mapping.processingModuleId);
+      if (!processingModule) {
+        namida.logFailure(
+          'ProcessingModuleManager',
+          "can't find processing module with ID " + mapping.processingModuleId
+        );
+        return;
+      }
+
       // connect inputs
       mapping.inputMappings &&
         mapping.inputMappings.forEach((inputMapping) => {
@@ -58,6 +66,7 @@ class ProcessingModuleManager {
             );
             return;
           }
+
           let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
           if (typeof topicSource === 'string') {
             processingModule.setInputGetter(inputMapping.inputName, () => {
@@ -79,12 +88,24 @@ class ProcessingModuleManager {
       // connect outputs
       mapping.outputMappings &&
         mapping.outputMappings.forEach((outputMapping) => {
+          if (!this.isValidIOMapping(processingModule, outputMapping)) {
+            namida.logFailure(
+              'ProcessingModuleManager',
+              'IO-Mapping for module ' +
+                processingModule.toString() +
+                '->' +
+                outputMapping.outputName +
+                ' is invalid'
+            );
+            return;
+          }
+
           let topicDestination =
             outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
           if (typeof topicDestination === 'string') {
-            let messageFormat = processingModule.getIOMessageFormat(outputMapping.name);
+            let messageFormat = processingModule.getIOMessageFormat(outputMapping.outputName);
             let type = Utils.getTopicDataTypeFromMessageFormat(messageFormat);
-            processingModule.setOutputSetter(outputMapping.name, (value) => {
+            processingModule.setOutputSetter(outputMapping.outputName, (value) => {
               this.topicdataBuffer.publish(topicDestination, value, type);
             });
           } else if (typeof topicDestination === 'object') {
@@ -94,7 +115,7 @@ class ProcessingModuleManager {
             } else {
               demultiplexer = this.deviceManager.addTopicDemux(topicDestination);
             }
-            processingModule.setOutputSetter(outputMapping.name, (value) => {
+            processingModule.setOutputSetter(outputMapping.outputName, (value) => {
               demultiplexer.push(value);
             });
           }

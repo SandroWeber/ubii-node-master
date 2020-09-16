@@ -1,7 +1,7 @@
 import test from 'ava';
 import sinon from 'sinon';
 
-import TestUtility from '../testUtility';
+import TestUtility from '../../testUtility';
 
 import { SessionManager, ProcessingModule, ProcessingModuleManager } from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';

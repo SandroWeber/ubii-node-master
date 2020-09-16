@@ -5,7 +5,8 @@ import * as tf from '@tensorflow/tfjs-node';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
 import { ProcessingModule, ProcessingModuleManager, Session } from '../../../src/index';
-import ExternalLibrariesService from '../../../src/sessions/externalLibrariesService';
+import ExternalLibrariesService from '../../../src/processing/externalLibrariesService';
+import TestUtility from '../../testUtility';
 
 /* setup */
 
@@ -104,7 +105,7 @@ test('run session with module', async (t) => {
         processingModuleId: pm.id,
         outputMappings: [
           {
-            name: pm.outputs[0].internalName,
+            outputName: pm.outputs[0].internalName,
             topicDestination: topicPrediction
           }
         ]
