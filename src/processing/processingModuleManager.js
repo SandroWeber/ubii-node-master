@@ -47,9 +47,20 @@ class ProcessingModuleManager {
       // connect inputs
       mapping.inputMappings &&
         mapping.inputMappings.forEach((inputMapping) => {
+          if (!this.isValidIOMapping(processingModule, inputMapping)) {
+            namida.logFailure(
+              'ProcessingModuleManager',
+              'IO-Mapping for module ' +
+                processingModule.name +
+                '->' +
+                inputMapping.inputName +
+                ' is invalid'
+            );
+            return;
+          }
           let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
           if (typeof topicSource === 'string') {
-            processingModule.setInputGetter(inputMapping.name, () => {
+            processingModule.setInputGetter(inputMapping.inputName, () => {
               let entry = this.topicdataBuffer.pull(topicSource);
               return entry && entry.data;
             });
@@ -60,7 +71,7 @@ class ProcessingModuleManager {
             } else {
               multiplexer = this.deviceManager.addTopicMux(topicSource);
             }
-            processingModule.setInputGetter(inputMapping.name, () => {
+            processingModule.setInputGetter(inputMapping.inputName, () => {
               return multiplexer.get();
             });
           }
@@ -89,6 +100,20 @@ class ProcessingModuleManager {
           }
         });
     });
+  }
+
+  isValidIOMapping(processingModule, ioMapping) {
+    if (ioMapping.inputName) {
+      return processingModule.inputs.some(
+        (element) => element.internalName === ioMapping.inputName
+      );
+    } else if (ioMapping.outputName) {
+      return processingModule.outputs.some(
+        (element) => element.internalName === ioMapping.outputName
+      );
+    }
+
+    return false;
   }
 }
 

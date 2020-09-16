@@ -71,13 +71,13 @@ let setupGenericProcessingModules = (session, count, topicData) => {
     };
     let specs = {
       onProcessingStringified: processCB.toString(),
-      inputFormats: [
+      inputs: [
         {
           internalName: 'bool',
           messageFormat: 'bool'
         }
       ],
-      outputFormats: [
+      outputs: [
         {
           internalName: 'string',
           messageFormat: 'string'

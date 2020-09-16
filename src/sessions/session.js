@@ -34,6 +34,7 @@ class Session {
     this.processingModuleManager = processingModuleManager;
 
     this.runtimeProcessingModules = [];
+    this.lockstepProcessingModules = [];
   }
 
   start() {
@@ -45,7 +46,7 @@ class Session {
     this.status = SessionStatus.RUNNING;
 
     // setup for processing modules
-    if (this.processingModules.length > 0) {
+    if (this.processingModules && this.processingModules.length > 0) {
       for (let pmSpecs of this.processingModules) {
         let pm = this.processingModuleManager.getModuleByID(pmSpecs.id);
         if (!pm) {
@@ -53,6 +54,9 @@ class Session {
         }
         if (pm) {
           this.runtimeProcessingModules.push(pm);
+          if (pm.processingMode && pm.processingMode.lockstep) {
+            this.lockstepProcessingModules.push(pm);
+          }
         } else {
           namida.logFailure(
             this.toString(),
@@ -81,6 +85,9 @@ class Session {
     for (let processingModule of this.runtimeProcessingModules) {
       processingModule.stop();
     }
+
+    this.runtimeProcessingModules = [];
+    this.lockstepProcessingModules = [];
 
     return true;
   }
