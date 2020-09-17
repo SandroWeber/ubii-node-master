@@ -8,6 +8,7 @@ class ProcessingModuleManager {
     this.topicdataBuffer = topicdataBuffer;
 
     this.processingModules = new Map();
+    this.inputTriggerSubscriptions = new Map();
   }
 
   createModule(specs) {
@@ -20,11 +21,34 @@ class ProcessingModuleManager {
 
   addModule(pm) {
     if (!pm.id) {
-      namida.logFailure('ProcessingModuleManager', 'module ' + pm.name + ' does not have an ID');
+      namida.logFailure(
+        'ProcessingModuleManager',
+        'module ' + pm.name + " does not have an ID, can't add"
+      );
       return false;
     }
     this.processingModules.set(pm.id, pm);
     return true;
+  }
+
+  removeModule(pm) {
+    if (!pm.id) {
+      namida.logFailure(
+        'ProcessingModuleManager',
+        'module ' + pm.name + " does not have an ID, can't remove"
+      );
+      return false;
+    }
+
+    if (this.inputTriggerSubscriptions.has(pm.id)) {
+      let subscriptionTokens = this.inputTriggerSubscriptions.get(pm.id);
+      subscriptionTokens.forEach((token) => {
+        this.topicdataBuffer.unsubscribe(token);
+      });
+      this.inputTriggerSubscriptions.delete(pm.id);
+    }
+
+    this.processingModules.delete(pm.id);
   }
 
   hasModuleID(id) {
@@ -41,6 +65,8 @@ class ProcessingModuleManager {
     }
   }
 
+  /* I/O <-> topic mapping functions */
+
   configureIODirectTopicdataAccess(ioMappings) {
     ioMappings.forEach((mapping) => {
       let processingModule = this.processingModules.get(mapping.processingModuleId);
@@ -51,6 +77,7 @@ class ProcessingModuleManager {
         );
         return;
       }
+      console.info('ioMappings for ' + processingModule.toString());
 
       // connect inputs
       mapping.inputMappings &&
@@ -68,12 +95,36 @@ class ProcessingModuleManager {
           }
 
           let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
+          // single topic input
           if (typeof topicSource === 'string') {
             processingModule.setInputGetter(inputMapping.inputName, () => {
               let entry = this.topicdataBuffer.pull(topicSource);
               return entry && entry.data;
             });
-          } else if (typeof topicSource === 'object') {
+
+            // if PM is triggered on input, notify PM for new input
+            if (processingModule.processingMode && processingModule.processingMode.triggerOnInput) {
+              let subscriptionToken = this.topicdataBuffer.subscribe(topicSource, () => {
+                console.info(
+                  'new input on topic ' +
+                    topicSource +
+                    ', concerns PM ' +
+                    processingModule.name +
+                    "'s input " +
+                    inputMapping.inputName
+                );
+                processingModule.emit(ProcessingModule.EVENTS.NEW_INPUT, inputMapping.inputName);
+              });
+
+              if (!this.inputTriggerSubscriptions.has(processingModule.id)) {
+                this.inputTriggerSubscriptions.set(processingModule.id, [subscriptionToken]);
+              } else {
+                this.inputTriggerSubscriptions.get(processingModule.id).push(subscriptionToken);
+              }
+            }
+          }
+          // topic muxer input
+          else if (typeof topicSource === 'object') {
             let multiplexer = undefined;
             if (topicSource.id) {
               multiplexer = this.deviceManager.getTopicMux(topicSource.id);
@@ -102,13 +153,16 @@ class ProcessingModuleManager {
 
           let topicDestination =
             outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
+          // single topic output
           if (typeof topicDestination === 'string') {
             let messageFormat = processingModule.getIOMessageFormat(outputMapping.outputName);
             let type = Utils.getTopicDataTypeFromMessageFormat(messageFormat);
             processingModule.setOutputSetter(outputMapping.outputName, (value) => {
               this.topicdataBuffer.publish(topicDestination, value, type);
             });
-          } else if (typeof topicDestination === 'object') {
+          }
+          // topic demuxer output
+          else if (typeof topicDestination === 'object') {
             let demultiplexer = undefined;
             if (topicDestination.id) {
               demultiplexer = this.deviceManager.getTopicDemux(topicDestination.id);
@@ -136,6 +190,8 @@ class ProcessingModuleManager {
 
     return false;
   }
+
+  /* I/O <-> topic mapping functions end */
 }
 
 module.exports = ProcessingModuleManager;

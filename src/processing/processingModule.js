@@ -7,6 +7,7 @@ const namida = require('@tum-far/namida');
 const ExternalLibrariesService = require('./externalLibrariesService');
 
 const Utils = require('../utilities');
+const { set } = require('shelljs');
 
 class ProcessingModule extends EventEmitter {
   constructor(
@@ -87,7 +88,7 @@ class ProcessingModule extends EventEmitter {
 
   start() {
     this.status = ProcessingModuleProto.Status.PROCESSING;
-    // processing based on frequency
+
     if (this.processingMode && this.processingMode.frequency) {
       this.startProcessingByFrequency();
     } else if (this.processingMode && this.processingMode.triggerOnInput) {
@@ -131,11 +132,11 @@ class ProcessingModule extends EventEmitter {
 
   startProcessingByTriggerOnInput() {
     //namida.log(this.toString(), 'start processing triggered on input');
-    let inputFlags = [];
     let allInputsNeedUpdate = this.processingMode.triggerOnInput.allInputsNeedUpdate;
 
     let tLastProcess = Date.now();
     let processingPass = () => {
+      inputFlags = [];
       // timing
       let tNow = Date.now();
       let deltaTime = tNow - tLastProcess;
@@ -144,23 +145,26 @@ class ProcessingModule extends EventEmitter {
       this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
     };
 
-    this.on(ProcessingModule.EVENTS.NEW_INPUT, (inputName) => {
+    let checkProcessingNeeded = false;
+    let checkProcessing = () => {
       if (allInputsNeedUpdate) {
-        if (
-          !inputFlags.includes(inputName) &&
-          this.inputs.some((element) => element.internalName === inputName)
-        ) {
-          inputFlags.push(inputName);
-        }
-
-        if (inputFlags.length === this.inputs.length) {
-          inputFlags = [];
+        if (this.inputs.every((element) => inputFlags.includes(element.internalName))) {
           processingPass();
         }
       } else {
         processingPass();
       }
-      console.info('processingPass ' + inputName);
+      checkProcessingNeeded = false;
+    };
+
+    let inputFlags = [];
+    this.on(ProcessingModule.EVENTS.NEW_INPUT, (inputName) => {
+      console.info('input trigger for ' + inputName);
+      inputFlags.push(inputName);
+      if (!checkProcessingNeeded) {
+        checkProcessingNeeded = true;
+        setImmediate(checkProcessing);
+      }
     });
   }
 
@@ -188,9 +192,9 @@ class ProcessingModule extends EventEmitter {
       // processing
       this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
-        setTimeout(() => {
+        setImmediate(() => {
           processIteration();
-        }, 0);
+        });
       }
     };
     processIteration();

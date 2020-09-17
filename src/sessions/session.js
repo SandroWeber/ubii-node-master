@@ -57,6 +57,8 @@ class Session {
           if (pm.processingMode && pm.processingMode.lockstep) {
             this.lockstepProcessingModules.push(pm);
           }
+          if (pm.processingMode && pm.processingMode.triggerOnInput) {
+          }
         } else {
           namida.logFailure(
             this.toString(),
