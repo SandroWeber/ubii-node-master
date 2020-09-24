@@ -57,8 +57,6 @@ class Session {
           if (pm.processingMode && pm.processingMode.lockstep) {
             this.lockstepProcessingModules.push(pm);
           }
-          if (pm.processingMode && pm.processingMode.triggerOnInput) {
-          }
         } else {
           namida.logFailure(
             this.toString(),
@@ -73,6 +71,7 @@ class Session {
     this.runtimeProcessingModules.forEach((pm) => {
       pm.start();
     });
+    this.tLastLockstepPass = Date.now();
 
     return true;
   }
@@ -92,6 +91,55 @@ class Session {
     this.lockstepProcessingModules = [];
 
     return true;
+  }
+
+  async lockstepProcessingPass() {
+    // timing
+    let tNow = Date.now();
+    let deltaTime = tNow - tLastProcess;
+    this.tLastLockstepPass = tNow;
+
+    // gather inputs
+    let lockstepProcessingRequests = [];
+    this.lockstepProcessingModules.forEach((pm) => {
+      let lockstepProcessingRequest = {
+        records: [],
+        deltaTimeMs: deltaTime
+      };
+      let inputMappings = this.ioMappings.find((element) => element.processingModuleId === pm.id)
+        .inputMappings;
+      if (inputMappings) {
+        pm.inputs.forEach((input) => {
+          let inputMapping = inputMappings.find(
+            (element) => element.inputName === input.internalName
+          );
+          // single topic input
+          if (typeof topicSource === 'string') {
+            let topicdataEntry = this.topicData.pull(topicSource);
+            let record = { topic: topicSource, data: topicdataEntry.data };
+            record.type = topicdataEntry.type;
+            record[entry.type] = topicdataEntry.data;
+            lockstepProcessingRequest.records.push(record);
+          }
+          // topic muxer input
+          else if (typeof topicSource === 'object') {
+            let records = this.deviceManager.getTopicMux(topicSource.id).get();
+            lockstepProcessingRequest.records.push(...records);
+          }
+        });
+      }
+
+      lockstepProcessingRequests.push({
+        processingModule: pm,
+        request: lockstepProcessingRequest
+      });
+    });
+
+    console.info(lockstepProcessingRequests);
+
+    // send out lockstepProcessingRequests
+    let processingPromises = [];
+    await Promise.all(processingPromises);
   }
 
   addProcessingModule(pm) {

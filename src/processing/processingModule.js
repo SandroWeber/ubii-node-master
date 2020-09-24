@@ -133,8 +133,10 @@ class ProcessingModule extends EventEmitter {
   startProcessingByTriggerOnInput() {
     //namida.log(this.toString(), 'start processing triggered on input');
     let allInputsNeedUpdate = this.processingMode.triggerOnInput.allInputsNeedUpdate;
+    let minDelayMs = this.processingMode.triggerOnInput.minDelayMs;
 
     let tLastProcess = Date.now();
+
     let processingPass = () => {
       inputFlags = [];
       // timing
@@ -147,11 +149,11 @@ class ProcessingModule extends EventEmitter {
 
     let checkProcessingNeeded = false;
     let checkProcessing = () => {
-      if (allInputsNeedUpdate) {
-        if (this.inputs.every((element) => inputFlags.includes(element.internalName))) {
-          processingPass();
-        }
-      } else {
+      let inputUpdatesFulfilled =
+        !allInputsNeedUpdate ||
+        this.inputs.every((element) => inputFlags.includes(element.internalName));
+      let minDelayFulfilled = !minDelayMs || Date.now() - tLastProcess >= minDelayMs;
+      if (inputUpdatesFulfilled && minDelayFulfilled) {
         processingPass();
       }
       checkProcessingNeeded = false;
@@ -159,7 +161,6 @@ class ProcessingModule extends EventEmitter {
 
     let inputFlags = [];
     this.on(ProcessingModule.EVENTS.NEW_INPUT, (inputName) => {
-      console.info('input trigger for ' + inputName);
       inputFlags.push(inputName);
       if (!checkProcessingNeeded) {
         checkProcessingNeeded = true;

@@ -75,7 +75,7 @@ class PMTriggerOnInputMinDelayUpdateAll extends TestProcessingModule {
     this.name = 'PMTriggerOnInputMinDelayUpdateAll';
     this.processingMode = {
       triggerOnInput: {
-        minDelayMs: 1000,
+        minDelayMs: 100,
         allInputsNeedUpdate: true
       }
     };
@@ -97,7 +97,7 @@ let publishTopicForModuleIO = (topicdata, processingModule, moduleIO) => {
     data = 'placeholder';
   }
   topicdata.publish(topic, data, moduleIO.messageFormat);
-  console.info('published ' + data + ' on topic ' + topic);
+  //console.info('published ' + data + ' on topic ' + topic);
 };
 
 /* test setup */
@@ -165,10 +165,17 @@ test.afterEach((t) => {
 
 test('run session containing PMs with different processing modes', async (t) => {
   let topicData = t.context.topicData;
+  let pmImmediateCycles = t.context.pmImmediateCycles;
+  let pmFrequency = t.context.pmFrequency;
+  let pmLockstep = t.context.pmLockstep;
   let pmToI = t.context.pmTriggerOnInput;
   let pmToIMinDelayUpdateAll = t.context.pmTriggerOnInputMinDelayUpdateAll;
 
   t.context.sessionManager.startAllSessions();
+
+  /* trigger test run 1 */
+  // guarantee that pmToIMinDelayUpdateAll can be triggered to process
+  await TestUtility.wait(pmToIMinDelayUpdateAll.processingMode.triggerOnInput.minDelayMs);
 
   // trigger input for PMTriggerOnInput in quick succession, should only trigger once
   publishTopicForModuleIO(topicData, pmToI, pmToI.inputs[0]);
@@ -183,18 +190,21 @@ test('run session containing PMs with different processing modes', async (t) => 
   t.is(pmToI.onProcessing.callCount, 1);
   t.is(pmToIMinDelayUpdateAll.onProcessing.callCount, 1);
 
+  /* trigger test run 2 */
   pmToI.onProcessing.resetHistory();
   pmToIMinDelayUpdateAll.onProcessing.resetHistory();
+  // guarantee that pmToIMinDelayUpdateAll can be triggered again to process
+  await TestUtility.wait(pmToIMinDelayUpdateAll.processingMode.triggerOnInput.minDelayMs);
 
-  // trigger input for PMTriggerOnInput again twice with delay in between, should result in two processings
+  // update input once
   publishTopicForModuleIO(topicData, pmToI, pmToI.inputs[0]);
-  await TestUtility.wait(10);
-  publishTopicForModuleIO(topicData, pmToI, pmToI.inputs[1]);
-  // try to trigger PMTriggerOnInputMinDelayUpdateAll twice, should only run once because of minDelay
   publishTopicForModuleIO(topicData, pmToIMinDelayUpdateAll, pmToIMinDelayUpdateAll.inputs[0]);
   publishTopicForModuleIO(topicData, pmToIMinDelayUpdateAll, pmToIMinDelayUpdateAll.inputs[1]);
   publishTopicForModuleIO(topicData, pmToIMinDelayUpdateAll, pmToIMinDelayUpdateAll.inputs[2]);
+  // wait some time but not enough for PMTriggerOnInputMinDelayUpdateAll to trigger again
   await TestUtility.wait(pmToIMinDelayUpdateAll.processingMode.triggerOnInput.minDelayMs / 4);
+  // update input a second time
+  publishTopicForModuleIO(topicData, pmToI, pmToI.inputs[1]);
   publishTopicForModuleIO(topicData, pmToIMinDelayUpdateAll, pmToIMinDelayUpdateAll.inputs[0]);
   publishTopicForModuleIO(topicData, pmToIMinDelayUpdateAll, pmToIMinDelayUpdateAll.inputs[1]);
   publishTopicForModuleIO(topicData, pmToIMinDelayUpdateAll, pmToIMinDelayUpdateAll.inputs[2]);
@@ -202,4 +212,10 @@ test('run session containing PMs with different processing modes', async (t) => 
   await TestUtility.wait(10);
   t.is(pmToI.onProcessing.callCount, 2);
   t.is(pmToIMinDelayUpdateAll.onProcessing.callCount, 1);
+
+  // check other processing modules that continuously process
+  t.true(pmImmediateCycles.onProcessing.callCount > 1);
+  t.true(pmFrequency.onProcessing.callCount > 1);
+
+  //TODO: do lockstep in session.js and check here
 });

@@ -77,7 +77,8 @@ class ProcessingModuleManager {
         );
         return;
       }
-      console.info('ioMappings for ' + processingModule.toString());
+
+      //TODO: if PM is running in lockstep mode, set getter/setter accordingly
 
       // connect inputs
       mapping.inputMappings &&
@@ -105,14 +106,6 @@ class ProcessingModuleManager {
             // if PM is triggered on input, notify PM for new input
             if (processingModule.processingMode && processingModule.processingMode.triggerOnInput) {
               let subscriptionToken = this.topicdataBuffer.subscribe(topicSource, () => {
-                console.info(
-                  'new input on topic ' +
-                    topicSource +
-                    ', concerns PM ' +
-                    processingModule.name +
-                    "'s input " +
-                    inputMapping.inputName
-                );
                 processingModule.emit(ProcessingModule.EVENTS.NEW_INPUT, inputMapping.inputName);
               });
 
@@ -192,6 +185,15 @@ class ProcessingModuleManager {
   }
 
   /* I/O <-> topic mapping functions end */
+
+  sendLockstepProcessingRequest(pm, request) {
+    if (pm.clientId === undefined) {
+      // server side PM
+      return this.processingModules
+        .get(pm.id)
+        .onProcessingLockstepPass(request.deltaTimeMs, todoinputs, todooutputs);
+    }
+  }
 }
 
 module.exports = ProcessingModuleManager;
