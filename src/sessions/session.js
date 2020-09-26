@@ -34,7 +34,7 @@ class Session {
     this.processingModuleManager = processingModuleManager;
 
     this.runtimeProcessingModules = [];
-    this.lockstepProcessingModules = [];
+    this.lockstepProcessingModules = new Map();
   }
 
   start() {
@@ -54,8 +54,13 @@ class Session {
         }
         if (pm) {
           this.runtimeProcessingModules.push(pm);
+          // processing mode = lockstep ?
           if (pm.processingMode && pm.processingMode.lockstep) {
-            this.lockstepProcessingModules.push(pm);
+            let clientID = pm.clientId || 'local';
+            if (!this.lockstepProcessingModules.has(clientID)) {
+              this.lockstepProcessingModules.set(clientID, []);
+            }
+            this.lockstepProcessingModules.get(clientID).push(pm);
           }
         } else {
           namida.logFailure(
@@ -72,6 +77,7 @@ class Session {
       pm.start();
     });
     this.tLastLockstepPass = Date.now();
+    this.lockstepProcessingPass();
 
     return true;
   }
@@ -88,58 +94,73 @@ class Session {
     }
 
     this.runtimeProcessingModules = [];
-    this.lockstepProcessingModules = [];
+    this.lockstepProcessingModules = new Map();
 
     return true;
   }
 
   async lockstepProcessingPass() {
+    console.info('lockstepProcessingPass');
     // timing
     let tNow = Date.now();
-    let deltaTime = tNow - tLastProcess;
+    let deltaTime = tNow - this.tLastLockstepPass;
     this.tLastLockstepPass = tNow;
 
     // gather inputs
-    let lockstepProcessingRequests = [];
-    this.lockstepProcessingModules.forEach((pm) => {
+    let processingPromises = [];
+    this.lockstepProcessingModules.forEach((pms, clientID) => {
+      // one request per client
       let lockstepProcessingRequest = {
+        processingModuleIds: [],
         records: [],
         deltaTimeMs: deltaTime
       };
-      let inputMappings = this.ioMappings.find((element) => element.processingModuleId === pm.id)
-        .inputMappings;
-      if (inputMappings) {
-        pm.inputs.forEach((input) => {
-          let inputMapping = inputMappings.find(
-            (element) => element.inputName === input.internalName
-          );
-          // single topic input
-          if (typeof topicSource === 'string') {
-            let topicdataEntry = this.topicData.pull(topicSource);
-            let record = { topic: topicSource, data: topicdataEntry.data };
-            record.type = topicdataEntry.type;
-            record[entry.type] = topicdataEntry.data;
-            lockstepProcessingRequest.records.push(record);
-          }
-          // topic muxer input
-          else if (typeof topicSource === 'object') {
-            let records = this.deviceManager.getTopicMux(topicSource.id).get();
-            lockstepProcessingRequest.records.push(...records);
-          }
-        });
-      }
 
-      lockstepProcessingRequests.push({
-        processingModule: pm,
-        request: lockstepProcessingRequest
+      pms.forEach((pm) => {
+        lockstepProcessingRequest.processingModuleIds.push(pm.id);
+
+        // gather inputs for all PMs running under client ID
+        let inputMappings = this.ioMappings.find((element) => element.processingModuleId === pm.id)
+          .inputMappings;
+        if (inputMappings) {
+          pm.inputs.forEach((input) => {
+            let inputMapping = inputMappings.find(
+              (element) => element.inputName === input.internalName
+            );
+            let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
+            console.info(topicSource);
+            // single topic input
+            if (typeof topicSource === 'string') {
+              let topicdataEntry = this.topicData.pull(topicSource);
+              console.info(this.topicData);
+              let record = { topic: topicSource, data: topicdataEntry.data };
+              record.type = topicdataEntry.type;
+              record[topicdataEntry.type] = topicdataEntry.data;
+              lockstepProcessingRequest.records.push(record);
+            }
+            // topic muxer input
+            else if (typeof topicSource === 'object') {
+              let records = this.deviceManager.getTopicMux(topicSource.id).get();
+              lockstepProcessingRequest.records.push(...records);
+            }
+          });
+        }
       });
+
+      // send out request, save promise
+      processingPromises.push(
+        this.processingModuleManager.sendLockstepProcessingRequest(
+          clientID,
+          lockstepProcessingRequest
+        )
+      );
+      console.info('lockstepProcessingRequest for ' + clientID);
+      console.info(lockstepProcessingRequest);
     });
 
-    console.info(lockstepProcessingRequests);
-
-    // send out lockstepProcessingRequests
-    let processingPromises = [];
-    await Promise.all(processingPromises);
+    Promise.all(processingPromises).then(() => {
+      setImmediate(this.lockstepProcessingPass);
+    });
   }
 
   addProcessingModule(pm) {

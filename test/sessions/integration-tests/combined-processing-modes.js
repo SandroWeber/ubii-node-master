@@ -171,6 +171,11 @@ test('run session containing PMs with different processing modes', async (t) => 
   let pmToI = t.context.pmTriggerOnInput;
   let pmToIMinDelayUpdateAll = t.context.pmTriggerOnInputMinDelayUpdateAll;
 
+  // provide topic data for lockstep module
+  pmLockstep.inputs.forEach((input) => {
+    publishTopicForModuleIO(topicData, pmLockstep, input);
+  });
+
   t.context.sessionManager.startAllSessions();
 
   /* trigger test run 1 */
@@ -218,4 +223,5 @@ test('run session containing PMs with different processing modes', async (t) => 
   t.true(pmFrequency.onProcessing.callCount > 1);
 
   //TODO: do lockstep in session.js and check here
+  t.true(pmLockstep.onProcessing.callCount > 1);
 });

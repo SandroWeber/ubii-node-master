@@ -174,6 +174,7 @@ class ProcessingModule extends EventEmitter {
       return new Promise((resolve, reject) => {
         try {
           this.onProcessing(deltaTime, inputs, outputs, this.state);
+          console.info(this.toString() + ' - lockstep pass done');
           return resolve(outputs);
         } catch (error) {
           return reject(error);

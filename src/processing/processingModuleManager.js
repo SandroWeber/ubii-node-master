@@ -9,6 +9,7 @@ class ProcessingModuleManager {
 
     this.processingModules = new Map();
     this.inputTriggerSubscriptions = new Map();
+    this.lockstepTopicdataProxy = undefined;
   }
 
   createModule(specs) {
@@ -98,6 +99,13 @@ class ProcessingModuleManager {
           let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
           // single topic input
           if (typeof topicSource === 'string') {
+            if (processingModule.processingMode && processingModule.processingMode.lockstep) {
+              processingModule.setInputGetter(inputMapping.inputName, () => {
+                let entry = this.topicdataBuffer.pull(topicSource);
+                return entry && entry.data;
+              });
+            }
+            // directly pull from topicdata buffer - all async modes (immediate cycles, frequency, input trigger)
             processingModule.setInputGetter(inputMapping.inputName, () => {
               let entry = this.topicdataBuffer.pull(topicSource);
               return entry && entry.data;
@@ -186,12 +194,26 @@ class ProcessingModuleManager {
 
   /* I/O <-> topic mapping functions end */
 
-  sendLockstepProcessingRequest(pm, request) {
-    if (pm.clientId === undefined) {
+  sendLockstepProcessingRequest(clientId, request) {
+    if (clientId === undefined || clientId === 'local') {
+      console.info('PMManager - lockstep request for local PMs');
       // server side PM
-      return this.processingModules
-        .get(pm.id)
-        .onProcessingLockstepPass(request.deltaTimeMs, todoinputs, todooutputs);
+      return new Promise((resolve, reject) => {
+        let lockstepPasses = [];
+        request.processingModuleIds.forEach((id) => {
+          lockstepPasses.push(
+            this.processingModules
+              .get(id)
+              .onProcessingLockstepPass(request.deltaTimeMs, todoinputs, todooutputs)
+          );
+        });
+
+        Promise.all(lockstepPasses).then(() => {
+          console.info('PMManager - lockstep request for local PMs all done');
+          // TODO: handle output
+          return resolve();
+        });
+      });
     }
   }
 }
