@@ -54,14 +54,6 @@ class Session {
         }
         if (pm) {
           this.runtimeProcessingModules.push(pm);
-          // processing mode = lockstep ?
-          if (pm.processingMode && pm.processingMode.lockstep) {
-            let clientID = pm.clientId || 'local';
-            if (!this.lockstepProcessingModules.has(clientID)) {
-              this.lockstepProcessingModules.set(clientID, []);
-            }
-            this.lockstepProcessingModules.get(clientID).push(pm);
-          }
         } else {
           namida.logFailure(
             this.toString(),
@@ -74,7 +66,17 @@ class Session {
     this.processingModuleManager.applyIOMappings(this.ioMappings);
 
     this.runtimeProcessingModules.forEach((pm) => {
-      pm.start();
+      // processing mode = lockstep ?
+      if (pm.processingMode && pm.processingMode.lockstep) {
+        let clientID = pm.clientId || 'local';
+        if (!this.lockstepProcessingModules.has(clientID)) {
+          this.lockstepProcessingModules.set(clientID, []);
+        }
+        this.lockstepProcessingModules.get(clientID).push(pm);
+
+        // start
+        pm.start();
+      }
     });
     this.tLastLockstepPass = Date.now();
     this.lockstepProcessingPass();
@@ -99,7 +101,7 @@ class Session {
     return true;
   }
 
-  async lockstepProcessingPass() {
+  lockstepProcessingPass() {
     console.info('lockstepProcessingPass');
     // timing
     let tNow = Date.now();
@@ -132,8 +134,7 @@ class Session {
             // single topic input
             if (typeof topicSource === 'string') {
               let topicdataEntry = this.topicData.pull(topicSource);
-              console.info(this.topicData);
-              let record = { topic: topicSource, data: topicdataEntry.data };
+              let record = { topic: topicSource };
               record.type = topicdataEntry.type;
               record[topicdataEntry.type] = topicdataEntry.data;
               lockstepProcessingRequest.records.push(record);

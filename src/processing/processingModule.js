@@ -170,7 +170,7 @@ class ProcessingModule extends EventEmitter {
   }
 
   startProcessingByLockstep() {
-    this.onProcessingLockstepPass = (deltaTime, inputs, outputs) => {
+    this.onProcessingLockstepPass = (deltaTime, inputs = this.ioProxy, outputs = this.ioProxy) => {
       return new Promise((resolve, reject) => {
         try {
           this.onProcessing(deltaTime, inputs, outputs, this.state);

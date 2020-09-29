@@ -9,7 +9,12 @@ class ProcessingModuleManager {
 
     this.processingModules = new Map();
     this.inputTriggerSubscriptions = new Map();
-    this.lockstepTopicdataProxy = undefined;
+    this.lockstepInputTopicdata = {
+      records: []
+    };
+    this.lockstepOutputTopicdata = {
+      records: []
+    };
   }
 
   createModule(specs) {
@@ -99,13 +104,16 @@ class ProcessingModuleManager {
           let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
           // single topic input
           if (typeof topicSource === 'string') {
+            // lockstep mode
             if (processingModule.processingMode && processingModule.processingMode.lockstep) {
               processingModule.setInputGetter(inputMapping.inputName, () => {
-                let entry = this.topicdataBuffer.pull(topicSource);
-                return entry && entry.data;
+                let record = this.lockstepInputTopicdata.records.find(
+                  (record) => record.topic === topicSource
+                );
+                return record && record[record.type];
               });
             }
-            // directly pull from topicdata buffer - all async modes (immediate cycles, frequency, input trigger)
+            // all async modes (immediate cycles, frequency, input trigger) - directly pull from topicdata buffer
             processingModule.setInputGetter(inputMapping.inputName, () => {
               let entry = this.topicdataBuffer.pull(topicSource);
               return entry && entry.data;
@@ -118,10 +126,9 @@ class ProcessingModuleManager {
               });
 
               if (!this.inputTriggerSubscriptions.has(processingModule.id)) {
-                this.inputTriggerSubscriptions.set(processingModule.id, [subscriptionToken]);
-              } else {
-                this.inputTriggerSubscriptions.get(processingModule.id).push(subscriptionToken);
+                this.inputTriggerSubscriptions.set(processingModule.id, []);
               }
+              this.inputTriggerSubscriptions.get(processingModule.id).push(subscriptionToken);
             }
           }
           // topic muxer input
@@ -158,6 +165,16 @@ class ProcessingModuleManager {
           if (typeof topicDestination === 'string') {
             let messageFormat = processingModule.getIOMessageFormat(outputMapping.outputName);
             let type = Utils.getTopicDataTypeFromMessageFormat(messageFormat);
+            // lockstep mode
+            if (processingModule.processingMode && processingModule.processingMode.lockstep) {
+              processingModule.setOutputSetter(inputMapping.inputName, (value) => {
+                let record = { topic: topicDestination };
+                record.type = type;
+                record[type] = value;
+                this.lockstepOutputTopicdata.records.push(record);
+              });
+            }
+            // all async modes (immediate cycles, frequency, input trigger) - directly publish to topicdata buffer
             processingModule.setOutputSetter(outputMapping.outputName, (value) => {
               this.topicdataBuffer.publish(topicDestination, value, type);
             });
@@ -199,12 +216,17 @@ class ProcessingModuleManager {
       console.info('PMManager - lockstep request for local PMs');
       // server side PM
       return new Promise((resolve, reject) => {
+        // assign input
+        this.lockstepInputTopicdata.records = request.records;
+        //TODO: need to map input names for lockstepInputTopicdata to records so it can be passed as second argument to onProcessingLockstepPass()
+        // clear output
+        this.lockstepOutputTopicdata.records = [];
+
+        // lockstep pass calls to PMs
         let lockstepPasses = [];
         request.processingModuleIds.forEach((id) => {
           lockstepPasses.push(
-            this.processingModules
-              .get(id)
-              .onProcessingLockstepPass(request.deltaTimeMs, todoinputs, todooutputs)
+            this.processingModules.get(id).onProcessingLockstepPass(request.deltaTimeMs)
           );
         });
 
