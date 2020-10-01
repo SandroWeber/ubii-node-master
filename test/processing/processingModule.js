@@ -337,7 +337,16 @@ test('processingMode TriggerOnInput', async (t) => {
   };
   pm.start();
   let timeMsBetweenInputTriggers = 10;
+
+  // do not stagger input triggers, multiple triggers occuring simultaneously / in immediate sequence should not result in multiple processings
+  pm.inputs.forEach((element) => {
+    pm.emit(ProcessingModule.EVENTS.NEW_INPUT, element.internalName);
+  });
+  await TestUtility.wait(timeMsBetweenInputTriggers);
+  t.is(processingCB.callCount, 1);
+
   // stagger input triggers
+  processingCB.resetHistory();
   pm.inputs.forEach((element, index) => {
     setTimeout(() => {
       pm.emit(ProcessingModule.EVENTS.NEW_INPUT, element.internalName);
