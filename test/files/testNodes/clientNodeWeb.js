@@ -35,7 +35,7 @@ class ClientNodeWeb {
             this.initializeTopicDataClient(this.serverSpecification);
             return resolve();
           })
-          .catch(error => {
+          .catch((error) => {
             console.error(error);
             return reject();
           });
@@ -48,7 +48,7 @@ class ClientNodeWeb {
       this.clientSpecification.id,
       this.serverHost,
       parseInt(serverSpecification.portTopicDataWs),
-      messageBuffer => {
+      (messageBuffer) => {
         try {
           // Decode the buffer.
           let message = this.translatorTopicData.createMessageFromBuffer(messageBuffer);
@@ -79,13 +79,13 @@ class ClientNodeWeb {
     };
 
     return this.callService(message).then(
-      reply => {
+      (reply) => {
         if (reply.server !== undefined && reply.server !== null) {
           // Process the reply client specification.
           this.serverSpecification = reply.server;
         }
       },
-      error => {
+      (error) => {
         console.error(error);
       }
     );
@@ -102,7 +102,7 @@ class ClientNodeWeb {
       }
     };
 
-    return this.callService(message).then(reply => {
+    return this.callService(message).then((reply) => {
       if (reply.client !== undefined && reply.client !== null) {
         this.clientSpecification = reply.client;
       }
@@ -125,7 +125,7 @@ class ClientNodeWeb {
     };
 
     return this.callService(message).then(
-      reply => {
+      (reply) => {
         if (reply.device !== undefined && reply.device !== null) {
           // Process the reply client specification.
           this.deviceSpecifications.set(reply.device.name, reply.device);
@@ -133,7 +133,7 @@ class ClientNodeWeb {
           return reply.device.id;
         }
       },
-      error => {
+      (error) => {
         console.error(error);
       }
     );
@@ -154,7 +154,7 @@ class ClientNodeWeb {
     };
 
     return this.callService(message).then(
-      reply => {
+      (reply) => {
         if (reply.success !== undefined && reply.success !== null) {
           let callbacks = this.topicDataCallbacks.get(topic);
           if (callbacks && callbacks.length > 0) {
@@ -166,7 +166,7 @@ class ClientNodeWeb {
           console.error('ClientNodeWeb - subscribe failed (' + topic + ')\n' + reply);
         }
       },
-      error => {
+      (error) => {
         console.error(error);
       }
     );
@@ -201,14 +201,13 @@ class ClientNodeWeb {
    */
   callService(message) {
     return new Promise((resolve, reject) => {
-      //TODO: just send JSON?
       // VARIANT A: PROTOBUF
       //let buffer = this.translatorServiceRequest.createBufferFromPayload(message);
       //console.info(buffer);
       //this.serviceClient.send('/services', {buffer: JSON.stringify(buffer)})
       // VARIANT B: JSON
       this.serviceClient.send('/services', message).then(
-        reply => {
+        (reply) => {
           // VARIANT A: PROTOBUF
           //let message = this.translatorServiceReply.createMessageFromBuffer(reply.buffer.data);
           // VARIANT B: JSON
@@ -216,7 +215,7 @@ class ClientNodeWeb {
 
           return resolve(message);
         },
-        error => {
+        (error) => {
           console.error(error);
           return reject();
         }
@@ -227,7 +226,7 @@ class ClientNodeWeb {
   _onTopicDataMessageReceived(message) {
     if (message.topicDataRecord && message.topicDataRecord.topic) {
       let callbacks = this.topicDataCallbacks.get(message.topicDataRecord.topic);
-      callbacks.forEach(cb => {
+      callbacks.forEach((cb) => {
         cb(message.topicDataRecord[message.topicDataRecord.type]);
       });
     }

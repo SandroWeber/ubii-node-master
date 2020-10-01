@@ -94,8 +94,6 @@ class ProcessingModuleManager {
 
       let isLockstep = processingModule.processingMode && processingModule.processingMode.lockstep;
 
-      //TODO: if PM is running in lockstep mode, set getter/setter accordingly
-
       // connect inputs
       mapping.inputMappings &&
         mapping.inputMappings.forEach((inputMapping) => {
@@ -121,20 +119,6 @@ class ProcessingModuleManager {
               let entry = topicDataBuffer.pull(topicSource);
               return entry && entry.data;
             });
-            /*// lockstep mode
-            if (processingModule.processingMode && processingModule.processingMode.lockstep) {
-              processingModule.setInputGetter(inputMapping.inputName, () => {
-                let entry = this.lockstepTopicData.pull(topicSource);
-                return entry && entry.data;
-              });
-            }
-            // all async modes (immediate cycles, frequency, input trigger) - directly pull from topicdata buffer
-            else {
-            processingModule.setInputGetter(inputMapping.inputName, () => {
-              let entry = this.topicData.pull(topicSource);
-              return entry && entry.data;
-            });
-            }*/
 
             // if PM is triggered on input, notify PM for new input
             //TODO: needs to be done for topic muxer too? does it make sense for accumulated topics to trigger processing?
@@ -166,28 +150,6 @@ class ProcessingModuleManager {
             processingModule.setInputGetter(inputMapping.inputName, () => {
               return multiplexer.get();
             });
-
-            /*// lockstep mode
-            if (processingModule.processingMode && processingModule.processingMode.lockstep) {
-              processingModule.setInputGetter(inputMapping.inputName, () => {
-                let record = this.lockstepInputTopicdata.records.filter(
-                  (record) => record.topic === topicSource
-                );
-                return record && record[record.type];
-              });
-            }
-            // all async modes (immediate cycles, frequency, input trigger) - directly pull from topicdata buffer
-            else {
-              let multiplexer = undefined;
-              if (topicSource.id) {
-                multiplexer = this.deviceManager.getTopicMux(topicSource.id);
-              } else {
-                multiplexer = this.deviceManager.createTopicMuxerBySpecs(topicSource);
-              }
-              processingModule.setInputGetter(inputMapping.inputName, () => {
-                return multiplexer.get();
-              });
-            }*/
           }
         });
       // connect outputs
@@ -269,20 +231,11 @@ class ProcessingModuleManager {
 
   sendLockstepProcessingRequest(clientId, request) {
     if (clientId === undefined || clientId === 'local') {
-      //console.info('PMManager - lockstep request for local PMs');
       // server side PM
       return new Promise((resolve, reject) => {
         // assign input
         request.records.forEach((record) => {
-          /*console.info(
-            'receveived lockstep input ' +
-              record.topic +
-              ': ' +
-              record[record.type] +
-              ' (' +
-              record.type +
-              ')'
-          );*/
+          //TODO: refactor without use of extra topicdata to avoid write/read cycles
           this.lockstepTopicData.publish(record.topic, record[record.type], record.type);
         });
         //this.lockstepInputTopicdata.records = request.records;
@@ -299,10 +252,7 @@ class ProcessingModuleManager {
         });
 
         Promise.all(lockstepPasses).then(() => {
-          //console.info('PMManager - lockstep request for local PMs all done');
-          // TODO: handle output
           let reply = this.produceLockstepProcessingReply(request);
-
           return resolve(reply);
         });
       });
@@ -310,7 +260,6 @@ class ProcessingModuleManager {
   }
 
   produceLockstepProcessingReply(lockstepProcessingRequest) {
-    //console.info('produceLockstepProcessingReply');
     let lockstepProcessingReply = {
       processingModuleIds: [],
       records: []
