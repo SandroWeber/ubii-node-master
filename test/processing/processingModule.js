@@ -6,6 +6,7 @@ const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 
 import { ProcessingModule } from '../../src/index';
 import Utils from '../../src/utilities';
+import TestUtility from '../testUtility';
 
 /* prepare tests */
 
@@ -323,7 +324,7 @@ test('processingMode Frequency', (t) => {
   pm.start();
 });
 
-test('processingMode TriggerOnInput', (t) => {
+test('processingMode TriggerOnInput', async (t) => {
   let pm = t.context.processingModule;
   let processingCB = sinon.fake((deltaT, inputs, outputs, state) => {
     t.true(deltaT !== undefined);
@@ -335,9 +336,15 @@ test('processingMode TriggerOnInput', (t) => {
     triggerOnInput: {}
   };
   pm.start();
-  pm.inputs.forEach((element) => {
-    pm.emit(ProcessingModule.EVENTS.NEW_INPUT, element.internalName);
+  let timeMsBetweenInputTriggers = 10;
+  // stagger input triggers
+  pm.inputs.forEach((element, index) => {
+    setTimeout(() => {
+      pm.emit(ProcessingModule.EVENTS.NEW_INPUT, element.internalName);
+    }, index * timeMsBetweenInputTriggers);
   });
+  // wait for all triggers to resolve
+  await TestUtility.wait((pm.inputs.length + 1) * timeMsBetweenInputTriggers);
   t.is(processingCB.callCount, pm.inputs.length);
   pm.stop();
 
@@ -348,6 +355,7 @@ test('processingMode TriggerOnInput', (t) => {
   pm.inputs.forEach((element) => {
     pm.emit(ProcessingModule.EVENTS.NEW_INPUT, element.internalName);
   });
+  await TestUtility.wait(timeMsBetweenInputTriggers);
   t.is(processingCB.callCount, 1);
   pm.stop();
 });
