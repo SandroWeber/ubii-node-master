@@ -101,7 +101,6 @@ class Session {
   }
 
   lockstepProcessingPass() {
-    //console.info('lockstepProcessingPass');
     // timing
     let tNow = Date.now();
     let deltaTime = tNow - this.tLastLockstepPass;
@@ -151,8 +150,6 @@ class Session {
         this.processingModuleManager
           .sendLockstepProcessingRequest(clientID, lockstepProcessingRequest)
           .then((lockstepProcessingReply) => {
-            //console.info('lockstepProcessingReply for ' + clientID + ':');
-            //console.info(lockstepProcessingReply);
             // sanity check making sure all PMs were included
             let allProcessingModulesReplied = lockstepProcessingRequest.processingModuleIds.every(
               (id) => lockstepProcessingReply.processingModuleIds.includes(id)
@@ -178,7 +175,6 @@ class Session {
     });
 
     Promise.all(processingPromises).then(() => {
-      //console.info('lockstepProcessingPass DONE');
       setImmediate(() => {
         this.lockstepProcessingPass();
       });

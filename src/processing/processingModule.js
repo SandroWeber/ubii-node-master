@@ -111,7 +111,7 @@ class ProcessingModule extends EventEmitter {
   }
 
   startProcessingByFrequency() {
-    //namida.log(this.toString(), 'start processing by frequency');
+    namida.log(this.toString(), 'start processing by frequency');
     let tLastProcess = Date.now();
     let msFrequency = 1000 / this.processingMode.frequency.hertz;
     let processIteration = () => {
