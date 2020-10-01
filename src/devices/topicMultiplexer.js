@@ -2,17 +2,18 @@ const uuidv4 = require('uuid/v4');
 
 const { TOPIC_EVENTS } = require('@tum-far/ubii-topic-data');
 
-
 /**
  * A class able to gather a list of topic data with unknown length, for example as input for an interaction.
- * 
+ *
  * Topics are selected based on a regular expression given by the string `topicSelector`.
- * Optionally `identityMatchPattern` can be provided as a regular expression string. When generating the topic data list, 
+ * Optionally `identityMatchPattern` can be provided as a regular expression string. When generating the topic data list,
  * it will match against each input topic and extract some identity string. The result will be added to the list entry as `identity`.
  */
 class TopicMultiplexer {
-  constructor({ id = undefined, name = '', dataType = '', topicSelector = '', identityMatchPattern = '' }, topicData = undefined) {
-
+  constructor(
+    { id = undefined, name = '', dataType = '', topicSelector = '', identityMatchPattern = '' },
+    topicData = undefined
+  ) {
     this.id = id ? id : uuidv4();
     this.name = name;
     this.dataType = dataType;
@@ -25,17 +26,19 @@ class TopicMultiplexer {
       this.identityMatchRegExp = new RegExp(this.identityMatchPattern);
     }
 
-    this.topicData.events.on(TOPIC_EVENTS.NEW_TOPIC, (topic) => { this.addTopic(topic); });
+    this.topicData.events.on(TOPIC_EVENTS.NEW_TOPIC, (topic) => {
+      this.addTopic(topic);
+    });
     this.topicList = [];
     this.updateTopicList();
   }
 
   /**
    * Get the list of topics + their respective data based on the regular expression defined for this multiplexer.
-   * 
+   *
    * If `identityMatchPattern` was specified, list entries will include the field identity.
-   * 
-   * @return {Array} List of {topic, data, [optional] identity} objects for all topic data that match the topic selector. 
+   *
+   * @return {Array} List of {topic, data, [optional] identity} objects for all topic data that match the topic selector.
    */
   get() {
     let topicDataRecords = [];
@@ -70,7 +73,7 @@ class TopicMultiplexer {
   }
 
   addTopic(topic) {
-    if (this.topicSelectorRegExp.test(topic)) {
+    if (!this.topicList.includes(topic) && this.topicSelectorRegExp.test(topic)) {
       this.topicList.push(topic);
     }
   }
@@ -87,5 +90,5 @@ class TopicMultiplexer {
 }
 
 module.exports = {
-  'TopicMultiplexer': TopicMultiplexer
-}
+  TopicMultiplexer: TopicMultiplexer
+};

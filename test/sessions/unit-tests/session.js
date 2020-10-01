@@ -7,7 +7,7 @@ import { Session } from '../../../src/index.js';
 
 import { MockIOMapping } from '../../mocks/mock-io-mapping.js';
 import { MockProcessingModuleManager } from '../../mocks/mock-processing-module-manager.js';
-import { MockProcessingModule } from '../../mocks/mock-processing-module.js';
+import MockProcessingModule from '../../mocks/mock-processing-module.js';
 import MockTopicData from '../../mocks/mock-topicdata.js';
 
 let runProcessing = (session, milliseconds) => {

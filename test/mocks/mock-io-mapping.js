@@ -1,5 +1,5 @@
 const uuidv4 = require('uuid/v4');
-const { MockProcessingModule } = require('./mock-processing-module');
+const MockProcessingModule = require('./mock-processing-module');
 
 class MockIOMapping {
   constructor() {

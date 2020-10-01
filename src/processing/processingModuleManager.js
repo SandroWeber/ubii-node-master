@@ -71,6 +71,17 @@ class ProcessingModuleManager {
     return this.processingModules.get(id);
   }
 
+  getModuleByName(name) {
+    let result = undefined;
+    this.processingModules.forEach((pm) => {
+      if (pm.name === name) {
+        result = pm;
+      }
+    });
+
+    return result;
+  }
+
   applyIOMappings(ioMappings) {
     if (this.topicData) {
       this.configureIODirectTopicdataAccess(ioMappings);
@@ -83,7 +94,9 @@ class ProcessingModuleManager {
     //TODO: refactor into something more readable
     ioMappings.forEach((mapping) => {
       this.ioMappings.set(mapping.processingModuleId, mapping);
-      let processingModule = this.processingModules.get(mapping.processingModuleId);
+      let processingModule =
+        this.getModuleByID(mapping.processingModuleId) ||
+        this.getModuleByName(mapping.processingModuleName);
       if (!processingModule) {
         namida.logFailure(
           'ProcessingModuleManager',
@@ -229,6 +242,8 @@ class ProcessingModuleManager {
 
   /* I/O <-> topic mapping functions end */
 
+  /* lockstep processing functions */
+
   sendLockstepProcessingRequest(clientId, request) {
     if (clientId === undefined || clientId === 'local') {
       // server side PM
@@ -289,6 +304,8 @@ class ProcessingModuleManager {
 
     return lockstepProcessingReply;
   }
+
+  /* lockstep processing functions end */
 }
 
 module.exports = ProcessingModuleManager;
