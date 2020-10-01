@@ -21,7 +21,7 @@ class TopicMuxRuntimeStartService extends Service {
         muxSpecs = specs;
       }
 
-      this.deviceManager.addTopicMux(muxSpecs);
+      this.deviceManager.createTopicMuxerBySpecs(muxSpecs);
 
       return {
         topicMux: muxSpecs

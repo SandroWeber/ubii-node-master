@@ -73,10 +73,9 @@ class Session {
           this.lockstepProcessingModules.set(clientID, []);
         }
         this.lockstepProcessingModules.get(clientID).push(pm);
-
-        // start
-        pm.start();
       }
+      // start
+      pm.start();
     });
     this.tLastLockstepPass = Date.now();
     this.lockstepProcessingPass();
@@ -102,7 +101,7 @@ class Session {
   }
 
   lockstepProcessingPass() {
-    console.info('lockstepProcessingPass');
+    //console.info('lockstepProcessingPass');
     // timing
     let tNow = Date.now();
     let deltaTime = tNow - this.tLastLockstepPass;
@@ -130,7 +129,6 @@ class Session {
               (element) => element.inputName === input.internalName
             );
             let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
-            console.info(topicSource);
             // single topic input
             if (typeof topicSource === 'string') {
               let topicdataEntry = this.topicData.pull(topicSource);
@@ -150,17 +148,40 @@ class Session {
 
       // send out request, save promise
       processingPromises.push(
-        this.processingModuleManager.sendLockstepProcessingRequest(
-          clientID,
-          lockstepProcessingRequest
-        )
+        this.processingModuleManager
+          .sendLockstepProcessingRequest(clientID, lockstepProcessingRequest)
+          .then((lockstepProcessingReply) => {
+            //console.info('lockstepProcessingReply for ' + clientID + ':');
+            //console.info(lockstepProcessingReply);
+            // sanity check making sure all PMs were included
+            let allProcessingModulesReplied = lockstepProcessingRequest.processingModuleIds.every(
+              (id) => lockstepProcessingReply.processingModuleIds.includes(id)
+            );
+            if (!allProcessingModulesReplied) {
+              let missingIDs = lockstepProcessingRequest.processingModuleIds.filter(
+                (id) => !lockstepProcessingReply.processingModuleIds.includes(id)
+              );
+              let message = 'not all ProcessingModules replied during lockstep pass, missing are:';
+              missingIDs.forEach((id) => {
+                let pm = this.processingModuleManager.getModuleByID(id);
+                message += '\n' + pm.toString();
+              });
+              namida.logFailure(this.toString(), message);
+            }
+
+            // publish received records to topicdata
+            lockstepProcessingReply.records.forEach((record) => {
+              this.topicData.publish(record.topic, record[record.type], record.type);
+            });
+          })
       );
-      console.info('lockstepProcessingRequest for ' + clientID);
-      console.info(lockstepProcessingRequest);
     });
 
     Promise.all(processingPromises).then(() => {
-      setImmediate(this.lockstepProcessingPass);
+      //console.info('lockstepProcessingPass DONE');
+      setImmediate(() => {
+        this.lockstepProcessingPass();
+      });
     });
   }
 

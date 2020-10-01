@@ -3,19 +3,14 @@ import sinon from 'sinon';
 
 import TestUtility from '../../testUtility';
 
-import { SessionManager, ProcessingModule, ProcessingModuleManager } from '../../../src/index';
+import { SessionManager, ProcessingModule } from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
-const { proto } = require('@tum-far/ubii-msg-formats');
-const SessionStatus = proto.ubii.sessions.SessionStatus;
 
 /* preparation */
 
 class TestProcessingModule extends ProcessingModule {
   constructor() {
     super();
-
-    this.onCreated = sinon.fake();
-    this.onProcessing = sinon.fake();
 
     this.inputs = [
       { internalName: 'inBool', messageFormat: 'bool' },
@@ -27,6 +22,17 @@ class TestProcessingModule extends ProcessingModule {
       { internalName: 'outInt', messageFormat: 'int32' },
       { internalName: 'outString', messageFormat: 'string' }
     ];
+
+    let produceOutput = () => {
+      this.outputs.forEach((output) => {
+        let data = getDataForModuleIO(output);
+
+        this[output.internalName] = data;
+      });
+    };
+
+    this.onCreated = sinon.fake();
+    this.onProcessing = sinon.fake(produceOutput);
   }
 }
 
@@ -86,18 +92,22 @@ let getTopicForModuleIO = (processingModule, moduleIO) => {
   return '/' + processingModule.id + '/' + moduleIO.internalName;
 };
 
+let getDataForModuleIO = (moduleIO) => {
+  if (moduleIO.messageFormat === 'bool') {
+    return true;
+  } else if (moduleIO.messageFormat === 'int32') {
+    return 42;
+  } else if (moduleIO.messageFormat === 'string') {
+    return 'placeholder';
+  }
+
+  return undefined;
+};
+
 let publishTopicForModuleIO = (topicdata, processingModule, moduleIO) => {
   let topic = getTopicForModuleIO(processingModule, moduleIO);
-  let data = undefined;
-  if (moduleIO.messageFormat === 'bool') {
-    data = true;
-  } else if (moduleIO.messageFormat === 'int32') {
-    data = 42;
-  } else if (moduleIO.messageFormat === 'string') {
-    data = 'placeholder';
-  }
+  let data = getDataForModuleIO(moduleIO);
   topicdata.publish(topic, data, moduleIO.messageFormat);
-  //console.info('published ' + data + ' on topic ' + topic);
 };
 
 /* test setup */
@@ -144,7 +154,7 @@ test.beforeEach((t) => {
       outputMappings.push({
         outputName: output.internalName,
         topic: getTopicForModuleIO(pm, output),
-        topicDestionation: 'topic'
+        topicDestination: 'topic'
       });
     });
 
@@ -191,7 +201,7 @@ test('run session containing PMs with different processing modes', async (t) => 
   publishTopicForModuleIO(topicData, pmToIMinDelayUpdateAll, pmToIMinDelayUpdateAll.inputs[1]);
   publishTopicForModuleIO(topicData, pmToIMinDelayUpdateAll, pmToIMinDelayUpdateAll.inputs[2]);
 
-  await TestUtility.wait(10);
+  await TestUtility.wait(100);
   t.is(pmToI.onProcessing.callCount, 1);
   t.is(pmToIMinDelayUpdateAll.onProcessing.callCount, 1);
 
@@ -222,6 +232,13 @@ test('run session containing PMs with different processing modes', async (t) => 
   t.true(pmImmediateCycles.onProcessing.callCount > 1);
   t.true(pmFrequency.onProcessing.callCount > 1);
 
-  //TODO: do lockstep in session.js and check here
   t.true(pmLockstep.onProcessing.callCount > 1);
+
+  // check all PMs output was published
+  t.context.processingModules.forEach((pm) => {
+    pm.outputs.forEach((output) => {
+      let topic = getTopicForModuleIO(pm, output);
+      t.true(t.context.topicData.pull(topic).data === getDataForModuleIO(output));
+    });
+  });
 });

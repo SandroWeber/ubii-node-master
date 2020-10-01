@@ -131,7 +131,6 @@ class ProcessingModule extends EventEmitter {
   }
 
   startProcessingByTriggerOnInput() {
-    //namida.log(this.toString(), 'start processing triggered on input');
     let allInputsNeedUpdate = this.processingMode.triggerOnInput.allInputsNeedUpdate;
     let minDelayMs = this.processingMode.triggerOnInput.minDelayMs;
 
@@ -164,7 +163,9 @@ class ProcessingModule extends EventEmitter {
       inputFlags.push(inputName);
       if (!checkProcessingNeeded) {
         checkProcessingNeeded = true;
-        setImmediate(checkProcessing);
+        setImmediate(() => {
+          checkProcessing();
+        });
       }
     });
   }
@@ -174,7 +175,6 @@ class ProcessingModule extends EventEmitter {
       return new Promise((resolve, reject) => {
         try {
           this.onProcessing(deltaTime, inputs, outputs, this.state);
-          console.info(this.toString() + ' - lockstep pass done');
           return resolve(outputs);
         } catch (error) {
           return reject(error);

@@ -21,7 +21,7 @@ class TopicDemuxRuntimeStartService extends Service {
         demuxSpecs = specs;
       }
 
-      this.deviceManager.addTopicDemux(demuxSpecs);
+      this.deviceManager.createTopicDemuxerBySpecs(demuxSpecs);
 
       return {
         topicDemux: demuxSpecs

@@ -1,20 +1,26 @@
+const namida = require('@tum-far/namida/src/namida');
+const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
+
 const Utils = require('../utilities');
 const { ProcessingModule } = require('./processingModule');
-const namida = require('@tum-far/namida/src/namida');
 
 class ProcessingModuleManager {
-  constructor(deviceManager, topicdataBuffer = undefined) {
+  constructor(deviceManager, topicData = undefined) {
     this.deviceManager = deviceManager;
-    this.topicdataBuffer = topicdataBuffer;
+    this.topicData = topicData;
 
     this.processingModules = new Map();
+    this.ioMappings = new Map();
     this.inputTriggerSubscriptions = new Map();
-    this.lockstepInputTopicdata = {
+
+    //TODO: optimize for use without real TopicData, avoiding write/read cycles for each lockstep request/reply
+    this.lockstepTopicData = new RuntimeTopicData();
+    /*this.lockstepInputTopicdata = {
       records: []
     };
     this.lockstepOutputTopicdata = {
       records: []
-    };
+    };*/
   }
 
   createModule(specs) {
@@ -49,7 +55,7 @@ class ProcessingModuleManager {
     if (this.inputTriggerSubscriptions.has(pm.id)) {
       let subscriptionTokens = this.inputTriggerSubscriptions.get(pm.id);
       subscriptionTokens.forEach((token) => {
-        this.topicdataBuffer.unsubscribe(token);
+        this.topicData.unsubscribe(token);
       });
       this.inputTriggerSubscriptions.delete(pm.id);
     }
@@ -66,7 +72,7 @@ class ProcessingModuleManager {
   }
 
   applyIOMappings(ioMappings) {
-    if (this.topicdataBuffer) {
+    if (this.topicData) {
       this.configureIODirectTopicdataAccess(ioMappings);
     }
   }
@@ -74,7 +80,9 @@ class ProcessingModuleManager {
   /* I/O <-> topic mapping functions */
 
   configureIODirectTopicdataAccess(ioMappings) {
+    //TODO: refactor into something more readable
     ioMappings.forEach((mapping) => {
+      this.ioMappings.set(mapping.processingModuleId, mapping);
       let processingModule = this.processingModules.get(mapping.processingModuleId);
       if (!processingModule) {
         namida.logFailure(
@@ -83,6 +91,8 @@ class ProcessingModuleManager {
         );
         return;
       }
+
+      let isLockstep = processingModule.processingMode && processingModule.processingMode.lockstep;
 
       //TODO: if PM is running in lockstep mode, set getter/setter accordingly
 
@@ -104,24 +114,33 @@ class ProcessingModuleManager {
           let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
           // single topic input
           if (typeof topicSource === 'string') {
-            // lockstep mode
+            // decide if we pull from lockstep data or asynchronously
+            let topicDataBuffer = isLockstep ? this.lockstepTopicData : this.topicData;
+            // set accessor accordingly
+            processingModule.setInputGetter(inputMapping.inputName, () => {
+              let entry = topicDataBuffer.pull(topicSource);
+              return entry && entry.data;
+            });
+            /*// lockstep mode
             if (processingModule.processingMode && processingModule.processingMode.lockstep) {
               processingModule.setInputGetter(inputMapping.inputName, () => {
-                let record = this.lockstepInputTopicdata.records.find(
-                  (record) => record.topic === topicSource
-                );
-                return record && record[record.type];
+                let entry = this.lockstepTopicData.pull(topicSource);
+                return entry && entry.data;
               });
             }
             // all async modes (immediate cycles, frequency, input trigger) - directly pull from topicdata buffer
+            else {
             processingModule.setInputGetter(inputMapping.inputName, () => {
-              let entry = this.topicdataBuffer.pull(topicSource);
+              let entry = this.topicData.pull(topicSource);
               return entry && entry.data;
             });
+            }*/
 
             // if PM is triggered on input, notify PM for new input
+            //TODO: needs to be done for topic muxer too? does it make sense for accumulated topics to trigger processing?
+            // use-case seems not to match but leaving opportunity open could be nice
             if (processingModule.processingMode && processingModule.processingMode.triggerOnInput) {
-              let subscriptionToken = this.topicdataBuffer.subscribe(topicSource, () => {
+              let subscriptionToken = this.topicData.subscribe(topicSource, () => {
                 processingModule.emit(ProcessingModule.EVENTS.NEW_INPUT, inputMapping.inputName);
               });
 
@@ -133,15 +152,42 @@ class ProcessingModuleManager {
           }
           // topic muxer input
           else if (typeof topicSource === 'object') {
+            // decide if we pull from lockstep data or asynchronously
             let multiplexer = undefined;
             if (topicSource.id) {
               multiplexer = this.deviceManager.getTopicMux(topicSource.id);
             } else {
-              multiplexer = this.deviceManager.addTopicMux(topicSource);
+              let topicDataBuffer = isLockstep ? this.lockstepTopicData : this.topicData;
+              multiplexer = this.deviceManager.createTopicMuxerBySpecs(
+                topicSource,
+                topicDataBuffer
+              );
             }
             processingModule.setInputGetter(inputMapping.inputName, () => {
               return multiplexer.get();
             });
+
+            /*// lockstep mode
+            if (processingModule.processingMode && processingModule.processingMode.lockstep) {
+              processingModule.setInputGetter(inputMapping.inputName, () => {
+                let record = this.lockstepInputTopicdata.records.filter(
+                  (record) => record.topic === topicSource
+                );
+                return record && record[record.type];
+              });
+            }
+            // all async modes (immediate cycles, frequency, input trigger) - directly pull from topicdata buffer
+            else {
+              let multiplexer = undefined;
+              if (topicSource.id) {
+                multiplexer = this.deviceManager.getTopicMux(topicSource.id);
+              } else {
+                multiplexer = this.deviceManager.createTopicMuxerBySpecs(topicSource);
+              }
+              processingModule.setInputGetter(inputMapping.inputName, () => {
+                return multiplexer.get();
+              });
+            }*/
           }
         });
       // connect outputs
@@ -165,8 +211,14 @@ class ProcessingModuleManager {
           if (typeof topicDestination === 'string') {
             let messageFormat = processingModule.getIOMessageFormat(outputMapping.outputName);
             let type = Utils.getTopicDataTypeFromMessageFormat(messageFormat);
-            // lockstep mode
-            if (processingModule.processingMode && processingModule.processingMode.lockstep) {
+
+            let topicDataBuffer = isLockstep ? this.lockstepTopicData : this.topicData;
+            processingModule.setOutputSetter(outputMapping.outputName, (value) => {
+              topicDataBuffer.publish(topicDestination, value, type);
+            });
+
+            /*// lockstep mode
+            if (isLockstep) {
               processingModule.setOutputSetter(inputMapping.inputName, (value) => {
                 let record = { topic: topicDestination };
                 record.type = type;
@@ -176,8 +228,8 @@ class ProcessingModuleManager {
             }
             // all async modes (immediate cycles, frequency, input trigger) - directly publish to topicdata buffer
             processingModule.setOutputSetter(outputMapping.outputName, (value) => {
-              this.topicdataBuffer.publish(topicDestination, value, type);
-            });
+              this.topicData.publish(topicDestination, value, type);
+            });*/
           }
           // topic demuxer output
           else if (typeof topicDestination === 'object') {
@@ -185,7 +237,11 @@ class ProcessingModuleManager {
             if (topicDestination.id) {
               demultiplexer = this.deviceManager.getTopicDemux(topicDestination.id);
             } else {
-              demultiplexer = this.deviceManager.addTopicDemux(topicDestination);
+              let topicDataBuffer = isLockstep ? this.lockstepTopicData : this.topicData;
+              demultiplexer = this.deviceManager.createTopicDemuxerBySpecs(
+                topicDestination,
+                topicDataBuffer
+              );
             }
             processingModule.setOutputSetter(outputMapping.outputName, (value) => {
               demultiplexer.push(value);
@@ -213,14 +269,26 @@ class ProcessingModuleManager {
 
   sendLockstepProcessingRequest(clientId, request) {
     if (clientId === undefined || clientId === 'local') {
-      console.info('PMManager - lockstep request for local PMs');
+      //console.info('PMManager - lockstep request for local PMs');
       // server side PM
       return new Promise((resolve, reject) => {
         // assign input
-        this.lockstepInputTopicdata.records = request.records;
+        request.records.forEach((record) => {
+          /*console.info(
+            'receveived lockstep input ' +
+              record.topic +
+              ': ' +
+              record[record.type] +
+              ' (' +
+              record.type +
+              ')'
+          );*/
+          this.lockstepTopicData.publish(record.topic, record[record.type], record.type);
+        });
+        //this.lockstepInputTopicdata.records = request.records;
         //TODO: need to map input names for lockstepInputTopicdata to records so it can be passed as second argument to onProcessingLockstepPass()
         // clear output
-        this.lockstepOutputTopicdata.records = [];
+        //this.lockstepOutputTopicdata.records = [];
 
         // lockstep pass calls to PMs
         let lockstepPasses = [];
@@ -231,12 +299,46 @@ class ProcessingModuleManager {
         });
 
         Promise.all(lockstepPasses).then(() => {
-          console.info('PMManager - lockstep request for local PMs all done');
+          //console.info('PMManager - lockstep request for local PMs all done');
           // TODO: handle output
-          return resolve();
+          let reply = this.produceLockstepProcessingReply(request);
+
+          return resolve(reply);
         });
       });
     }
+  }
+
+  produceLockstepProcessingReply(lockstepProcessingRequest) {
+    //console.info('produceLockstepProcessingReply');
+    let lockstepProcessingReply = {
+      processingModuleIds: [],
+      records: []
+    };
+    lockstepProcessingRequest.processingModuleIds.forEach((id) => {
+      lockstepProcessingReply.processingModuleIds.push(id);
+      this.processingModules.get(id).outputs.forEach((pmOutput) => {
+        let outputMapping = this.ioMappings
+          .get(id)
+          .outputMappings.find((mapping) => mapping.outputName === pmOutput.internalName);
+        let destination =
+          outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
+
+        // single topic
+        let topicdataEntry = this.lockstepTopicData.pull(destination);
+        if (topicdataEntry) {
+          let record = {
+            topic: destination,
+            type: topicdataEntry.type
+          };
+          record[record.type] = topicdataEntry.data;
+          lockstepProcessingReply.records.push(record);
+        }
+        //TODO: handle demuxer output
+      });
+    });
+
+    return lockstepProcessingReply;
   }
 }
 
