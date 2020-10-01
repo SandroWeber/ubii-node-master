@@ -74,11 +74,6 @@ class WebsocketServer {
     const {
       query: { clientID }
     } = url.parse(request.url, true);
-    //console.log('[' + new Date() + '] websocket connection accepted from ID ' + clientID);
-
-    //TODO: get proper client ID specification
-    //let clientID = request.headers['sec-websocket-key'];
-    //let clientID = this.clients.size;
     this.clients.set(clientID, websocket);
 
     websocket.on('message', (message) => {
