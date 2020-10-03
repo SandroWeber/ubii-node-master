@@ -87,8 +87,6 @@ class ProcessingModule extends EventEmitter {
   /* execution control */
 
   start() {
-    this.status = ProcessingModuleProto.Status.PROCESSING;
-
     if (this.processingMode && this.processingMode.frequency) {
       this.startProcessingByFrequency();
     } else if (this.processingMode && this.processingMode.triggerOnInput) {
@@ -96,22 +94,32 @@ class ProcessingModule extends EventEmitter {
     } else if (this.processingMode && this.processingMode.lockstep) {
       this.startProcessingByLockstep();
     } else if (this.processingMode === undefined) {
-      this.startProcessingByCycles();
+      namida.logFailure(this.toString(), 'no processing mode specified, can not start processing');
+    }
+
+    if (this.status === ProcessingModuleProto.Status.PROCESSING) {
+      namida.logSuccess(this.toString(), 'started');
     }
   }
 
   stop() {
-    this.status = ProcessingModuleProto.Status.HALTED;
+    if (this.status === ProcessingModuleProto.Status.HALTED) {
+      return;
+    }
+
     this.onHalted && this.onHalted();
+    this.status = ProcessingModuleProto.Status.HALTED;
 
     this.removeAllListeners(ProcessingModule.EVENTS.NEW_INPUT);
     this.onProcessingLockstepPass = () => {
       return undefined;
     };
+    namida.logSuccess(this.toString(), 'stopped');
   }
 
   startProcessingByFrequency() {
-    namida.log(this.toString(), 'start processing by frequency');
+    this.status = ProcessingModuleProto.Status.PROCESSING;
+
     let tLastProcess = Date.now();
     let msFrequency = 1000 / this.processingMode.frequency.hertz;
     let processIteration = () => {
@@ -131,6 +139,8 @@ class ProcessingModule extends EventEmitter {
   }
 
   startProcessingByTriggerOnInput() {
+    this.status = ProcessingModuleProto.Status.PROCESSING;
+
     let allInputsNeedUpdate = this.processingMode.triggerOnInput.allInputsNeedUpdate;
     let minDelayMs = this.processingMode.triggerOnInput.minDelayMs;
 
@@ -171,6 +181,8 @@ class ProcessingModule extends EventEmitter {
   }
 
   startProcessingByLockstep() {
+    this.status = ProcessingModuleProto.Status.PROCESSING;
+
     this.onProcessingLockstepPass = (deltaTime, inputs = this.ioProxy, outputs = this.ioProxy) => {
       return new Promise((resolve, reject) => {
         try {
@@ -183,8 +195,12 @@ class ProcessingModule extends EventEmitter {
     };
   }
 
+  /**
+   * LEGACY PROCESSING MODE - should not be used as it quickly hogs all ressources
+   */
   startProcessingByCycles() {
-    //namida.log(this.toString(), 'start processing by cycles with minimal delay');
+    this.status = ProcessingModuleProto.Status.PROCESSING;
+
     let tLastProcess = Date.now();
     let processIteration = () => {
       // timing
@@ -200,10 +216,6 @@ class ProcessingModule extends EventEmitter {
       }
     };
     processIteration();
-  }
-
-  onProcessingLockstepPass() {
-    return undefined;
   }
 
   /* execution control end */
@@ -246,6 +258,10 @@ class ProcessingModule extends EventEmitter {
       state;
     namida.error(this.toString(), errorMsg);
     throw new Error(this.toString() + ' - onProcessing() callback is not specified');
+  }
+
+  onProcessingLockstepPass() {
+    return undefined;
   }
 
   onHalted() {}

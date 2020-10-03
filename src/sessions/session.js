@@ -2,6 +2,7 @@ const uuidv4 = require('uuid/v4');
 
 const { proto } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
+const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 
 const namida = require('@tum-far/namida');
 
@@ -48,11 +49,12 @@ class Session {
     // setup for processing modules
     if (this.processingModules && this.processingModules.length > 0) {
       for (let pmSpecs of this.processingModules) {
-        let pm = this.processingModuleManager.getModuleByID(pmSpecs.id);
+        let pm = this.processingModuleManager.getModuleBySpecs(pmSpecs, this.id);
         if (!pm) {
           pm = this.processingModuleManager.createModule(pmSpecs);
         }
         if (pm) {
+          pm.sessionId = this.id;
           this.runtimeProcessingModules.push(pm);
         } else {
           namida.logFailure(
@@ -63,7 +65,7 @@ class Session {
       }
     }
 
-    this.processingModuleManager.applyIOMappings(this.ioMappings);
+    this.processingModuleManager.applyIOMappings(this.ioMappings, this.id);
 
     this.runtimeProcessingModules.forEach((pm) => {
       // processing mode = lockstep ?
@@ -92,6 +94,7 @@ class Session {
 
     for (let processingModule of this.runtimeProcessingModules) {
       processingModule.stop();
+      this.processingModuleManager.removeModule(processingModule);
     }
 
     this.runtimeProcessingModules = [];

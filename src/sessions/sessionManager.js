@@ -145,7 +145,7 @@ class SessionManager extends EventEmitter {
       this.emit(EVENTS_SESSION_MANAGER.STOP_SESSION, session.toProtobuf());
       namida.logSuccess('SessionManager', 'succesfully stopped ' + session.toString());
     } else {
-      namida.logFailure('SessionManager', 'failed to stop session ID ' + session.id);
+      namida.logFailure('SessionManager', 'failed to stop ' + session.toString());
     }
 
     return success;

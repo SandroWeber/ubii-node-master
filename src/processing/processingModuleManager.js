@@ -1,6 +1,9 @@
 const namida = require('@tum-far/namida/src/namida');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 
+const { proto } = require('@tum-far/ubii-msg-formats');
+const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
+
 const Utils = require('../utilities');
 const { ProcessingModule } = require('./processingModule');
 
@@ -67,40 +70,66 @@ class ProcessingModuleManager {
     return this.processingModules.has(id);
   }
 
+  getModuleBySpecs(pmSpecs, sessionID) {
+    return this.getModuleByID(pmSpecs.id) || this.getModuleByName(pmSpecs.name, sessionID);
+  }
+
   getModuleByID(id) {
     return this.processingModules.get(id);
   }
 
-  getModuleByName(name) {
-    let result = undefined;
+  getModuleByName(name, sessionID) {
+    let candidates = [];
     this.processingModules.forEach((pm) => {
       if (pm.name === name) {
-        result = pm;
+        candidates.push(pm);
       }
     });
 
-    return result;
+    if (sessionID) {
+      candidates = candidates.filter((element) => element.sessionId === sessionID);
+    }
+
+    if (candidates.length > 1) {
+      namida.logFailure(
+        'ProcessingModuleManager',
+        'trying to get PM by name (' + name + ') resulted in multiple candidates'
+      );
+    } else {
+      return candidates[0];
+    }
   }
 
-  applyIOMappings(ioMappings) {
-    if (this.topicData) {
-      this.configureIODirectTopicdataAccess(ioMappings);
-    }
+  getModulesProcessing() {
+    return this.getModulesByStatus(ProcessingModuleProto.Status.PROCESSING);
+  }
+
+  getModulesByStatus(status) {
+    return Array.from(this.processingModules)
+      .map((keyValue) => {
+        return keyValue[1];
+      })
+      .filter((pm) => pm.status === status);
   }
 
   /* I/O <-> topic mapping functions */
 
-  configureIODirectTopicdataAccess(ioMappings) {
+  applyIOMappings(ioMappings, sessionID) {
     //TODO: refactor into something more readable
     ioMappings.forEach((mapping) => {
       this.ioMappings.set(mapping.processingModuleId, mapping);
       let processingModule =
         this.getModuleByID(mapping.processingModuleId) ||
-        this.getModuleByName(mapping.processingModuleName);
+        this.getModuleByName(mapping.processingModuleName, sessionID);
       if (!processingModule) {
         namida.logFailure(
           'ProcessingModuleManager',
-          "can't find processing module with ID " + mapping.processingModuleId
+          "can't find processing module for I/O mapping, given: ID = " +
+            mapping.processingModuleId +
+            ', name = ' +
+            mapping.processingModuleName +
+            ', session ID = ' +
+            sessionID
         );
         return;
       }
