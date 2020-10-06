@@ -6,6 +6,7 @@ const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 
 import { ProcessingModule } from '../../src/index';
 import Utils from '../../src/utilities';
+import TestUtility from '../testUtility';
 
 /* prepare tests */
 
@@ -87,28 +88,36 @@ test('lifecycle functions should always be defined', (t) => {
   t.true(typeof t.context.processingModule.onDestroyed === 'function');
 });
 
-test('setOnCreated()', (t) => {
-  let cb = () => {};
+test('setOnCreated() / onCreated()', (t) => {
+  let cb = sinon.fake();
   t.context.processingModule.setOnCreated(cb);
   t.is(t.context.processingModule.onCreated, cb);
+  t.context.processingModule.onCreated();
+  t.is(cb.callCount, 1);
 });
 
-test('setOnProcessing()', (t) => {
-  let cb = () => {};
+test('setOnProcessing() / onProcessing()', (t) => {
+  let cb = sinon.fake();
   t.context.processingModule.setOnProcessing(cb);
   t.is(t.context.processingModule.onProcessing, cb);
+  t.context.processingModule.onProcessing();
+  t.is(cb.callCount, 1);
 });
 
-test('setOnHalted()', (t) => {
-  let cb = () => {};
+test('setOnHalted() / onHalted()', (t) => {
+  let cb = sinon.fake();
   t.context.processingModule.setOnHalted(cb);
   t.is(t.context.processingModule.onHalted, cb);
+  t.context.processingModule.onHalted();
+  t.is(cb.callCount, 1);
 });
 
-test('setOnDestroyed()', (t) => {
-  let cb = () => {};
+test('setOnDestroyed() / onDestroyed()', (t) => {
+  let cb = sinon.fake();
   t.context.processingModule.setOnDestroyed(cb);
   t.is(t.context.processingModule.onDestroyed, cb);
+  t.context.processingModule.onDestroyed();
+  t.is(cb.callCount, 1);
 });
 
 test('onProcessing(), should throw an error when not set/overwritten', (t) => {
@@ -130,7 +139,7 @@ test('onProcessing(), should work normally when properly set', (t) => {
 });
 
 test('setInputGetter()', (t) => {
-  let module = t.context.processingModule;
+  let pm = t.context.processingModule;
   let inputString = 'some string',
     inputBool = true,
     inputInt = 42,
@@ -145,47 +154,47 @@ test('setInputGetter()', (t) => {
 
   // try to use internal name that conflicts with another property
   let takenPropertyName = 'id';
-  t.false(module.setInputGetter(takenPropertyName, inputFunctionObject));
-  t.is(module.ioProxy[takenPropertyName], undefined);
+  t.false(pm.setInputGetter(takenPropertyName, inputFunctionObject));
+  t.is(pm.ioProxy[takenPropertyName], undefined);
   // try to set empty internal name
-  t.false(module.setInputGetter('', inputFunctionObject));
-  t.is(module.ioProxy.myInput, undefined);
-  t.is(module.myInput, undefined);
+  t.false(pm.setInputGetter('', inputFunctionObject));
+  t.is(pm.ioProxy.myInput, undefined);
+  t.is(pm.myInput, undefined);
   // try to set undefined getter
-  t.false(module.setInputGetter(internalName, undefined));
-  t.is(module.ioProxy.myInput, undefined);
-  t.is(module.myInput, undefined);
+  t.false(pm.setInputGetter(internalName, undefined));
+  t.is(pm.ioProxy.myInput, undefined);
+  t.is(pm.myInput, undefined);
   // try to set getter to things other than a function
-  t.false(module.setInputGetter(internalName, inputString));
-  t.is(module.ioProxy.myInput, undefined);
-  t.is(module.myInput, undefined);
-  t.false(module.setInputGetter(internalName, inputBool));
-  t.is(module.ioProxy.myInput, undefined);
-  t.is(module.myInput, undefined);
-  t.false(module.setInputGetter(internalName, inputInt));
-  t.is(module.ioProxy.myInput, undefined);
-  t.is(module.myInput, undefined);
-  t.false(module.setInputGetter(internalName, inputObject));
-  t.is(module.ioProxy.myInput, undefined);
-  t.is(module.myInput, undefined);
+  t.false(pm.setInputGetter(internalName, inputString));
+  t.is(pm.ioProxy.myInput, undefined);
+  t.is(pm.myInput, undefined);
+  t.false(pm.setInputGetter(internalName, inputBool));
+  t.is(pm.ioProxy.myInput, undefined);
+  t.is(pm.myInput, undefined);
+  t.false(pm.setInputGetter(internalName, inputInt));
+  t.is(pm.ioProxy.myInput, undefined);
+  t.is(pm.myInput, undefined);
+  t.false(pm.setInputGetter(internalName, inputObject));
+  t.is(pm.ioProxy.myInput, undefined);
+  t.is(pm.myInput, undefined);
   // proper call with function
-  t.true(module.setInputGetter(internalName, inputFunctionObject));
-  t.deepEqual(module.ioProxy.myInput, inputObject);
+  t.true(pm.setInputGetter(internalName, inputFunctionObject));
+  t.deepEqual(pm.ioProxy.myInput, inputObject);
   // check that shortcut result is the same
-  t.deepEqual(module.myInput, inputObject);
-  t.is(module.myInput, module.ioProxy.myInput);
+  t.deepEqual(pm.myInput, inputObject);
+  t.is(pm.myInput, pm.ioProxy.myInput);
 
   // try to set same input again without overwrite
-  t.false(module.setInputGetter(internalName, inputFunctionString));
-  t.deepEqual(module.ioProxy.myInput, inputObject);
+  t.false(pm.setInputGetter(internalName, inputFunctionString));
+  t.deepEqual(pm.ioProxy.myInput, inputObject);
   // this time with overwrite
-  t.true(module.setInputGetter(internalName, inputFunctionString, true));
-  t.is(module.ioProxy.myInput, inputString);
-  t.is(module.myInput, inputString);
+  t.true(pm.setInputGetter(internalName, inputFunctionString, true));
+  t.is(pm.ioProxy.myInput, inputString);
+  t.is(pm.myInput, inputString);
 });
 
 test('setOutputSetter()', (t) => {
-  let module = t.context.processingModule;
+  let pm = t.context.processingModule;
   let outputVerifier = 1;
   let outputString = 'some string',
     outputBool = true,
@@ -196,106 +205,205 @@ test('setOutputSetter()', (t) => {
   let internalName = 'myOutput';
 
   // try to set empty internal name
-  t.false(module.setOutputSetter('', outputVerifier));
-  t.is(module[internalName], undefined);
+  t.false(pm.setOutputSetter('', outputVerifier));
+  t.is(pm[internalName], undefined);
   // try to set undefined setter
-  t.false(module.setOutputSetter(internalName, undefined));
-  t.is(module[internalName], undefined);
+  t.false(pm.setOutputSetter(internalName, undefined));
+  t.is(pm[internalName], undefined);
   // try to use internal name that conflicts with another property
-  t.false(module.setOutputSetter('id', outputFunction));
-  t.is(module[internalName], undefined);
+  t.false(pm.setOutputSetter('id', outputFunction));
+  t.is(pm[internalName], undefined);
   // try to set setter to things other than a function
-  t.false(module.setOutputSetter(internalName, outputVerifier));
-  module[internalName] = outputString;
+  t.false(pm.setOutputSetter(internalName, outputVerifier));
+  pm[internalName] = outputString;
   t.is(outputVerifier, 1);
   // proper call with function
-  delete module[internalName];
-  t.true(module.setOutputSetter(internalName, outputFunction));
-  module.ioProxy[internalName] = outputObject;
+  delete pm[internalName];
+  t.true(pm.setOutputSetter(internalName, outputFunction));
+  pm.ioProxy[internalName] = outputObject;
   t.deepEqual(outputVerifier, outputObject);
   // check that shortcut result is the same
-  module[internalName] = outputBool;
+  pm[internalName] = outputBool;
   t.is(outputVerifier, outputBool);
   // try to set same input again without overwrite
-  t.false(module.setOutputSetter(internalName, outputFunction));
+  t.false(pm.setOutputSetter(internalName, outputFunction));
 });
 
 test('removeIOAccessor()', (t) => {
-  let module = t.context.processingModule;
+  let pm = t.context.processingModule;
   // check for input getter
   let inputFunction = sinon.fake.returns(true);
-  t.true(module.setInputGetter('myInput', inputFunction));
-  t.true(module.myInput !== undefined);
+  t.true(pm.setInputGetter('myInput', inputFunction));
+  t.true(pm.myInput !== undefined);
   t.is(inputFunction.callCount, 1);
-  module.removeIOAccessor('myInput');
-  t.is(module.ioProxy.myInput, undefined);
-  t.is(module.myInput, undefined);
+  pm.removeIOAccessor('myInput');
+  t.is(pm.ioProxy.myInput, undefined);
+  t.is(pm.myInput, undefined);
   t.is(inputFunction.callCount, 1);
   // check for output setter
   let outputFunction = sinon.fake();
-  module.setOutputSetter('myOutput', outputFunction);
-  module.myOutput = true;
+  pm.setOutputSetter('myOutput', outputFunction);
+  pm.myOutput = true;
   t.is(outputFunction.callCount, 1);
-  module.removeIOAccessor('myOutput');
-  t.is(module.ioProxy.myOutput, undefined);
-  t.is(module.myOutput, undefined);
-  module.myOutput = true;
+  pm.removeIOAccessor('myOutput');
+  t.is(pm.ioProxy.myOutput, undefined);
+  t.is(pm.myOutput, undefined);
+  pm.myOutput = true;
   t.is(outputFunction.callCount, 1);
 });
 
 test('removeAllIOAccessors()', (t) => {
-  let module = t.context.processingModule;
+  let pm = t.context.processingModule;
   // set getter/setter
   let inputFunction = sinon.fake(() => {});
-  t.true(module.setInputGetter('myInput', inputFunction));
+  t.true(pm.setInputGetter('myInput', inputFunction));
   let outputFunction = sinon.fake();
-  t.true(module.setOutputSetter('myOutput', outputFunction));
-  module.removeAllIOAccessors();
+  t.true(pm.setOutputSetter('myOutput', outputFunction));
+  pm.removeAllIOAccessors();
   // call getter/setter
-  t.is(module.myInput, undefined);
-  module.myOutput = true;
+  t.is(pm.myInput, undefined);
+  pm.myOutput = true;
   // callbacks should not have been called
   t.false(inputFunction.calledOnce);
   t.false(outputFunction.calledOnce);
 });
 
 test('readInput()', (t) => {
-  let module = t.context.processingModule;
+  let pm = t.context.processingModule;
   let inputFunction = sinon.fake.returns(42);
-  t.true(module.setInputGetter('myInput', inputFunction));
-  t.is(module.readInput('myInput'), 42);
+  t.true(pm.setInputGetter('myInput', inputFunction));
+  t.is(pm.readInput('myInput'), 42);
   t.true(inputFunction.calledOnce);
 });
 
 test('writeOutput()', (t) => {
-  let module = t.context.processingModule;
+  let pm = t.context.processingModule;
   let verifier = undefined;
   let outputFunction = sinon.fake((value) => {
     verifier = value;
   });
-  t.true(module.setOutputSetter('myOutput', outputFunction));
-  module.writeOutput('myOutput', 42);
+  t.true(pm.setOutputSetter('myOutput', outputFunction));
+  pm.writeOutput('myOutput', 42);
   t.is(verifier, 42);
   t.true(outputFunction.calledOnce);
 });
 
 test('getIOMessageFormat()', (t) => {
-  let module = t.context.processingModule;
-  t.is(module.getIOMessageFormat('inString'), 'string');
-  t.is(module.getIOMessageFormat('outBool'), 'bool');
+  let pm = t.context.processingModule;
+  t.is(pm.getIOMessageFormat('inString'), 'string');
+  t.is(pm.getIOMessageFormat('outBool'), 'bool');
 });
 
 test('checkInternalName()', (t) => {
-  let module = t.context.processingModule;
+  let pm = t.context.processingModule;
   // class porperties should not be valid, even if not used as I/O names yet
-  t.false(module.checkInternalName('id'));
+  t.false(pm.checkInternalName('id'));
   // empty internal name should not be valid
-  t.false(module.checkInternalName(''));
+  t.false(pm.checkInternalName(''));
   // a viable name
-  t.true(module.checkInternalName('myInternalVariable'));
+  t.true(pm.checkInternalName('myInternalVariable'));
   // something that is already taken
-  module.ioProxy.myInternalVariable = true;
-  t.false(module.checkInternalName('myInternalVariable'));
+  pm.ioProxy.myInternalVariable = true;
+  t.false(pm.checkInternalName('myInternalVariable'));
   // something that is already taken but with overwrite
-  t.true(module.checkInternalName('myInternalVariable', true));
+  t.true(pm.checkInternalName('myInternalVariable', true));
+});
+
+test('processingMode Frequency', (t) => {
+  let pm = new ProcessingModule({
+    processingMode: {
+      frequency: {
+        hertz: 30
+      }
+    }
+  });
+  let processingCB = sinon.fake((deltaT, inputs, outputs, state) => {
+    t.true(deltaT !== undefined);
+  });
+  pm.setOnProcessing(processingCB);
+  pm.start();
+});
+
+test('processingMode TriggerOnInput', async (t) => {
+  let pm = t.context.processingModule;
+  let processingCB = sinon.fake((deltaT, inputs, outputs, state) => {
+    t.true(deltaT !== undefined);
+  });
+  pm.setOnProcessing(processingCB);
+
+  // trigger on every new input event
+  pm.processingMode = {
+    triggerOnInput: {}
+  };
+  pm.start();
+  let timeMsBetweenInputTriggers = 10;
+
+  // do not stagger input triggers, multiple triggers occuring simultaneously / in immediate sequence should not result in multiple processings
+  pm.inputs.forEach((element) => {
+    pm.emit(ProcessingModule.EVENTS.NEW_INPUT, element.internalName);
+  });
+  await TestUtility.wait(timeMsBetweenInputTriggers);
+  t.is(processingCB.callCount, 1);
+
+  // stagger input triggers
+  processingCB.resetHistory();
+  pm.inputs.forEach((element, index) => {
+    setTimeout(() => {
+      pm.emit(ProcessingModule.EVENTS.NEW_INPUT, element.internalName);
+    }, index * timeMsBetweenInputTriggers);
+  });
+  // wait for all triggers to resolve with some buffer for onProcessing calls to go through
+  await TestUtility.wait(2 * pm.inputs.length * timeMsBetweenInputTriggers);
+  t.is(processingCB.callCount, pm.inputs.length);
+  pm.stop();
+
+  // trigger only when all inputs are refreshed
+  processingCB.resetHistory();
+  pm.processingMode.triggerOnInput.allInputsNeedUpdate = true;
+  pm.start();
+  pm.inputs.forEach((element) => {
+    pm.emit(ProcessingModule.EVENTS.NEW_INPUT, element.internalName);
+  });
+  await TestUtility.wait(timeMsBetweenInputTriggers);
+  t.is(processingCB.callCount, 1);
+  pm.stop();
+});
+
+test('processingMode Lockstep', async (t) => {
+  let pm = new ProcessingModule({
+    processingMode: {
+      lockstep: {}
+    }
+  });
+  t.is(pm.onProcessingLockstepPass(), undefined);
+
+  let lockstepDeltaTime = 10;
+  let lockstepInputs = {},
+    lockstepOutputs = {};
+  let outputBool = true,
+    outputInt = 42,
+    outputString = 'string',
+    outputObject = {};
+  let processingCB = sinon.fake((deltaT, inputs, outputs, state) => {
+    t.true(deltaT === lockstepDeltaTime);
+    t.true(inputs === lockstepInputs);
+    t.true(outputs === lockstepOutputs);
+    t.true(state === pm.state);
+
+    outputs.bool = outputBool;
+    outputs.int = outputInt;
+    outputs.string = outputString;
+    outputs.object = outputObject;
+  });
+  pm.setOnProcessing(processingCB);
+  pm.start();
+  await pm.onProcessingLockstepPass(lockstepDeltaTime, lockstepInputs, lockstepOutputs);
+
+  t.is(lockstepOutputs.bool, outputBool);
+  t.is(lockstepOutputs.int, outputInt);
+  t.is(lockstepOutputs.string, outputString);
+  t.is(lockstepOutputs.object, outputObject);
+
+  pm.stop();
+  t.is(pm.onProcessingLockstepPass(), undefined);
 });

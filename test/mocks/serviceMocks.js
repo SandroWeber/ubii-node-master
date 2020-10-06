@@ -1,3 +1,5 @@
+//TODO: refactor into properly named files
+
 class ClientManagerMock {
   constructor(verifyEverything) {
     this.verifyEverything = verifyEverything;

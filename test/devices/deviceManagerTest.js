@@ -2,11 +2,8 @@ import test from 'ava';
 import { DeviceManager } from '../../src/index.js';
 import { Participant } from '../../src/index.js';
 import { Watcher } from '../../src/index.js';
-import {
-  ServerMock,
-  TopicDataMock,
-  createDeviceSpecificationMock
-} from '../mocks/serverMockDevices';
+import { ServerMock } from '../mocks/serverMock';
+import { TopicDataMock, createDeviceSpecificationMock } from '../mocks/serverMockDevices';
 import { ClientMock } from '../mocks/clientMock';
 import { ClientManagerMock } from '../mocks/clientManagerMock';
 

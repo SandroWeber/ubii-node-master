@@ -1,11 +1,9 @@
 const uuidv4 = require('uuid/v4');
 
 const { proto } = require('@tum-far/ubii-msg-formats');
-const ProcessMode = proto.ubii.sessions.ProcessMode;
 const SessionStatus = proto.ubii.sessions.SessionStatus;
-const InteractionStatus = proto.ubii.interactions.InteractionStatus;
+const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 
-const { Interaction } = require('./interaction');
 const namida = require('@tum-far/namida');
 
 class Session {
@@ -16,10 +14,8 @@ class Session {
       tags = [],
       description = '',
       authors = [],
-      interactions = [],
       processingModules = [],
-      ioMappings = [],
-      processMode = ProcessMode.CYCLE_INTERACTIONS
+      ioMappings = []
     },
     topicData,
     deviceManager,
@@ -31,9 +27,6 @@ class Session {
     this.description = description;
     this.authors = authors;
     this.status = SessionStatus.CREATED;
-    this.processMode = processMode;
-    this.isProcessing = false;
-    this.interactions = interactions;
     this.processingModules = processingModules;
     this.ioMappings = ioMappings;
 
@@ -41,32 +34,28 @@ class Session {
     this.deviceManager = deviceManager;
     this.processingModuleManager = processingModuleManager;
 
-    this.runtimeInteractions = [];
     this.runtimeProcessingModules = [];
+    this.lockstepProcessingModules = new Map();
   }
 
   start() {
-    if (this.isProcessing) {
+    if (this.status === SessionStatus.RUNNING) {
       namida.logFailure('Session ' + this.id, "can't be started again, already processing");
       return false;
     }
 
-    for (let interactionSpecs of this.interactions) {
-      this.addInteraction(interactionSpecs);
-    }
-    if (this.runtimeInteractions.length > 0) {
-      this.applyIOMappings();
-    }
-
     this.status = SessionStatus.RUNNING;
-    this.isProcessing = true;
 
     // setup for processing modules
-    if (this.processingModules.length > 0) {
+    if (this.processingModules && this.processingModules.length > 0) {
       for (let pmSpecs of this.processingModules) {
-        let module = this.processingModuleManager.createModule(pmSpecs);
-        if (module) {
-          this.runtimeProcessingModules.push(module);
+        let pm = this.processingModuleManager.getModuleBySpecs(pmSpecs, this.id);
+        if (!pm) {
+          pm = this.processingModuleManager.createModule(pmSpecs);
+        }
+        if (pm) {
+          pm.sessionId = this.id;
+          this.runtimeProcessingModules.push(pm);
         } else {
           namida.logFailure(
             this.toString(),
@@ -74,30 +63,24 @@ class Session {
           );
         }
       }
-      this.processingModuleManager.applyIOMappings(this.ioMappings);
-
-      this.runtimeProcessingModules.forEach((pm) => {
-        pm.start();
-      });
     }
 
-    if (this.runtimeInteractions.length > 0) {
-      if (this.processMode === ProcessMode.CYCLE_INTERACTIONS) {
-        this.processInteractionsCycle().then(
-          () => {},
-          (rejected) => {
-            namida.logFailure(
-              this.toString(),
-              'interaction cyclic processing rejection:\n' + rejected
-            );
-          }
-        );
-      } else if (this.processMode === ProcessMode.INDIVIDUAL_PROCESS_FREQUENCIES) {
-        this.runtimeInteractions.forEach((interaction) => {
-          interaction.run();
-        });
+    this.processingModuleManager.applyIOMappings(this.ioMappings, this.id);
+
+    this.runtimeProcessingModules.forEach((pm) => {
+      // processing mode = lockstep ?
+      if (pm.processingMode && pm.processingMode.lockstep) {
+        let clientID = pm.clientId || 'local';
+        if (!this.lockstepProcessingModules.has(clientID)) {
+          this.lockstepProcessingModules.set(clientID, []);
+        }
+        this.lockstepProcessingModules.get(clientID).push(pm);
       }
-    }
+      // start
+      pm.start();
+    });
+    this.tLastLockstepPass = Date.now();
+    this.lockstepProcessingPass();
 
     return true;
   }
@@ -107,160 +90,129 @@ class Session {
       return false;
     }
 
-    this.isProcessing = false;
     this.status = SessionStatus.STOPPED;
-
-    for (let interaction of this.runtimeInteractions) {
-      interaction.status = InteractionStatus.HALTED;
-    }
 
     for (let processingModule of this.runtimeProcessingModules) {
       processingModule.stop();
+      this.processingModuleManager.removeModule(processingModule);
     }
+
+    this.runtimeProcessingModules = [];
+    this.lockstepProcessingModules = new Map();
 
     return true;
   }
 
-  processInteractionsCycle() {
-    let processingCycleCallback = (i) => {
-      if (!this.isProcessing) {
-        for (let interaction of this.runtimeInteractions) {
-          if (interaction.status === InteractionStatus.PROCESSING) {
-            interaction.status = InteractionStatus.HALTED;
-          }
+  lockstepProcessingPass() {
+    // timing
+    let tNow = Date.now();
+    let deltaTime = tNow - this.tLastLockstepPass;
+    this.tLastLockstepPass = tNow;
+
+    // gather inputs
+    let processingPromises = [];
+    this.lockstepProcessingModules.forEach((pms, clientID) => {
+      // one request per client
+      let lockstepProcessingRequest = {
+        processingModuleIds: [],
+        records: [],
+        deltaTimeMs: deltaTime
+      };
+
+      pms.forEach((pm) => {
+        lockstepProcessingRequest.processingModuleIds.push(pm.id);
+
+        // gather inputs for all PMs running under client ID
+        let inputMappings = this.ioMappings.find((element) => element.processingModuleId === pm.id)
+          .inputMappings;
+        if (inputMappings) {
+          pm.inputs.forEach((input) => {
+            let inputMapping = inputMappings.find(
+              (element) => element.inputName === input.internalName
+            );
+            let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
+            // single topic input
+            if (typeof topicSource === 'string') {
+              let topicdataEntry = this.topicData.pull(topicSource);
+              let record = { topic: topicSource };
+              record.type = topicdataEntry.type;
+              record[topicdataEntry.type] = topicdataEntry.data;
+              lockstepProcessingRequest.records.push(record);
+            }
+            // topic muxer input
+            else if (typeof topicSource === 'object') {
+              let records = this.deviceManager.getTopicMux(topicSource.id).get();
+              lockstepProcessingRequest.records.push(...records);
+            }
+          });
         }
-        return;
-      }
+      });
 
-      let interaction = this.runtimeInteractions[i % this.runtimeInteractions.length];
-      if (interaction) {
-        if (interaction.status === InteractionStatus.INITIALIZED) {
-          interaction.status = InteractionStatus.PROCESSING;
-        }
-        interaction.process();
-      }
-      setTimeout(() => {
-        processingCycleCallback(i + 1);
-      }, 0);
-    };
+      // send out request, save promise
+      processingPromises.push(
+        this.processingModuleManager
+          .sendLockstepProcessingRequest(clientID, lockstepProcessingRequest)
+          .then((lockstepProcessingReply) => {
+            // sanity check making sure all PMs were included
+            let allProcessingModulesReplied = lockstepProcessingRequest.processingModuleIds.every(
+              (id) => lockstepProcessingReply.processingModuleIds.includes(id)
+            );
+            if (!allProcessingModulesReplied) {
+              let missingIDs = lockstepProcessingRequest.processingModuleIds.filter(
+                (id) => !lockstepProcessingReply.processingModuleIds.includes(id)
+              );
+              let message = 'not all ProcessingModules replied during lockstep pass, missing are:';
+              missingIDs.forEach((id) => {
+                let pm = this.processingModuleManager.getModuleByID(id);
+                message += '\n' + pm.toString();
+              });
+              namida.logFailure(this.toString(), message);
+            }
 
-    return new Promise((resolve, reject) => {
-      try {
-        processingCycleCallback(0);
-      } catch (error) {
-        reject(error);
-      }
+            // publish received records to topicdata
+            lockstepProcessingReply.records.forEach((record) => {
+              this.topicData.publish(record.topic, record[record.type], record.type);
+            });
+          })
+      );
+    });
 
-      resolve('processInteractionsPromiseRecursive() resolved');
+    Promise.all(processingPromises).then(() => {
+      setImmediate(() => {
+        this.lockstepProcessingPass();
+      });
     });
   }
 
-  addInteraction(specs) {
-    if (
-      !this.runtimeInteractions.some((interaction) => {
-        return interaction.id === specs.id;
-      })
-    ) {
-      let interaction = new Interaction(specs);
-      interaction.setTopicData(this.topicData);
-      interaction.onCreated();
-
-      this.runtimeInteractions.push(interaction);
-
-      return interaction;
-    } else {
+  addProcessingModule(pm) {
+    if (this.runtimeProcessingModules.includes(pm)) {
       namida.logFailure(
         this.toString(),
-        "can't add interaction " + specs.name + ', ID ' + specs.id + ' already exists'
+        "can't add processing module " + pm.name + ', already part of session'
       );
+      return false;
+    }
+
+    if (!this.processingModuleManager.hasModuleID(pm.id)) {
+      this.processingModuleManager.addModule(pm);
+    }
+    this.runtimeProcessingModules.push(pm);
+    return true;
+  }
+
+  removeProcessingModuleByID(id) {
+    let index = this.runtimeProcessingModules.findIndex((element) => element.id === id);
+    if (index !== -1) {
+      this.runtimeProcessingModules[index].stop();
+      this.runtimeProcessingModules.splice(index, 1);
+      return true;
+    } else {
+      return false;
     }
   }
 
-  removeInteraction(interactionID) {
-    this.runtimeInteractions.forEach((element, index) => {
-      if (element.id === interactionID) {
-        this.interactions.splice(index, 1);
-      }
-    });
-  }
-
-  applyIOMappings() {
-    this.ioMappings.forEach((mapping) => {
-      let interaction = this.runtimeInteractions.find((interaction) => {
-        return interaction.id === mapping.interactionId;
-      });
-
-      if (!interaction) {
-        namida.error(
-          'Session ' + this.id,
-          'no interaction with ID ' + mapping.interactionId + ' for I/O mapping'
-        );
-        return;
-      }
-
-      mapping.inputMappings &&
-        mapping.inputMappings.forEach((inputMapping) => {
-          // single topic input target
-          let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
-          if (typeof topicSource === 'string') {
-            if (interaction.hasInput(inputMapping.name)) {
-              if (!interaction.connectInputTopic(inputMapping.name, topicSource)) {
-                namida.error(
-                  'Session ' + this.id,
-                  'failed to connect input topic ' +
-                    inputMapping.topic +
-                    ' to internal name ' +
-                    inputMapping.name +
-                    ' for interaction ' +
-                    interaction.id
-                );
-              }
-            } else {
-              namida.error(
-                'Session ' + this.id,
-                'interaction ' + interaction.id + ' has no input with name ' + inputMapping.name
-              );
-            }
-          }
-          // topic mux
-          else if (typeof topicSource === 'object') {
-            let mux = this.deviceManager.addTopicMux(topicSource);
-            interaction.connectMultiplexer(inputMapping.name, mux);
-          }
-        });
-
-      mapping.outputMappings &&
-        mapping.outputMappings.forEach((outputMapping) => {
-          // single topic output target
-          let topicDestination =
-            outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
-          if (typeof topicDestination === 'string') {
-            if (interaction.hasOutput(outputMapping.name)) {
-              if (!interaction.connectOutputTopic(outputMapping.name, topicDestination)) {
-                namida.error(
-                  'Session ' + this.id,
-                  'failed to connect output topic ' +
-                    outputMapping.topic +
-                    ' to internal name ' +
-                    outputMapping.name +
-                    ' for interaction ' +
-                    interaction.id
-                );
-              }
-            } else {
-              namida.error(
-                'Session ' + this.id,
-                'interaction ' + interaction.id + ' has no output with name ' + outputMapping.name
-              );
-            }
-          }
-          // topic demux
-          else if (typeof topicDestination === 'object') {
-            let demux = this.deviceManager.addTopicDemux(topicDestination);
-            interaction.connectDemultiplexer(outputMapping.name, demux);
-          }
-        });
-    });
+  removeProcessingModule(pm) {
+    return this.removeProcessingModuleByID(pm.id);
   }
 
   toProtobuf() {
@@ -270,7 +222,6 @@ class Session {
       authors: this.authors,
       tags: this.tags,
       description: this.description,
-      interactions: this.interactions,
       processingModules: this.processingModules,
       ioMappings: this.ioMappings
     };

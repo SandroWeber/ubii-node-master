@@ -1,7 +1,7 @@
 import test from 'ava';
 import uuidv4 from 'uuid/v4';
 
-import TestUtility from '../testUtility';
+import TestUtility from '../../testUtility';
 import Utils from '../../../src/utilities';
 
 import { SessionManager, DeviceManager } from '../../../src/index';
@@ -36,7 +36,7 @@ let topicDemuxSpecs = {
   outputTopicFormat: '/%s' + outputTopicSuffix
 };
 
-let processCB = (inputs, outputs, state) => {
+let processCB = (deltaT, inputs, outputs, state) => {
   let muxRecords = inputs.mux;
 
   let outputList = [];
@@ -51,55 +51,64 @@ let processCB = (inputs, outputs, state) => {
   outputs.demux = outputList;
 };
 
-let interactionSpecs = {
+let processingModuleSpecs = {
   id: uuidv4(),
-  name: 'test-interaction',
-  processingCallback: processCB.toString(),
-  inputFormats: [{
-    internalName: 'mux',
-    messageFormat: 'double'
-  }],
-  outputFormats: [{
-    internalName: 'demux',
-    messageFormat: 'string'
-  }]
+  name: 'test-module',
+  onProcessingStringified: processCB.toString(),
+  inputs: [
+    {
+      internalName: 'mux',
+      messageFormat: 'double'
+    }
+  ],
+  outputs: [
+    {
+      internalName: 'demux',
+      messageFormat: 'string'
+    }
+  ]
 };
 
 let sessionSpecs = {
   name: 'test-session',
-  interactions: [interactionSpecs],
-  ioMappings: [{
-    interactionId: interactionSpecs.id,
-    inputMappings: [{
-      name: interactionSpecs.inputFormats[0].internalName,
-      topicSource: topicMuxSpecs
-    }],
-    outputMappings: [{
-      name: interactionSpecs.outputFormats[0].internalName,
-      topicDestination: topicDemuxSpecs
-    }]
-  }]
+  processingModules: [processingModuleSpecs],
+  ioMappings: [
+    {
+      processingModuleId: processingModuleSpecs.id,
+      inputMappings: [
+        {
+          inputName: processingModuleSpecs.inputs[0].internalName,
+          topicSource: topicMuxSpecs
+        }
+      ],
+      outputMappings: [
+        {
+          outputName: processingModuleSpecs.outputs[0].internalName,
+          topicDestination: topicDemuxSpecs
+        }
+      ]
+    }
+  ]
 };
 
 let publishInput = (inputList, topicData) => {
-  inputList.forEach(input => {
+  inputList.forEach((input) => {
     let topic = '/' + input.uuid + inputTopicSuffix;
     topicData.publish(topic, input.value, topicMuxSpecs.dataType);
   });
-}
+};
 
 /* initialize tests */
 
-test.beforeEach(t => {
+test.beforeEach((t) => {
   t.context.topicData = new RuntimeTopicData();
   t.context.deviceManager = new DeviceManager(undefined, t.context.topicData, undefined);
   t.context.sessionManager = new SessionManager(t.context.topicData, t.context.deviceManager);
 });
 
-
 /* run tests */
 
-test('publish first, start session', async t => {
+test('publish first, start session', async (t) => {
   let inputList = generateInputList(10);
   publishInput(inputList, t.context.topicData);
 
@@ -108,14 +117,14 @@ test('publish first, start session', async t => {
   await TestUtility.wait(10);
   t.context.sessionManager.stopAllSessions();
 
-  inputList.forEach(input => {
+  inputList.forEach((input) => {
     let expected = input.value < 0.5 ? 'low' : 'high';
     let outputTopic = '/' + input.uuid + outputTopicSuffix;
     t.is(t.context.topicData.pull(outputTopic).data, expected);
   });
 });
 
-test('start session first, then publish', async t => {
+test('start session first, then publish', async (t) => {
   let inputList = generateInputList(10);
 
   t.context.sessionManager.createSession(sessionSpecs);
@@ -124,7 +133,7 @@ test('start session first, then publish', async t => {
   await TestUtility.wait(10);
   t.context.sessionManager.stopAllSessions();
 
-  inputList.forEach(input => {
+  inputList.forEach((input) => {
     let expected = input.value < 0.5 ? 'low' : 'high';
     let outputTopic = '/' + input.uuid + outputTopicSuffix;
     t.is(t.context.topicData.pull(outputTopic).data, expected);

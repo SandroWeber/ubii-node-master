@@ -1,5 +1,5 @@
 const { MasterNode } = require('../src/index.js');
-const ExternalLibrariesService = require('../src/sessions/externalLibrariesService');
+const ExternalLibrariesService = require('../src/processing/externalLibrariesService');
 
 const tf = require('@tensorflow/tfjs-node');
 const cocoSsd = require('@tensorflow-models/coco-ssd');

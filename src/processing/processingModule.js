@@ -4,9 +4,10 @@ const { proto } = require('@tum-far/ubii-msg-formats');
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 const namida = require('@tum-far/namida');
 
-const ExternalLibrariesService = require('../sessions/externalLibrariesService');
+const ExternalLibrariesService = require('./externalLibrariesService');
 
 const Utils = require('../utilities');
+const { set } = require('shelljs');
 
 class ProcessingModule extends EventEmitter {
   constructor(
@@ -86,24 +87,48 @@ class ProcessingModule extends EventEmitter {
   /* execution control */
 
   start() {
-    this.status = ProcessingModuleProto.Status.PROCESSING;
-    // processing based on frequency
     if (this.processingMode && this.processingMode.frequency) {
       this.startProcessingByFrequency();
+    } else if (this.processingMode && this.processingMode.triggerOnInput) {
+      this.startProcessingByTriggerOnInput();
+    } else if (this.processingMode && this.processingMode.lockstep) {
+      this.startProcessingByLockstep();
     } else if (this.processingMode === undefined) {
-      this.startProcessingByCycles();
+      namida.logFailure(this.toString(), 'no processing mode specified, can not start processing');
+    }
+
+    if (this.status === ProcessingModuleProto.Status.PROCESSING) {
+      namida.logSuccess(this.toString(), 'started');
     }
   }
 
   stop() {
+    if (this.status === ProcessingModuleProto.Status.HALTED) {
+      return;
+    }
+
+    this.onHalted && this.onHalted();
     this.status = ProcessingModuleProto.Status.HALTED;
+
+    this.removeAllListeners(ProcessingModule.EVENTS.NEW_INPUT);
+    this.onProcessingLockstepPass = () => {
+      return undefined;
+    };
+    namida.logSuccess(this.toString(), 'stopped');
   }
 
   startProcessingByFrequency() {
-    namida.log(this.toString(), 'start processing by frequency');
+    this.status = ProcessingModuleProto.Status.PROCESSING;
+
+    let tLastProcess = Date.now();
     let msFrequency = 1000 / this.processingMode.frequency.hertz;
     let processIteration = () => {
-      this.onProcessing(this.ioProxy, this.ioProxy, this.state);
+      // timing
+      let tNow = Date.now();
+      let deltaTime = tNow - tLastProcess;
+      tLastProcess = tNow;
+      // processing
+      this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
           processIteration();
@@ -114,20 +139,80 @@ class ProcessingModule extends EventEmitter {
   }
 
   startProcessingByTriggerOnInput() {
-    namida.log(this.toString(), 'start processing triggered on input');
-    this.on('new_input', () => {
-      this.onProcessing(this.ioProxy, this.ioProxy, this.state);
+    this.status = ProcessingModuleProto.Status.PROCESSING;
+
+    let allInputsNeedUpdate = this.processingMode.triggerOnInput.allInputsNeedUpdate;
+    let minDelayMs = this.processingMode.triggerOnInput.minDelayMs;
+
+    let tLastProcess = Date.now();
+
+    let processingPass = () => {
+      inputFlags = [];
+      // timing
+      let tNow = Date.now();
+      let deltaTime = tNow - tLastProcess;
+      tLastProcess = tNow;
+      // processing
+      this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
+    };
+
+    let checkProcessingNeeded = false;
+    let checkProcessing = () => {
+      let inputUpdatesFulfilled =
+        !allInputsNeedUpdate ||
+        this.inputs.every((element) => inputFlags.includes(element.internalName));
+      let minDelayFulfilled = !minDelayMs || Date.now() - tLastProcess >= minDelayMs;
+      if (inputUpdatesFulfilled && minDelayFulfilled) {
+        processingPass();
+      }
+      checkProcessingNeeded = false;
+    };
+
+    let inputFlags = [];
+    this.on(ProcessingModule.EVENTS.NEW_INPUT, (inputName) => {
+      inputFlags.push(inputName);
+      if (!checkProcessingNeeded) {
+        checkProcessingNeeded = true;
+        setImmediate(() => {
+          checkProcessing();
+        });
+      }
     });
   }
 
+  startProcessingByLockstep() {
+    this.status = ProcessingModuleProto.Status.PROCESSING;
+
+    this.onProcessingLockstepPass = (deltaTime, inputs = this.ioProxy, outputs = this.ioProxy) => {
+      return new Promise((resolve, reject) => {
+        try {
+          this.onProcessing(deltaTime, inputs, outputs, this.state);
+          return resolve(outputs);
+        } catch (error) {
+          return reject(error);
+        }
+      });
+    };
+  }
+
+  /**
+   * LEGACY PROCESSING MODE - should not be used as it quickly hogs all ressources
+   */
   startProcessingByCycles() {
-    namida.log(this.toString(), 'start processing by cycles with minimal delay');
+    this.status = ProcessingModuleProto.Status.PROCESSING;
+
+    let tLastProcess = Date.now();
     let processIteration = () => {
-      this.onProcessing(this.ioProxy, this.ioProxy, this.state);
+      // timing
+      let tNow = Date.now();
+      let deltaTime = tNow - tLastProcess;
+      tLastProcess = tNow;
+      // processing
+      this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
-        setTimeout(() => {
+        setImmediate(() => {
           processIteration();
-        }, 0);
+        });
       }
     };
     processIteration();
@@ -159,14 +244,24 @@ class ProcessingModule extends EventEmitter {
    * Lifecycle function to be called when module is supposed to process data.
    * Needs to be overwritten when extending this class, specified as a stringified version for the constructor or
    * set via setOnProcessing() before onProcessing() is called.
-   * Signature
    */
-  onProcessing() {
-    namida.error(
-      this.toString(),
-      'onProcessing callback is not specified, module will not do anything?'
-    );
+  onProcessing(deltaTime, inputs, outputs, state) {
+    let errorMsg =
+      'onProcessing callback is not specified / overwritten, called with' +
+      '\ndeltaTime: ' +
+      deltaTime +
+      '\ninputs:\n' +
+      inputs +
+      '\noutputs:\n' +
+      outputs +
+      '\nstate:\n' +
+      state;
+    namida.error(this.toString(), errorMsg);
     throw new Error(this.toString() + ' - onProcessing() callback is not specified');
+  }
+
+  onProcessingLockstepPass() {
+    return undefined;
   }
 
   onHalted() {}
@@ -332,7 +427,8 @@ class ProcessingModule extends EventEmitter {
 
 ProcessingModule.EVENTS = Object.freeze({
   NEW_INPUT: 1,
-  PROCESSED: 2
+  LOCKSTEP_PASS: 2,
+  PROCESSED: 3
 });
 
 module.exports = { ProcessingModule: ProcessingModule };

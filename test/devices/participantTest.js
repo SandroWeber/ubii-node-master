@@ -1,15 +1,15 @@
 import test from 'ava';
-import sinon from 'sinon';
 import { Participant } from '../../src/index.js';
-import { ServerMock, TopicDataMock } from '../mocks/serverMockDevices';
+import { ServerMock } from '../mocks/serverMock';
+import { TopicDataMock } from '../mocks/serverMockDevices';
 
-(function() {
-  test.beforeEach(t => {
+(function () {
+  test.beforeEach((t) => {
     t.context.topicDataMock = new TopicDataMock();
     t.context.serverMock = new ServerMock();
   });
 
-  test('create Participant', t => {
+  test('create Participant', (t) => {
     t.notThrows(() => {
       let participant = new Participant({}, undefined, t.context.topicDataMock);
     });

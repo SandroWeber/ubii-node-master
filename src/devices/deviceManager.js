@@ -283,12 +283,12 @@ class DeviceManager {
     return currentDevice;
   }
 
-  addTopicMux(specs) {
+  createTopicMuxerBySpecs(specs, topicDataBuffer = this.topicData) {
     if (this.topicMuxers.has(specs.id)) {
       throw 'TopicMux with ID ' + specs.id + ' already exists.';
     }
 
-    let mux = new TopicMultiplexer(specs, this.topicData);
+    let mux = new TopicMultiplexer(specs, topicDataBuffer);
     this.topicMuxers.set(mux.id, mux);
 
     return mux;
@@ -299,27 +299,33 @@ class DeviceManager {
   }
 
   hasTopicMux(id) {
-    return this.topicMuxers.some((mux) => {
-      return mux.id === id;
-    });
+    return (
+      this.topicMuxers &&
+      this.topicMuxers.some((mux) => {
+        return mux.id === id;
+      })
+    );
   }
 
   getTopicMux(id) {
-    return this.topicMuxers.find((mux) => {
-      return mux.id === id;
-    });
+    return (
+      this.topicMuxers &&
+      this.topicMuxers.find((mux) => {
+        return mux.id === id;
+      })
+    );
   }
 
   getTopicMuxList() {
     return Array.from(this.topicMuxers.values());
   }
 
-  addTopicDemux(specs) {
+  createTopicDemuxerBySpecs(specs, topicDataBuffer = this.topicData) {
     if (this.topicDemuxers.has(specs.id)) {
       throw 'TopicMux with ID ' + specs.id + ' already exists.';
     }
 
-    let demux = new TopicDemultiplexer(specs, this.topicData);
+    let demux = new TopicDemultiplexer(specs, topicDataBuffer);
     this.topicDemuxers.set(demux.id, demux);
 
     return demux;

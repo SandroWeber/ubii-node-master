@@ -11,10 +11,9 @@ const { TopicDemultiplexer } = require('./devices/topicDemultiplexer');
 
 const { Session } = require('./sessions/session');
 const { SessionManager } = require('./sessions/sessionManager');
-const { Interaction } = require('./sessions/interaction');
-const { INTERACTION_LIFECYCLE_EVENTS } = require('./sessions/constants');
 
 const { ProcessingModule } = require('./processing/processingModule');
+const ProcessingModuleManager = require('./processing/processingModuleManager');
 
 const { ServiceManager } = require('./services/serviceManager');
 const { ClientRegistrationService } = require('./services/clientRegistrationService');
@@ -32,11 +31,10 @@ module.exports = {
   TopicDemultiplexer: TopicDemultiplexer,
   Session: Session,
   SessionManager: SessionManager,
-  Interaction: Interaction,
   ProcessingModule: ProcessingModule,
+  ProcessingModuleManager: ProcessingModuleManager,
   ServiceManager: ServiceManager,
   ClientRegistrationService: ClientRegistrationService,
   DeviceRegistrationService: DeviceRegistrationService,
-  SubscriptionService: SubscriptionService,
-  INTERACTION_LIFECYCLE_EVENTS: INTERACTION_LIFECYCLE_EVENTS
+  SubscriptionService: SubscriptionService
 };

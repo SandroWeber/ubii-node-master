@@ -47,34 +47,19 @@ class SessionManager extends EventEmitter {
     this.addEventListeners();
 
     this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
-    this.translateToProcessingModules = false; // TEMPORARY - migration from Interactions to ProcessingModules
   }
 
   createSession(specs = {}) {
     if (specs.id && this.getSession(specs.id)) {
-      namida.error('SessionManager', 'Session ID already exists: ' + specs.id);
-      throw 'Session with ID ' + specs.id + ' already exists.';
+      namida.logFailure('SessionManager', 'Session ID already exists: ' + specs.id);
+      throw new Errror('Session with ID ' + specs.id + ' already exists.');
     }
 
     if (!specs.ioMappings || specs.ioMappings.length === 0) {
       namida.warn(
         'SessionManager',
-        'Session ' + specs.id + ' has no I/O Mappings (topics <-> interactions)'
+        'Session ' + specs.id + ' has no I/O Mappings (topics <-> processing modules)'
       );
-    }
-
-    // TEMPORARY - migration from Interactions to ProcessingModules
-    if (this.translateToProcessingModules) {
-      console.info('SessionManager - translating interactions to processing modules');
-      let processingModuleSpecs = [];
-      specs.interactions.forEach((interactionSpecs) => {
-        processingModuleSpecs.push(mapSpecsInteraction2ProcessingModule(interactionSpecs));
-      });
-
-      specs.processingModules = processingModuleSpecs;
-      specs.interactions = [];
-    } else {
-      console.info('SessionManager - NOT translating interaction to processing modules');
     }
 
     let session = new Session(
@@ -131,7 +116,6 @@ class SessionManager extends EventEmitter {
   }
 
   startSession(session) {
-    //console.info('SessionManager - startSession()');
     let success = session && session.start();
     if (success) {
       this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
@@ -159,9 +143,9 @@ class SessionManager extends EventEmitter {
     let success = session && session.stop();
     if (success) {
       this.emit(EVENTS_SESSION_MANAGER.STOP_SESSION, session.toProtobuf());
-      namida.logSuccess('SessionManager', 'succesfully stopped session ID ' + session.id);
+      namida.logSuccess('SessionManager', 'succesfully stopped ' + session.toString());
     } else {
-      namida.logFailure('SessionManager', 'failed to stop session ID ' + session.id);
+      namida.logFailure('SessionManager', 'failed to stop ' + session.toString());
     }
 
     return success;
