@@ -5,7 +5,6 @@ export default {
     'test/clients/**/*',
     'test/processing/**/*',
     // not part of the tests
-    '!test/files/**/*',
     '!test/mocks/*',
     '!test/sessions/testUtility.js'
   ],

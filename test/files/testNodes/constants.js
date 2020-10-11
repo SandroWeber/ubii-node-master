@@ -1,7 +1,0 @@
-const PING_MESSAGE = 'PING';
-const PONG_MESSAGE = 'PONG';
-
-module.exports = {
-    PING_MESSAGE: PING_MESSAGE,
-    PONG_MESSAGE: PONG_MESSAGE,
-};
