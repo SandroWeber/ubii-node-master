@@ -4,7 +4,7 @@
 
 ### Node.js
 
-install Node.js v10.22.1 (https://nodejs.org/en/download/releases/, older LTS version as 12.19 LTS has conflicts with newer tensorflowjs versions)
+install Node.js v10.22.1 (https://nodejs.org/en/download/releases/, it's an older LTS version since 12.19 LTS has conflicts with newer tensorflowjs versions)
 
 ### Windows pre-requisists before "npm install"
 
