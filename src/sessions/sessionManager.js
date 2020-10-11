@@ -136,7 +136,7 @@ class SessionManager extends EventEmitter {
   stopSessionByID(id) {
     let session = this.getSession(id);
 
-    return this.stopSession(session);
+    return session && this.stopSession(session);
   }
 
   stopSession(session) {
