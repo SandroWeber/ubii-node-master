@@ -130,7 +130,7 @@ test('start session first, then publish', async (t) => {
   t.context.sessionManager.createSession(sessionSpecs);
   t.context.sessionManager.startAllSessions();
   publishInput(inputList, t.context.topicData);
-  await TestUtility.wait(10);
+  await TestUtility.wait(100);
   t.context.sessionManager.stopAllSessions();
 
   inputList.forEach((input) => {

@@ -5,6 +5,7 @@ class MockProcessingModuleManager {
     this.hasModuleID = sinon.fake();
     this.addModule = sinon.fake();
     this.applyIOMappings = sinon.fake();
+    this.removeModule = sinon.fake();
   }
 }
 

@@ -34,25 +34,29 @@ class ProcessingModule extends EventEmitter {
   ) {
     super();
 
+    // take over specs
+    Object.assign(this, specs);
+    // add ID if missing
+    if (!this.id) {
+      this.id = uuidv4();
+    }
     // check that language specification for module is correct
-    if (specs.language === undefined) specs.language = ProcessingModuleProto.Language.JS;
-    if (specs.language !== ProcessingModuleProto.Language.JS) {
+    if (this.language === undefined) this.language = ProcessingModuleProto.Language.JS;
+    if (this.language !== ProcessingModuleProto.Language.JS) {
       namida.error(
         'ProcessingModule ' + this.toString(),
         'trying to create module under javascript, but specification says ' +
-          ProcessingModuleProto.Language[specs.language]
+          ProcessingModuleProto.Language[this.language]
       );
       throw new Error(
         'Incompatible language specifications (javascript vs. ' +
-          ProcessingModuleProto.Language[specs.language] +
+          ProcessingModuleProto.Language[this.language] +
           ')'
       );
     }
-
-    // take over specs and add ID if missing
-    Object.assign(this, specs);
-    if (!this.id) {
-      this.id = uuidv4();
+    // default processing mode
+    if (!this.processingMode) {
+      this.processingMode = { frequency: { hertz: 30 } };
     }
 
     if (this.onCreatedStringified) {
