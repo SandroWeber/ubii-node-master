@@ -15,5 +15,7 @@ export default {
   tap: false,
   verbose: true,
   serial: true,
-  compileEnhancements: false
+  babel: {
+    compileEnhancements: false
+  }
 };
