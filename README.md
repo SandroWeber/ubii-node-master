@@ -1,4 +1,4 @@
-# ubii-nodejs-backend
+# ubii-node-master
 
 ## Project setup
 
