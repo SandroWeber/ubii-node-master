@@ -185,7 +185,8 @@ class Client {
     let token = this.topicData.subscribe(topic, (topic, entry) => {
       let payload = {
         topicDataRecord: {
-          topic: topic
+          topic: topic,
+          timestamp: entry.timestamp
         }
       };
       payload.topicDataRecord[entry.type] = entry.data;
