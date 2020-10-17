@@ -4,7 +4,7 @@ import uuidv4 from 'uuid/v4';
 import TestUtility from '../../testUtility';
 import Utils from '../../../src/utilities';
 
-import { SessionManager, DeviceManager } from '../../../src/index';
+import { SessionManager, DeviceManager, ProcessingModuleManager } from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
 let inputTopicSuffix = '/input/double';
@@ -103,7 +103,15 @@ let publishInput = (inputList, topicData) => {
 test.beforeEach((t) => {
   t.context.topicData = new RuntimeTopicData();
   t.context.deviceManager = new DeviceManager(undefined, t.context.topicData, undefined);
-  t.context.sessionManager = new SessionManager(t.context.topicData, t.context.deviceManager);
+  t.context.processingModuleManager = new ProcessingModuleManager(
+    t.context.deviceManager,
+    t.context.topicData
+  );
+  t.context.sessionManager = new SessionManager(
+    t.context.topicData,
+    t.context.deviceManager,
+    t.context.processingModuleManager
+  );
 });
 
 /* run tests */

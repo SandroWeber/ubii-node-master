@@ -119,6 +119,8 @@ class Storage {
       }
 
       files.forEach((file) => {
+        //console.info('new ', this.fileEnding, ' db local file:');
+        //console.log(file);
         this.loadSpecificationFromFile(this.localDirectory + '/' + file);
       });
     });

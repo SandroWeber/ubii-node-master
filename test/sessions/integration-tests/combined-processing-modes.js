@@ -3,7 +3,7 @@ import sinon from 'sinon';
 
 import TestUtility from '../../testUtility';
 
-import { SessionManager, ProcessingModule } from '../../../src/index';
+import { SessionManager, ProcessingModule, ProcessingModuleManager } from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
 /* preparation */
@@ -114,7 +114,12 @@ let publishTopicForModuleIO = (topicdata, processingModule, moduleIO) => {
 
 test.beforeEach((t) => {
   t.context.topicData = new RuntimeTopicData();
-  t.context.sessionManager = new SessionManager(t.context.topicData);
+  t.context.processingModuleManager = new ProcessingModuleManager(undefined, t.context.topicData);
+  t.context.sessionManager = new SessionManager(
+    t.context.topicData,
+    undefined,
+    t.context.processingModuleManager
+  );
 
   t.context.processingModules = [
     new PMImmediateCycles(),

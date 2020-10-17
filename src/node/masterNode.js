@@ -40,8 +40,14 @@ class MasterNode {
       this.connectionsManager.connections.topicDataZMQ
     );
 
+    this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
+
     // Session manager component:
-    this.sessionManager = new SessionManager(this.topicData, this.deviceManager);
+    this.sessionManager = new SessionManager(
+      this.topicData,
+      this.deviceManager,
+      this.processingModuleManager
+    );
 
     // Service Manager Component:
     this.serviceManager = new ServiceManager(
@@ -77,7 +83,10 @@ class MasterNode {
       context.feedback.message = `processing failed with an error:`;
       context.feedback.stack = '' + (e.stack.toString() || e.toString());
 
-      namida.logFailure(context.feedback.title, context.feedback.message + ' ' +  context.feedback.stack);
+      namida.logFailure(
+        context.feedback.title,
+        context.feedback.message + ' ' + context.feedback.stack
+      );
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
@@ -131,7 +140,10 @@ class MasterNode {
       context.feedback.message = `processing failed with an error:`;
       context.feedback.stack = '' + (e.stack.toString() || e.toString());
 
-      namida.logFailure(context.feedback.title, context.feedback.message + ' ' + context.feedback.stack);
+      namida.logFailure(
+        context.feedback.title,
+        context.feedback.message + ' ' + context.feedback.stack
+      );
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {

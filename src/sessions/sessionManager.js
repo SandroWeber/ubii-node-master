@@ -37,7 +37,7 @@ let mapSpecsInteraction2ProcessingModule = (interactionSpecs) => {
 // TEMPORARY - migration from Interactions to ProcessingModules
 
 class SessionManager extends EventEmitter {
-  constructor(topicData, deviceManager) {
+  constructor(topicData, deviceManager, processingModuleManager) {
     super();
 
     this.topicData = topicData;
@@ -46,7 +46,7 @@ class SessionManager extends EventEmitter {
 
     this.addEventListeners();
 
-    this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
+    this.processingModuleManager = processingModuleManager;
   }
 
   createSession(specs = {}) {
