@@ -1,6 +1,6 @@
+const namida = require('@tum-far/namida/src/namida');
 const fs = require('fs');
 const shelljs = require('shelljs');
-const uuidv4 = require('uuid/v4');
 const { BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB } = require('./storageConstants');
 
 class Storage {
@@ -22,21 +22,21 @@ class Storage {
   }
 
   /**
-   * Returns whether a specification with the specified ID exists.
-   * @param {String} id
-   * @returns {Boolean} Does a specification with the specified ID exists?
+   * Returns whether a specification matching the given specifications exists.
+   * @param {Specification Object} specs
+   * @returns {Boolean} Does a specification with the given specifications exist?
    */
   hasSpecification(specs) {
-    return this.specificationsLocal.has(specs.id) || this.specificationsOnline.has(specs.id);
+    return this.specificationsLocal.has(specs.name) || this.specificationsOnline.has(specs.name);
   }
 
   /**
-   * Get the specification with the specified id.
-   * @param {String} id
-   * @returns The specification with the specified id.
+   * Get the specification with the specified name.
+   * @param {String} name
+   * @returns The specification with the specified name.
    */
-  getSpecification(id) {
-    return this.specificationsLocal.get(id) || this.specificationsOnline.get(id);
+  getSpecification(name) {
+    return this.specificationsLocal.get(name) || this.specificationsOnline.get(name);
   }
 
   /**
@@ -53,36 +53,34 @@ class Storage {
 
   /**
    * Add a new specification to the specifications list.
-   * @param {Object} specification The specification in protobuf format. It requires a name and id property.
+   * @param {Object} spec The specification in protobuf format. It requires a name property.
    */
-  addSpecification(specification) {
-    // assign ID, only server does this i.e. IDs sent by clients are ignored and replaced
-    specification.id = uuidv4();
-    while (this.hasSpecification(specification)) {
-      specification.id = uuidv4();
+  addSpecification(spec) {
+    while (this.hasSpecification(spec)) {
+      spec.name = spec.name + '_new';
     }
 
-    if (this.hasSpecification(specification)) {
-      throw 'Specification with ID ' + specification.id + ' could not be added, ID already exists.';
+    if (this.hasSpecification(spec)) {
+      throw 'Specification with name ' + spec.name + ' could not be added, name already exists.';
     }
 
     try {
-      this.specificationsLocal.set(specification.id, specification);
-      this.saveSpecificationToFile(specification);
-      return specification;
+      this.specificationsLocal.set(spec.name, spec);
+      this.saveSpecificationToFile(spec);
+      return spec;
     } catch (error) {
       throw error;
     }
   }
 
   /**
-   * Delete the specification with the specified id from the specifications list.
-   * @param {String} id
+   * Delete the specification with the specified name from the specifications list.
+   * @param {String} name
    */
-  deleteSpecification(id) {
+  deleteSpecification(name) {
     try {
-      this.specificationsLocal.delete(id);
-      this.deleteSpecificationFile(id);
+      this.specificationsLocal.delete(name);
+      this.deleteSpecificationFile(name);
     } catch (error) {
       throw error;
     }
@@ -90,18 +88,18 @@ class Storage {
 
   /**
    * Update a specification that is already present in the specifications list with a new value.
-   * @param {Object} specification The specification requires a name and id property.
+   * @param {Object} spec The specification requires a name property.
    */
-  updateSpecification(specification) {
-    let localSpecification = this.specificationsLocal.get(specification.id);
+  updateSpecification(spec) {
+    let localSpecification = this.specificationsLocal.get(spec.name);
     if (typeof localSpecification === 'undefined') {
-      throw 'Specification with ID ' + specification.id + ' could not be found';
+      throw 'Specification with name ' + spec.name + ' could not be found';
     }
 
     try {
-      this.specificationsLocal.set(specification.id, specification);
-      this.deleteSpecificationFile(specification.id);
-      this.saveSpecificationToFile(specification);
+      this.specificationsLocal.set(spec.name, spec);
+      this.deleteSpecificationFile(spec.name);
+      this.saveSpecificationToFile(spec);
     } catch (error) {
       throw error;
     }
@@ -136,13 +134,14 @@ class Storage {
       files.forEach(async (file) => {
         let path = dirOnlineDB + '/' + file;
         let specs = await this.getSpecificationFromFile(path);
-        if (this.specificationsLocal.has(specs.id) || this.specificationsOnline.has(specs.id)) {
-          console.info(
-            'Storage - specification from file ' + path + ' has conflicting ID ' + specs.id
+        if (this.specificationsLocal.has(specs.name) || this.specificationsOnline.has(specs.name)) {
+          namida.logFailure(
+            this.fileEnding + ' Storage',
+            'specification from file ' + path + ' has conflicting name ' + specs.name
           );
         } else {
-          this.specificationsOnline.set(specs.id, specs);
-          this.filePaths.set(specs.id, path);
+          this.specificationsOnline.set(specs.name, specs);
+          this.filePaths.set(specs.name, path);
         }
       });
     });
@@ -154,11 +153,14 @@ class Storage {
    */
   async loadSpecificationFromFile(path) {
     let specs = await this.getSpecificationFromFile(path);
-    if (this.specificationsLocal.has(specs.id) || this.specificationsOnline.has(specs.id)) {
-      console.info('Storage - specification from file ' + path + ' has conflicting ID ' + specs.id);
+    if (this.specificationsLocal.has(specs.name) || this.specificationsOnline.has(specs.name)) {
+      namida.logFailure(
+        this.fileEnding + ' Storage',
+        'specification from file ' + path + ' has conflicting name ' + specs.name
+      );
     } else {
-      this.specificationsLocal.set(specs.id, specs);
-      this.filePaths.set(specs.id, path);
+      this.specificationsLocal.set(specs.name, specs);
+      this.filePaths.set(specs.name, path);
     }
   }
 
@@ -178,20 +180,23 @@ class Storage {
 
   /**
    * Saves a specification to a file with the corresponding path. The path is then stored in the filePaths map.
-   * @param {Object} specification The specification requires a name and id property.
+   * @param {Object} specification The specification requires a name property.
    */
   saveSpecificationToFile(specification) {
-    // Build complete path.
-    let path = this.localDirectory + '/';
-    if (specification.name && specification.name.length > 0) {
-      path += specification.name + '_';
+    if (!specification.name) {
+      namida.logFailure(
+        this.fileEnding + ' Storage',
+        'could not save specs to file, no name given'
+      );
+      return;
     }
-    path += specification.id + '.' + this.fileEnding;
+    // Build complete path.
+    let path = this.localDirectory + '/' + specification.name + this.fileEnding;
 
     // Write to file and store path.
     try {
       fs.writeFileSync(path, JSON.stringify(specification, null, 4), { flag: 'wx' });
-      this.filePaths.set(specification.id, path);
+      this.filePaths.set(specification.name, path);
     } catch (error) {
       if (error) throw error;
     }
@@ -199,12 +204,12 @@ class Storage {
 
   /**
    * Replaces a specification file with the path stored with regard to the is of the specification with a new specification file.
-   * @param {Object} specification The specification requires a name and id property.
+   * @param {Object} specification The specification requires a name property.
    */
   replaceSpecificationFile(specification) {
     try {
       fs.writeFileSync(
-        this.filePaths.get(specification.id),
+        this.filePaths.get(specification.name),
         JSON.stringify(specification, null, 4),
         { flag: 'w' }
       );
@@ -214,11 +219,11 @@ class Storage {
   }
 
   /**
-   * Deletes the file associated with the specified id.
-   * @param {String} id Id of a stored specification.
+   * Deletes the file associated with the specified name.
+   * @param {String} name Name of a stored specification.
    */
-  deleteSpecificationFile(id) {
-    let path = this.filePaths.get(id);
+  deleteSpecificationFile(name) {
+    let path = this.filePaths.get(name);
     if (typeof path !== 'undefined') {
       fs.unlinkSync(path);
     }
@@ -227,9 +232,8 @@ class Storage {
   async copySpecsFromFile(path) {
     let specs = await this.getSpecificationFromFile(path);
     while (this.hasSpecification(specs)) {
-      specs.id = uuidv4();
+      specs.name = specs.name + '_copy';
     }
-    specs.name += '_copy';
     this.addSpecification(specs);
   }
 }

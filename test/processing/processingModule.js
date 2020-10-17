@@ -354,7 +354,7 @@ test('processingMode TriggerOnInput', async (t) => {
     }, index * timeMsBetweenInputTriggers);
   });
   // wait for all triggers to resolve with some buffer for onProcessing calls to go through
-  await TestUtility.wait(2 * pm.inputs.length * timeMsBetweenInputTriggers);
+  await TestUtility.wait(3 * pm.inputs.length * timeMsBetweenInputTriggers);
   t.is(processingCB.callCount, pm.inputs.length);
   pm.stop();
 
