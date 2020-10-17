@@ -69,10 +69,11 @@ test('constructor() - with specs', (t) => {
   t.is(processingModule.authors, specs.authors);
   t.is(processingModule.description, specs.description);
 
-  // with ID defined,
+  // with ID defined, should be overwritten though
   specs.id = 'my-id';
   processingModule = new ProcessingModule(specs);
-  t.is(processingModule.id, specs.id);
+  t.not(processingModule.id, specs.id);
+  t.true(regexUUID.test(processingModule.id));
 
   // trying to specify language within JS that is not JS
   specs.language = ProcessingModuleProto.Language.CPP;

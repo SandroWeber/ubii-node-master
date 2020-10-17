@@ -52,7 +52,6 @@ let processCB = (deltaT, inputs, outputs, state) => {
 };
 
 let processingModuleSpecs = {
-  id: uuidv4(),
   name: 'test-module',
   onProcessingStringified: processCB.toString(),
   inputs: [
@@ -74,7 +73,7 @@ let sessionSpecs = {
   processingModules: [processingModuleSpecs],
   ioMappings: [
     {
-      processingModuleId: processingModuleSpecs.id,
+      processingModuleName: processingModuleSpecs.name,
       inputMappings: [
         {
           inputName: processingModuleSpecs.inputs[0].internalName,

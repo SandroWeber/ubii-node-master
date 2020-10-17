@@ -36,10 +36,8 @@ class ProcessingModule extends EventEmitter {
 
     // take over specs
     Object.assign(this, specs);
-    // add ID if missing
-    if (!this.id) {
-      this.id = uuidv4();
-    }
+    // new instance is getting new ID
+    this.id = uuidv4();
     // check that language specification for module is correct
     if (this.language === undefined) this.language = ProcessingModuleProto.Language.JS;
     if (this.language !== ProcessingModuleProto.Language.JS) {
