@@ -7,20 +7,20 @@ class ProcessingModuleDatabase extends Storage {
   }
 
   /**
-   * Returns whether an interaction specification with the specified ID exists.
-   * @param {String} id
-   * @returns {Boolean} Does an interaction specification with the specified ID exists?
+   * Returns whether an interaction specification matching the given specifications exists.
+   * @param {Specification Object} specs
+   * @returns {Boolean} Does an interaction specification with the given specifications exist?
    */
   has(specs) {
     return this.hasSpecification(specs);
   }
 
   /**
-   * Get the interaction with the specified id.
-   * @param {String} id
+   * Get the interaction with the specified name.
+   * @param {String} name
    */
-  getByID(id) {
-    return this.getSpecification(id);
+  getByName(name) {
+    return this.getSpecification(name);
   }
 
   /**
@@ -32,48 +32,48 @@ class ProcessingModuleDatabase extends Storage {
 
   /**
    * Add a new interaction protobuf specification based on the specified specification to the specifications list.
-   * @param {Object} specification The specification in protobuf format. It requires a name and id property.
+   * @param {Object} spec The specification in protobuf format. It requires a name property.
    */
-  add(specification) {
-    if (!this.verifySpecification(specification)) {
-      throw 'Interaction with ID ' + specification.id + ' could not be registered, invalid specs';
+  add(spec) {
+    if (!this.verifySpecification(spec)) {
+      throw 'Interaction with name ' + spec.name + ' could not be registered, invalid specs';
     }
 
     try {
-      return this.addSpecification(specification);
+      return this.addSpecification(spec);
     } catch (error) {
       throw error;
     }
   }
 
   /**
-   * Delete the interaction specification with the specified id from the specifications list.
-   * @param {String} id
+   * Delete the interaction specification with the specified name from the specifications list.
+   * @param {String} name
    */
-  deleteByID(id) {
-    this.deleteSpecification(id);
+  deleteByName(name) {
+    this.deleteSpecification(name);
   }
 
   /**
    * Update a interaction specification that is already present in the specifications list with a new value.
-   * @param {Object} specification The specification requires a name and id property.
+   * @param {Object} spec The specification requires a name property.
    */
-  update(specification) {
-    if (!this.verifySpecification(specification)) {
+  update(spec) {
+    if (!this.verifySpecification(spec)) {
       throw 'interaction specification could not be verified';
     }
 
-    this.updateSpecification(specification);
+    this.updateSpecification(spec);
   }
 
   /**
    * Verifies the specified specification.
-   * @param {*} specification
+   * @param {*} spec
    */
-  verify(specification) {
+  verify(spec) {
     let translator = new ProtobufTranslator(MSG_TYPES.INTERACTION);
     try {
-      return translator.verify(specification);
+      return translator.verify(spec);
     } catch (error) {
       return false;
     }
