@@ -77,7 +77,10 @@ class MasterNode {
       context.feedback.message = `Ubii service request processing failed with an error:`;
       context.feedback.stack = '' + (e.stack || e);
 
-      namida.logFailure(context.feedback.title, context.feedback.message, context.feedback.stack);
+      namida.logFailure(
+        context.feedback.title,
+        context.feedback.message + '\n' + context.feedback.stack
+      );
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
