@@ -129,31 +129,31 @@ class Client {
       if (difference > TIME_UNTIL_STANDBY) {
         if (difference > TIME_UNTIL_INACTIVE) {
           // The client has the state inactive.
-          if (this.state !== clientStateEnum.inactive) {
+          /*if (this.state !== clientStateEnum.inactive) {
             namida.log(
               `Client State has changed`,
               `Client with id ${this.id} is not available and is now in an inactive state.`
             );
-          }
+          }*/
           this.state = clientStateEnum.inactive;
         } else {
           // The client has the state standby.
-          if (this.state !== clientStateEnum.standby) {
+          /*if (this.state !== clientStateEnum.standby) {
             namida.log(
               `Client State has changed`,
               `Client with id ${this.id} is not available and is now in an standby state.`
             );
-          }
+          }*/
           this.state = clientStateEnum.standby;
         }
       } else {
         // The client has the state active.
-        if (this.state !== clientStateEnum.active) {
+        /*if (this.state !== clientStateEnum.active) {
           namida.log(
             `Client State has changed`,
             `Client with id ${this.id} is available again and is now in an active state.`
           );
-        }
+        }*/
         this.state = clientStateEnum.active;
       }
 
@@ -185,7 +185,8 @@ class Client {
     let token = this.topicData.subscribe(topic, (topic, entry) => {
       let payload = {
         topicDataRecord: {
-          topic: topic
+          topic: topic,
+          timestamp: entry.timestamp
         }
       };
       payload.topicDataRecord[entry.type] = entry.data;

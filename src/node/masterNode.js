@@ -73,9 +73,9 @@ class MasterNode {
         }
       };
 
-      context.feedback.title = 'Ubii service request processing failed';
-      context.feedback.message = `Ubii service request processing failed with an error:`;
-      context.feedback.stack = '' + (e.stack || e);
+      context.feedback.title = 'Service Request';
+      context.feedback.message = `processing failed with an error:`;
+      context.feedback.stack = '' + (e.stack.toString() || e.toString());
 
       namida.logFailure(
         context.feedback.title,
@@ -130,17 +130,19 @@ class MasterNode {
         }
       };
 
-      context.feedback.title = 'Ubii service request processing failed';
-      context.feedback.request = `Ubii service request processing failed with an error:`;
-      context.feedback.stack = '' + (e.stack || e);
+      context.feedback.title = 'Service Request';
+      context.feedback.message = `processing failed with an error:`;
+      context.feedback.stack = '' + (e.stack.toString() || e.toString());
 
-      console.warn(e);
-      namida.logFailure(context.feedback.title, context.feedback.request, context.feedback.stack);
+      namida.logFailure(
+        context.feedback.title,
+        context.feedback.message + ' ' + context.feedback.stack
+      );
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
           title: context.feedback.title,
-          message: context.feedback.request,
+          message: context.feedback.message,
           stack: context.feedback.stack
         }
       });
@@ -196,7 +198,7 @@ class MasterNode {
         );
       } catch (e) {
         context.feedback.title = 'TopicData error response sending failed (ZMQ)';
-        context.feedback.message = `opicData error response sending failed (ZMQ) with an error:`;
+        context.feedback.message = `TopicData error response sending failed (ZMQ) with an error:`;
         context.feedback.stack = '' + (e.stack || e);
 
         namida.error(context.feedback.title, context.feedback.message, context.feedback.stack);
@@ -270,7 +272,7 @@ class MasterNode {
 
   processTopicDataMessage(topicDataMessage) {
     let record = topicDataMessage.topicDataRecord;
-    this.topicData.publish(record.topic, record[record.type], record.type);
+    this.topicData.publish(record.topic, record[record.type], record.type, record.timestamp);
   }
 }
 
