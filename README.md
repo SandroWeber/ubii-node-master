@@ -4,9 +4,9 @@
 
 ### Node.js
 
-install Node.js v10.22.1 (https://nodejs.org/en/download/releases/, it's an older LTS version since 12.19 LTS has conflicts with newer tensorflowjs versions)
+install Node.js v10.22.1 (https://nodejs.org/en/download/releases/, it's an older LTS version as 12.19 LTS has conflicts with newer tensorflowjs versions)
 
-### Windows pre-requisists before "npm install"
+### Windows pre-requisists
 
 #### windows build tools
 
@@ -66,4 +66,8 @@ Alternatives:
 - In `config.json` set things up under "https"
 - enable by setting to "true"
 - set paths to your certificates
-- add IPs / URLs of allowed origins for CORS (usually the machine running your web frontend / other web clients)
+
+
+### CORS / allowed origins policies
+- add IPs / URLs of allowed origins for CORS (usually the machine running your web frontend / other web clients) to your config.json
+- localhost and local IPs are automatically added, if you want web communication from outside you need to configure it manually
