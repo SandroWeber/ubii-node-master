@@ -74,7 +74,7 @@ class MasterNode {
       };
 
       context.feedback.title = 'Service Request';
-      context.feedback.message = `processing failed with an error:`;
+      context.feedback.message = 'processing failed with an error:';
       context.feedback.stack = '' + (e.stack.toString() || e.toString());
 
       namida.logFailure(
