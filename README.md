@@ -71,3 +71,11 @@ Alternatives:
 ### CORS / allowed origins policies
 - add IPs / URLs of allowed origins for CORS (usually the machine running your web frontend / other web clients) to your config.json
 - localhost and local IPs are automatically added, if you want web communication from outside you need to configure it manually
+
+## Debugging
+
+- start the master node via "npm run start-profiling" (will run with additional command-line flags "--inspect")
+- in Chrome browser, go to "about:inspect"
+-- click "Open dedicated DevTools for Node" or select your process from the remote target list
+-- Tab "Profiler" allows you to check CPU execution time
+-- Tab "Sources" allows you to set breakpoints and debug execution
