@@ -74,8 +74,12 @@ Alternatives:
 
 ## Debugging
 
+### NodeJS inspection
 - start the master node via "npm run start-profiling" (will run with additional command-line flags "--inspect")
 - in Chrome browser, go to "about:inspect"
 - click "Open dedicated DevTools for Node" or select your process from the remote target list
 - Tab "Profiler" allows you to check CPU execution time
 - Tab "Sources" allows you to set breakpoints and debug execution
+
+### Topic Communication
+- use the tools offered in the web-frontend: https://github.com/SandroWeber/ubii-web-frontend
