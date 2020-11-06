@@ -20,18 +20,16 @@ class RESTServer {
 
     let ipLan = NetworkConfigManager.hostAdresses.ethernet;
     let ipWifi = NetworkConfigManager.hostAdresses.wifi;
-    if (configService.useHTTPS()) {
-      this.allowedOrigins = configService.getAllowedOrigins();
-    } else {
-      this.allowedOrigins = [
-        'http://' + ipLan + ':8080',
-        'http://' + ipLan + ':8081',
-        'http://' + ipWifi + ':8080',
-        'http://' + ipWifi + ':8081',
-        'http://localhost:8080',
-        'http://localhost:8081'
-      ];
-    }
+
+    this.allowedOrigins = configService.getAllowedOrigins();
+    this.allowedOrigins = this.allowedOrigins.concat([
+      'http://' + ipLan + ':8080',
+      'http://' + ipLan + ':8081',
+      'http://' + ipWifi + ':8080',
+      'http://' + ipWifi + ':8081',
+      'http://localhost:8080',
+      'http://localhost:8081'
+    ]);
 
     this.ready = false;
 
