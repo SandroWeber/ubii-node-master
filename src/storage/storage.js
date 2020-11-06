@@ -1,6 +1,8 @@
-const namida = require('@tum-far/namida/src/namida');
 const fs = require('fs');
 const shelljs = require('shelljs');
+
+const namida = require('@tum-far/namida/src/namida');
+
 const { BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB } = require('./storageConstants');
 
 class Storage {
@@ -8,6 +10,7 @@ class Storage {
     this.fileEnding = fileEnding;
     this.subFolder = subFolder;
     this.localDirectory = BASE_FOLDER_LOCAL_DB + '/' + this.subFolder;
+    this.onlineDirectory = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
 
     if (!fs.existsSync(this.localDirectory)) {
       shelljs.mkdir('-p', this.localDirectory);
@@ -117,16 +120,18 @@ class Storage {
       }
 
       files.forEach((file) => {
-        //console.info('new ', this.fileEnding, ' db local file:');
-        //console.log(file);
-        this.loadSpecificationFromFile(this.localDirectory + '/' + file);
+        let fileEndingIndex = file.lastIndexOf('.');
+        let fileEnding = file.substr(fileEndingIndex + 1);
+
+        if (fileEnding === this.fileEnding) {
+          this.loadSpecificationFromFile(this.localDirectory + '/' + file);
+        }
       });
     });
   }
 
   loadOnlineDB() {
-    let dirOnlineDB = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
-    fs.readdir(dirOnlineDB, (err, files) => {
+    fs.readdir(this.onlineDirectory, (err, files) => {
       if (err) {
         return console.warn('Storage - Unable to scan directory: ' + err);
       }
@@ -137,7 +142,7 @@ class Storage {
         if (this.specificationsLocal.has(specs.name) || this.specificationsOnline.has(specs.name)) {
           namida.logFailure(
             this.fileEnding + ' Storage',
-            'specification from file ' + path + ' has conflicting name ' + specs.name
+            'specification from file ' + path + ' has conflicting name "' + specs.name + '"'
           );
         } else {
           this.specificationsOnline.set(specs.name, specs);
@@ -153,7 +158,11 @@ class Storage {
    */
   async loadSpecificationFromFile(path) {
     let specs = await this.getSpecificationFromFile(path);
-    if (this.specificationsLocal.has(specs.name) || this.specificationsOnline.has(specs.name)) {
+    if (
+      this.specificationsLocal.has(specs.name) ||
+      this.specificationsOnline.has(specs.name) ||
+      specs.name === ''
+    ) {
       namida.logFailure(
         this.fileEnding + ' Storage',
         'specification from file ' + path + ' has conflicting name ' + specs.name
@@ -161,6 +170,8 @@ class Storage {
     } else {
       this.specificationsLocal.set(specs.name, specs);
       this.filePaths.set(specs.name, path);
+      console.info('new db local file: ' + path);
+      console.info(this.specificationsLocal);
     }
   }
 

@@ -3,3 +3,7 @@ certificates/*
 config.json
 .idea/
 .vscode/
+
+database/processing/*.js
+database/processing/*.pm
+database/sessions/*.session
