@@ -25,9 +25,9 @@ class Storage {
   }
 
   /**
-   * Returns whether a specification matching the given specifications exists.
+   * Returns whether a specification matching the given specifications exists. Currently only checks for name.
    * @param {Specification Object} specs
-   * @returns {Boolean} Does a specification with the given specifications exist?
+   * @returns {boolean} Does a specification with the given specifications exist?
    */
   hasSpecification(specs) {
     return this.specificationsLocal.has(specs.name) || this.specificationsOnline.has(specs.name);
@@ -35,7 +35,7 @@ class Storage {
 
   /**
    * Get the specification with the specified name.
-   * @param {String} name
+   * @param {string} name
    * @returns The specification with the specified name.
    */
   getSpecification(name) {
@@ -56,7 +56,7 @@ class Storage {
 
   /**
    * Add a new specification to the specifications list.
-   * @param {Object} spec The specification in protobuf format. It requires a name property.
+   * @param {object} spec - The specification. It requires a name property.
    */
   addSpecification(spec) {
     while (this.hasSpecification(spec)) {
@@ -116,7 +116,8 @@ class Storage {
   loadLocalDB() {
     fs.readdir(this.localDirectory, (err, files) => {
       if (err) {
-        return console.info('Storage - Unable to scan directory: ' + err);
+        namida.log(this.toString(), 'Unable to scan directory: ' + err);
+        return;
       }
 
       files.forEach((file) => {
@@ -133,15 +134,16 @@ class Storage {
   loadOnlineDB() {
     fs.readdir(this.onlineDirectory, (err, files) => {
       if (err) {
-        return console.warn('Storage - Unable to scan directory: ' + err);
+        namida.log(this.toString(), 'Unable to scan directory: ' + err);
+        return;
       }
 
       files.forEach(async (file) => {
         let path = dirOnlineDB + '/' + file;
         let specs = await this.getSpecificationFromFile(path);
-        if (this.specificationsLocal.has(specs.name) || this.specificationsOnline.has(specs.name)) {
+        if (!this.isValidSpecName(specs.name)) {
           namida.logFailure(
-            this.fileEnding + ' Storage',
+            this.toString(),
             'specification from file ' + path + ' has conflicting name "' + specs.name + '"'
           );
         } else {
@@ -154,27 +156,26 @@ class Storage {
 
   /**
    * Load a specification from the file with the specified path and adds it to the local specifications.
-   * @param {String} path Path to the specification file.
+   * @param {string} path - Path to the specification file.
    */
   async loadSpecificationFromFile(path) {
     let specs = await this.getSpecificationFromFile(path);
-    if (
-      this.specificationsLocal.has(specs.name) ||
-      this.specificationsOnline.has(specs.name) ||
-      specs.name === ''
-    ) {
+    if (!this.isValidSpecName(specs.name)) {
       namida.logFailure(
-        this.fileEnding + ' Storage',
+        this.toString(),
         'specification from file ' + path + ' has conflicting name ' + specs.name
       );
     } else {
       this.specificationsLocal.set(specs.name, specs);
       this.filePaths.set(specs.name, path);
-      console.info('new db local file: ' + path);
-      console.info(this.specificationsLocal);
     }
   }
 
+  /**
+   * Returns the parsed JSON content.
+   * @param {string} path - Path to file.
+   * @returns {object} - The parsed JSON object.
+   */
   getSpecificationFromFile(path) {
     return new Promise((resolve, reject) => {
       fs.readFile(path, (err, data) => {
@@ -191,23 +192,20 @@ class Storage {
 
   /**
    * Saves a specification to a file with the corresponding path. The path is then stored in the filePaths map.
-   * @param {Object} specification The specification requires a name property.
+   * @param {object} spec - The specification requires a name property.
    */
-  saveSpecificationToFile(specification) {
-    if (!specification.name) {
-      namida.logFailure(
-        this.fileEnding + ' Storage',
-        'could not save specs to file, no name given'
-      );
+  saveSpecificationToFile(spec) {
+    if (!spec.name) {
+      namida.logFailure(this.toString(), 'could not save specs to file, no name given');
       return;
     }
     // Build complete path.
-    let path = this.localDirectory + '/' + specification.name + this.fileEnding;
+    let path = this.localDirectory + '/' + spec.name + this.fileEnding;
 
     // Write to file and store path.
     try {
-      fs.writeFileSync(path, JSON.stringify(specification, null, 4), { flag: 'wx' });
-      this.filePaths.set(specification.name, path);
+      fs.writeFileSync(path, JSON.stringify(spec, null, 4), { flag: 'wx' });
+      this.filePaths.set(spec.name, path);
     } catch (error) {
       if (error) throw error;
     }
@@ -215,7 +213,7 @@ class Storage {
 
   /**
    * Replaces a specification file with the path stored with regard to the is of the specification with a new specification file.
-   * @param {Object} specification The specification requires a name property.
+   * @param {object} specification - The specification requires a name property.
    */
   replaceSpecificationFile(specification) {
     try {
@@ -231,7 +229,7 @@ class Storage {
 
   /**
    * Deletes the file associated with the specified name.
-   * @param {String} name Name of a stored specification.
+   * @param {string} name - Name of a stored specification.
    */
   deleteSpecificationFile(name) {
     let path = this.filePaths.get(name);
@@ -246,6 +244,18 @@ class Storage {
       specs.name = specs.name + '_copy';
     }
     this.addSpecification(specs);
+  }
+
+  /**
+   * Checks whether the passed object has a valid name specified.
+   * @param {string} name - Specification object to test
+   */
+  isValidSpecName(name) {
+    return !this.hasSpecification({ name: name }) && name.length > 0;
+  }
+
+  toString() {
+    return 'Storage(.' + this.fileEnding + ')';
   }
 }
 

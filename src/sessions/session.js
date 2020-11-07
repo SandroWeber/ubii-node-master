@@ -51,7 +51,7 @@ class Session {
       for (let pmSpecs of this.processingModules) {
         let pm = this.processingModuleManager.getModuleBySpecs(pmSpecs, this.id);
         if (!pm) {
-          pm = this.processingModuleManager.createModule(pmSpecs);
+          pm = this.processingModuleManager.createModuleBySpecs(pmSpecs);
         }
         if (pm) {
           pm.sessionId = this.id;

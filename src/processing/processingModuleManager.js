@@ -1,6 +1,5 @@
 const namida = require('@tum-far/namida/src/namida');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
-
 const { proto } = require('@tum-far/ubii-msg-formats');
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 
@@ -26,8 +25,16 @@ class ProcessingModuleManager {
     };*/
   }
 
-  createModule(specs) {
+  createModuleBySpecs(specs) {
     let pm = new ProcessingModule(specs);
+    this.processingModules.set(pm.id, pm);
+    pm.onCreated(pm.state);
+
+    return pm;
+  }
+
+  createModuleByClassConstructor(classConstructor) {
+    let pm = new classConstructor();
     this.processingModules.set(pm.id, pm);
     pm.onCreated(pm.state);
 

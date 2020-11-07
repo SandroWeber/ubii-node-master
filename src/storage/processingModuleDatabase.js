@@ -13,20 +13,21 @@ class ProcessingModuleDatabase extends Storage {
   }
 
   /**
-   * Returns whether an interaction specification matching the given specifications exists.
-   * @param {Specification Object} specs
-   * @returns {Boolean} Does an interaction specification with the given specifications exist?
+   * Returns whether a processing module specification matching the given specifications exists.
+   * @param {object} specs
+   * @returns {Boolean} Does a processing module specification with the given specifications exist?
    */
   has(specs) {
     return this.hasSpecification(specs);
   }
 
   /**
-   * Get the interaction with the specified name.
-   * @param {String} name
+   * Get the processing module with the specified name.
+   * @param {string} name
+   * @returns {(object|constructor)} The JSON object or the constructor of the JS class for the module
    */
   getByName(name) {
-    return this.getSpecification(name);
+    return this.getSpecification(name) || this.localNativeJsPMs.get(name);
   }
 
   /**
@@ -37,12 +38,12 @@ class ProcessingModuleDatabase extends Storage {
   }
 
   /**
-   * Add a new interaction protobuf specification based on the specified specification to the specifications list.
+   * Add a new Processing Module specification to the list.
    * @param {Object} spec The specification in protobuf format. It requires a name property.
    */
   add(spec) {
     if (!this.verifySpecification(spec)) {
-      throw 'Interaction with name ' + spec.name + ' could not be registered, invalid specs';
+      throw 'Processing Module with name ' + spec.name + ' could not be registered, invalid specs';
     }
 
     try {
@@ -53,7 +54,7 @@ class ProcessingModuleDatabase extends Storage {
   }
 
   /**
-   * Delete the interaction specification with the specified name from the specifications list.
+   * Delete the processing module with the specified name from the specifications list.
    * @param {String} name
    */
   deleteByName(name) {
@@ -61,12 +62,12 @@ class ProcessingModuleDatabase extends Storage {
   }
 
   /**
-   * Update a interaction specification that is already present in the specifications list with a new value.
+   * Update a processing module specification that is already present in the specifications list with a new value.
    * @param {Object} spec The specification requires a name property.
    */
   update(spec) {
     if (!this.verifySpecification(spec)) {
-      throw 'interaction specification could not be verified';
+      throw 'Processing Module specification could not be verified';
     }
 
     this.updateSpecification(spec);
@@ -74,7 +75,7 @@ class ProcessingModuleDatabase extends Storage {
 
   /**
    * Verifies the specified specification.
-   * @param {*} spec
+   * @param {object} spec - The object to verify.
    */
   verify(spec) {
     let translator = new ProtobufTranslator(MSG_TYPES.PM);
@@ -86,14 +87,15 @@ class ProcessingModuleDatabase extends Storage {
   }
 
   /**
-   * Load all js files that are present in the sub-folder specified for this storage.
+   * Load all js files defining natively written modules that are present in the sub-folder specified for this storage.
    */
   loadLocalNativeJsModules() {
     this.localNativeJsPMs = new Map();
 
     fs.readdir(this.localDirectory, (err, files) => {
       if (err) {
-        return console.info('Storage - Unable to scan directory: ' + err);
+        namida.log(this.toString(), 'Unable to scan directory: ' + err);
+        return;
       }
 
       files.forEach((file) => {
@@ -105,12 +107,7 @@ class ProcessingModuleDatabase extends Storage {
           let pmClass = require(filepath).default;
           let pm = new pmClass();
 
-          if (
-            this.specificationsLocal.has(pm.name) ||
-            this.specificationsOnline.has(pm.name) ||
-            this.localNativeJsPMs.has(pm.name) ||
-            pm.name === ''
-          ) {
+          if (!this.isValidSpecName(pm)) {
             namida.logFailure(
               this.fileEnding + ' Storage',
               'specification from file ' + filepath + ' has conflicting name "' + pm.name + '"'
@@ -122,6 +119,16 @@ class ProcessingModuleDatabase extends Storage {
         }
       });
     });
+  }
+
+  /**
+   * Overrides Storage.isValidSpecName() to include processing modules natively written in JS.
+   * @param {string} name - The object to check for viable naming.
+   */
+  isValidSpecName(name) {
+    return (
+      !this.hasSpecification({ name: name }) && !this.localNativeJsPMs.has(name) && name.length > 0
+    );
   }
 }
 
