@@ -115,17 +115,11 @@ class Storage {
    * Load all specification files that are present in the sub-folder specified for this storage.
    */
   loadLocalDB() {
-    fs.readdirSync(this.localDirectory, (err, files) => {
-      if (err) {
-        namida.log(this.toString(), 'Unable to scan directory: ' + err);
-        return;
+    let files = fs.readdirSync(this.localDirectory);
+    files.forEach((file) => {
+      if (path.extname(file) === '.' + this.fileEnding) {
+        this.loadSpecificationFromFile(this.localDirectory + '/' + file);
       }
-
-      files.forEach((file) => {
-        if (path.extname(file) === '.' + this.fileEnding) {
-          this.loadSpecificationFromFile(this.localDirectory + '/' + file);
-        }
-      });
     });
   }
 
@@ -156,8 +150,8 @@ class Storage {
    * Load a specification from the file with the specified path and adds it to the local specifications.
    * @param {string} path - Path to the specification file.
    */
-  async loadSpecificationFromFile(path) {
-    let specs = await this.getSpecificationFromFile(path);
+  loadSpecificationFromFile(path) {
+    let specs = this.getSpecificationFromFile(path);
     if (!this.isValidSpecName(specs.name)) {
       namida.logFailure(
         this.toString(),
@@ -175,17 +169,9 @@ class Storage {
    * @returns {object} - The parsed JSON object.
    */
   getSpecificationFromFile(path) {
-    return new Promise((resolve, reject) => {
-      fs.readFile(path, (err, data) => {
-        if (err) {
-          reject(err);
-          throw err;
-        }
-
-        let specs = JSON.parse(data);
-        return resolve(specs);
-      });
-    });
+    let file = fs.readFileSync(path);
+    let specs = JSON.parse(file);
+    return specs;
   }
 
   /**
