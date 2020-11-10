@@ -354,9 +354,10 @@ test('processingMode TriggerOnInput', async (t) => {
     }, index * timeMsBetweenInputTriggers);
   });
   // wait for all triggers to resolve with some buffer for onProcessing calls to go through
-  await TestUtility.wait(4 * pm.inputs.length * timeMsBetweenInputTriggers);
-  t.is(processingCB.callCount, pm.inputs.length);
-  pm.stop();
+  await TestUtility.wait(10 * pm.inputs.length * timeMsBetweenInputTriggers).then(() => {
+    t.is(processingCB.callCount, pm.inputs.length);
+    pm.stop();
+  });
 
   // trigger only when all inputs are refreshed
   processingCB.resetHistory();
@@ -365,9 +366,10 @@ test('processingMode TriggerOnInput', async (t) => {
   pm.inputs.forEach((element) => {
     pm.emit(ProcessingModule.EVENTS.NEW_INPUT, element.internalName);
   });
-  await TestUtility.wait(timeMsBetweenInputTriggers);
-  t.is(processingCB.callCount, 1);
-  pm.stop();
+  await TestUtility.wait(timeMsBetweenInputTriggers).then(() => {
+    t.is(processingCB.callCount, 1);
+    pm.stop();
+  });
 });
 
 test('processingMode Lockstep', async (t) => {

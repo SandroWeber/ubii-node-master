@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 const namida = require('@tum-far/namida/src/namida');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
@@ -9,7 +10,7 @@ class ProcessingModuleDatabase extends Storage {
   constructor() {
     super('processing', 'pm');
 
-    this.loadLocalNativeJsModules();
+    this.loadLocalJsModules();
   }
 
   /**
@@ -27,7 +28,7 @@ class ProcessingModuleDatabase extends Storage {
    * @returns {(object|constructor)} The JSON object or the constructor of the JS class for the module
    */
   getByName(name) {
-    return this.getSpecification(name) || this.localNativeJsPMs.get(name);
+    return this.getSpecification(name) || this.localJsPMs.get(name);
   }
 
   /**
@@ -89,36 +90,36 @@ class ProcessingModuleDatabase extends Storage {
   /**
    * Load all js files defining natively written modules that are present in the sub-folder specified for this storage.
    */
-  loadLocalNativeJsModules() {
-    this.localNativeJsPMs = new Map();
+  loadLocalJsModules() {
+    this.localJsPMs = new Map();
 
-    fs.readdir(this.localDirectory, (err, files) => {
-      if (err) {
-        namida.log(this.toString(), 'Unable to scan directory: ' + err);
-        return;
+    let files = fs.readdirSync(this.localDirectory);
+    files.forEach((file) => {
+      if (path.extname(file) === '.js') {
+        let filepath = this.localDirectory + '/' + file;
+        this.loadJSModule(filepath, this.localJsPMs);
       }
-
-      files.forEach((file) => {
-        let fileEndingIndex = file.lastIndexOf('.');
-        let fileEnding = file.substr(fileEndingIndex + 1);
-
-        if (fileEnding === 'js') {
-          let filepath = this.localDirectory + '/' + file;
-          let pmClass = require(filepath).default;
-          let pm = new pmClass();
-
-          if (!this.isValidSpecName(pm)) {
-            namida.logFailure(
-              this.fileEnding + ' Storage',
-              'specification from file ' + filepath + ' has conflicting name "' + pm.name + '"'
-            );
-          } else {
-            this.localNativeJsPMs.set(pm.name, pmClass);
-            this.filePaths.set(pm.name, filepath);
-          }
-        }
-      });
     });
+  }
+
+  /**
+   * Load processing module written in .js.
+   * @param {string} filepath - path to file
+   * @param {Map} map - map to add the the loaded module to
+   */
+  loadJSModule(filepath, map) {
+    let pmClass = require(filepath);
+    let pm = new pmClass();
+
+    if (!this.isValidSpecName(pm.name)) {
+      namida.logFailure(
+        this.toString(),
+        'specification from file ' + filepath + ' has conflicting name "' + pm.name + '"'
+      );
+    } else {
+      map.set(pm.name, pmClass);
+      this.filePaths.set(pm.name, filepath);
+    }
   }
 
   /**
@@ -127,7 +128,10 @@ class ProcessingModuleDatabase extends Storage {
    */
   isValidSpecName(name) {
     return (
-      !this.hasSpecification({ name: name }) && !this.localNativeJsPMs.has(name) && name.length > 0
+      name &&
+      name.length > 0 &&
+      !this.hasSpecification({ name: name }) &&
+      !this.localJsPMs.has(name)
     );
   }
 }

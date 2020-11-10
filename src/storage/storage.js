@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const shelljs = require('shelljs');
 
 const namida = require('@tum-far/namida/src/namida');
@@ -114,17 +115,14 @@ class Storage {
    * Load all specification files that are present in the sub-folder specified for this storage.
    */
   loadLocalDB() {
-    fs.readdir(this.localDirectory, (err, files) => {
+    fs.readdirSync(this.localDirectory, (err, files) => {
       if (err) {
         namida.log(this.toString(), 'Unable to scan directory: ' + err);
         return;
       }
 
       files.forEach((file) => {
-        let fileEndingIndex = file.lastIndexOf('.');
-        let fileEnding = file.substr(fileEndingIndex + 1);
-
-        if (fileEnding === this.fileEnding) {
+        if (path.extname(file) === '.' + this.fileEnding) {
           this.loadSpecificationFromFile(this.localDirectory + '/' + file);
         }
       });
@@ -251,7 +249,7 @@ class Storage {
    * @param {string} name - Specification object to test
    */
   isValidSpecName(name) {
-    return !this.hasSpecification({ name: name }) && name.length > 0;
+    return name && name.length > 0 && !this.hasSpecification({ name: name });
   }
 
   toString() {

@@ -4,8 +4,10 @@ export default {
     'test/sessions/**/*',
     'test/clients/**/*',
     'test/processing/**/*',
+    'test/storage/**/*',
     // not part of the tests
     '!test/mocks/*',
+    '!test/files/*',
     '!test/sessions/testUtility.js'
   ],
   cache: false,

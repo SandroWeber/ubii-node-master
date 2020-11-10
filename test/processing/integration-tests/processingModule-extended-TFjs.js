@@ -1,58 +1,14 @@
 import test from 'ava';
 import sinon from 'sinon';
 
-import * as tf from '@tensorflow/tfjs-node';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
-import { ProcessingModule, ProcessingModuleManager, Session } from '../../../src/index';
-import ExternalLibrariesService from '../../../src/processing/externalLibrariesService';
+import { ProcessingModuleManager, Session } from '../../../src/index';
 import TestUtility from '../../testUtility';
 
+import TestProcessingModuleTF from '../../files/processing/testProcessingModuleTF';
+
 /* setup */
-
-ExternalLibrariesService.addExternalLibrary('tf', tf);
-
-class ExtendedProcessingModule extends ProcessingModule {
-  constructor(specs) {
-    super(specs);
-
-    this.outputs = [
-      {
-        internalName: 'prediction',
-        messageFormat: 'float'
-      }
-    ];
-  }
-
-  onCreated() {
-    this.state.model = tf.sequential();
-    this.state.model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
-
-    // Prepare the model for training: Specify the loss and the optimizer.
-    this.state.model.compile({ loss: 'meanSquaredError', optimizer: 'sgd' });
-
-    // Generate some synthetic data for training.
-    const xs = tf.tensor2d([1, 2, 3, 4], [4, 1]);
-    const ys = tf.tensor2d([1, 3, 5, 7], [4, 1]);
-    // Train the model using the data.
-    let fitData = async () => {
-      await this.state.model.fit(xs, ys);
-    };
-    fitData();
-
-    this.state.expectedPrediction = this.state.model
-      .predict(tf.tensor2d([5], [1, 1]))
-      .dataSync()[0];
-  }
-
-  onProcessing() {
-    // Use the model to do inference on a data point the model hasn't seen before:
-    let prediction = this.state.model
-      .predict(this.state.modules.tf.tensor2d([5], [1, 1]))
-      .dataSync()[0];
-    this.prediction = prediction;
-  }
-}
 
 let topicPrediction = '/tfjs-runtime-test/prediction';
 
@@ -67,14 +23,14 @@ test('passing specifications to constructor', (t) => {
       }
     }
   };
-  let pm = new ExtendedProcessingModule(specs);
+  let pm = new TestProcessingModuleTF(specs);
   t.true(pm.id !== undefined && pm.id.length > 0);
   t.is(pm.name, specs.name);
   t.is(pm.processingMode, specs.processingMode);
 });
 
 test('overwritten lifecycle functions', (t) => {
-  let pm = new ExtendedProcessingModule();
+  let pm = new TestProcessingModuleTF();
   // onCreated
   pm.onCreated(pm.state);
   t.true(pm.state.model !== undefined);
@@ -91,7 +47,7 @@ test('run session with module', async (t) => {
   let topicdata = new RuntimeTopicData();
   let pmManager = new ProcessingModuleManager(undefined, topicdata);
 
-  let pm = new ExtendedProcessingModule();
+  let pm = new TestProcessingModuleTF();
   pm.onCreated();
   t.true(pm.state.model !== undefined);
   t.true(pm.state.expectedPrediction !== undefined);
