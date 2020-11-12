@@ -25,7 +25,7 @@ class ProcessingModuleManager {
     };*/
   }
 
-  createModuleBySpecs(specs) {
+  createModuleFromSpecs(specs) {
     let pm = new ProcessingModule(specs);
     this.processingModules.set(pm.id, pm);
     pm.onCreated(pm.state);
@@ -33,7 +33,7 @@ class ProcessingModuleManager {
     return pm;
   }
 
-  createModuleByClassConstructor(classConstructor) {
+  createModuleFromClass(classConstructor) {
     let pm = new classConstructor();
     this.processingModules.set(pm.id, pm);
     pm.onCreated(pm.state);

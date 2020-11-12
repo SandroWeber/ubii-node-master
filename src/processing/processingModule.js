@@ -12,7 +12,6 @@ const { set } = require('shelljs');
 class ProcessingModule extends EventEmitter {
   constructor(
     specs = {
-      id: uuidv4(),
       name: '',
       authors: [],
       tags: [],
@@ -422,6 +421,26 @@ class ProcessingModule extends EventEmitter {
 
   toString() {
     return 'ProcessingModule ' + this.name + ' (ID ' + this.id + ')';
+  }
+
+  toProtobuf() {
+    return {
+      id: this.id,
+      name: this.name,
+      authors: this.authors,
+      tags: this.tags,
+      description: this.description,
+      clientId: this.clientId,
+      status: this.status,
+      processingMode: this.processingMode,
+      inputs: this.inputs,
+      outputs: this.outputs,
+      language: this.language,
+      onProcessingStringified: this.onProcessing.toString(),
+      onCreatedStringified: this.onCreated.toString(),
+      onHaltedStringified: this.onHalted.toString(),
+      onDestroyedStringified: this.onDestroyed.toString()
+    };
   }
 
   /* helper functions end */

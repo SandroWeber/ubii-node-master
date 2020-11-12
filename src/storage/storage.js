@@ -6,9 +6,35 @@ const namida = require('@tum-far/namida/src/namida');
 
 const { BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB } = require('./storageConstants');
 
-class Storage {
-  constructor(subFolder, fileEnding) {
+class SpecificationHandler {
+  constructor(fileEnding, readFile, writeFile, createInstance) {
     this.fileEnding = fileEnding;
+    this.readFile = readFile;
+    this.writeFile = writeFile;
+    this.createInstance = createInstance;
+  }
+
+  read() {
+    throw new Error('SpecificationHandler(' + this.fileEnding + ').read() must be overwritten');
+  }
+
+  write() {
+    throw new Error('SpecificationHandler(' + this.fileEnding + ').write() must be overwritten');
+  }
+
+  createInstance() {
+    throw new Error(
+      'SpecificationHandler(' + this.fileEnding + ').createInstance() must be overwritten'
+    );
+  }
+}
+
+class Storage {
+  constructor(subFolder, mapFileHandlers) {
+    this.fileHandlers = mapFileHandlers;
+    console.info(this.fileHandlers);
+    this.fileEndings = Array.from(this.fileHandlers.keys());
+    console.info(this.fileEndings);
     this.subFolder = subFolder;
     this.localDirectory = BASE_FOLDER_LOCAL_DB + '/' + this.subFolder;
     this.onlineDirectory = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
@@ -17,6 +43,13 @@ class Storage {
       shelljs.mkdir('-p', this.localDirectory);
     }
 
+    //this.initialize();
+  }
+
+  /**
+   * Initialize maps for storage and load files.
+   */
+  initialize() {
     this.specificationsLocal = new Map();
     this.specificationsOnline = new Map();
     this.filePaths = new Map();
@@ -117,8 +150,19 @@ class Storage {
   loadLocalDB() {
     let files = fs.readdirSync(this.localDirectory);
     files.forEach((file) => {
-      if (path.extname(file) === '.' + this.fileEnding) {
-        this.loadSpecificationFromFile(this.localDirectory + '/' + file);
+      let fileEnding = path.extname(file);
+      let filepath = this.localDirectory + '/' + file;
+      if (this.fileEndings.includes(fileEnding)) {
+        let specs = this.fileHandlers.get(fileEnding).read(filepath);
+        if (!this.isValidSpecName(specs.name)) {
+          namida.logFailure(
+            this.toString(),
+            'specification from file ' + path + ' has conflicting name ' + specs.name
+          );
+        } else {
+          this.specificationsLocal.set(specs.name, specs);
+          this.filePaths.set(specs.name, filepath);
+        }
       }
     });
   }
@@ -178,13 +222,13 @@ class Storage {
    * Saves a specification to a file with the corresponding path. The path is then stored in the filePaths map.
    * @param {object} spec - The specification requires a name property.
    */
-  saveSpecificationToFile(spec) {
+  saveSpecificationToFile(spec, fileEnding) {
     if (!spec.name) {
       namida.logFailure(this.toString(), 'could not save specs to file, no name given');
       return;
     }
     // Build complete path.
-    let path = this.localDirectory + '/' + spec.name + this.fileEnding;
+    let path = this.localDirectory + '/' + spec.name + fileEnding;
 
     // Write to file and store path.
     try {
@@ -239,8 +283,8 @@ class Storage {
   }
 
   toString() {
-    return 'Storage(.' + this.fileEnding + ')';
+    return 'Storage' + this.fileEndings.toString();
   }
 }
 
-module.exports = Storage;
+module.exports = { Storage, SpecificationHandler };

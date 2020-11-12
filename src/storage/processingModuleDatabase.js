@@ -4,11 +4,47 @@ const path = require('path');
 const namida = require('@tum-far/namida/src/namida');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
-const Storage = require('./storage.js');
+const { Storage, SpecificationHandler } = require('./storage.js');
+const { ProcessingModule } = require('../processing/processingModule.js');
 
 class ProcessingModuleDatabase extends Storage {
   constructor() {
-    super('processing', 'pm');
+    let fileHandlerProto = new SpecificationHandler(
+      '.pm',
+      (filepath) => {
+        let file = fs.readFileSync(filepath);
+        let protoSpecs = JSON.parse(file);
+        return {
+          name: protoSpecs.name,
+          fileEnding: '.pm'
+        };
+      },
+      (filepath, protoSpecs) => {
+        try {
+          fs.writeFileSync(filepath, JSON.stringify(protoSpecs, null, 4), { flag: 'wx' });
+        } catch (error) {
+          if (error) throw error;
+        }
+      }
+    );
+
+    let fileHandlerJs = new SpecificationHandler(
+      '.js',
+      (filepath) => {
+        let pmClass = require(filepath);
+        return pmClass;
+      },
+      (filepath, jsBlob) => {
+        //TODO: implement
+      },
+      (classSpecs) => {
+        return new classSpecs();
+      }
+    );
+    let mapFileHandlers = new Map();
+    mapFileHandlers.set(fileHandlerProto.fileEnding, fileHandlerProto);
+    mapFileHandlers.set(fileHandlerJs.fileEnding, fileHandlerJs);
+    super('processing', mapFileHandlers);
 
     this.loadLocalJsModules();
   }
