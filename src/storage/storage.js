@@ -6,35 +6,33 @@ const namida = require('@tum-far/namida/src/namida');
 
 const { BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB } = require('./storageConstants');
 
-class SpecificationHandler {
-  constructor(fileEnding, readFile, writeFile, createInstance) {
+class StorageEntry {
+  constructor(key, filepath) {
+    this.key = key;
+    this.filepath = filepath;
+  }
+}
+
+class FileHandler {
+  constructor(fileEnding, readFile, writeFile) {
     this.fileEnding = fileEnding;
     this.readFile = readFile;
     this.writeFile = writeFile;
-    this.createInstance = createInstance;
   }
 
-  read() {
+  readFile() {
     throw new Error('SpecificationHandler(' + this.fileEnding + ').read() must be overwritten');
   }
 
-  write() {
+  writeFile() {
     throw new Error('SpecificationHandler(' + this.fileEnding + ').write() must be overwritten');
-  }
-
-  createInstance() {
-    throw new Error(
-      'SpecificationHandler(' + this.fileEnding + ').createInstance() must be overwritten'
-    );
   }
 }
 
 class Storage {
   constructor(subFolder, mapFileHandlers) {
     this.fileHandlers = mapFileHandlers;
-    console.info(this.fileHandlers);
     this.fileEndings = Array.from(this.fileHandlers.keys());
-    console.info(this.fileEndings);
     this.subFolder = subFolder;
     this.localDirectory = BASE_FOLDER_LOCAL_DB + '/' + this.subFolder;
     this.onlineDirectory = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
@@ -43,7 +41,7 @@ class Storage {
       shelljs.mkdir('-p', this.localDirectory);
     }
 
-    //this.initialize();
+    this.initialize();
   }
 
   /**
@@ -52,28 +50,27 @@ class Storage {
   initialize() {
     this.specificationsLocal = new Map();
     this.specificationsOnline = new Map();
-    this.filePaths = new Map();
 
-    this.loadOnlineDB();
-    this.loadLocalDB();
+    this.loadDirectory(this.localDirectory, this.specificationsLocal);
+    this.loadDirectory(this.onlineDirectory, this.specificationsOnline);
   }
 
   /**
    * Returns whether a specification matching the given specifications exists. Currently only checks for name.
-   * @param {Specification Object} specs
+   * @param {string} key
    * @returns {boolean} Does a specification with the given specifications exist?
    */
-  hasSpecification(specs) {
-    return this.specificationsLocal.has(specs.name) || this.specificationsOnline.has(specs.name);
+  hasEntry(key) {
+    return this.specificationsLocal.has(key) || this.specificationsOnline.has(key);
   }
 
   /**
    * Get the specification with the specified name.
-   * @param {string} name
+   * @param {string} key
    * @returns The specification with the specified name.
    */
-  getSpecification(name) {
-    return this.specificationsLocal.get(name) || this.specificationsOnline.get(name);
+  getEntry(key) {
+    return this.specificationsLocal.get(key) || this.specificationsOnline.get(key);
   }
 
   /**
@@ -93,11 +90,11 @@ class Storage {
    * @param {object} spec - The specification. It requires a name property.
    */
   addSpecification(spec) {
-    while (this.hasSpecification(spec)) {
+    while (this.hasEntry(spec)) {
       spec.name = spec.name + '_new';
     }
 
-    if (this.hasSpecification(spec)) {
+    if (this.hasEntry(spec)) {
       throw 'Specification with name ' + spec.name + ' could not be added, name already exists.';
     }
 
@@ -148,78 +145,84 @@ class Storage {
    * Load all specification files that are present in the sub-folder specified for this storage.
    */
   loadLocalDB() {
-    let files = fs.readdirSync(this.localDirectory);
-    files.forEach((file) => {
-      let fileEnding = path.extname(file);
-      let filepath = this.localDirectory + '/' + file;
-      if (this.fileEndings.includes(fileEnding)) {
-        let specs = this.fileHandlers.get(fileEnding).read(filepath);
-        if (!this.isValidSpecName(specs.name)) {
-          namida.logFailure(
-            this.toString(),
-            'specification from file ' + path + ' has conflicting name ' + specs.name
-          );
-        } else {
-          this.specificationsLocal.set(specs.name, specs);
-          this.filePaths.set(specs.name, filepath);
+    try {
+      let files = fs.readdirSync(this.localDirectory);
+      files.forEach((file) => {
+        let filepath = this.localDirectory + '/' + file;
+        let entry = this.loadSpecificationFromFile(filepath);
+        if (entry) {
+          this.specificationsLocal.set(entry.name, entry);
         }
-      }
-    });
+      });
+    } catch (error) {
+      namida.log(this.toString(), 'unable to read ' + this.localDirectory);
+    }
+
+    console.info(this.specificationsLocal);
   }
 
   loadOnlineDB() {
-    fs.readdir(this.onlineDirectory, (err, files) => {
-      if (err) {
-        namida.log(this.toString(), 'Unable to scan directory: ' + err);
-        return;
-      }
-
-      files.forEach(async (file) => {
-        let path = dirOnlineDB + '/' + file;
-        let specs = await this.getSpecificationFromFile(path);
-        if (!this.isValidSpecName(specs.name)) {
-          namida.logFailure(
-            this.toString(),
-            'specification from file ' + path + ' has conflicting name "' + specs.name + '"'
-          );
-        } else {
-          this.specificationsOnline.set(specs.name, specs);
-          this.filePaths.set(specs.name, path);
+    try {
+      let files = fs.readdirSync(this.onlineDirectory);
+      files.forEach((file) => {
+        let filepath = this.onlineDirectory + '/' + file;
+        let entry = this.loadSpecificationFromFile(filepath);
+        if (entry) {
+          this.specificationsOnline.set(entry.name, entry);
         }
       });
-    });
-  }
-
-  /**
-   * Load a specification from the file with the specified path and adds it to the local specifications.
-   * @param {string} path - Path to the specification file.
-   */
-  loadSpecificationFromFile(path) {
-    let specs = this.getSpecificationFromFile(path);
-    if (!this.isValidSpecName(specs.name)) {
-      namida.logFailure(
-        this.toString(),
-        'specification from file ' + path + ' has conflicting name ' + specs.name
-      );
-    } else {
-      this.specificationsLocal.set(specs.name, specs);
-      this.filePaths.set(specs.name, path);
+    } catch (error) {
+      namida.log(this.toString(), 'unable to read ' + this.onlineDirectory);
     }
   }
 
   /**
-   * Returns the parsed JSON content.
-   * @param {string} path - Path to file.
-   * @returns {object} - The parsed JSON object.
+   * Load all specification files that are present in the sub-folder specified for this storage.
+   * Stores entries generated from files in map.
+   * @param {string} directoryPath - path to directory
+   * @param {Map} mapStorage - Map to store entries in
    */
-  getSpecificationFromFile(path) {
-    let file = fs.readFileSync(path);
-    let specs = JSON.parse(file);
-    return specs;
+  loadDirectory(directoryPath, mapStorage) {
+    try {
+      let files = fs.readdirSync(directoryPath);
+      files.forEach((file) => {
+        let filepath = directoryPath + '/' + file;
+        let entry = this.loadSpecificationFromFile(filepath);
+        if (entry) {
+          mapStorage.set(entry.key, entry);
+        }
+      });
+    } catch (error) {
+      namida.log(
+        this.toString(),
+        'error while reading ' + directoryPath + ':\n' + error.toString()
+      );
+    }
   }
 
   /**
-   * Saves a specification to a file with the corresponding path. The path is then stored in the filePaths map.
+   * Load a specification from the file with the specified path.
+   * @param {string} filepath - Path to the specification file.
+   * @returns {object} The entry to the storage read by the fitting file handler if existing.
+   */
+  loadSpecificationFromFile(filepath) {
+    let fileEnding = path.extname(filepath);
+    if (this.fileEndings.includes(fileEnding)) {
+      let fileHandler = this.fileHandlers.get(fileEnding);
+      let entry = fileHandler.readFile(filepath);
+      if (!this.isValidEntry(entry)) {
+        namida.logFailure(
+          this.toString(),
+          'entry from file "' + filepath + '" has conflicting key ' + entry.key
+        );
+      } else {
+        return entry;
+      }
+    }
+  }
+
+  /**
+   * Saves a specification to a file with the corresponding path.
    * @param {object} spec - The specification requires a name property.
    */
   saveSpecificationToFile(spec, fileEnding) {
@@ -233,7 +236,6 @@ class Storage {
     // Write to file and store path.
     try {
       fs.writeFileSync(path, JSON.stringify(spec, null, 4), { flag: 'wx' });
-      this.filePaths.set(spec.name, path);
     } catch (error) {
       if (error) throw error;
     }
@@ -246,7 +248,7 @@ class Storage {
   replaceSpecificationFile(specification) {
     try {
       fs.writeFileSync(
-        this.filePaths.get(specification.name),
+        this.specificationsLocal.get(specification.name).filepath,
         JSON.stringify(specification, null, 4),
         { flag: 'w' }
       );
@@ -260,31 +262,27 @@ class Storage {
    * @param {string} name - Name of a stored specification.
    */
   deleteSpecificationFile(name) {
-    let path = this.filePaths.get(name);
-    if (typeof path !== 'undefined') {
-      fs.unlinkSync(path);
+    let filepath = this.specificationsLocal.get(name).filepath;
+    if (typeof filepath !== 'undefined') {
+      fs.unlinkSync(filepath);
     }
   }
 
-  async copySpecsFromFile(path) {
-    let specs = await this.getSpecificationFromFile(path);
-    while (this.hasSpecification(specs)) {
-      specs.name = specs.name + '_copy';
-    }
-    this.addSpecification(specs);
+  async copySpecsFromFile() {
+    //TODO: re-implement
   }
 
   /**
-   * Checks whether the passed object has a valid name specified.
-   * @param {string} name - Specification object to test
+   * Checks whether the passed object has a valid entry specification.
+   * @param {object} entry - object to test
    */
-  isValidSpecName(name) {
-    return name && name.length > 0 && !this.hasSpecification({ name: name });
+  isValidEntry(entry) {
+    return entry.key && entry.key.length > 0 && !this.hasEntry(entry.key);
   }
 
   toString() {
-    return 'Storage' + this.fileEndings.toString();
+    return 'Storage(' + this.fileEndings.toString() + ')';
   }
 }
 
-module.exports = { Storage, SpecificationHandler };
+module.exports = { Storage, StorageEntry, FileHandler };

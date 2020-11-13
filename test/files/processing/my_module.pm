@@ -1,13 +1,13 @@
 {
-    "name": "my processing module",
+    "name": "TestModuleProto",
     "authors": [
-        "sandro"
+        "author"
     ],
     "tags": [
         "tag1",
         "tag2"
     ],
-    "description": "asdfqwer",
+    "description": "lorem ipsum",
     "processingMode": {
         "frequency ": {
             "hertz": 30
@@ -25,6 +25,6 @@
             "messageFormat": "messageFormat"
         }
     ],
-    "onCreatedStringified ": "(state) => {\n  // Your initialization code here.\n}",
-    "onProcessingStringified ": "(deltaTime, inputs, outputs, state) => {\n\n  // Your code here.\n\n  outputs.defaultOut = inputs.defaultIn;\n}"
+    "onCreatedStringified": "(state) => {\n  // Your initialization code here.\n}",
+    "onProcessingStringified": "(deltaTime, inputs, outputs, state) => {\n\n  // Your code here.\n\n  this.defaultOut = this.defaultIn;\n}"
 }

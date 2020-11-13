@@ -25,22 +25,6 @@ class ProcessingModuleManager {
     };*/
   }
 
-  createModuleFromSpecs(specs) {
-    let pm = new ProcessingModule(specs);
-    this.processingModules.set(pm.id, pm);
-    pm.onCreated(pm.state);
-
-    return pm;
-  }
-
-  createModuleFromClass(classConstructor) {
-    let pm = new classConstructor();
-    this.processingModules.set(pm.id, pm);
-    pm.onCreated(pm.state);
-
-    return pm;
-  }
-
   addModule(pm) {
     if (!pm.id) {
       namida.logFailure(

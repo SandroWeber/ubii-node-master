@@ -4,21 +4,25 @@ const path = require('path');
 const namida = require('@tum-far/namida/src/namida');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
-const { Storage, SpecificationHandler } = require('./storage.js');
+const { Storage, FileHandler, StorageEntry } = require('./storage.js');
 const { ProcessingModule } = require('../processing/processingModule.js');
 
 class ProcessingModuleDatabase extends Storage {
   constructor() {
-    let fileHandlerProto = new SpecificationHandler(
+    let fileHandlerProto = new FileHandler(
       '.pm',
+      // read
       (filepath) => {
         let file = fs.readFileSync(filepath);
-        let protoSpecs = JSON.parse(file);
-        return {
-          name: protoSpecs.name,
-          fileEnding: '.pm'
+        let proto = JSON.parse(file);
+        let entry = new StorageEntry(proto.name, filepath);
+        entry.protobuf = proto;
+        entry.createInstance = () => {
+          return new ProcessingModule(proto);
         };
+        return entry;
       },
+      // write
       (filepath, protoSpecs) => {
         try {
           fs.writeFileSync(filepath, JSON.stringify(protoSpecs, null, 4), { flag: 'wx' });
@@ -28,17 +32,24 @@ class ProcessingModuleDatabase extends Storage {
       }
     );
 
-    let fileHandlerJs = new SpecificationHandler(
+    let fileHandlerJs = new FileHandler(
       '.js',
+      // read
       (filepath) => {
         let pmClass = require(filepath);
-        return pmClass;
+        let pm = new pmClass();
+        let proto = pm.toProtobuf();
+        delete proto.id;
+        let entry = new StorageEntry(proto.name, filepath);
+        entry.protobuf = proto;
+        entry.createInstance = () => {
+          return new pmClass();
+        };
+        return entry;
       },
+      // write
       (filepath, jsBlob) => {
         //TODO: implement
-      },
-      (classSpecs) => {
-        return new classSpecs();
       }
     );
     let mapFileHandlers = new Map();
@@ -46,7 +57,8 @@ class ProcessingModuleDatabase extends Storage {
     mapFileHandlers.set(fileHandlerJs.fileEnding, fileHandlerJs);
     super('processing', mapFileHandlers);
 
-    this.loadLocalJsModules();
+    //this.loadLocalJsModules();
+    console.info(this.toString());
   }
 
   /**
@@ -55,7 +67,7 @@ class ProcessingModuleDatabase extends Storage {
    * @returns {Boolean} Does a processing module specification with the given specifications exist?
    */
   has(specs) {
-    return this.hasSpecification(specs);
+    return this.hasEntry(specs);
   }
 
   /**
@@ -64,7 +76,7 @@ class ProcessingModuleDatabase extends Storage {
    * @returns {(object|constructor)} The JSON object or the constructor of the JS class for the module
    */
   getByName(name) {
-    return this.getSpecification(name) || this.localJsPMs.get(name);
+    return this.getEntry(name);
   }
 
   /**
@@ -123,52 +135,10 @@ class ProcessingModuleDatabase extends Storage {
     }
   }
 
-  /**
-   * Load all js files defining natively written modules that are present in the sub-folder specified for this storage.
-   */
-  loadLocalJsModules() {
-    this.localJsPMs = new Map();
-
-    let files = fs.readdirSync(this.localDirectory);
-    files.forEach((file) => {
-      if (path.extname(file) === '.js') {
-        let filepath = this.localDirectory + '/' + file;
-        this.loadJSModule(filepath, this.localJsPMs);
-      }
-    });
-  }
-
-  /**
-   * Load processing module written in .js.
-   * @param {string} filepath - path to file
-   * @param {Map} map - map to add the the loaded module to
-   */
-  loadJSModule(filepath, map) {
-    let pmClass = require(filepath);
-    let pm = new pmClass();
-
-    if (!this.isValidSpecName(pm.name)) {
-      namida.logFailure(
-        this.toString(),
-        'specification from file ' + filepath + ' has conflicting name "' + pm.name + '"'
-      );
-    } else {
-      map.set(pm.name, pmClass);
-      this.filePaths.set(pm.name, filepath);
-    }
-  }
-
-  /**
-   * Overrides Storage.isValidSpecName() to include processing modules natively written in JS.
-   * @param {string} name - The object to check for viable naming.
-   */
-  isValidSpecName(name) {
-    return (
-      name &&
-      name.length > 0 &&
-      !this.hasSpecification({ name: name }) &&
-      !this.localJsPMs.has(name)
-    );
+  createInstanceByName(name) {
+    let pm = this.getByName(name).createInstance();
+    pm.onCreated();
+    return pm;
   }
 }
 
