@@ -52,6 +52,7 @@ class Device {
     return {
       id: this.id,
       name: this.name,
+      tags: this.tags,
       deviceType: this.deviceType,
       components: this.components,
       clientId: this.clientId

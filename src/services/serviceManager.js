@@ -2,6 +2,7 @@ const { ClientRegistrationService } = require('./clientRegistrationService.js');
 const { ClientDeregistrationService } = require('./clientDeregistrationService.js');
 const { DeviceRegistrationService } = require('./devices/deviceRegistrationService.js');
 const { DeviceDeregistrationService } = require('./devices/deviceDeregistrationService.js');
+const { DeviceListService } = require('./devices/deviceListService.js');
 const {
   InteractionDatabaseDeleteService
 } = require('./interactions/interactionDatabaseDeleteService.js');
@@ -60,6 +61,7 @@ class ServiceManager {
     /* add device services */
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
     this.addService(new DeviceDeregistrationService(this.clientManager, this.deviceManager));
+    this.addService(new DeviceListService(this.deviceManager));
     /* add interaction services */
     this.addService(new InteractionDatabaseDeleteService());
     this.addService(new InteractionDatabaseGetListService());

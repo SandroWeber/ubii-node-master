@@ -44,16 +44,21 @@ class ClientManager {
 
   /**
    * Remove the specified Client from the clients map.
-   * @param {String} clientIdentifier Universally unique identifier of a Client.
+   * @param {String} id Universally unique identifier of a Client.
    */
-  removeClient(clientIdentifier) {
-    let client = this.clients.get(clientIdentifier);
+  removeClient(id) {
+    let client = this.clients.get(id);
+    client.devices.forEach(device => {});
     client.deactivate();
-    this.clients.delete(clientIdentifier);
+    this.clients.delete(id);
   }
 
   setClientInactive(id) {
-    this.clients.get(id).setState(clientStateEnum.inactive);
+    let client = this.clients.get(id);
+    if (client) {
+      client.setState(clientStateEnum.inactive);
+      console.info('client ' + id + ' set inactive');
+    }
   }
 
   /**
