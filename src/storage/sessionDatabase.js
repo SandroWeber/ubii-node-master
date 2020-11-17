@@ -1,9 +1,33 @@
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
-const Storage = require('./storage.js');
+const { Storage, FileHandler, StorageEntry } = require('./storage.js');
 
 class SessionDatabase extends Storage {
   constructor() {
-    super('sessions', 'session');
+    let fileHandlerProto = new FileHandler(
+      '.session',
+      // read
+      (filepath) => {
+        let file = fs.readFileSync(filepath);
+        let proto = JSON.parse(file);
+        let entry = new StorageEntry(proto.name, filepath);
+        entry.protobuf = proto;
+        entry.createInstance = () => {
+          return new ProcessingModule(proto);
+        };
+        return entry;
+      },
+      // write
+      (filepath, protoSpecs) => {
+        try {
+          fs.writeFileSync(filepath, JSON.stringify(protoSpecs, null, 4), { flag: 'wx' });
+        } catch (error) {
+          if (error) throw error;
+        }
+      }
+    );
+    let mapFileHandlers = new Map();
+    mapFileHandlers.set(fileHandlerProto.fileEnding, fileHandlerProto);
+    super('processing', mapFileHandlers);
   }
 
   /**

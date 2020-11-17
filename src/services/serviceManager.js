@@ -58,7 +58,7 @@ class ServiceManager {
 
   addService(service) {
     if (!service.topic) {
-      namida.error('Service topic error', 'Service topic: ' + service.topic, service);
+      namida.logFailure('Service Manager', 'can not add service, no topic: ' + service.constructor.name);
       return;
     }
 
