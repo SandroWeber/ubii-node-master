@@ -2,6 +2,7 @@ const { ClientRegistrationService } = require('./clientRegistrationService.js');
 const { ClientDeregistrationService } = require('./clientDeregistrationService.js');
 const { DeviceRegistrationService } = require('./devices/deviceRegistrationService.js');
 const { DeviceDeregistrationService } = require('./devices/deviceDeregistrationService.js');
+const { DeviceListService } = require('./devices/deviceListService.js');
 const ProcessingModuleGetService = require('./processing/pmDatabaseGetService.js');
 const { SubscriptionService } = require('./subscriptionService.js');
 const { ServerConfigService } = require('./serverConfigService.js');
@@ -43,6 +44,7 @@ class ServiceManager {
     /* add device services */
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
     this.addService(new DeviceDeregistrationService(this.clientManager, this.deviceManager));
+    this.addService(new DeviceListService(this.deviceManager));
     /* add processing module services */
     this.addService(ProcessingModuleGetService);
     /* add session services */

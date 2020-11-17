@@ -67,6 +67,14 @@ class DeviceManager {
   }
 
   /**
+   * Get a list of all participants.
+   * @returns {array} The list of participants.
+   */
+  getAllParticipants() {
+    return Array.from(this.participants.values());
+  }
+
+  /**
    * Is there a participant with the specified identifier in the participants map?
    * @param {String} id Universally unique identifier of a Device.
    * @returns Boolean indicating if there is a participant with the specified identifier.
