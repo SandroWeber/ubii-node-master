@@ -1,9 +1,7 @@
 const uuidv4 = require('uuid/v4');
-
 const { proto } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
-
 const namida = require('@tum-far/namida');
 
 class Session {
@@ -51,7 +49,7 @@ class Session {
       for (let pmSpecs of this.processingModules) {
         let pm = this.processingModuleManager.getModuleBySpecs(pmSpecs, this.id);
         if (!pm) {
-          pm = this.processingModuleManager.createModuleBySpecs(pmSpecs);
+          pm = this.processingModuleManager.createModule(pmSpecs);
         }
         if (pm) {
           pm.sessionId = this.id;

@@ -15,7 +15,6 @@ class DeviceListService extends Service {
 
   reply() {
     let devices = this.deviceManager.getAllParticipants().map((device) => device.toProtobuf());
-    console.info(devices);
 
     return { deviceList: { elements: devices } };
   }

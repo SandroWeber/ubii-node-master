@@ -5,6 +5,7 @@ const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 
 const Utils = require('../utilities');
 const { ProcessingModule } = require('./processingModule');
+const ProcessingModuleDatabase = require('../storage/processingModuleDatabase');
 
 class ProcessingModuleManager {
   constructor(deviceManager, topicData = undefined) {
@@ -23,6 +24,23 @@ class ProcessingModuleManager {
     this.lockstepOutputTopicdata = {
       records: []
     };*/
+  }
+
+  createModule(specs) {
+    let pm = undefined;
+    if (ProcessingModuleDatabase.has(specs.name)) {
+      let entry = ProcessingModuleDatabase.getByName(specs.name);
+      pm = entry.createInstance();
+    } else {
+      pm = new ProcessingModule(specs);
+    }
+      
+    let success = this.addModule(pm);
+    if (!success) {
+      return undefined;
+    } else {
+      return pm;
+    }
   }
 
   addModule(pm) {

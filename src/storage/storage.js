@@ -108,10 +108,10 @@ class Storage {
   }
 
   /**
-   * Delete the specification with the specified name from the specifications list.
-   * @param {String} name
+   * Delete the entry with the specified name from the local list.
+   * @param {string} name
    */
-  deleteSpecification(name) {
+  deleteEntry(name) {
     try {
       this.specificationsLocal.delete(name);
       this.deleteSpecificationFile(name);
@@ -121,10 +121,10 @@ class Storage {
   }
 
   /**
-   * Update a specification that is already present in the specifications list with a new value.
-   * @param {Object} spec The specification requires a name property.
+   * Update an entry that is already present in the specifications list with a new value.
+   * @param {object} spec The specification requires a name property.
    */
-  updateSpecification(spec) {
+  updateEntry(spec) {
     let localSpecification = this.specificationsLocal.get(spec.name);
     if (typeof localSpecification === 'undefined') {
       throw 'Specification with name ' + spec.name + ' could not be found';
@@ -157,8 +157,6 @@ class Storage {
     } catch (error) {
       namida.log(this.toString(), 'unable to read ' + this.localDirectory);
     }
-
-    console.info(this.specificationsLocal);
   }
 
   loadOnlineDB() {

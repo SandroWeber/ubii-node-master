@@ -25,8 +25,6 @@ test('create instances of modules', (t) => {
   let pmProto = ProcessingModuleDatabase.createInstanceByName(t.context.nameProtoModule);
   let pmJs = ProcessingModuleDatabase.createInstanceByName(t.context.nameJsModule);
 
-  console.info(pmProto);
-
   t.notThrows(() => {
     pmProto.onProcessing();
   });

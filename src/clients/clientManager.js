@@ -57,7 +57,6 @@ class ClientManager {
     let client = this.clients.get(id);
     if (client) {
       client.setState(clientStateEnum.inactive);
-      console.info('client ' + id + ' set inactive');
     }
   }
 

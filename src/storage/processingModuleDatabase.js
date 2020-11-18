@@ -55,9 +55,6 @@ class ProcessingModuleDatabase extends Storage {
     mapFileHandlers.set(fileHandlerProto.fileEnding, fileHandlerProto);
     mapFileHandlers.set(fileHandlerJs.fileEnding, fileHandlerJs);
     super('processing', mapFileHandlers);
-
-    //this.loadLocalJsModules();
-    console.info(this.toString());
   }
 
   /**
@@ -106,7 +103,7 @@ class ProcessingModuleDatabase extends Storage {
    * @param {String} name
    */
   deleteByName(name) {
-    this.deleteSpecification(name);
+    this.deleteEntry(name);
   }
 
   /**
@@ -118,7 +115,7 @@ class ProcessingModuleDatabase extends Storage {
       throw 'Processing Module specification could not be verified';
     }
 
-    this.updateSpecification(spec);
+    this.updateEntry(spec);
   }
 
   /**
