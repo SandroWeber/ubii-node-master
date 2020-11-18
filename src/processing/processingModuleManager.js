@@ -34,6 +34,7 @@ class ProcessingModuleManager {
     } else {
       pm = new ProcessingModule(specs);
     }
+    pm && pm.onCreated(pm.state);
       
     let success = this.addModule(pm);
     if (!success) {

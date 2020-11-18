@@ -22,7 +22,7 @@ class ProcessingModuleGetService extends Service {
         }
       };
     } else {
-      return { processingModuleList: [pm] };
+      return { processingModuleList: [pm.protobuf] };
     }
   }
 }
