@@ -3,8 +3,8 @@ const tf = require('@tensorflow/tfjs-node');
 const { ProcessingModule } = require('../../../src/processing/processingModule.js');
 
 class TestProcessingModuleTF extends ProcessingModule {
-  constructor() {
-    super();
+  constructor(specs) {
+    super(specs);
 
     this.name = 'TestProcessingModuleTF';
     this.outputs = [

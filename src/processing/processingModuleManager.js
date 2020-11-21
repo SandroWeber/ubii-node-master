@@ -29,17 +29,16 @@ class ProcessingModuleManager {
   createModule(specs) {
     let pm = undefined;
     if (ProcessingModuleDatabase.has(specs.name)) {
-      let entry = ProcessingModuleDatabase.getByName(specs.name);
-      pm = entry.createInstance();
+      pm = ProcessingModuleDatabase.createInstanceByName(specs.name);
     } else {
       pm = new ProcessingModule(specs);
     }
-    pm && pm.onCreated(pm.state);
-      
+
     let success = this.addModule(pm);
     if (!success) {
       return undefined;
     } else {
+      pm && pm.onCreated(pm.state);
       return pm;
     }
   }

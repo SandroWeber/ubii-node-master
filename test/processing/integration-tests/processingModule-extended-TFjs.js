@@ -16,7 +16,6 @@ let topicPrediction = '/tfjs-runtime-test/prediction';
 
 test('passing specifications to constructor', (t) => {
   let specs = {
-    name: 'test-extended-pm',
     processingMode: {
       frequency: {
         hertz: 15
@@ -25,7 +24,7 @@ test('passing specifications to constructor', (t) => {
   };
   let pm = new TestProcessingModuleTF(specs);
   t.true(pm.id !== undefined && pm.id.length > 0);
-  t.is(pm.name, specs.name);
+  t.true(pm.name.length > 0);
   t.is(pm.processingMode, specs.processingMode);
 });
 

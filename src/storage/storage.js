@@ -21,11 +21,13 @@ class FileHandler {
   }
 
   readFile() {
-    throw new Error('SpecificationHandler(' + this.fileEnding + ').read() must be overwritten');
+    throw new Error('SpecificationHandler(' + this.fileEnding + ').readFile() must be overwritten');
   }
 
   writeFile() {
-    throw new Error('SpecificationHandler(' + this.fileEnding + ').write() must be overwritten');
+    throw new Error(
+      'SpecificationHandler(' + this.fileEnding + ').writeFile() must be overwritten'
+    );
   }
 }
 
@@ -48,11 +50,11 @@ class Storage {
    * Initialize maps for storage and load files.
    */
   initialize() {
-    this.specificationsLocal = new Map();
-    this.specificationsOnline = new Map();
+    this.localEntries = new Map();
+    this.onlineEntries = new Map();
 
-    this.loadDirectory(this.localDirectory, this.specificationsLocal);
-    this.loadDirectory(this.onlineDirectory, this.specificationsOnline);
+    this.loadDirectory(this.localDirectory, this.localEntries);
+    this.loadDirectory(this.onlineDirectory, this.onlineEntries);
   }
 
   /**
@@ -61,7 +63,7 @@ class Storage {
    * @returns {boolean} Does a specification with the given specifications exist?
    */
   hasEntry(key) {
-    return this.specificationsLocal.has(key) || this.specificationsOnline.has(key);
+    return this.localEntries.has(key) || this.onlineEntries.has(key);
   }
 
   /**
@@ -70,19 +72,19 @@ class Storage {
    * @returns The specification with the specified name.
    */
   getEntry(key) {
-    return this.specificationsLocal.get(key) || this.specificationsOnline.get(key);
+    return this.localEntries.get(key) || this.onlineEntries.get(key);
   }
 
   /**
    * Get an array of all specifications.
    * @returns Array with all specifications.
    */
-  getLocalSpecificationList() {
-    return Array.from(this.specificationsLocal.values());
+  getAllLocalEntries() {
+    return Array.from(this.localEntries.values());
   }
 
-  getOnlineSpecificationList() {
-    return Array.from(this.specificationsOnline.values());
+  getAllOnlineEntries() {
+    return Array.from(this.onlineEntries.values());
   }
 
   /**
@@ -99,7 +101,7 @@ class Storage {
     }
 
     try {
-      this.specificationsLocal.set(spec.name, spec);
+      this.localEntries.set(spec.name, spec);
       this.saveSpecificationToFile(spec);
       return spec;
     } catch (error) {
@@ -109,12 +111,12 @@ class Storage {
 
   /**
    * Delete the entry with the specified name from the local list.
-   * @param {string} name
+   * @param {string} key - key of the entry to delete
    */
-  deleteEntry(name) {
+  deleteEntry(key) {
     try {
-      this.specificationsLocal.delete(name);
-      this.deleteSpecificationFile(name);
+      this.localEntries.delete(key);
+      this.deleteEntryFile(key);
     } catch (error) {
       throw error;
     }
@@ -125,14 +127,14 @@ class Storage {
    * @param {object} spec The specification requires a name property.
    */
   updateEntry(spec) {
-    let localSpecification = this.specificationsLocal.get(spec.name);
+    let localSpecification = this.localEntries.get(spec.name);
     if (typeof localSpecification === 'undefined') {
       throw 'Specification with name ' + spec.name + ' could not be found';
     }
 
     try {
-      this.specificationsLocal.set(spec.name, spec);
-      this.deleteSpecificationFile(spec.name);
+      this.localEntries.set(spec.name, spec);
+      this.deleteEntryFile(spec.name);
       this.saveSpecificationToFile(spec);
     } catch (error) {
       throw error;
@@ -151,7 +153,7 @@ class Storage {
         let filepath = this.localDirectory + '/' + file;
         let entry = this.loadSpecificationFromFile(filepath);
         if (entry) {
-          this.specificationsLocal.set(entry.name, entry);
+          this.localEntries.set(entry.name, entry);
         }
       });
     } catch (error) {
@@ -166,7 +168,7 @@ class Storage {
         let filepath = this.onlineDirectory + '/' + file;
         let entry = this.loadSpecificationFromFile(filepath);
         if (entry) {
-          this.specificationsOnline.set(entry.name, entry);
+          this.onlineEntries.set(entry.name, entry);
         }
       });
     } catch (error) {
@@ -246,7 +248,7 @@ class Storage {
   replaceSpecificationFile(specification) {
     try {
       fs.writeFileSync(
-        this.specificationsLocal.get(specification.name).filepath,
+        this.localEntries.get(specification.name).filepath,
         JSON.stringify(specification, null, 4),
         { flag: 'w' }
       );
@@ -257,10 +259,10 @@ class Storage {
 
   /**
    * Deletes the file associated with the specified name.
-   * @param {string} name - Name of a stored specification.
+   * @param {string} key - Name of a stored specification.
    */
-  deleteSpecificationFile(name) {
-    let filepath = this.specificationsLocal.get(name).filepath;
+  deleteEntryFile(key) {
+    let filepath = this.localEntries.get(key).filepath;
     if (typeof filepath !== 'undefined') {
       fs.unlinkSync(filepath);
     }

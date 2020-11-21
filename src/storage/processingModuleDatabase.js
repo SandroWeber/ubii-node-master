@@ -79,7 +79,7 @@ class ProcessingModuleDatabase extends Storage {
    * Get an array of all specifications.
    */
   getList() {
-    return this.getLocalSpecificationList();
+    return this.getAllLocalEntries();
   }
 
   /**
@@ -133,7 +133,6 @@ class ProcessingModuleDatabase extends Storage {
 
   createInstanceByName(name) {
     let pm = this.getByName(name).createInstance();
-    pm.onCreated();
     return pm;
   }
 }

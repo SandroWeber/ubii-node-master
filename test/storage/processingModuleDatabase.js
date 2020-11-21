@@ -16,7 +16,7 @@ test.beforeEach((t) => {
 /* run tests */
 
 test('import local PMs written in .pm and .js', (t) => {
-  t.is(ProcessingModuleDatabase.specificationsLocal.size, 2);
+  t.is(ProcessingModuleDatabase.localEntries.size, 2);
   t.true(ProcessingModuleDatabase.getByName(t.context.nameProtoModule) !== undefined);
   t.true(ProcessingModuleDatabase.getByName(t.context.nameJsModule) !== undefined);
 });
@@ -25,10 +25,8 @@ test('create instances of modules', (t) => {
   let pmProto = ProcessingModuleDatabase.createInstanceByName(t.context.nameProtoModule);
   let pmJs = ProcessingModuleDatabase.createInstanceByName(t.context.nameJsModule);
 
-  t.notThrows(() => {
-    pmProto.onProcessing();
-  });
-  t.notThrows(() => {
-    pmJs.onProcessing();
-  });
+  t.true(pmProto.id !== undefined && pmProto.id.length > 0);
+  t.true(pmJs.id !== undefined && pmJs.id.length > 0);
+  t.is(pmProto.name, t.context.nameProtoModule);
+  t.is(pmJs.name, t.context.nameJsModule);
 });

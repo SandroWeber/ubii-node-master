@@ -1,7 +1,7 @@
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Storage, FileHandler, StorageEntry } = require('./storage.js');
-const {Session} = require('../sessions/session');
+const { Session } = require('../sessions/session');
 
 class SessionDatabase extends Storage {
   constructor() {
@@ -50,7 +50,7 @@ class SessionDatabase extends Storage {
    * Get an array of all specifications.
    */
   getList() {
-    return this.getLocalSpecificationList().concat(this.getOnlineSpecificationList());
+    return this.getAllLocalEntries().concat(this.getAllOnlineEntries());
   }
 
   /**
