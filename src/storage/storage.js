@@ -90,19 +90,32 @@ class Storage {
   /**
    * Add a new specification to the specifications list.
    * @param {object} spec - The specification. It requires a name property.
+   * @param {string} fileEnding - file ending, indicating type of entry
    */
-  addSpecification(spec) {
-    while (this.hasEntry(spec)) {
-      spec.name = spec.name + '_new';
-    }
-
-    if (this.hasEntry(spec)) {
+  addEntry(spec, fileEnding) {
+    if (this.hasEntry(spec.name)) {
+      namida.logFailure(
+        this.toString(),
+        'can not add entry "' + spec.name + '", name already exists'
+      );
       throw 'Specification with name ' + spec.name + ' could not be added, name already exists.';
     }
 
     try {
+      let fileHandler = this.fileHandlers.get(fileEnding);
+      if (!fileEnding) {
+        namida.logFailure(
+          this.toString(),
+          'can not add entry "' + spec.name + '", no file handler for ' + fileEnding
+        );
+        throw 'Specification with name "' + spec.name + '", no file handler for ' + fileEnding;
+      }
+
+      let filepath = this.localDirectory + '/' + spec.name + fileEnding;
+      fileHandler.writeFile(filepath, spec);
+
       this.localEntries.set(spec.name, spec);
-      this.saveSpecificationToFile(spec);
+
       return spec;
     } catch (error) {
       throw error;

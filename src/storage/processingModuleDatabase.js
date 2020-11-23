@@ -92,7 +92,7 @@ class ProcessingModuleDatabase extends Storage {
     }
 
     try {
-      return this.addSpecification(spec);
+      return this.addEntry(spec);
     } catch (error) {
       throw error;
     }
