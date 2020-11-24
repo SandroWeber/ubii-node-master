@@ -17,8 +17,8 @@ test.beforeEach((t) => {
 
 test('import local PMs written in .pm and .js', (t) => {
   t.is(ProcessingModuleDatabase.localEntries.size, 2);
-  t.true(ProcessingModuleDatabase.getByName(t.context.nameProtoModule) !== undefined);
-  t.true(ProcessingModuleDatabase.getByName(t.context.nameJsModule) !== undefined);
+  t.true(ProcessingModuleDatabase.getEntry(t.context.nameProtoModule) !== undefined);
+  t.true(ProcessingModuleDatabase.getEntry(t.context.nameJsModule) !== undefined);
 });
 
 test('create instances of modules', (t) => {

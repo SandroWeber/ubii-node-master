@@ -7,17 +7,22 @@ const namida = require('@tum-far/namida/src/namida');
 const { BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB } = require('./storageConstants');
 
 class StorageEntry {
-  constructor(key, filepath) {
+  constructor(key, filepath, filedata) {
     this.key = key;
     this.filepath = filepath;
+    this.filedata = filedata;
   }
 }
 
 class FileHandler {
   constructor(fileEnding, readFile, writeFile) {
     this.fileEnding = fileEnding;
-    this.readFile = readFile;
-    this.writeFile = writeFile;
+    if (readFile) {
+      this.readFile = readFile;
+    }
+    if (writeFile) {
+      this.writeFile = writeFile;
+    }
   }
 
   readFile() {
@@ -32,8 +37,11 @@ class FileHandler {
 }
 
 class Storage {
-  constructor(subFolder, mapFileHandlers) {
-    this.fileHandlers = mapFileHandlers;
+  constructor(subFolder, listFileHandlers) {
+    this.fileHandlers = new Map();
+    listFileHandlers.forEach((handler) => {
+      this.fileHandlers.set(handler.fileEnding, handler);
+    });
     this.fileEndings = Array.from(this.fileHandlers.keys());
     this.subFolder = subFolder;
     this.localDirectory = BASE_FOLDER_LOCAL_DB + '/' + this.subFolder;
@@ -55,6 +63,19 @@ class Storage {
 
     this.loadDirectory(this.localDirectory, this.localEntries);
     this.loadDirectory(this.onlineDirectory, this.onlineEntries);
+  }
+
+  addFileHandler(handler) {
+    if (this.fileHandlers.has(handler.fileEnding)) {
+      namida.logFailure(
+        this.toString(),
+        'can not add file handler for ' + handler.fileEnding + ', an entry already exists'
+      );
+      return false;
+    }
+
+    this.fileHandlers.set(handler.fileEnding, handler);
+    return true;
   }
 
   /**
@@ -89,34 +110,23 @@ class Storage {
 
   /**
    * Add a new specification to the specifications list.
-   * @param {object} spec - The specification. It requires a name property.
+   * @param {object} entry - The specification. It requires a name property.
    * @param {string} fileEnding - file ending, indicating type of entry
    */
-  addEntry(spec, fileEnding) {
-    if (this.hasEntry(spec.name)) {
+  addEntry(entry, fileEnding) {
+    if (this.hasEntry(entry.key)) {
       namida.logFailure(
         this.toString(),
-        'can not add entry "' + spec.name + '", name already exists'
+        'can not add entry "' + entry.key + '", key already exists'
       );
-      throw 'Specification with name ' + spec.name + ' could not be added, name already exists.';
+      throw 'Entry with key ' + entry.key + ' could not be added, key already exists.';
     }
 
     try {
-      let fileHandler = this.fileHandlers.get(fileEnding);
-      if (!fileEnding) {
-        namida.logFailure(
-          this.toString(),
-          'can not add entry "' + spec.name + '", no file handler for ' + fileEnding
-        );
-        throw 'Specification with name "' + spec.name + '", no file handler for ' + fileEnding;
-      }
+      this.writeEntryToFile(entry);
+      this.localEntries.set(entry.key, entry);
 
-      let filepath = this.localDirectory + '/' + spec.name + fileEnding;
-      fileHandler.writeFile(filepath, spec);
-
-      this.localEntries.set(spec.name, spec);
-
-      return spec;
+      return entry;
     } catch (error) {
       throw error;
     }
@@ -137,18 +147,20 @@ class Storage {
 
   /**
    * Update an entry that is already present in the specifications list with a new value.
-   * @param {object} spec The specification requires a name property.
+   * @param {object} fileContent The specification requires a name property.
    */
-  updateEntry(spec) {
-    let localSpecification = this.localEntries.get(spec.name);
-    if (typeof localSpecification === 'undefined') {
-      throw 'Specification with name ' + spec.name + ' could not be found';
+  updateEntry(key, newEntry) {
+    let entry = this.localEntries.get(key);
+    if (typeof entry === 'undefined') {
+      throw 'Specification with name ' + key + ' could not be found';
     }
 
     try {
-      this.localEntries.set(spec.name, spec);
-      this.deleteEntryFile(spec.name);
-      this.saveSpecificationToFile(spec);
+      let fileEnding = path.extname(newEntry.filepath);
+      let fileHandler = this.fileHandlers.get(fileEnding);
+      this.localEntries.set(key, newEntry);
+      this.deleteEntryFile(key);
+      this.writeEntryToFile(newEntry);
     } catch (error) {
       throw error;
     }
@@ -164,7 +176,7 @@ class Storage {
       let files = fs.readdirSync(this.localDirectory);
       files.forEach((file) => {
         let filepath = this.localDirectory + '/' + file;
-        let entry = this.loadSpecificationFromFile(filepath);
+        let entry = this.loadEntryFromFile(filepath);
         if (entry) {
           this.localEntries.set(entry.name, entry);
         }
@@ -179,7 +191,7 @@ class Storage {
       let files = fs.readdirSync(this.onlineDirectory);
       files.forEach((file) => {
         let filepath = this.onlineDirectory + '/' + file;
-        let entry = this.loadSpecificationFromFile(filepath);
+        let entry = this.loadEntryFromFile(filepath);
         if (entry) {
           this.onlineEntries.set(entry.name, entry);
         }
@@ -200,7 +212,7 @@ class Storage {
       let files = fs.readdirSync(directoryPath);
       files.forEach((file) => {
         let filepath = directoryPath + '/' + file;
-        let entry = this.loadSpecificationFromFile(filepath);
+        let entry = this.loadEntryFromFile(filepath);
         if (entry) {
           mapStorage.set(entry.key, entry);
         }
@@ -218,7 +230,7 @@ class Storage {
    * @param {string} filepath - Path to the specification file.
    * @returns {object} The entry to the storage read by the fitting file handler if existing.
    */
-  loadSpecificationFromFile(filepath) {
+  loadEntryFromFile(filepath) {
     let fileEnding = path.extname(filepath);
     if (this.fileEndings.includes(fileEnding)) {
       let fileHandler = this.fileHandlers.get(fileEnding);
@@ -231,6 +243,11 @@ class Storage {
       } else {
         return entry;
       }
+    } else {
+      namida.logFailure(
+        this.toString(),
+        'entry from file "' + filepath + '" can not be read, no known file ending ' + fileEnding
+      );
     }
   }
 
@@ -238,20 +255,29 @@ class Storage {
    * Saves a specification to a file with the corresponding path.
    * @param {object} spec - The specification requires a name property.
    */
-  saveSpecificationToFile(spec, fileEnding) {
-    if (!spec.name) {
-      namida.logFailure(this.toString(), 'could not save specs to file, no name given');
+  writeEntryToFile(entry) {
+    if (!entry.key) {
+      namida.logFailure(this.toString(), 'could not save entry to file, no key given');
       return;
     }
-    // Build complete path.
-    let path = this.localDirectory + '/' + spec.name + fileEnding;
 
-    // Write to file and store path.
-    try {
-      fs.writeFileSync(path, JSON.stringify(spec, null, 4), { flag: 'wx' });
-    } catch (error) {
-      if (error) throw error;
+    let fileHandler = this.fileHandlers.get(fileEnding);
+    if (!fileEnding) {
+      namida.logFailure(
+        this.toString(),
+        'can not add entry "' + entry.key + '", no file handler for ' + fileEnding
+      );
+      throw 'Entry with key "' + entry.key + '", no file handler for ' + fileEnding;
     }
+
+    let filepath = this.localDirectory + '/' + entry.key + fileEnding;
+    entry.filepath = filepath;
+
+    fileHandler.writeFile(filepath, entry.filedata);
+
+    let fileEnding = path.extname(entry.filepath);
+    let fileHandler = this.fileHandlers.get(fileEnding);
+    fileHandler && fileHandler.writeFile(entry.filepath, entry.filedata);
   }
 
   /**
