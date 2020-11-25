@@ -7,10 +7,10 @@ const namida = require('@tum-far/namida/src/namida');
 const { BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB } = require('./storageConstants');
 
 class StorageEntry {
-  constructor(key, filepath, filedata) {
+  constructor(key, fileEnding, fileData) {
     this.key = key;
-    this.filepath = filepath;
-    this.filedata = filedata;
+    this.fileEnding = fileEnding;
+    this.fileData = fileData;
   }
 }
 
@@ -45,7 +45,8 @@ class Storage {
     this.fileEndings = Array.from(this.fileHandlers.keys());
     this.subFolder = subFolder;
     this.localDirectory = BASE_FOLDER_LOCAL_DB + '/' + this.subFolder;
-    this.onlineDirectory = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
+    // online database disabled for now
+    //this.onlineDirectory = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
 
     if (!fs.existsSync(this.localDirectory)) {
       shelljs.mkdir('-p', this.localDirectory);
@@ -62,9 +63,14 @@ class Storage {
     this.onlineEntries = new Map();
 
     this.loadDirectory(this.localDirectory, this.localEntries);
-    this.loadDirectory(this.onlineDirectory, this.onlineEntries);
+    // online database disabled for now
+    //this.loadDirectory(this.onlineDirectory, this.onlineEntries);
   }
 
+  /**
+   * Adds a file handler.
+   * @param {FileHandler} handler - file handler to add
+   */
   addFileHandler(handler) {
     if (this.fileHandlers.has(handler.fileEnding)) {
       namida.logFailure(
@@ -109,11 +115,10 @@ class Storage {
   }
 
   /**
-   * Add a new specification to the specifications list.
-   * @param {object} entry - The specification. It requires a name property.
-   * @param {string} fileEnding - file ending, indicating type of entry
+   * Add a new entry to the local list.
+   * @param {StorageEntry} entry - The entry, requires a key property.
    */
-  addEntry(entry, fileEnding) {
+  addEntry(entry) {
     if (this.hasEntry(entry.key)) {
       namida.logFailure(
         this.toString(),
@@ -137,33 +142,26 @@ class Storage {
    * @param {string} key - key of the entry to delete
    */
   deleteEntry(key) {
-    try {
-      this.localEntries.delete(key);
-      this.deleteEntryFile(key);
-    } catch (error) {
-      throw error;
-    }
+    this.localEntries.delete(key);
+    this.deleteEntryFile(key);
   }
 
   /**
-   * Update an entry that is already present in the specifications list with a new value.
-   * @param {object} fileContent The specification requires a name property.
+   * Update an entry that is already present in the local list with a new value.
+   * @param {StorageEntry} newEntry - The new entry to update the old one with the same key.
    */
-  updateEntry(key, newEntry) {
-    let entry = this.localEntries.get(key);
-    if (typeof entry === 'undefined') {
-      throw 'Specification with name ' + key + ' could not be found';
+  updateEntry(newEntry) {
+    if (!this.localEntries.has(newEntry.key)) {
+      namida.logFailure(
+        this.toString(),
+        'could not update entry with key "' + newEntry.key + '", no such entry existing'
+      );
+      return;
     }
 
-    try {
-      let fileEnding = path.extname(newEntry.filepath);
-      let fileHandler = this.fileHandlers.get(fileEnding);
-      this.localEntries.set(key, newEntry);
-      this.deleteEntryFile(key);
-      this.writeEntryToFile(newEntry);
-    } catch (error) {
-      throw error;
-    }
+    this.localEntries.set(newEntry.key, newEntry);
+    this.deleteEntryFile(newEntry.key);
+    this.writeEntryToFile(newEntry);
   }
 
   // Storage file utility methods:
@@ -252,38 +250,31 @@ class Storage {
   }
 
   /**
-   * Saves a specification to a file with the corresponding path.
-   * @param {object} spec - The specification requires a name property.
+   * Saves an entry to a file with the help of the corresponding FileHandler.
+   * @param {StorageEntry} entry - The entry to write.
    */
   writeEntryToFile(entry) {
     if (!entry.key) {
       namida.logFailure(this.toString(), 'could not save entry to file, no key given');
       return;
     }
-
-    let fileHandler = this.fileHandlers.get(fileEnding);
-    if (!fileEnding) {
+    if (!entry.fileEnding) {
       namida.logFailure(
         this.toString(),
-        'can not add entry "' + entry.key + '", no file handler for ' + fileEnding
+        'could not save entry "' + entry.key + '" to file, no file ending given'
       );
-      throw 'Entry with key "' + entry.key + '", no file handler for ' + fileEnding;
+      return;
     }
 
-    let filepath = this.localDirectory + '/' + entry.key + fileEnding;
-    entry.filepath = filepath;
-
-    fileHandler.writeFile(filepath, entry.filedata);
-
-    let fileEnding = path.extname(entry.filepath);
-    let fileHandler = this.fileHandlers.get(fileEnding);
-    fileHandler && fileHandler.writeFile(entry.filepath, entry.filedata);
+    let fileHandler = this.fileHandlers.get(entry.fileEnding);
+    fileHandler.writeFile(this.getLocalEntryFilepath(entry), entry.fileData);
   }
 
   /**
    * Replaces a specification file with the path stored with regard to the is of the specification with a new specification file.
    * @param {object} specification - The specification requires a name property.
    */
+  //TODO: outdated
   replaceSpecificationFile(specification) {
     try {
       fs.writeFileSync(
@@ -307,9 +298,8 @@ class Storage {
     }
   }
 
-  async copySpecsFromFile() {
-    //TODO: re-implement
-  }
+  //TODO: re-implement
+  async copySpecsFromFile() {}
 
   /**
    * Checks whether the passed object has a valid entry specification.
@@ -317,6 +307,15 @@ class Storage {
    */
   isValidEntry(entry) {
     return entry.key && entry.key.length > 0 && !this.hasEntry(entry.key);
+  }
+
+  /**
+   * Gives a filepath for a local StorageEntry.
+   * @param {StorageEntry} entry - the storage entry
+   * @returns {string} - the path to the local file
+   */
+  getLocalEntryFilepath(entry) {
+    return this.localDirectory + '/' + entry.key + entry.fileEnding;
   }
 
   toString() {
