@@ -103,18 +103,6 @@ class Storage {
   }
 
   /**
-   * Get an array of all specifications.
-   * @returns Array with all specifications.
-   */
-  getAllLocalEntries() {
-    return Array.from(this.localEntries.values());
-  }
-
-  getAllOnlineEntries() {
-    return Array.from(this.onlineEntries.values());
-  }
-
-  /**
    * Add a new entry to the local list.
    * @param {StorageEntry} entry - The entry, requires a key property.
    */
@@ -166,6 +154,22 @@ class Storage {
     return true;
   }
 
+  /**
+   * Get an array of all local entries.
+   * @returns Array of local entries.
+   */
+  getAllLocalEntries() {
+    return Array.from(this.localEntries.values());
+  }
+
+  /**
+   * Get an array of all online entries.
+   * @returns Array of online entries.
+   */
+  getAllOnlineEntries() {
+    return Array.from(this.onlineEntries.values());
+  }
+
   // Storage file utility methods:
 
   /**
@@ -182,7 +186,7 @@ class Storage {
         }
       });
     } catch (error) {
-      namida.log(this.toString(), 'unable to read ' + this.localDirectory);
+      namida.log(this.toString(), error);
     }
   }
 
@@ -273,23 +277,6 @@ class Storage {
   }
 
   /**
-   * Replaces a specification file with the path stored with regard to the is of the specification with a new specification file.
-   * @param {object} specification - The specification requires a name property.
-   */
-  //TODO: outdated
-  replaceSpecificationFile(specification) {
-    try {
-      fs.writeFileSync(
-        this.localEntries.get(specification.name).filepath,
-        JSON.stringify(specification, null, 4),
-        { flag: 'w' }
-      );
-    } catch (error) {
-      if (error) throw error;
-    }
-  }
-
-  /**
    * Deletes the file associated with the specified name.
    * @param {string} key - Name of a stored specification.
    */
@@ -299,9 +286,6 @@ class Storage {
       fs.unlinkSync(filepath);
     }
   }
-
-  //TODO: re-implement
-  async copySpecsFromFile() {}
 
   /**
    * Checks whether the passed object has a valid entry specification.

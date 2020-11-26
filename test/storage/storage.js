@@ -9,17 +9,20 @@ import { BASE_FOLDER_LOCAL_DB } from '../../src/storage/storageConstants';
 
 test.beforeEach((t) => {
   t.context.subFolder = 'tests';
+  t.context.testDir = BASE_FOLDER_LOCAL_DB + '/' + t.context.subFolder;
   t.context.fileEnding = '.test';
 
   t.context.fileHandler = new FileHandler(
     t.context.fileEnding,
+    //readFile
     (filepath) => {
-      let filename = path.basename(filepath, this.fileEnding);
+      let filename = path.basename(filepath, t.context.fileEnding);
       let file = fs.readFileSync(filepath);
       let data = JSON.parse(file);
-      let entry = new StorageEntry(filename, this.fileEnding, data);
+      let entry = new StorageEntry(filename, t.context.fileEnding, data);
       return entry;
     },
+    //writeFile
     (filepath, data) => {
       fs.writeFileSync(filepath, JSON.stringify(data, null, 4), { flag: 'wx' });
     }
@@ -34,12 +37,11 @@ test.beforeEach((t) => {
 });
 
 test.afterEach((t) => {
-  let testDir = BASE_FOLDER_LOCAL_DB + '/' + t.context.subFolder;
-  let files = fs.readdirSync(testDir);
+  let files = fs.readdirSync(t.context.testDir);
   files.forEach((file) => {
-    fs.unlinkSync(testDir + '/' + file);
+    fs.unlinkSync(t.context.testDir + '/' + file);
   });
-  fs.rmdirSync(testDir, { recursive: true });
+  fs.rmdirSync(t.context.testDir, { recursive: true });
 });
 
 /* run tests */
@@ -83,4 +85,28 @@ test('entry handling', (t) => {
   storage.deleteEntry(entry.key);
   t.false(fs.existsSync(filepath));
   t.is(t.context.storage.localEntries.size, 0);
+});
+
+test('entry lists', (t) => {
+  let storage = t.context.storage;
+  let entry = t.context.storageEntry;
+
+  storage.localEntries.set(entry.key, entry);
+  storage.onlineEntries.set(entry.key, entry);
+
+  let locals = storage.getAllLocalEntries();
+  let onlines = storage.getAllOnlineEntries();
+  t.is(locals.length, 1);
+  t.is(onlines.length, 1);
+});
+
+test('reading/writing local files', (t) => {
+  let storage = t.context.storage;
+  let entry = t.context.storageEntry;
+  t.is(storage.localEntries.size, 0);
+
+  storage.writeEntryToFile(entry);
+  storage.loadLocalDB();
+  t.is(storage.localEntries.size, 1);
+  t.deepEqual(storage.getAllLocalEntries()[0], entry);
 });
