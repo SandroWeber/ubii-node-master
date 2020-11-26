@@ -1,7 +1,9 @@
 import test from 'ava';
 import path from 'path';
+import fs from 'fs';
 
 import { Storage, FileHandler, StorageEntry } from '../../src/storage/storage';
+import { BASE_FOLDER_LOCAL_DB } from '../../src/storage/storageConstants';
 
 /* test setup */
 
@@ -31,6 +33,15 @@ test.beforeEach((t) => {
   t.context.storage = new Storage(t.context.subFolder, [t.context.fileHandler]);
 });
 
+test.afterEach((t) => {
+  let testDir = BASE_FOLDER_LOCAL_DB + '/' + t.context.subFolder;
+  let files = fs.readdirSync(testDir);
+  files.forEach((file) => {
+    fs.unlinkSync(testDir + '/' + file);
+  });
+  fs.rmdirSync(testDir, { recursive: true });
+});
+
 /* run tests */
 
 test('constructor', (t) => {
@@ -54,5 +65,22 @@ test('adding file handler', (t) => {
 });
 
 test('entry handling', (t) => {
-  t.true(t.context.storage !== undefined);
+  let storage = t.context.storage;
+  let entry = t.context.storageEntry;
+  let filepath = BASE_FOLDER_LOCAL_DB + '/' + entry.key + t.context.fileEnding;
+
+  // add entry
+  storage.addEntry(entry);
+  t.true(storage.hasEntry(entry.key));
+  t.is(storage.getEntry(entry.key), entry);
+  t.is(t.context.storage.localEntries.size, 1);
+
+  // add a second time
+  t.false(storage.addEntry(entry));
+  t.is(t.context.storage.localEntries.size, 1);
+
+  // delete entry
+  storage.deleteEntry(entry.key);
+  t.false(fs.existsSync(filepath));
+  t.is(t.context.storage.localEntries.size, 0);
 });

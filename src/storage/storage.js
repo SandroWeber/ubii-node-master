@@ -124,14 +124,14 @@ class Storage {
         this.toString(),
         'can not add entry "' + entry.key + '", key already exists'
       );
-      throw 'Entry with key ' + entry.key + ' could not be added, key already exists.';
+      return false;
     }
 
     try {
       this.writeEntryToFile(entry);
       this.localEntries.set(entry.key, entry);
 
-      return entry;
+      return true;
     } catch (error) {
       throw error;
     }
@@ -142,8 +142,8 @@ class Storage {
    * @param {string} key - key of the entry to delete
    */
   deleteEntry(key) {
-    this.localEntries.delete(key);
     this.deleteEntryFile(key);
+    this.localEntries.delete(key);
   }
 
   /**
@@ -156,12 +156,14 @@ class Storage {
         this.toString(),
         'could not update entry with key "' + newEntry.key + '", no such entry existing'
       );
-      return;
+      return false;
     }
 
     this.localEntries.set(newEntry.key, newEntry);
     this.deleteEntryFile(newEntry.key);
     this.writeEntryToFile(newEntry);
+
+    return true;
   }
 
   // Storage file utility methods:
@@ -292,7 +294,7 @@ class Storage {
    * @param {string} key - Name of a stored specification.
    */
   deleteEntryFile(key) {
-    let filepath = this.localEntries.get(key).filepath;
+    let filepath = this.getLocalEntryFilepath(this.localEntries.get(key));
     if (typeof filepath !== 'undefined') {
       fs.unlinkSync(filepath);
     }
