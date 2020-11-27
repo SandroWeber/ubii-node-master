@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 const namida = require('@tum-far/namida/src/namida');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
@@ -12,14 +13,26 @@ class PMFileHandlerProtobuf extends FileHandler {
   }
 
   readFile(filepath) {
+    let filename = path.basename(filepath);
+    if (path.extname(filename) !== this.fileEnding) {
+      namida.logFailure(
+        'PMFileHandlerProtobuf',
+        'file ' + filename + ' is not of type ' + this.fileEnding
+      );
+      return;
+    }
+
     let file = fs.readFileSync(filepath);
-    let proto = JSON.parse(file);
-    let entry = new StorageEntry(proto.name, this.fileEnding, proto);
-    entry.protobuf = proto;
+    let protobuf = JSON.parse(file);
+    let entry = new StorageEntry(filename, protobuf);
     entry.createInstance = () => {
-      return new ProcessingModule(proto);
+      return new ProcessingModule(protobuf);
     };
-    return entry;
+
+    return {
+      key: protobuf.name,
+      value: entry
+    };
   }
 
   writeFile(filepath, protoSpecs) {
@@ -37,16 +50,28 @@ class PMFileHandlerJS extends FileHandler {
   }
 
   readFile(filepath) {
+    let filename = path.basename(filepath);
+    if (path.extname(filename) !== this.fileEnding) {
+      namida.logFailure(
+        'PMFileHandlerProtobuf',
+        'file ' + filename + ' is not of type ' + this.fileEnding
+      );
+      return;
+    }
+
     let pmClass = require(filepath);
     let pm = new pmClass();
-    let proto = pm.toProtobuf();
-    delete proto.id;
-    let entry = new StorageEntry(proto.name, this.fileEnding, pmClass);
-    entry.protobuf = proto;
+    let protobuf = pm.toProtobuf();
+    delete protobuf.id;
+    let entry = new StorageEntry(filename, pmClass);
     entry.createInstance = () => {
       return new pmClass();
     };
-    return entry;
+
+    return {
+      key: protobuf.name,
+      value: entry
+    };
   }
 
   writeFile(filepath, jsBlob) {
@@ -71,7 +96,7 @@ class ProcessingModuleDatabase extends Storage {
     }
 
     try {
-      return this.addEntry(spec);
+      return this.addEntry(spec.name, spec);
     } catch (error) {
       throw error;
     }

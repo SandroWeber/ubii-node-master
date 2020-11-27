@@ -7,9 +7,8 @@ const namida = require('@tum-far/namida/src/namida');
 const { BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB } = require('./storageConstants');
 
 class StorageEntry {
-  constructor(key, fileEnding, fileData) {
-    this.key = key;
-    this.fileEnding = fileEnding;
+  constructor(fileName, fileData) {
+    this.fileName = fileName;
     this.fileData = fileData;
   }
 }
@@ -26,7 +25,11 @@ class FileHandler {
   }
 
   readFile() {
-    throw new Error('SpecificationHandler(' + this.fileEnding + ').readFile() must be overwritten');
+    throw new Error(
+      'SpecificationHandler(' +
+        this.fileEnding +
+        ').readFile() must be overwritten, must return {key, value}'
+    );
   }
 
   writeFile() {
@@ -45,12 +48,6 @@ class Storage {
     this.fileEndings = Array.from(this.fileHandlers.keys());
     this.subFolder = subFolder;
     this.localDirectory = BASE_FOLDER_LOCAL_DB + '/' + this.subFolder;
-    // online database disabled for now
-    //this.onlineDirectory = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
-
-    if (!fs.existsSync(this.localDirectory)) {
-      shelljs.mkdir('-p', this.localDirectory);
-    }
 
     this.initialize();
   }
@@ -62,8 +59,13 @@ class Storage {
     this.localEntries = new Map();
     this.onlineEntries = new Map();
 
+    if (!fs.existsSync(this.localDirectory)) {
+      shelljs.mkdir('-p', this.localDirectory);
+    }
     this.loadDirectory(this.localDirectory, this.localEntries);
+
     // online database disabled for now
+    //this.onlineDirectory = BASE_FOLDER_ONLINE_DB + '/' + this.subFolder;
     //this.loadDirectory(this.onlineDirectory, this.onlineEntries);
   }
 
@@ -104,20 +106,18 @@ class Storage {
 
   /**
    * Add a new entry to the local list.
-   * @param {StorageEntry} entry - The entry, requires a key property.
+   * @param {string} key - key under which to store entry in the local map
+   * @param {StorageEntry} entry - The entry, requires a fileName property.
    */
-  addEntry(entry) {
-    if (this.hasEntry(entry.key)) {
-      namida.logFailure(
-        this.toString(),
-        'can not add entry "' + entry.key + '", key already exists'
-      );
+  addEntry(key, entry) {
+    if (this.hasEntry(key)) {
+      namida.logFailure(this.toString(), 'can not add entry "' + key + '", key already exists');
       return false;
     }
 
     try {
       this.writeEntryToFile(entry);
-      this.localEntries.set(entry.key, entry);
+      this.localEntries.set(key, entry);
 
       return true;
     } catch (error) {
@@ -138,8 +138,8 @@ class Storage {
    * Update an entry that is already present in the local list with a new value.
    * @param {StorageEntry} newEntry - The new entry to update the old one with the same key.
    */
-  updateEntry(newEntry) {
-    if (!this.localEntries.has(newEntry.key)) {
+  updateEntry(key, newEntry) {
+    if (!this.localEntries.has(key)) {
       namida.logFailure(
         this.toString(),
         'could not update entry with key "' + newEntry.key + '", no such entry existing'
@@ -147,8 +147,8 @@ class Storage {
       return false;
     }
 
-    this.localEntries.set(newEntry.key, newEntry);
-    this.deleteEntryFile(newEntry.key);
+    this.deleteEntryFile(key);
+    this.localEntries.set(key, newEntry);
     this.writeEntryToFile(newEntry);
 
     return true;
@@ -174,39 +174,6 @@ class Storage {
 
   /**
    * Load all specification files that are present in the sub-folder specified for this storage.
-   */
-  loadLocalDB() {
-    try {
-      let files = fs.readdirSync(this.localDirectory);
-      files.forEach((file) => {
-        let filepath = this.localDirectory + '/' + file;
-        let entry = this.loadEntryFromFile(filepath);
-        if (entry) {
-          this.localEntries.set(entry.name, entry);
-        }
-      });
-    } catch (error) {
-      namida.log(this.toString(), error);
-    }
-  }
-
-  loadOnlineDB() {
-    try {
-      let files = fs.readdirSync(this.onlineDirectory);
-      files.forEach((file) => {
-        let filepath = this.onlineDirectory + '/' + file;
-        let entry = this.loadEntryFromFile(filepath);
-        if (entry) {
-          this.onlineEntries.set(entry.name, entry);
-        }
-      });
-    } catch (error) {
-      namida.log(this.toString(), 'unable to read ' + this.onlineDirectory);
-    }
-  }
-
-  /**
-   * Load all specification files that are present in the sub-folder specified for this storage.
    * Stores entries generated from files in map.
    * @param {string} directoryPath - path to directory
    * @param {Map} mapStorage - Map to store entries in
@@ -216,9 +183,9 @@ class Storage {
       let files = fs.readdirSync(directoryPath);
       files.forEach((file) => {
         let filepath = directoryPath + '/' + file;
-        let entry = this.loadEntryFromFile(filepath);
-        if (entry) {
-          mapStorage.set(entry.key, entry);
+        let { key, value } = this.loadEntryFromFile(filepath);
+        if (key && value) {
+          mapStorage.set(key, value);
         }
       });
     } catch (error) {
@@ -238,14 +205,19 @@ class Storage {
     let fileEnding = path.extname(filepath);
     if (this.fileEndings.includes(fileEnding)) {
       let fileHandler = this.fileHandlers.get(fileEnding);
-      let entry = fileHandler.readFile(filepath);
-      if (!this.isValidEntry(entry)) {
+      let { key, value } = fileHandler.readFile(filepath);
+      if (!this.isValidMapEntry(key, value)) {
         namida.logFailure(
           this.toString(),
-          'entry from file "' + filepath + '" has conflicting key ' + entry.key
+          'entry from file "' +
+            filepath +
+            '" is not valid: key exists = ' +
+            this.hasEntry(key) +
+            ', value = ' +
+            value
         );
       } else {
-        return entry;
+        return { key, value };
       }
     } else {
       namida.logFailure(
@@ -260,19 +232,16 @@ class Storage {
    * @param {StorageEntry} entry - The entry to write.
    */
   writeEntryToFile(entry) {
-    if (!entry.key) {
-      namida.logFailure(this.toString(), 'could not save entry to file, no key given');
-      return;
-    }
-    if (!entry.fileEnding) {
+    if (!entry.fileName) {
       namida.logFailure(
         this.toString(),
-        'could not save entry "' + entry.key + '" to file, no file ending given'
+        'could not save entry "' + entry.fileName + '" to file, no file name given'
       );
       return;
     }
 
-    let fileHandler = this.fileHandlers.get(entry.fileEnding);
+    let fileEnding = path.extname(entry.fileName);
+    let fileHandler = this.fileHandlers.get(fileEnding);
     fileHandler.writeFile(this.getLocalEntryFilepath(entry), entry.fileData);
   }
 
@@ -291,8 +260,8 @@ class Storage {
    * Checks whether the passed object has a valid entry specification.
    * @param {object} entry - object to test
    */
-  isValidEntry(entry) {
-    return entry.key && entry.key.length > 0 && !this.hasEntry(entry.key);
+  isValidMapEntry(key, entry) {
+    return key && key.length > 0 && !this.hasEntry(key) && entry !== undefined;
   }
 
   /**
@@ -301,7 +270,7 @@ class Storage {
    * @returns {string} - the path to the local file
    */
   getLocalEntryFilepath(entry) {
-    return this.localDirectory + '/' + entry.key + entry.fileEnding;
+    return path.join(this.localDirectory, entry.fileName);
   }
 
   toString() {

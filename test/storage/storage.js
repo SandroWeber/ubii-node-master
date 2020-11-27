@@ -16,11 +16,12 @@ test.beforeEach((t) => {
     t.context.fileEnding,
     //readFile
     (filepath) => {
-      let filename = path.basename(filepath, t.context.fileEnding);
+      let filename = path.basename(filepath);
       let file = fs.readFileSync(filepath);
       let data = JSON.parse(file);
-      let entry = new StorageEntry(filename, t.context.fileEnding, data);
-      return entry;
+      let entry = new StorageEntry(filename, data);
+      let key = path.basename(filename, t.context.fileEnding);
+      return { key: key, value: entry };
     },
     //writeFile
     (filepath, data) => {
@@ -31,7 +32,7 @@ test.beforeEach((t) => {
   let data = {
     name: 'test-storage-entry-data'
   };
-  t.context.storageEntry = new StorageEntry(data.name, t.context.fileEnding, data);
+  t.context.storageEntry = new StorageEntry(data.name + t.context.fileEnding, data);
 
   t.context.storage = new Storage(t.context.subFolder, [t.context.fileHandler]);
 });
@@ -72,17 +73,29 @@ test('entry handling', (t) => {
   let filepath = BASE_FOLDER_LOCAL_DB + '/' + entry.key + t.context.fileEnding;
 
   // add entry
-  storage.addEntry(entry);
-  t.true(storage.hasEntry(entry.key));
-  t.is(storage.getEntry(entry.key), entry);
+  let entryKey = entry.fileData.name;
+  storage.addEntry(entryKey, entry);
+  t.true(storage.hasEntry(entryKey));
+  t.is(storage.getEntry(entryKey), entry);
   t.is(t.context.storage.localEntries.size, 1);
 
   // add a second time
-  t.false(storage.addEntry(entry));
+  t.false(storage.addEntry(entryKey, entry));
   t.is(t.context.storage.localEntries.size, 1);
 
+  // update entry
+  let updatedEntry = new StorageEntry(entry.fileName, {
+    name: 'new-test-entry'
+  });
+  t.true(storage.updateEntry(entryKey, updatedEntry));
+  t.is(storage.getEntry(entryKey), updatedEntry);
+
+  // try updating a non-existing entry
+  let newKeyEntry = new StorageEntry('some-new-file' + t.context.fileEnding, {});
+  t.false(storage.updateEntry('some.new.key', newKeyEntry));
+
   // delete entry
-  storage.deleteEntry(entry.key);
+  storage.deleteEntry(entryKey);
   t.false(fs.existsSync(filepath));
   t.is(t.context.storage.localEntries.size, 0);
 });
@@ -100,13 +113,13 @@ test('entry lists', (t) => {
   t.is(onlines.length, 1);
 });
 
-test('reading/writing local files', (t) => {
+test('initialization, reading/writing local files', (t) => {
   let storage = t.context.storage;
   let entry = t.context.storageEntry;
   t.is(storage.localEntries.size, 0);
 
   storage.writeEntryToFile(entry);
-  storage.loadLocalDB();
+  storage.initialize();
   t.is(storage.localEntries.size, 1);
   t.deepEqual(storage.getAllLocalEntries()[0], entry);
 });
