@@ -106,7 +106,11 @@ let setupGenericProcessingModules = (session, count, topicData) => {
 test.beforeEach((t) => {
   t.context.topicData = new RuntimeTopicData();
   t.context.processingModuleManager = new ProcessingModuleManager(undefined, t.context.topicData);
-  t.context.sessionManager = new SessionManager(t.context.topicData);
+  t.context.sessionManager = new SessionManager(
+    t.context.topicData,
+    undefined,
+    t.context.processingModuleManager
+  );
 });
 
 /* run tests */

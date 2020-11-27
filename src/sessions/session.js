@@ -1,9 +1,7 @@
 const uuidv4 = require('uuid/v4');
-
 const { proto } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
-
 const namida = require('@tum-far/namida');
 
 class Session {

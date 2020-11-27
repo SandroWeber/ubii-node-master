@@ -1,9 +1,32 @@
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
-const Storage = require('./storage.js');
+
+const { Storage, FileHandler, StorageEntry } = require('./storage.js');
+const { Session } = require('../sessions/session');
 
 class SessionDatabase extends Storage {
   constructor() {
-    super('sessions', 'session');
+    let fileHandlerProto = new FileHandler(
+      '.session',
+      // read
+      (filepath) => {
+        let file = fs.readFileSync(filepath);
+        let proto = JSON.parse(file);
+        let entry = new StorageEntry(proto.name, filepath);
+        entry.protobuf = proto;
+        return entry;
+      },
+      // write
+      (filepath, protoSpecs) => {
+        try {
+          fs.writeFileSync(filepath, JSON.stringify(protoSpecs, null, 4), { flag: 'wx' });
+        } catch (error) {
+          if (error) throw error;
+        }
+      }
+    );
+    let mapFileHandlers = new Map();
+    mapFileHandlers.set(fileHandlerProto.fileEnding, fileHandlerProto);
+    super('sessions', mapFileHandlers);
   }
 
   /**
@@ -11,33 +34,32 @@ class SessionDatabase extends Storage {
    * @param {String} id
    * @returns {Boolean} Does a session specification with the specified ID exists?
    */
-  hasSession(specs) {
-    return this.hasSpecification(specs);
+  has(specs) {
+    return this.hasEntry(specs.name);
   }
 
   /**
-   * Get the session with the specified id.
-   * @param {String} id
+   * Get the session with the specified name.
+   * @param {string} name
    */
-  getSession(id) {
-    return this.getSpecification(id);
+  getByName(name) {
+    return this.getEntry(name);
   }
 
   /**
    * Get an array of all specifications.
    */
-  getSessionList() {
-    return this.getSpecificationList();
+  getList() {
+    return this.getAllLocalEntries().concat(this.getAllOnlineEntries());
   }
 
   /**
    * Add a new session protobuf specification based on the specified specification to the specifications list.
-   * @param {Object} specification The specification in protobuf format. It requires a name and id property.
-   * @param {Object} sessionManager A reference tot he sessionmanager is required to create session instances.
+   * @param {object} specification The specification in protobuf format. It requires a name and id property.
    */
-  addSession(specification) {
+  addProto(specification) {
     if (!this.verifySpecification(specification)) {
-      throw 'Session with ID ' + specification.id + ' could not be registered, invalid specs';
+      throw 'Session with name ' + specification.name + ' could not be registered, invalid specs';
     }
 
     try {
@@ -52,7 +74,7 @@ class SessionDatabase extends Storage {
    * @param {String} id
    */
   deleteSession(id) {
-    this.deleteSpecification(id);
+    this.deleteEntry(id);
   }
 
   /**
@@ -64,7 +86,7 @@ class SessionDatabase extends Storage {
       throw 'session specification could not be verified';
     }
 
-    this.updateSpecification(specification);
+    this.updateEntry(specification);
   }
 
   /**

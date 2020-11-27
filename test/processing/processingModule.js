@@ -69,10 +69,11 @@ test('constructor() - with specs', (t) => {
   t.is(processingModule.authors, specs.authors);
   t.is(processingModule.description, specs.description);
 
-  // with ID defined,
+  // with ID defined, should be overwritten though
   specs.id = 'my-id';
   processingModule = new ProcessingModule(specs);
-  t.is(processingModule.id, specs.id);
+  t.not(processingModule.id, specs.id);
+  t.true(regexUUID.test(processingModule.id));
 
   // trying to specify language within JS that is not JS
   specs.language = ProcessingModuleProto.Language.CPP;
@@ -353,9 +354,10 @@ test('processingMode TriggerOnInput', async (t) => {
     }, index * timeMsBetweenInputTriggers);
   });
   // wait for all triggers to resolve with some buffer for onProcessing calls to go through
-  await TestUtility.wait(2 * pm.inputs.length * timeMsBetweenInputTriggers);
-  t.is(processingCB.callCount, pm.inputs.length);
-  pm.stop();
+  await TestUtility.wait(10 * pm.inputs.length * timeMsBetweenInputTriggers).then(() => {
+    t.is(processingCB.callCount, pm.inputs.length);
+    pm.stop();
+  });
 
   // trigger only when all inputs are refreshed
   processingCB.resetHistory();
@@ -364,9 +366,10 @@ test('processingMode TriggerOnInput', async (t) => {
   pm.inputs.forEach((element) => {
     pm.emit(ProcessingModule.EVENTS.NEW_INPUT, element.internalName);
   });
-  await TestUtility.wait(timeMsBetweenInputTriggers);
-  t.is(processingCB.callCount, 1);
-  pm.stop();
+  await TestUtility.wait(timeMsBetweenInputTriggers).then(() => {
+    t.is(processingCB.callCount, 1);
+    pm.stop();
+  });
 });
 
 test('processingMode Lockstep', async (t) => {

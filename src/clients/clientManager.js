@@ -1,9 +1,5 @@
 const { clientStateEnum, Client } = require('./client.js');
 const namida = require('@tum-far/namida');
-const uuidv4 = require('uuid/v4');
-
-const REJECT_REGISTRATION_FEEDBACK_TITLE = 'Client registration rejected';
-const ACCEPT_REGISTRATION_FEEDBACK_TITLE = 'Client registration accepted';
 
 class ClientManager {
   constructor(server, topicData) {
@@ -40,7 +36,9 @@ class ClientManager {
     this.clients.set(client.id, client);
   }
 
-  reconnectClient(clientSpecs) {}
+  reconnectClient(clientSpecs) {
+    //TODO: implement
+  }
 
   /**
    * Remove the specified Client from the clients map.
@@ -48,7 +46,6 @@ class ClientManager {
    */
   removeClient(id) {
     let client = this.clients.get(id);
-    client.devices.forEach(device => {});
     client.deactivate();
     this.clients.delete(id);
   }
@@ -57,7 +54,6 @@ class ClientManager {
     let client = this.clients.get(id);
     if (client) {
       client.setState(clientStateEnum.inactive);
-      console.info('client ' + id + ' set inactive');
     }
   }
 

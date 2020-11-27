@@ -1,11 +1,11 @@
 const namida = require('@tum-far/namida/src/namida');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
-
 const { proto } = require('@tum-far/ubii-msg-formats');
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 
 const Utils = require('../utilities');
 const { ProcessingModule } = require('./processingModule');
+const ProcessingModuleDatabase = require('../storage/processingModuleDatabase');
 
 class ProcessingModuleManager {
   constructor(deviceManager, topicData = undefined) {
@@ -27,11 +27,20 @@ class ProcessingModuleManager {
   }
 
   createModule(specs) {
-    let pm = new ProcessingModule(specs);
-    this.processingModules.set(pm.id, pm);
-    pm.onCreated(pm.state);
+    let pm = undefined;
+    if (ProcessingModuleDatabase.hasEntry(specs.name)) {
+      pm = ProcessingModuleDatabase.createInstanceByName(specs.name);
+    } else {
+      pm = new ProcessingModule(specs);
+    }
 
-    return pm;
+    let success = this.addModule(pm);
+    if (!success) {
+      return undefined;
+    } else {
+      pm && pm.onCreated(pm.state);
+      return pm;
+    }
   }
 
   addModule(pm) {

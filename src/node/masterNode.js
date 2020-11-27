@@ -7,6 +7,7 @@ const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
+const ProcessingModuleManager = require('../processing/processingModuleManager');
 
 class MasterNode {
   constructor() {
@@ -40,8 +41,14 @@ class MasterNode {
       this.connectionsManager.connections.topicDataZMQ
     );
 
+    this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
+
     // Session manager component:
-    this.sessionManager = new SessionManager(this.topicData, this.deviceManager);
+    this.sessionManager = new SessionManager(
+      this.topicData,
+      this.deviceManager,
+      this.processingModuleManager
+    );
 
     // Service Manager Component:
     this.serviceManager = new ServiceManager(

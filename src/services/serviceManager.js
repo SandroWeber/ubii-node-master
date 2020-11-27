@@ -3,24 +3,7 @@ const { ClientDeregistrationService } = require('./clientDeregistrationService.j
 const { DeviceRegistrationService } = require('./devices/deviceRegistrationService.js');
 const { DeviceDeregistrationService } = require('./devices/deviceDeregistrationService.js');
 const { DeviceListService } = require('./devices/deviceListService.js');
-const {
-  InteractionDatabaseDeleteService
-} = require('./interactions/interactionDatabaseDeleteService.js');
-const {
-  InteractionDatabaseGetListService
-} = require('./interactions/interactionDatabaseGetListService.js');
-const {
-  InteractionOnlineDatabaseGetListService
-} = require('./interactions/interactionOnlineDatabaseGetListService');
-const {
-  InteractionLocalDatabaseGetListService
-} = require('./interactions/interactionLocalDatabaseGetListService');
-const {
-  InteractionDatabaseGetService
-} = require('./interactions/interactionDatabaseGetService.js');
-const {
-  InteractionDatabaseSaveService
-} = require('./interactions/interactionDatabaseSaveService.js');
+const ProcessingModuleGetService = require('./processing/pmDatabaseGetService.js');
 const { SubscriptionService } = require('./subscriptionService.js');
 const { ServerConfigService } = require('./serverConfigService.js');
 const { TopicListService } = require('./topicListService');
@@ -62,13 +45,8 @@ class ServiceManager {
     this.addService(new DeviceRegistrationService(this.clientManager, this.deviceManager));
     this.addService(new DeviceDeregistrationService(this.clientManager, this.deviceManager));
     this.addService(new DeviceListService(this.deviceManager));
-    /* add interaction services */
-    this.addService(new InteractionDatabaseDeleteService());
-    this.addService(new InteractionDatabaseGetListService());
-    this.addService(new InteractionOnlineDatabaseGetListService());
-    this.addService(new InteractionLocalDatabaseGetListService());
-    this.addService(new InteractionDatabaseGetService());
-    this.addService(new InteractionDatabaseSaveService());
+    /* add processing module services */
+    this.addService(ProcessingModuleGetService);
     /* add session services */
     this.addService(new SessionDatabaseDeleteService());
     this.addService(new SessionDatabaseGetListService());
@@ -82,7 +60,7 @@ class ServiceManager {
 
   addService(service) {
     if (!service.topic) {
-      namida.error('Service topic error', 'Service topic: ' + service.topic, service);
+      namida.logFailure('Service Manager', 'can not add service, no topic: ' + service.constructor.name);
       return;
     }
 
