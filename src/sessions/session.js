@@ -59,6 +59,7 @@ class Session {
             this.toString(),
             'could not instantiate processing module ' + pmSpecs.name
           );
+          return false;
         }
       }
     }
@@ -66,7 +67,6 @@ class Session {
     this.processingModuleManager.applyIOMappings(this.ioMappings, this.id);
 
     this.runtimeProcessingModules.forEach((pm) => {
-      // processing mode = lockstep ?
       if (pm.processingMode && pm.processingMode.lockstep) {
         let clientID = pm.clientId || 'local';
         if (!this.lockstepProcessingModules.has(clientID)) {
@@ -74,7 +74,7 @@ class Session {
         }
         this.lockstepProcessingModules.get(clientID).push(pm);
       }
-      // start
+
       pm.start();
     });
     this.tLastLockstepPass = Date.now();

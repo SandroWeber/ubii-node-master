@@ -31,6 +31,11 @@ class ProcessingModuleManager {
     if (ProcessingModuleDatabase.hasEntry(specs.name)) {
       pm = ProcessingModuleDatabase.createInstanceByName(specs.name);
     } else {
+      // create new module based on specs
+      if (!specs.onProcessingStringified) {
+        namida.logFailure('ProcessingModuleManager', 'can\'t create PM "' + specs.name + '" based on specs, missing onProcessing definition.');
+        return undefined;
+      }
       pm = new ProcessingModule(specs);
     }
 
