@@ -6,35 +6,6 @@ const namida = require('@tum-far/namida');
 const { Session } = require('./session.js');
 const { EVENTS_SESSION_MANAGER } = require('./constants');
 const Utils = require('../utilities');
-const ProcessingModuleManager = require('../processing/processingModuleManager.js');
-
-// TEMPORARY - migration from Interactions to ProcessingModules
-let mapSpecsInteraction2ProcessingModule = (interactionSpecs) => {
-  let pmSpecs = {};
-  pmSpecs.id = interactionSpecs.id;
-  pmSpecs.name = interactionSpecs.name;
-  pmSpecs.authors = interactionSpecs.authors;
-  pmSpecs.tags = interactionSpecs.tags;
-  pmSpecs.description = interactionSpecs.description;
-  pmSpecs.clientId = 'server';
-
-  if (interactionSpecs.processFrequency) {
-    pmSpecs.processingMode = {
-      frequency: {
-        hertz: interactionSpecs.processFrequency
-      }
-    };
-  }
-  pmSpecs.inputs = interactionSpecs.inputFormats;
-  pmSpecs.outputs = interactionSpecs.outputFormats;
-  pmSpecs.language = proto.ubii.processing.ProcessingModule.Language.JS;
-
-  pmSpecs.onProcessingStringified = interactionSpecs.processingCallback;
-  pmSpecs.onCreatedStringified = interactionSpecs.onCreated;
-
-  return pmSpecs;
-};
-// end TEMPORARY - migration from Interactions to ProcessingModules
 
 class SessionManager extends EventEmitter {
   constructor(topicData, deviceManager, processingModuleManager) {

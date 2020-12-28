@@ -287,8 +287,8 @@ class ProcessingModuleManager {
 
   /* lockstep processing functions */
 
-  sendLockstepProcessingRequest(clientId, request) {
-    if (clientId === undefined || clientId === 'local') {
+  sendLockstepProcessingRequest(nodeId, request) {
+    if (nodeId === undefined || nodeId === 'local') {
       // server side PM
       return new Promise((resolve, reject) => {
         // assign input

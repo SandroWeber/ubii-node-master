@@ -68,11 +68,11 @@ class Session {
 
     this.runtimeProcessingModules.forEach((pm) => {
       if (pm.processingMode && pm.processingMode.lockstep) {
-        let clientID = pm.clientId || 'local';
-        if (!this.lockstepProcessingModules.has(clientID)) {
-          this.lockstepProcessingModules.set(clientID, []);
+        let nodeID = pm.nodeId || 'local';
+        if (!this.lockstepProcessingModules.has(nodeID)) {
+          this.lockstepProcessingModules.set(nodeID, []);
         }
-        this.lockstepProcessingModules.get(clientID).push(pm);
+        this.lockstepProcessingModules.get(nodeID).push(pm);
       }
 
       pm.start();

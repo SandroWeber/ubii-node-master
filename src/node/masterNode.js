@@ -55,6 +55,7 @@ class MasterNode {
 
     // Service Manager Component:
     this.serviceManager = new ServiceManager(
+      this.id,
       this.clientManager,
       this.deviceManager,
       this.sessionManager,
