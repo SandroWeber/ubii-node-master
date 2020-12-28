@@ -278,8 +278,11 @@ class MasterNode {
   }
 
   processTopicDataMessage(topicDataMessage) {
-    let record = topicDataMessage.topicDataRecord;
-    this.topicData.publish(record.topic, record[record.type], record.type, record.timestamp);
+    let records = topicDataMessage.topicDataRecordList || [];
+    if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
+    records.forEach((record) => {
+      this.topicData.publish(record.topic, record[record.type], record.type, record.timestamp);
+    });
   }
 }
 
