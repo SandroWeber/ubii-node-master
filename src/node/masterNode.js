@@ -278,7 +278,9 @@ class MasterNode {
   }
 
   processTopicDataMessage(topicDataMessage) {
-    let records = topicDataMessage.topicDataRecordList || [];
+    let records = topicDataMessage.topicDataRecordList
+      ? topicDataMessage.topicDataRecordList.elements
+      : [];
     if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
     records.forEach((record) => {
       this.topicData.publish(record.topic, record[record.type], record.type, record.timestamp);
