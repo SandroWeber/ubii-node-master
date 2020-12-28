@@ -1,3 +1,4 @@
+const uuidv4 = require('uuid/v4');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
@@ -11,6 +12,8 @@ const ProcessingModuleManager = require('../processing/processingModuleManager')
 
 class MasterNode {
   constructor() {
+    this.id = uuidv4();
+
     // Translators:
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
     this.serviceRequestTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
@@ -70,30 +73,18 @@ class MasterNode {
 
       // Return reply.
       return this.serviceReplyTranslator.createBufferFromPayload(reply);
-    } catch (e) {
-      // Create context.
-      let context = {
-        feedback: {
-          title: '',
-          message: '',
-          stack: ''
-        }
-      };
+    } catch (error) {
+      let title = 'Service Request';
+      let message = 'processing failed with an error:';
+      let stack = '' + (error.stack.toString() || error.toString());
 
-      context.feedback.title = 'Service Request';
-      context.feedback.message = 'processing failed with an error:';
-      context.feedback.stack = '' + (e.stack.toString() || e.toString());
-
-      namida.logFailure(
-        context.feedback.title,
-        context.feedback.message + '\n' + context.feedback.stack
-      );
+      namida.logFailure(title, message + '\n' + stack);
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
-          title: context.feedback.title,
-          message: context.feedback.message,
-          stack: context.feedback.stack
+          title: title,
+          message: message,
+          stack: stack
         }
       });
     }
@@ -127,30 +118,18 @@ class MasterNode {
       // VARIANT B: JSON
       response.json(reply);
       return reply;
-    } catch (e) {
-      // Create context.
-      let context = {
-        feedback: {
-          title: '',
-          message: '',
-          stack: ''
-        }
-      };
+    } catch (error) {
+      let title = 'Service Request';
+      let message = `processing failed with an error:`;
+      let stack = '' + (error.stack.toString() || error.toString());
 
-      context.feedback.title = 'Service Request';
-      context.feedback.message = `processing failed with an error:`;
-      context.feedback.stack = '' + (e.stack.toString() || e.toString());
-
-      namida.logFailure(
-        context.feedback.title,
-        context.feedback.message + ' ' + context.feedback.stack
-      );
+      namida.logFailure(title, message + '\n' + stack);
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
-          title: context.feedback.title,
-          message: context.feedback.message,
-          stack: context.feedback.stack
+          title: title,
+          message: message,
+          stack: stack
         }
       });
     }
@@ -172,24 +151,12 @@ class MasterNode {
 
       // Process message.
       this.processTopicDataMessage(topicDataMessage);
-    } catch (e) {
-      // Create context.
-      let context = {
-        feedback: {
-          title: '',
-          message: '',
-          stack: ''
-        }
-      };
+    } catch (error) {
+      let title = 'TopicData message publishing failed (ZMQ)';
+      let message = `TopicData message publishing failed (ZMQ) with an error:`;
+      let stack = '' + (error.stack || error);
 
-      context.feedback.title = 'TopicData message publishing failed (ZMQ)';
-      context.feedback.message = `TopicData message publishing failed (ZMQ) with an error:`;
-      context.feedback.stack = '' + (e.stack || e);
-
-      console.error(context.feedback.message + context.feedback.stack);
-      /*namida.error(context.feedback.title,
-        context.feedback.message,
-        context.feedback.stack);*/
+      namida.logFailure(title, message + '\n' + stack);
 
       try {
         // Send error:
@@ -197,18 +164,18 @@ class MasterNode {
           clientID,
           this.topicDataTranslator.createBufferFromPayload({
             error: {
-              title: context.feedback.title,
-              message: context.feedback.message,
-              stack: context.feedback.stack
+              title: title,
+              message: message,
+              stack: stack
             }
           })
         );
-      } catch (e) {
-        context.feedback.title = 'TopicData error response sending failed (ZMQ)';
-        context.feedback.message = `TopicData error response sending failed (ZMQ) with an error:`;
-        context.feedback.stack = '' + (e.stack || e);
+      } catch (error) {
+        title = 'TopicData error response sending failed (ZMQ)';
+        message = `TopicData error response sending failed (ZMQ) with an error:`;
+        stack = '' + (error.stack || error);
 
-        namida.error(context.feedback.title, context.feedback.message, context.feedback.stack);
+        namida.logFailure(title, message + '\n' + stack);
       }
     }
 
@@ -232,45 +199,30 @@ class MasterNode {
       //let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
 
       this.processTopicDataMessage(topicDataMessage);
-    } catch (e) {
-      // Create context.
-      let context = {
-        feedback: {
-          title: '',
-          message: '',
-          stack: ''
-        }
-      };
+    } catch (error) {
+      let title = 'TopicData message publishing failed (WS)';
+      let message = `TopicData message publishing failed (WS) with an error:`;
+      let stack = '' + (error.stack || error);
 
-      context.feedback.title = 'TopicData message publishing failed (WS)';
-      context.feedback.message = `TopicData message publishing failed (WS) with an error:`;
-      context.feedback.stack = '' + (e.stack || e);
-
-      console.error(context.feedback.message + context.feedback.stack);
-      /*namida.error(context.feedback.title,
-        context.feedback.message,
-        context.feedback.stack);*/
+      namida.logFailure(title, message + '\n' + stack);
 
       try {
-        // Send error:
-        //let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
-        //let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
         this.connectionsManager.send(
           clientID,
           this.topicDataTranslator.createBufferFromPayload({
             error: {
-              title: context.feedback.title,
-              message: context.feedback.message,
-              stack: context.feedback.stack
+              title: title,
+              message: message,
+              stack: stack
             }
           })
         );
       } catch (e) {
-        context.feedback.title = 'TopicData error response sending failed (WS)';
-        context.feedback.message = 'TopicData error response sending failed (WS) with an error:';
-        context.feedback.stack = '' + (e.stack || e);
+        title = 'TopicData error response sending failed (WS)';
+        message = 'TopicData error response sending failed (WS) with an error:';
+        stack = '' + (e.stack || e);
 
-        namida.error(context.feedback.title, context.feedback.message, context.feedback.stack);
+        namida.logFailure(title, message + '\n' + stack);
       }
     }
 

@@ -34,7 +34,7 @@ let mapSpecsInteraction2ProcessingModule = (interactionSpecs) => {
 
   return pmSpecs;
 };
-// TEMPORARY - migration from Interactions to ProcessingModules
+// end TEMPORARY - migration from Interactions to ProcessingModules
 
 class SessionManager extends EventEmitter {
   constructor(topicData, deviceManager, processingModuleManager) {
