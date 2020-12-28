@@ -5,7 +5,7 @@ const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 
 const Utils = require('../utilities');
 const { ProcessingModule } = require('./processingModule');
-const ProcessingModuleDatabase = require('../storage/processingModuleDatabase');
+const ProcessingModuleStorage = require('../storage/processingModuleStorage');
 
 class ProcessingModuleManager {
   constructor(deviceManager, topicData = undefined) {
@@ -28,8 +28,8 @@ class ProcessingModuleManager {
 
   createModule(specs) {
     let pm = undefined;
-    if (ProcessingModuleDatabase.hasEntry(specs.name)) {
-      pm = ProcessingModuleDatabase.createInstanceByName(specs.name);
+    if (ProcessingModuleStorage.hasEntry(specs.name)) {
+      pm = ProcessingModuleStorage.createInstanceByName(specs.name);
     } else {
       // create new module based on specs
       if (!specs.onProcessingStringified) {

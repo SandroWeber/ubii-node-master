@@ -3,16 +3,19 @@ const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const { Service } = require('./../service.js');
 const ProcessingModuleStorage = require('../../storage/processingModuleStorage');
 
-class ProcessingModuleDatabaseGetService extends Service {
-  constructor() {
+class ProcessingModuleRuntimeAddService extends Service {
+  constructor(processingModuleManager) {
     super(
-      DEFAULT_TOPICS.SERVICES.PM_DATABASE_GET,
-      MSG_TYPES.PM,
-      MSG_TYPES.PM_LIST + ', ' + MSG_TYPES.ERROR
+      DEFAULT_TOPICS.SERVICES.PM_RUNTIME_ADD,
+      MSG_TYPES.PM_LIST,
+      MSG_TYPES.SUCCESS + ', ' + MSG_TYPES.ERROR
     );
+
+    this.processingModuleManager = processingModuleManager;
   }
 
-  reply(pmMessage) {
+  reply(msg) {
+    let pmSpecList = msg.processingModuleList && msg.processingModuleList.elements;
     let pm = ProcessingModuleStorage.getByName(pmMessage.name);
     if (typeof pm === 'undefined') {
       return {
@@ -31,4 +34,4 @@ class ProcessingModuleDatabaseGetService extends Service {
   }
 }
 
-module.exports = new ProcessingModuleDatabaseGetService();
+module.exports = new ProcessingModuleRuntimeAddService();
