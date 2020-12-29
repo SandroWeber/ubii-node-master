@@ -16,21 +16,6 @@ class ProcessingModuleRuntimeAddService extends Service {
 
   reply(msg) {
     let pmSpecList = msg.processingModuleList && msg.processingModuleList.elements;
-    let pm = ProcessingModuleStorage.getByName(pmMessage.name);
-    if (typeof pm === 'undefined') {
-      return {
-        error: {
-          title: 'ProcessingModuleGetService Error',
-          message: 'Could not find processing module with name ' + pmMessage.name
-        }
-      };
-    } else {
-      return {
-        processingModuleList: {
-          elements: [pm.protobuf]
-        }
-      };
-    }
   }
 }
 

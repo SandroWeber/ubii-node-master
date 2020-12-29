@@ -44,10 +44,11 @@ class MasterNode {
       this.connectionsManager.connections.topicDataZMQ
     );
 
-    this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
+    this.processingModuleManager = new ProcessingModuleManager(this.id, this.deviceManager, this.topicData);
 
     // Session manager component:
     this.sessionManager = new SessionManager(
+      this.id,
       this.topicData,
       this.deviceManager,
       this.processingModuleManager

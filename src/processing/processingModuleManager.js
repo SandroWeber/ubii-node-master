@@ -8,7 +8,8 @@ const { ProcessingModule } = require('./processingModule');
 const ProcessingModuleStorage = require('../storage/processingModuleStorage');
 
 class ProcessingModuleManager {
-  constructor(deviceManager, topicData = undefined) {
+  constructor(nodeID, deviceManager, topicData = undefined) {
+    this.nodeID = nodeID;
     this.deviceManager = deviceManager;
     this.topicData = topicData;
 
@@ -38,6 +39,7 @@ class ProcessingModuleManager {
       }
       pm = new ProcessingModule(specs);
     }
+    pm.nodeId = this.nodeID;
 
     let success = this.addModule(pm);
     if (!success) {

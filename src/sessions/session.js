@@ -14,6 +14,7 @@ class Session {
       processingModules = [],
       ioMappings = []
     },
+    masterNodeID,
     topicData,
     deviceManager,
     processingModuleManager
@@ -27,6 +28,7 @@ class Session {
     this.processingModules = processingModules;
     this.ioMappings = ioMappings;
 
+    this.masterNodeID = masterNodeID;
     this.topicData = topicData;
     this.deviceManager = deviceManager;
     this.processingModuleManager = processingModuleManager;
@@ -46,19 +48,25 @@ class Session {
     // setup for processing modules
     if (this.processingModules && this.processingModules.length > 0) {
       for (let pmSpecs of this.processingModules) {
-        let pm = this.processingModuleManager.getModuleBySpecs(pmSpecs, this.id);
-        if (!pm) {
-          pm = this.processingModuleManager.createModule(pmSpecs);
-        }
-        if (pm) {
-          pm.sessionId = this.id;
-          this.runtimeProcessingModules.push(pm);
-        } else {
-          namida.logFailure(
-            this.toString(),
-            'could not instantiate processing module ' + pmSpecs.name
-          );
-          return false;
+        // if PM isn't assigned to run on a particular node, run here
+        //TODO: check if dedicated processing nodes are available to run it (requires load balancing and communication)
+        if (!pmSpecs.nodeId) pmSpecs.nodeId = this.masterNodeID;
+
+        if (pmSpecs.nodeId === this.masterNodeID) {
+          let pm = this.processingModuleManager.getModuleBySpecs(pmSpecs, this.id);
+          if (!pm) {
+            pm = this.processingModuleManager.createModule(pmSpecs);
+          }
+          if (pm) {
+            pm.sessionId = this.id;
+            this.runtimeProcessingModules.push(pm);
+          } else {
+            namida.logFailure(
+              this.toString(),
+              'could not instantiate processing module ' + pmSpecs.name
+            );
+            return false;
+          }
         }
       }
     }
