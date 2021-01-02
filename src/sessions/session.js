@@ -3,6 +3,8 @@ const { proto } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
 const namida = require('@tum-far/namida');
 
+const ProcessingModuleManager = require('../processing/processingModuleManager');
+
 class Session {
   constructor(
     {
@@ -25,7 +27,7 @@ class Session {
     this.description = description;
     this.authors = authors;
     this.status = SessionStatus.CREATED;
-    this.processingModules = processingModules;
+    this.processingModules = processingModules || [];
     this.ioMappings = ioMappings;
 
     this.masterNodeID = masterNodeID;
@@ -33,7 +35,6 @@ class Session {
     this.deviceManager = deviceManager;
     this.processingModuleManager = processingModuleManager;
 
-    this.runtimeProcessingModules = [];
     this.lockstepProcessingModules = new Map();
   }
 
@@ -43,46 +44,67 @@ class Session {
       return false;
     }
 
+    if (!this.processingModules || this.processingModules.length === 0) {
+      namida.logFailure('Session ' + this.id, 'session has no processing modules to start');
+      return false;
+    }
+
     this.status = SessionStatus.RUNNING;
 
     // setup for processing modules
-    if (this.processingModules && this.processingModules.length > 0) {
-      for (let pmSpecs of this.processingModules) {
-        // if PM isn't assigned to run on a particular node, run here
-        //TODO: check if dedicated processing nodes are available to run it (requires load balancing and communication)
-        if (!pmSpecs.nodeId) pmSpecs.nodeId = this.masterNodeID;
+    for (let pmSpec of this.processingModules) {
+      pmSpec.sessionId = this.id;
+      // if PM isn't assigned to run on a particular node, run here
+      //TODO: check if dedicated processing nodes are available to run it (requires load balancing and communication)
+      if (!pmSpec.nodeId) pmSpec.nodeId = this.masterNodeID;
 
-        if (pmSpecs.nodeId === this.masterNodeID) {
-          let pm = this.processingModuleManager.getModuleBySpecs(pmSpecs, this.id);
-          if (!pm) {
-            pm = this.processingModuleManager.createModule(pmSpecs);
-          }
-          if (pm) {
-            pm.sessionId = this.id;
-            this.runtimeProcessingModules.push(pm);
-          } else {
-            namida.logFailure(
-              this.toString(),
-              'could not instantiate processing module ' + pmSpecs.name
-            );
-            return false;
-          }
+      // should PM run on this node?
+      if (pmSpec.nodeId === this.masterNodeID) {
+        let pm = this.processingModuleManager.getModuleBySpecs(pmSpec, this.id);
+        if (!pm) {
+          pm = this.processingModuleManager.createModule(pmSpec);
         }
+        if (pm) {
+          pmSpec.id = pm.id;
+        } else {
+          namida.logFailure(
+            this.toString(),
+            'could not instantiate processing module ' + pmSpec.name
+          );
+          return false;
+        }
+      }
+      //PM should run on a different node, wait for confirmation
+      else {
+        this.processingModuleManager.on(ProcessingModuleManager.EVENTS.PM_STARTED, (pmSpecs) => {
+          console.info('session on PM_STARTED');
+          console.info(pmSpecs);
+        });
       }
     }
 
-    this.processingModuleManager.applyIOMappings(this.ioMappings, this.id);
+    // filter out I/O mappings for PMs that run on this node and apply
+    let applicableIOMappings = this.ioMappings.filter((ioMapping) =>
+      this.processingModules.find(
+        (pm) =>
+          (pm.name === ioMapping.processingModuleName || pm.id === ioMapping.processingModuleId) &&
+          pm.nodeId === this.masterNodeID
+      )
+    );
+    this.processingModuleManager.applyIOMappings(applicableIOMappings, this.id);
 
-    this.runtimeProcessingModules.forEach((pm) => {
+    // start processing modules
+    this.processingModules.forEach((pm) => {
+      // gather PMs running in lockstep and start processing loop for them
+      // group PMs by node ID they're running on
       if (pm.processingMode && pm.processingMode.lockstep) {
-        let nodeID = pm.nodeId || 'local';
-        if (!this.lockstepProcessingModules.has(nodeID)) {
-          this.lockstepProcessingModules.set(nodeID, []);
+        if (!this.lockstepProcessingModules.has(pm.nodeId)) {
+          this.lockstepProcessingModules.set(pm.nodeId, []);
         }
-        this.lockstepProcessingModules.get(nodeID).push(pm);
+        this.lockstepProcessingModules.get(pm.nodeId).push(pm);
       }
 
-      pm.start();
+      this.processingModuleManager.getModuleByID(pm.id).start();
     });
     this.tLastLockstepPass = Date.now();
     this.lockstepProcessingPass();
@@ -97,12 +119,11 @@ class Session {
 
     this.status = SessionStatus.STOPPED;
 
-    for (let processingModule of this.runtimeProcessingModules) {
-      processingModule.stop();
+    for (let processingModule of this.processingModules) {
+      this.processingModuleManager.getModuleByID(processingModule.id).stop();
       this.processingModuleManager.removeModule(processingModule);
     }
 
-    this.runtimeProcessingModules = [];
     this.lockstepProcessingModules = new Map();
 
     return true;
@@ -189,7 +210,7 @@ class Session {
     });
   }
 
-  addProcessingModule(pm) {
+  /*addProcessingModule(pm) {
     if (this.runtimeProcessingModules.includes(pm)) {
       namida.logFailure(
         this.toString(),
@@ -203,22 +224,7 @@ class Session {
     }
     this.runtimeProcessingModules.push(pm);
     return true;
-  }
-
-  removeProcessingModuleByID(id) {
-    let index = this.runtimeProcessingModules.findIndex((element) => element.id === id);
-    if (index !== -1) {
-      this.runtimeProcessingModules[index].stop();
-      this.runtimeProcessingModules.splice(index, 1);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  removeProcessingModule(pm) {
-    return this.removeProcessingModuleByID(pm.id);
-  }
+  }*/
 
   toProtobuf() {
     return {

@@ -1,3 +1,5 @@
+const EventEmitter = require('events');
+
 const namida = require('@tum-far/namida/src/namida');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { proto } = require('@tum-far/ubii-msg-formats');
@@ -7,8 +9,15 @@ const Utils = require('../utilities');
 const { ProcessingModule } = require('./processingModule');
 const ProcessingModuleStorage = require('../storage/processingModuleStorage');
 
-class ProcessingModuleManager {
+class ProcessingModuleManager extends EventEmitter {
+
+  /*static EVENTS = {
+    PM_STARTED: 'PM_STARTED'
+  };*/
+
   constructor(nodeID, deviceManager, topicData = undefined) {
+    super();
+
     this.nodeID = nodeID;
     this.deviceManager = deviceManager;
     this.topicData = topicData;
@@ -290,7 +299,7 @@ class ProcessingModuleManager {
   /* lockstep processing functions */
 
   sendLockstepProcessingRequest(nodeId, request) {
-    if (nodeId === undefined || nodeId === 'local') {
+    if (nodeId === this.nodeID) {
       // server side PM
       return new Promise((resolve, reject) => {
         // assign input
@@ -352,5 +361,9 @@ class ProcessingModuleManager {
 
   /* lockstep processing functions end */
 }
+
+ProcessingModuleManager.EVENTS = Object.freeze({
+  PM_STARTED: 'PM_STARTED'
+});
 
 module.exports = ProcessingModuleManager;

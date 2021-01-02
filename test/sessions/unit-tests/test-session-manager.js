@@ -29,8 +29,9 @@ let getRandomSession = (sessionManager) => {
 /* test setup */
 
 test.beforeEach(t => {
+  t.context.nodeID = 'test-node-id-session-manager';
   t.context.topicData = new MockTopicData();
-  t.context.sessionManager = new SessionManager(t.context.topicData);
+  t.context.sessionManager = new SessionManager(t.context.nodeID, t.context.topicData);
 });
 
 

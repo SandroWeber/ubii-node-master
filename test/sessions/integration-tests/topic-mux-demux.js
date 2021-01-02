@@ -100,13 +100,16 @@ let publishInput = (inputList, topicData) => {
 /* initialize tests */
 
 test.beforeEach((t) => {
+  t.context.nodeID = 'test-node-id-topic-mux-demux';
   t.context.topicData = new RuntimeTopicData();
   t.context.deviceManager = new DeviceManager(undefined, t.context.topicData, undefined);
   t.context.processingModuleManager = new ProcessingModuleManager(
+    t.context.nodeID,
     t.context.deviceManager,
     t.context.topicData
   );
   t.context.sessionManager = new SessionManager(
+    t.context.nodeID,
     t.context.topicData,
     t.context.deviceManager,
     t.context.processingModuleManager

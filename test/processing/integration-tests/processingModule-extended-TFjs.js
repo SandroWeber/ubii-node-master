@@ -43,8 +43,9 @@ test('overwritten lifecycle functions', (t) => {
 });
 
 test('run session with module', async (t) => {
+  let nodeID = 'test-node-id-processingModule-extended-TFjs';
   let topicdata = new RuntimeTopicData();
-  let pmManager = new ProcessingModuleManager(undefined, topicdata);
+  let pmManager = new ProcessingModuleManager(nodeID, undefined, topicdata);
 
   let pm = new TestProcessingModuleTF();
   pm.onCreated();
@@ -67,9 +68,9 @@ test('run session with module', async (t) => {
       }
     ]
   };
-  let session = new Session(sessionSpecs, topicdata, undefined, pmManager);
+  let session = new Session(sessionSpecs, nodeID, topicdata, undefined, pmManager);
   session.start();
-  t.is(session.runtimeProcessingModules.length, 1);
+  t.is(session.processingModules.length, 1);
 
   while (!topicdata.pull(topicPrediction)) {
     await TestUtility.wait(50);

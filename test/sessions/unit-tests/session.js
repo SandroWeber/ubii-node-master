@@ -54,66 +54,10 @@ test('constructor', (t) => {
   t.is(session.ioMappings.length, ioMappings.length);
 });
 
-test('add/remove processing modules', (t) => {
-  let session = t.context.session;
-
-  let pm1 = new MockProcessingModule();
-  let pm2 = new MockProcessingModule();
-
-  t.is(session.runtimeProcessingModules.length, 0);
-  t.true(session.addProcessingModule(pm1));
-  t.true(session.addProcessingModule(pm2));
-  t.is(session.runtimeProcessingModules.length, 2);
-
-  // try adding the same module twice
-  t.false(session.addProcessingModule(pm1));
-  t.is(session.runtimeProcessingModules.length, 2);
-
-  // remove one
-  t.true(session.removeProcessingModule(pm1));
-  t.is(session.runtimeProcessingModules.length, 1);
-  // try removing the same element
-  t.false(session.removeProcessingModule(pm1));
-  t.is(session.runtimeProcessingModules.length, 1);
-});
-
 test('start', async (t) => {
-  let session = t.context.session;
-
-  let pm1 = new MockProcessingModule();
-  let pm2 = new MockProcessingModule();
-  let pm3 = new MockProcessingModule();
-  t.true(session.addProcessingModule(pm1));
-  t.true(session.addProcessingModule(pm2));
-  t.true(session.addProcessingModule(pm3));
-
-  t.is(pm1.start.callCount, 0);
-  t.is(pm2.start.callCount, 0);
-  t.is(pm3.start.callCount, 0);
-
-  await runProcessing(session, 100);
-
-  t.true(pm1.start.callCount > 0);
-  t.true(pm2.start.callCount > 0);
-  t.true(pm3.start.callCount > 0);
-
-  // start, then try to start again while already running
-  t.true(session.start());
-  t.is(session.status, SessionStatus.RUNNING);
-  t.false(session.start());
+  //TODO: rewrite
 });
 
 test('stop', async (t) => {
-  let session = t.context.session;
-
-  let pm1 = new MockProcessingModule();
-  t.true(session.addProcessingModule(pm1));
-
-  t.is(session.status, SessionStatus.CREATED);
-  t.false(session.stop());
-  t.true(session.start());
-  t.is(pm1.start.callCount, 1);
-  t.is(session.status, SessionStatus.RUNNING);
-  t.true(session.stop());
-  t.is(pm1.stop.callCount, 1);
+  //TODO: rewrite
 });
