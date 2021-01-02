@@ -169,9 +169,6 @@ class Session extends EventEmitter {
   }
 
   onProcessingModuleStarted(remotePMSpec) {
-    console.info('session onProcessingModuleStarted');
-    console.info(remotePMSpec);
-
     let index = this.pmAwaitingRemoteStart.findIndex(
       (pm) => pm.sessionId === this.id && pm.id === remotePMSpec.id
     );
