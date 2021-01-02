@@ -1,13 +1,9 @@
 import test from 'ava';
 
-const { proto } = require('@tum-far/ubii-msg-formats');
-const SessionStatus = proto.ubii.sessions.SessionStatus;
-
 import { Session } from '../../../src/index.js';
 
 import { MockIOMapping } from '../../mocks/mock-io-mapping.js';
-import { MockProcessingModuleManager } from '../../mocks/mock-processing-module-manager.js';
-import MockProcessingModule from '../../mocks/mock-processing-module.js';
+import MockProcessingModuleManager from '../../mocks/mock-processing-module-manager.js';
 import MockTopicData from '../../mocks/mock-topicdata.js';
 
 let runProcessing = (session, milliseconds) => {
@@ -21,18 +17,19 @@ let runProcessing = (session, milliseconds) => {
 };
 
 test.beforeEach((t) => {
+  t.context.nodeID = 'test-node-id-sessions';
   t.context.mockIOMappings = [];
   t.context.mockIOMappings.push(new MockIOMapping());
   t.context.mockIOMappings.push(new MockIOMapping());
   t.context.mockIOMappings.push(new MockIOMapping());
 
-  t.context.topicData = new MockTopicData();
-
+  t.context.mockTopicData = new MockTopicData();
   t.context.mockProcessingModuleManager = new MockProcessingModuleManager();
 
   t.context.session = new Session(
     {},
-    t.context.topicData,
+    t.context.nodeID,
+    t.context.mockTopicData,
     undefined,
     t.context.mockProcessingModuleManager
   );
@@ -48,7 +45,13 @@ test('constructor', (t) => {
   t.not(session.id, '');
   t.is(session.ioMappings.length, 0);
 
-  session = new Session({ ioMappings: ioMappings });
+  session = new Session(
+    { ioMappings: ioMappings },
+    t.context.nodeID,
+    t.context.mockTopicData,
+    undefined,
+    t.context.mockProcessingModuleManager
+  );
   t.is(typeof session.id, 'string');
   t.not(session.id, '');
   t.is(session.ioMappings.length, ioMappings.length);

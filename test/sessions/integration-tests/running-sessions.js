@@ -150,6 +150,7 @@ test('single session - two processing modules', async (t) => {
   [pm1, pm2].forEach((pm) => {
     session.processingModules.push(pm.toProtobuf());
   });
+  session.initialize();
 
   // start
   await sessionManager.startAllSessions();
@@ -234,6 +235,7 @@ test('two sessions - one processing module each', async (t) => {
   let pm1 = new ProcessingModule(getPM1Specs());
   pmManager.addModule(pm1);
   session1.processingModules.push(pm1);
+  session1.initialize();
 
   let pm2 = new ProcessingModule(getPM2Specs());
   pm2.state.triggerToggle = true;
@@ -246,6 +248,7 @@ test('two sessions - one processing module each', async (t) => {
   });
   pmManager.addModule(pm2);
   session2.processingModules.push(pm2);
+  session2.initialize();
 
   let topicIntegerTarget = 21;
   topicData.publish(topicNameInteger, topicIntegerTarget);
@@ -335,6 +338,7 @@ test('100 generic sessions with 100 generic interactions each', async (t) => {
   for (let i = 0; i < sessionCount; i = i + 1) {
     let session = sessionManager.createSession();
     setupGenericProcessingModules(session, pmManager, 100, topicData);
+    session.initialize();
   }
 
   await sessionManager.startAllSessions();
