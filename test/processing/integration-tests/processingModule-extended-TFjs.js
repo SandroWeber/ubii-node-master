@@ -25,7 +25,7 @@ test('passing specifications to constructor', (t) => {
   let pm = new TestProcessingModuleTF(specs);
   t.true(pm.id !== undefined && pm.id.length > 0);
   t.true(pm.name.length > 0);
-  t.is(pm.processingMode, specs.processingMode);
+  t.deepEqual(pm.processingMode, specs.processingMode);
 });
 
 test('overwritten lifecycle functions', (t) => {

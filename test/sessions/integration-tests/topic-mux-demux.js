@@ -23,14 +23,14 @@ let generateInputList = (count) => {
   return list;
 };
 
-let topicMuxSpecs = {
+const topicMuxSpecs = {
   name: 'test-mux',
   dataType: 'double',
   topicSelector: '/' + Utils.getUUIDv4Regex() + inputTopicSuffix,
   identityMatchPattern: Utils.getUUIDv4Regex()
 };
 
-let topicDemuxSpecs = {
+const topicDemuxSpecs = {
   name: 'test-demux',
   dataType: 'string',
   outputTopicFormat: '/%s' + outputTopicSuffix
@@ -51,8 +51,8 @@ let processCB = (deltaT, inputs, outputs, state) => {
   outputs.demux = outputList;
 };
 
-let processingModuleSpecs = {
-  name: 'test-module',
+const processingModuleSpecs = {
+  name: 'test-pm-topic-mux-demux',
   onProcessingStringified: processCB.toString(),
   inputs: [
     {
@@ -68,7 +68,7 @@ let processingModuleSpecs = {
   ]
 };
 
-let sessionSpecs = {
+const sessionSpecs = {
   name: 'test-session',
   processingModules: [processingModuleSpecs],
   ioMappings: [
@@ -116,6 +116,10 @@ test.beforeEach((t) => {
   );
 });
 
+test.afterEach((t) => {
+  t.context.sessionManager.stopAllSessions();
+});
+
 /* run tests */
 
 test('publish first, start session', async (t) => {
@@ -124,6 +128,7 @@ test('publish first, start session', async (t) => {
 
   t.context.sessionManager.createSession(sessionSpecs);
   t.context.sessionManager.startAllSessions();
+
   await TestUtility.wait(10);
   t.context.sessionManager.stopAllSessions();
 
@@ -135,11 +140,12 @@ test('publish first, start session', async (t) => {
 });
 
 test('start session first, then publish', async (t) => {
-  let inputList = generateInputList(10);
-
   t.context.sessionManager.createSession(sessionSpecs);
   t.context.sessionManager.startAllSessions();
+
+  let inputList = generateInputList(10);
   publishInput(inputList, t.context.topicData);
+
   await TestUtility.wait(100);
   t.context.sessionManager.stopAllSessions();
 

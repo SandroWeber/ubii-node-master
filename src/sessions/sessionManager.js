@@ -58,6 +58,12 @@ class SessionManager extends EventEmitter {
 
     if (session instanceof Session) {
       this.sessions.push(session);
+      session.addListener(Session.EVENTS.START_FAILURE, (pmList) => {
+        namida.logFailure(
+          'SessionManager',
+          'failure to start ' + session.toString() + ', list of PMs:\n' + JSON.stringify(pmList)
+        );
+      });
     }
   }
 
@@ -181,7 +187,7 @@ class SessionManager extends EventEmitter {
   onEventSessionStart(sessionSpecs) {
     this.topicData.publish(
       DEFAULT_TOPICS.INFO_TOPICS.START_SESSION,
-      { id: sessionSpecs.id },
+      sessionSpecs,
       Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
     );
   }

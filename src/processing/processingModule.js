@@ -10,33 +10,15 @@ const Utils = require('../utilities');
 const { set } = require('shelljs');
 
 class ProcessingModule extends EventEmitter {
-  constructor(
-    specs = {
-      name: '',
-      authors: [],
-      tags: [],
-      description: '',
-      nodeId: undefined,
-      language: ProcessingModuleProto.Language.JS,
-      inputs: [],
-      outputs: [],
-      processingMode: {
-        frequency: {
-          hertz: 30
-        }
-      },
-      onCreatedStringified: undefined,
-      onProcessingStringified: undefined,
-      onHaltedStringified: undefined,
-      onDestroyedStringified: undefined
-    }
-  ) {
+  constructor(specs = {}) {
     super();
 
     // take over specs
-    Object.assign(this, specs);
+    specs && Object.assign(this, JSON.parse(JSON.stringify(specs)));
     // new instance is getting new ID
     this.id = uuidv4();
+    this.inputs = this.inputs || [];
+    this.outputs = this.outputs || [];
     // check that language specification for module is correct
     if (this.language === undefined) this.language = ProcessingModuleProto.Language.JS;
     if (this.language !== ProcessingModuleProto.Language.JS) {
@@ -452,4 +434,4 @@ ProcessingModule.EVENTS = Object.freeze({
   PROCESSED: 3
 });
 
-module.exports = { ProcessingModule: ProcessingModule };
+module.exports = { ProcessingModule };

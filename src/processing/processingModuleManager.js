@@ -10,11 +10,6 @@ const { ProcessingModule } = require('./processingModule');
 const ProcessingModuleStorage = require('../storage/processingModuleStorage');
 
 class ProcessingModuleManager extends EventEmitter {
-
-  /*static EVENTS = {
-    PM_STARTED: 'PM_STARTED'
-  };*/
-
   constructor(nodeID, deviceManager, topicData = undefined) {
     super();
 
@@ -36,17 +31,27 @@ class ProcessingModuleManager extends EventEmitter {
     };*/
   }
 
-  createModule(specs) {
+  createModule(spec) {
+    if (spec.id && this.processingModules.has(spec.id)) {
+      namida.logFailure(
+        'ProcessingModuleManager',
+        "can't create module " + spec.name + ', ID already exists: ' + spec.id
+      );
+    }
+
     let pm = undefined;
-    if (ProcessingModuleStorage.hasEntry(specs.name)) {
-      pm = ProcessingModuleStorage.createInstanceByName(specs.name);
+    if (ProcessingModuleStorage.hasEntry(spec.name)) {
+      pm = ProcessingModuleStorage.createInstanceByName(spec.name);
     } else {
       // create new module based on specs
-      if (!specs.onProcessingStringified) {
-        namida.logFailure('ProcessingModuleManager', 'can\'t create PM "' + specs.name + '" based on specs, missing onProcessing definition.');
+      if (!spec.onProcessingStringified) {
+        namida.logFailure(
+          'ProcessingModuleManager',
+          'can\'t create PM "' + spec.name + '" based on specs, missing onProcessing definition.'
+        );
         return undefined;
       }
-      pm = new ProcessingModule(specs);
+      pm = new ProcessingModule(spec);
     }
     pm.nodeId = this.nodeID;
 
@@ -140,8 +145,13 @@ class ProcessingModuleManager extends EventEmitter {
   /* I/O <-> topic mapping functions */
 
   applyIOMappings(ioMappings, sessionID) {
+    // filter out I/O mappings for PMs that run on this node
+    let applicableIOMappings = ioMappings.filter((ioMapping) =>
+      this.processingModules.has(ioMapping.processingModuleId)
+    );
+
     //TODO: refactor into something more readable
-    ioMappings.forEach((mapping) => {
+    applicableIOMappings.forEach((mapping) => {
       this.ioMappings.set(mapping.processingModuleId, mapping);
       let processingModule =
         this.getModuleByID(mapping.processingModuleId) ||

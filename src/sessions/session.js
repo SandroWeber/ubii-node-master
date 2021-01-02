@@ -1,35 +1,38 @@
+const EventEmitter = require('events');
+
 const uuidv4 = require('uuid/v4');
 const { proto } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
-const ProcessingModuleStatus = proto.ubii.processing.ProcessingModule.Status;
 const namida = require('@tum-far/namida');
 
 const ProcessingModuleManager = require('../processing/processingModuleManager');
 
-class Session {
+const TIMEOUT_START_REMOTE_PMS = 10000;
+
+class Session extends EventEmitter {
   constructor(
-    {
-      id,
+    specs = {
+      /*id,
       name = '',
       tags = [],
       description = '',
       authors = [],
       processingModules = [],
-      ioMappings = []
+      ioMappings = []*/
     },
     masterNodeID,
     topicData,
     deviceManager,
     processingModuleManager
   ) {
-    this.id = id ? id : uuidv4();
-    this.name = name;
-    this.tags = tags;
-    this.description = description;
-    this.authors = authors;
-    this.status = SessionStatus.CREATED;
-    this.processingModules = processingModules || [];
-    this.ioMappings = ioMappings;
+    super();
+
+    // take over specs
+    specs && Object.assign(this, JSON.parse(JSON.stringify(specs)));
+    // new instance is getting new ID
+    this.id = uuidv4();
+    this.processingModules = this.processingModules || [];
+    this.ioMappings = this.ioMappings || [];
 
     this.masterNodeID = masterNodeID;
     this.topicData = topicData;
@@ -41,6 +44,8 @@ class Session {
     this.remotePMs = new Map();
 
     this.initialize();
+
+    this.status = SessionStatus.CREATED;
   }
 
   initialize() {
@@ -77,6 +82,14 @@ class Session {
         this.remotePMs.get(pmSpec.nodeId).push(pmSpec);
       }
 
+      // fill out ID for I/O mapping for this PM
+      // if multiple PMs specified within this session have the same name referenced by the mapping and no specific ID is given by the mapping,
+      // it is assumed it doesn't matter which PM receives which I/O mapping as they're all instances of the same PM
+      let ioMapping = this.ioMappings.find(
+        (mapping) => !mapping.processingModuleId && mapping.processingModuleName === pmSpec.name
+      );
+      if (ioMapping) ioMapping.processingModuleId = pmSpec.id;
+
       // gather PMs running in lockstep, group PMs by node ID they're running on
       if (pmSpec.processingMode && pmSpec.processingMode.lockstep) {
         if (!this.lockstepPMs.has(pmSpec.nodeId)) {
@@ -85,8 +98,6 @@ class Session {
         this.lockstepPMs.get(pmSpec.nodeId).push(pmSpec);
       }
     }
-    console.info('remoteProcessingModules');
-    console.info(this.remotePMs);
 
     if (this.remotePMs.size > 0) {
       this.processingModuleManager.addListener(
@@ -95,17 +106,7 @@ class Session {
       );
     }
 
-    // filter out I/O mappings for PMs that run on this node and apply
-    let applicableIOMappings = this.ioMappings.filter((ioMapping) =>
-      this.processingModules.find(
-        (pm) =>
-          pm.nodeId === this.masterNodeID &&
-          (pm.name === ioMapping.processingModuleName || pm.id === ioMapping.processingModuleId)
-      )
-    );
-    if (applicableIOMappings.length > 0) {
-      this.processingModuleManager.applyIOMappings(applicableIOMappings, this.id);
-    }
+    this.processingModuleManager.applyIOMappings(this.ioMappings, this.id);
   }
 
   start() {
@@ -129,6 +130,11 @@ class Session {
     this.remotePMs.forEach((pm) => {
       this.pmAwaitingRemoteStart.push(pm);
     });
+    if (this.pmAwaitingRemoteStart.length > 0) {
+      setTimeout(() => {
+        this.emit(Session.EVENTS.START_FAILURE, this.pmAwaitingRemoteStart);
+      }, TIMEOUT_START_REMOTE_PMS);
+    }
 
     // start lockstep cycles
     this.tLastLockstepPass = Date.now();
@@ -272,5 +278,9 @@ class Session {
     return 'Session ' + this.name + ' (ID ' + this.id + ')';
   }
 }
+
+Session.EVENTS = Object.freeze({
+  START_FAILURE: 1
+});
 
 module.exports = { Session };

@@ -59,7 +59,7 @@ test('addSession', (t) => {
 
   let numberOfSessions = 16;
   for (let i = 0; i < numberOfSessions; i = i + 1) {
-    let session = new Session({});
+    let session = new Session({}, undefined, undefined, undefined, t.context.mockProcessingModuleManager);
     sessionManager.addSession(session);
   }
   t.is(sessionManager.sessions.length, numberOfSessions);
