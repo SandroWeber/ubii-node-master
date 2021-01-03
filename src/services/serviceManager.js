@@ -4,6 +4,7 @@ const { DeviceRegistrationService } = require('./devices/deviceRegistrationServi
 const { DeviceDeregistrationService } = require('./devices/deviceDeregistrationService.js');
 const { DeviceListService } = require('./devices/deviceListService.js');
 const ProcessingModuleGetService = require('./processing/pmDatabaseGetService.js');
+const ProcessingModuleRuntimeAddService = require('./processing/pmRuntimeAddService.js');
 const { SubscriptionService } = require('./subscriptionService.js');
 const { ServerConfigService } = require('./serverConfigService.js');
 const { TopicListService } = require('./topicListService');
@@ -21,11 +22,20 @@ const namida = require('@tum-far/namida');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class ServiceManager {
-  constructor(nodeID, clientManager, deviceManager, sessionManager, connectionsManager, topicData) {
+  constructor(
+    nodeID,
+    clientManager,
+    deviceManager,
+    sessionManager,
+    connectionsManager,
+    processingModuleManager,
+    topicData
+  ) {
     this.clientManager = clientManager;
     this.deviceManager = deviceManager;
     this.sessionManager = sessionManager;
     this.connectionsManager = connectionsManager;
+    this.processingModuleManager = processingModuleManager;
     this.topicData = topicData;
 
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
@@ -33,9 +43,7 @@ class ServiceManager {
     this.services = new Map();
     /* add general services */
     this.addService(new SubscriptionService(this.clientManager, this.topicData));
-    this.addService(
-      new ServerConfigService(nodeID, 'master-node', this.connectionsManager)
-    );
+    this.addService(new ServerConfigService(nodeID, 'master-node', this.connectionsManager));
     this.addService(new TopicListService(this.topicData, this));
     this.addService(new ServiceListService(this));
     /* add client services */
@@ -47,6 +55,9 @@ class ServiceManager {
     this.addService(new DeviceListService(this.deviceManager));
     /* add processing module services */
     this.addService(ProcessingModuleGetService);
+    this.addService(
+      new ProcessingModuleRuntimeAddService(this.processingModuleManager, this.sessionManager)
+    );
     /* add session services */
     this.addService(new SessionDatabaseDeleteService());
     this.addService(new SessionDatabaseGetListService());
@@ -60,7 +71,10 @@ class ServiceManager {
 
   addService(service) {
     if (!service.topic) {
-      namida.logFailure('Service Manager', 'can not add service, no topic: ' + service.constructor.name);
+      namida.logFailure(
+        'Service Manager',
+        'can not add service, no topic: ' + service.constructor.name
+      );
       return;
     }
 

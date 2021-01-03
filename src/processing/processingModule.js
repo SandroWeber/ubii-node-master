@@ -16,7 +16,7 @@ class ProcessingModule extends EventEmitter {
     // take over specs
     specs && Object.assign(this, JSON.parse(JSON.stringify(specs)));
     // new instance is getting new ID
-    this.id = uuidv4();
+    this.id = this.id || uuidv4();
     this.inputs = this.inputs || [];
     this.outputs = this.outputs || [];
     // check that language specification for module is correct

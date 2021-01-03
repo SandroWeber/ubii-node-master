@@ -42,6 +42,7 @@ class ProcessingModuleManager extends EventEmitter {
     let pm = undefined;
     if (ProcessingModuleStorage.hasEntry(spec.name)) {
       pm = ProcessingModuleStorage.createInstanceByName(spec.name);
+      if (specs.id) pm.id = specs.id;
     } else {
       // create new module based on specs
       if (!spec.onProcessingStringified) {

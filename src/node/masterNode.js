@@ -61,6 +61,7 @@ class MasterNode {
       this.deviceManager,
       this.sessionManager,
       this.connectionsManager,
+      this.processingModuleManager,
       this.topicData
     );
   }
@@ -69,7 +70,6 @@ class MasterNode {
     try {
       // Decode buffer.
       let request = this.serviceRequestTranslator.createMessageFromBuffer(message);
-
       // Process request.
       let reply = this.serviceManager.processRequest(request);
 

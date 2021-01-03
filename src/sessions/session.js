@@ -102,7 +102,7 @@ class Session extends EventEmitter {
     if (this.remotePMs.size > 0) {
       this.processingModuleManager.addListener(
         ProcessingModuleManager.EVENTS.PM_STARTED,
-        this.onProcessingModuleStarted
+        this.onProcessingModuleStarted.bind(this)
       );
     }
 
@@ -128,7 +128,7 @@ class Session extends EventEmitter {
     });
     this.pmAwaitingRemoteStart = [];
     this.remotePMs.forEach((pm) => {
-      this.pmAwaitingRemoteStart.push(pm);
+      this.pmAwaitingRemoteStart.concat(pm);
     });
     if (this.pmAwaitingRemoteStart.length > 0) {
       setTimeout(() => {
@@ -175,7 +175,10 @@ class Session extends EventEmitter {
     if (index !== -1) {
       this.pmAwaitingRemoteStart.splice(index, 1);
     }
-    console.info(this.pmAwaitingRemoteStart);
+
+    if (this.pmAwaitingRemoteStart.length === 0) {
+      namida.logSuccess(this.toString(), 'all remote PMs started');
+    }
   }
 
   lockstepProcessingPass() {

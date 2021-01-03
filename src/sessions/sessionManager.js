@@ -199,6 +199,14 @@ class SessionManager extends EventEmitter {
       Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
     );
   }
+
+  verifyRemoteProcessingModule(remotePM) {
+    return this.sessions.some(
+      (session) =>
+        session.remotePMs.has(remotePM.nodeId) &&
+        session.remotePMs.get(remotePM.nodeId).some((pm) => pm.id === remotePM.id)
+    );
+  }
 }
 
 module.exports = { SessionManager };
