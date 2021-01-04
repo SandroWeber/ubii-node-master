@@ -35,6 +35,7 @@ class Client {
     this.regexSubscriptions = new Map();
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
+    this.publishedTopics = [];
   }
 
   /**
@@ -406,6 +407,10 @@ class Client {
       tags: this.tags,
       description: this.description
     };
+  }
+
+  toString() {
+    return 'Client "' + this.name + '" (ID ' + this.id + ')';
   }
 }
 
