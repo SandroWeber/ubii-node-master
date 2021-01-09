@@ -11,19 +11,12 @@ const TIMEOUT_START_REMOTE_PMS = 10000;
 
 class Session extends EventEmitter {
   constructor(
-    specs = {
-      /*id,
-      name = '',
-      tags = [],
-      description = '',
-      authors = [],
-      processingModules = [],
-      ioMappings = []*/
-    },
+    specs = {},
     masterNodeID,
     topicData,
     deviceManager,
-    processingModuleManager
+    processingModuleManager,
+    clientManager
   ) {
     super();
 
@@ -38,6 +31,7 @@ class Session extends EventEmitter {
     this.topicData = topicData;
     this.deviceManager = deviceManager;
     this.processingModuleManager = processingModuleManager;
+    this.clientManager = clientManager;
 
     this.lockstepPMs = new Map();
     this.localPMs = [];
@@ -52,9 +46,18 @@ class Session extends EventEmitter {
     // setup for processing modules
     for (let pmSpec of this.processingModules) {
       pmSpec.sessionId = this.id;
-      // if PM isn't assigned to run on a particular node, run here
+      // if PM isn't assigned to run on a particular node, assign one (preferably dedicated processing node)
       //TODO: check if dedicated processing nodes are available to run it (requires load balancing and communication)
-      if (!pmSpec.nodeId) pmSpec.nodeId = this.masterNodeID;
+      if (!pmSpec.nodeId) {
+        let processingNodeIDs = this.clientManager.getNodeIDsForProcessingModule(pmSpec.name);
+        if (processingNodeIDs.length > 0) {
+          //TODO: some more sophisticated load assessment for each processing node
+          // nodes reporting metrics on open resources
+          pmSpec.nodeId = processingNodeIDs[0];
+        } else {
+          pmSpec.nodeId = this.masterNodeID;
+        }
+      }
 
       // should PM run on this node?
       if (pmSpec.nodeId === this.masterNodeID) {
@@ -99,13 +102,6 @@ class Session extends EventEmitter {
       }
     }
 
-    if (this.remotePMs.size > 0) {
-      this.processingModuleManager.addListener(
-        ProcessingModuleManager.EVENTS.PM_STARTED,
-        this.onProcessingModuleStarted.bind(this)
-      );
-    }
-
     this.processingModuleManager.applyIOMappings(this.ioMappings, this.id);
   }
 
@@ -126,13 +122,23 @@ class Session extends EventEmitter {
     this.localPMs.forEach((pm) => {
       this.processingModuleManager.getModuleByID(pm.id).start();
     });
-    this.pmAwaitingRemoteStart = [];
-    this.remotePMs.forEach((pm) => {
-      this.pmAwaitingRemoteStart.concat(pm);
-    });
-    if (this.pmAwaitingRemoteStart.length > 0) {
+
+    if (this.remotePMs.size > 0) {
+      this.onProcessingModuleStartedListener = this.onProcessingModuleStarted.bind(this);
+      this.processingModuleManager.addListener(
+        ProcessingModuleManager.EVENTS.PM_STARTED,
+        this.onProcessingModuleStartedListener
+      );
+
+      this.pmsAwaitingRemoteStart = [];
+      this.remotePMs.forEach((nodePMs) => {
+        this.pmsAwaitingRemoteStart.push(...nodePMs);
+      });
+
       setTimeout(() => {
-        this.emit(Session.EVENTS.START_FAILURE, this.pmAwaitingRemoteStart);
+        if (this.pmsAwaitingRemoteStart.length > 0) {
+          this.emit(Session.EVENTS.START_FAILURE, this.pmsAwaitingRemoteStart);
+        }
       }, TIMEOUT_START_REMOTE_PMS);
     }
 
@@ -150,10 +156,10 @@ class Session extends EventEmitter {
 
     this.status = SessionStatus.STOPPED;
 
-    if (this.remotePMs.size > 0) {
+    if (this.onProcessingModuleStartedListener) {
       this.processingModuleManager.removeListener(
         ProcessingModuleManager.EVENTS.PM_STARTED,
-        this.onProcessingModuleStarted
+        this.onProcessingModuleStartedListener
       );
     }
 
@@ -169,14 +175,14 @@ class Session extends EventEmitter {
   }
 
   onProcessingModuleStarted(remotePMSpec) {
-    let index = this.pmAwaitingRemoteStart.findIndex(
+    let index = this.pmsAwaitingRemoteStart.findIndex(
       (pm) => pm.sessionId === this.id && pm.id === remotePMSpec.id
     );
     if (index !== -1) {
-      this.pmAwaitingRemoteStart.splice(index, 1);
+      this.pmsAwaitingRemoteStart.splice(index, 1);
     }
 
-    if (this.pmAwaitingRemoteStart.length === 0) {
+    if (this.pmsAwaitingRemoteStart.length === 0) {
       namida.logSuccess(this.toString(), 'all remote PMs started');
     }
   }

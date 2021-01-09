@@ -17,12 +17,11 @@ let clientStateEnum = Object.freeze({
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class Client {
-  constructor({ id, name = '', devices = [], tags = [], description = '' }, server, topicData) {
-    this.id = id ? id : uuidv4();
-    this.name = name;
-    this.devices = devices;
-    this.tags = tags;
-    this.description = description;
+  constructor(specs = {}, server, topicData) {
+    // take over specs
+    specs && Object.assign(this, JSON.parse(JSON.stringify(specs)));
+    // new instance is getting new ID
+    this.id = uuidv4();
 
     this.server = server;
     this.topicData = topicData;
@@ -405,7 +404,9 @@ class Client {
       name: this.name,
       devices: this.devices,
       tags: this.tags,
-      description: this.description
+      description: this.description,
+      isDedicatedProcessingNode: this.isDedicatedProcessingNode,
+      processingModules: this.processingModules
     };
   }
 

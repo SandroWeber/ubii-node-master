@@ -56,7 +56,8 @@ class MasterNode {
       this.id,
       this.topicData,
       this.deviceManager,
-      this.processingModuleManager
+      this.processingModuleManager,
+      this.clientManager
     );
 
     // Service Manager Component:
@@ -246,6 +247,7 @@ class MasterNode {
 
     records.forEach((record) => {
       let topic = record.topic;
+      // confirm that the client is the rightful publisher of this topic
       if (!client.publishedTopics.includes(topic)) {
         let topicRaw = this.topicData.pull(topic);
         let topicHasData = topicRaw && topicRaw.data ? true : false;
@@ -253,13 +255,11 @@ class MasterNode {
         if (!topicHasData) {
           client.publishedTopics.push(topic);
         } else {
-          if (!client.publishedTopics.includes(topic)) {
-            namida.logFailure(
-              'TopicData message',
-              client.toString() + ' is not the original publisher of the topic ' + topic
-            );
-            return;
-          }
+          namida.logFailure(
+            'TopicData message',
+            client.toString() + ' is not the original publisher of ' + topic
+          );
+          return;
         }
       }
 

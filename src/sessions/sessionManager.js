@@ -8,17 +8,18 @@ const { EVENTS_SESSION_MANAGER } = require('./constants');
 const Utils = require('../utilities');
 
 class SessionManager extends EventEmitter {
-  constructor(masterNodeID, topicData, deviceManager, processingModuleManager) {
+  constructor(masterNodeID, topicData, deviceManager, processingModuleManager, clientManager) {
     super();
 
     this.masterNodeID = masterNodeID;
     this.topicData = topicData;
     this.deviceManager = deviceManager;
+    this.processingModuleManager = processingModuleManager;
+    this.clientManager = clientManager;
+
     this.sessions = [];
 
     this.addEventListeners();
-
-    this.processingModuleManager = processingModuleManager;
   }
 
   createSession(specs = {}) {
@@ -39,7 +40,8 @@ class SessionManager extends EventEmitter {
       this.masterNodeID,
       this.topicData,
       this.deviceManager,
-      this.processingModuleManager
+      this.processingModuleManager,
+      this.clientManager
     );
     this.addSession(session);
     this.emit(EVENTS_SESSION_MANAGER.NEW_SESSION, session.toProtobuf());

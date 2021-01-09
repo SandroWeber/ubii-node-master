@@ -413,6 +413,7 @@ class ProcessingModule extends EventEmitter {
       tags: this.tags,
       description: this.description,
       nodeId: this.nodeId,
+      sessionId: this.sessionId,
       status: this.status,
       processingMode: this.processingMode,
       inputs: this.inputs,

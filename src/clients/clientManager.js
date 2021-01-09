@@ -94,8 +94,7 @@ class ClientManager {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (this.getClient(spec.id).getState() === clientStateEnum.active) {
         // => Re-registering is NOT an option: Reject the registration.
-        let errorMessage =
-          'Client with ID ' + spec.id + ' is already registered and active';
+        let errorMessage = 'Client with ID ' + spec.id + ' is already registered and active';
 
         // Ouput the feedback on the server console.
         namida.logFailure('ClientManager', errorMessage);
@@ -133,6 +132,20 @@ class ClientManager {
 
     // Return the client
     return currentClient;
+  }
+
+  getNodeIDsForProcessingModule(pmName) {
+    let nodeIDs = [];
+    this.clients.forEach((client) => {
+      if (
+        client.isDedicatedProcessingNode &&
+        client.processingModules.some((pm) => (pm.name = pmName))
+      ) {
+        nodeIDs.push(client.id);
+      }
+    });
+
+    return nodeIDs;
   }
 }
 
