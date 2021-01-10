@@ -1,4 +1,4 @@
-const { clientStateEnum, Client } = require('./client.js');
+const { CLIENT_STATE, Client } = require('./client.js');
 const namida = require('@tum-far/namida');
 
 class ClientManager {
@@ -50,13 +50,6 @@ class ClientManager {
     this.clients.delete(id);
   }
 
-  setClientInactive(id) {
-    let client = this.clients.get(id);
-    if (client) {
-      client.setState(clientStateEnum.inactive);
-    }
-  }
-
   /**
    * Register the referred client and initialize some client functionalities.
    * @param {Object} client Client object.
@@ -92,7 +85,7 @@ class ClientManager {
     // Check if a client with the specified id is already registered...
     if (spec.id && this.hasClient(spec.id)) {
       // ... if so, check the state of the registered client if reregistering is possible.
-      if (this.getClient(spec.id).getState() === clientStateEnum.active) {
+      if (this.getClient(spec.id).getState() === CLIENT_STATE.active) {
         // => Re-registering is NOT an option: Reject the registration.
         let errorMessage = 'Client with ID ' + spec.id + ' is already registered and active';
 
@@ -139,6 +132,7 @@ class ClientManager {
     this.clients.forEach((client) => {
       if (
         client.isDedicatedProcessingNode &&
+        client.getState() !== CLIENT_STATE.disconnected &&
         client.processingModules.some((pm) => (pm.name = pmName))
       ) {
         nodeIDs.push(client.id);

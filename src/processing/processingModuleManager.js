@@ -42,13 +42,13 @@ class ProcessingModuleManager extends EventEmitter {
     let pm = undefined;
     if (ProcessingModuleStorage.hasEntry(spec.name)) {
       pm = ProcessingModuleStorage.createInstanceByName(spec.name);
-      if (specs.id) pm.id = specs.id;
+      if (spec.id) pm.id = spec.id;
     } else {
-      // create new module based on specs
+      // create new module based on spec
       if (!spec.onProcessingStringified) {
         namida.logFailure(
           'ProcessingModuleManager',
-          'can\'t create PM "' + spec.name + '" based on specs, missing onProcessing definition.'
+          'can\'t create PM "' + spec.name + '" based on spec, missing onProcessing definition.'
         );
         return undefined;
       }

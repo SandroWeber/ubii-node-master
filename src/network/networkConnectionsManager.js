@@ -99,7 +99,13 @@ class NetworkConnectionsManager {
     }
   }
 
-  ping(clientID, callback) {}
+  ping(clientID, callback) {
+    if (this.connections.topicDataWS.hasClient(clientID)) {
+      this.connections.topicDataWS.ping(clientID, callback);
+    } else {
+      this.connections.topicDataZMQ.ping(clientID, callback);
+    }
+  }
 
   logConnectionStatus() {
     let httpsEnabled = configService.useHTTPS() ? 'enabled' : 'disabled';

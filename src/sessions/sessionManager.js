@@ -63,7 +63,10 @@ class SessionManager extends EventEmitter {
       session.addListener(Session.EVENTS.START_FAILURE, (pmList) => {
         namida.logFailure(
           'SessionManager',
-          'failure to start ' + session.toString() + ', list of PMs:\n' + JSON.stringify(pmList)
+          'failure to start ' +
+            session.toString() +
+            ', list of PMs not running:\n' +
+            JSON.stringify(pmList)
         );
       });
     }

@@ -4,6 +4,7 @@ const fs = require('fs');
 const url = require('url');
 
 const configService = require('../config/configService');
+const { PING_MESSAGE } = require('./constants');
 
 class WebsocketServer {
   /**
