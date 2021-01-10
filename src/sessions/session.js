@@ -50,6 +50,8 @@ class Session extends EventEmitter {
       //TODO: check if dedicated processing nodes are available to run it (requires load balancing and communication)
       if (!pmSpec.nodeId) {
         let processingNodeIDs = this.clientManager.getNodeIDsForProcessingModule(pmSpec.name);
+        console.info('\nviable PM node IDs:');
+        console.info(processingNodeIDs);
         if (processingNodeIDs.length > 0) {
           //TODO: some more sophisticated load assessment for each processing node
           // nodes reporting metrics on open resources

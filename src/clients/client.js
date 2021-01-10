@@ -13,7 +13,7 @@ let CLIENT_STATE = Object.freeze({
   active: 'active',
   standby: 'standby',
   inactive: 'inactive',
-  disconnected: 'disconnected',
+  disconnected: 'disconnected'
 });
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
@@ -95,6 +95,8 @@ class Client {
   deactivate() {
     this.stopLifeMonitoring();
     this.unsubscribeAll();
+    this.deletePublishedTopics();
+    namida.warn(this.toString(), 'deactivated due to missing sign of life, state=' + this.state);
   }
 
   /**
@@ -137,6 +139,7 @@ class Client {
           );
         }
         this.state = CLIENT_STATE.disconnected;
+        this.deactivate();
       } else if (difference > TIME_UNTIL_INACTIVE) {
         // The client has the state inactive.
         if (this.state !== CLIENT_STATE.inactive) {
@@ -433,6 +436,12 @@ class Client {
     this.topicSubscriptionTokens.clear();
     this.topicSubscriptions.clear();
     this.regexSubscriptions.clear();
+  }
+
+  deletePublishedTopics() {
+    this.publishedTopics.forEach((topic) => {
+      this.topicData.remove(topic);
+    });
   }
 
   toProtobuf() {
