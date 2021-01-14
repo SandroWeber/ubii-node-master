@@ -123,13 +123,26 @@ class ProcessingModule extends EventEmitter {
 
     let tLastProcess = Date.now();
     let msFrequency = 1000 / this.processingMode.frequency.hertz;
+
     let processIteration = () => {
       // timing
       let tNow = Date.now();
       let deltaTime = tNow - tLastProcess;
       tLastProcess = tNow;
+
       // processing
-      this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
+      //TODO: procedure testing worker pool viability, full PM client and IPC
+      this.workerPool.exec(this.onProcessing, [deltaTime, this.ioProxy, {}, this.state])
+      .then((result) => {
+        console.info(result);
+        this.outputs.forEach(output => {
+          if (result[output.internalName]) {
+            this.ioProxy[output.internalName] = result[output.internalName];
+          }
+        })
+      });
+      //this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
+
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
           processIteration();
@@ -194,6 +207,10 @@ class ProcessingModule extends EventEmitter {
         }
       });
     };
+  }
+
+  setWorkerPool(workerPool) {
+    this.workerPool = workerPool;
   }
 
   /**

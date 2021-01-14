@@ -3,6 +3,8 @@ const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { proto } = require('@tum-far/ubii-msg-formats');
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 
+const workerpool = require('workerpool');
+
 const Utils = require('../utilities');
 const { ProcessingModule } = require('./processingModule');
 const ProcessingModuleDatabase = require('../storage/processingModuleDatabase');
@@ -24,6 +26,8 @@ class ProcessingModuleManager {
     this.lockstepOutputTopicdata = {
       records: []
     };*/
+
+    this.workerPool = workerpool.pool();
   }
 
   createModule(specs) {
@@ -38,7 +42,8 @@ class ProcessingModuleManager {
     if (!success) {
       return undefined;
     } else {
-      pm && pm.onCreated(pm.state);
+      pm.setWorkerPool(this.workerPool);
+      pm && pm.onCreated && pm.onCreated(pm.state);
       return pm;
     }
   }
