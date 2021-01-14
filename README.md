@@ -4,8 +4,7 @@
 
 ### Node.js
 
-install Node.js v14.15.4 (https://nodejs.org/en/download/)
-older LTS version v10.16 works too, just don't try v12.19 LTS as it has conflicts with newer tensorflowjs versions
+Install Node.js v14.15.4 (https://nodejs.org/en/download/). Older LTS version v10.16 works too, just don't try v12.19 LTS as it has conflicts with newer tensorflowjs versions.
 
 ### Windows pre-requisists
 
