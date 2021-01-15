@@ -5,11 +5,11 @@ const SIGN_OF_LIFE_DELTA_TIME = 500;
 /**
  * Time interval in ms for the remote pinging.
  */
-const TIME_UNTIL_PING = 300;
+const TIME_UNTIL_PING = 1000;
 /**
  * Time in ms until the client state should change to standby
  */
-const TIME_UNTIL_STANDBY = 1000;
+const TIME_UNTIL_STANDBY = 2000;
 /**
  * Time in ms until the client state should change to inactive.
  */

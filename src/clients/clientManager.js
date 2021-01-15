@@ -127,13 +127,13 @@ class ClientManager {
     return currentClient;
   }
 
-  getNodeIDsForProcessingModule(pmName) {
+  getNodeIDsForProcessingModule(pmSpec) {
     let nodeIDs = [];
     this.clients.forEach((client) => {
       if (
         client.isDedicatedProcessingNode &&
         client.getState() !== CLIENT_STATE.disconnected &&
-        client.processingModules.some((pm) => (pm.name = pmName))
+        client.processingModules.some((pm) => (pm.name = pmSpec.name))
       ) {
         nodeIDs.push(client.id);
       }

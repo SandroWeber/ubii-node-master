@@ -49,7 +49,7 @@ class Session extends EventEmitter {
       // if PM isn't assigned to run on a particular node, assign one (preferably dedicated processing node)
       //TODO: check if dedicated processing nodes are available to run it (requires load balancing and communication)
       if (!pmSpec.nodeId) {
-        let processingNodeIDs = this.clientManager.getNodeIDsForProcessingModule(pmSpec.name);
+        let processingNodeIDs = this.clientManager.getNodeIDsForProcessingModule(pmSpec);
         console.info('\nviable PM node IDs:');
         console.info(processingNodeIDs);
         if (processingNodeIDs.length > 0) {
