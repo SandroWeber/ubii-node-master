@@ -6,8 +6,6 @@ class ClientManager {
     this.server = server;
     this.topicData = topicData;
     this.clients = new Map();
-
-    namida.log('Client Manager Ready', 'The Client Manager is initialized and ready to work.');
   }
 
   /**
@@ -132,7 +130,7 @@ class ClientManager {
     this.clients.forEach((client) => {
       if (
         client.isDedicatedProcessingNode &&
-        client.getState() !== CLIENT_STATE.disconnected &&
+        client.getState() === CLIENT_STATE.active &&
         client.processingModules.some((pm) => (pm.name = pmSpec.name))
       ) {
         nodeIDs.push(client.id);

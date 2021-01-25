@@ -82,7 +82,10 @@ class ProcessingModule extends EventEmitter {
 
     if (this.status === ProcessingModuleProto.Status.PROCESSING) {
       namida.logSuccess(this.toString(), 'started');
+      return true;
     }
+    
+    return false;
   }
 
   stop() {

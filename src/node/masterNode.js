@@ -45,6 +45,7 @@ class MasterNode {
       this.connectionsManager.connections.topicDataZMQ
     );
 
+    // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(
       this.id,
       this.deviceManager,

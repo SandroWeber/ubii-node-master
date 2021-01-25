@@ -122,7 +122,10 @@ class Session extends EventEmitter {
 
     // start processing modules
     this.localPMs.forEach((pm) => {
-      this.processingModuleManager.getModuleByID(pm.id).start();
+      let success = this.processingModuleManager.getModuleByID(pm.id).start();
+      if (success) {
+        this.processingModuleManager.emit(ProcessingModuleManager.EVENTS.PM_STARTED, pm);
+      }
     });
 
     if (this.remotePMs.size > 0) {
