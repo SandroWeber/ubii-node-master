@@ -187,7 +187,11 @@ class ProcessingModuleManager extends EventEmitter {
             return;
           }
 
-          let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
+          let topicSource =
+            inputMapping[inputMapping.topicSource] ||
+            inputMapping.topicSource ||
+            inputMapping.topic ||
+            inputMapping.topicMux;
           // single topic input
           if (typeof topicSource === 'string') {
             // decide if we pull from lockstep data or asynchronously
@@ -246,7 +250,10 @@ class ProcessingModuleManager extends EventEmitter {
           }
 
           let topicDestination =
-            outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
+            outputMapping[outputMapping.topicDestination] ||
+            outputMapping.topicDestination ||
+            outputMapping.topic ||
+            outputMapping.topicDemux;
           // single topic output
           if (typeof topicDestination === 'string') {
             let messageFormat = processingModule.getIOMessageFormat(outputMapping.outputName);

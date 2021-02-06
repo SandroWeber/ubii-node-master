@@ -112,7 +112,7 @@ class Client {
       } catch (e) {
         namida.error(
           'UpdateLastSignOfLife failed',
-          `UpdateLastSignOfLife of client with id ${this.id} failed with an error.`,
+          `UpdateLastSignOfLife of client with ID ${this.id} failed with an error.`,
           '' + (e.stack || e)
         );
       }
@@ -135,37 +135,37 @@ class Client {
         if (this.state !== CLIENT_STATE.disconnected) {
           namida.log(
             `Client State has changed`,
-            `Client with id ${this.id} is not available and is now in a disconnected state.`
+            `Client with ID ${this.id} is not available and is now in a disconnected state.`
           );
         }
         this.state = CLIENT_STATE.disconnected;
         this.deactivate();
       } else if (difference > TIME_UNTIL_INACTIVE) {
         // The client has the state inactive.
-        if (this.state !== CLIENT_STATE.inactive) {
+        /*if (this.state !== CLIENT_STATE.inactive) {
           namida.log(
             `Client State has changed`,
             `Client with id ${this.id} is not available and is now in an inactive state.`
           );
-        }
+        }*/
         this.state = CLIENT_STATE.inactive;
       } else if (difference > TIME_UNTIL_STANDBY) {
         // The client has the state standby.
-        if (this.state !== CLIENT_STATE.standby) {
+        /*if (this.state !== CLIENT_STATE.standby) {
           namida.log(
             `Client State has changed`,
             `Client with id ${this.id} is not available and is now in an standby state.`
           );
-        }
+        }*/
         this.state = CLIENT_STATE.standby;
       } else {
         // The client has the state active.
-        if (this.state !== CLIENT_STATE.active) {
+        /*if (this.state !== CLIENT_STATE.active) {
           namida.log(
             `Client State has changed`,
             `Client with id ${this.id} is available again and is now in an active state.`
           );
-        }
+        }*/
         this.state = CLIENT_STATE.active;
       }
 
