@@ -16,7 +16,7 @@ import { ServerMock, createClientSpecificationMock } from '../mocks/serverMock.j
 
   test.beforeEach((t) => {
     t.context.serverMock = new ServerMock();
-    t.context.clientManager = new ClientManager(t.context.serverMock, 'targetHost', '0000');
+    t.context.clientManager = new ClientManager(t.context.serverMock, undefined);
   });
 
   // Test cases:
@@ -71,24 +71,19 @@ import { ServerMock, createClientSpecificationMock } from '../mocks/serverMock.j
 
   test('basic client operations', (t) => {
     t.notThrows(() => {
-      let dummyClient = new Client(
-        { id: '00000000-0000-0000-0000-000000000000', name: 'clientDisplayName' },
-        {}
-      );
+      let dummyClient = new Client({ name: 'clientDisplayName' }, {});
 
       t.context.clientManager.addClient(dummyClient);
 
-      t.true(t.context.clientManager.hasClient('00000000-0000-0000-0000-000000000000'));
+      t.true(t.context.clientManager.hasClient(dummyClient.id));
 
-      let returnedClient = t.context.clientManager.getClient(
-        '00000000-0000-0000-0000-000000000000'
-      );
+      let returnedClient = t.context.clientManager.getClient(dummyClient.id);
 
       t.deepEqual(dummyClient, returnedClient);
 
-      t.context.clientManager.removeClient('00000000-0000-0000-0000-000000000000');
+      t.context.clientManager.removeClient(dummyClient.id);
 
-      t.true(!t.context.clientManager.hasClient('00000000-0000-0000-0000-000000000000'));
+      t.true(!t.context.clientManager.hasClient(dummyClient.id));
     });
   });
 

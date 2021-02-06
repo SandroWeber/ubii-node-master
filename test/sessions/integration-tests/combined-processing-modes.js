@@ -11,6 +11,7 @@ import {
 
 import { SessionManager, ProcessingModuleManager } from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
+import { ClientManager } from '../../../src/clients/clientManager';
 
 /* preparation */
 
@@ -70,17 +71,23 @@ class PMTriggerOnInputMinDelayUpdateAll extends TestProcessingModule {
 
 test.beforeEach((t) => {
   t.context.nodeID = 'test-master-node-id';
+
   t.context.topicData = new RuntimeTopicData();
+
   t.context.processingModuleManager = new ProcessingModuleManager(
     t.context.nodeID,
     undefined,
     t.context.topicData
   );
+
+  t.context.clientManager = new ClientManager(undefined, t.context.topicData);
+
   t.context.sessionManager = new SessionManager(
     t.context.nodeID,
     t.context.topicData,
     undefined,
-    t.context.processingModuleManager
+    t.context.processingModuleManager,
+    t.context.clientManager
   );
 
   t.context.processingModules = [

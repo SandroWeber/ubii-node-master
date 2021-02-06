@@ -2,7 +2,12 @@ import test from 'ava';
 
 import TestUtility from '../../testUtility';
 
-import { SessionManager, ProcessingModule, ProcessingModuleManager } from '../../../src/index';
+import {
+  SessionManager,
+  ProcessingModule,
+  ProcessingModuleManager,
+  ClientManager
+} from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 const { proto } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
@@ -107,6 +112,7 @@ let setupGenericProcessingModules = (session, pmManager, count, topicData) => {
 test.beforeEach((t) => {
   t.context.nodeID = 'test-node-id-running-sessions';
   t.context.topicData = new RuntimeTopicData();
+  t.context.clientManager = new ClientManager(undefined, t.context.topicData);
   t.context.processingModuleManager = new ProcessingModuleManager(
     t.context.nodeID,
     undefined,
@@ -116,7 +122,8 @@ test.beforeEach((t) => {
     t.context.nodeID,
     t.context.topicData,
     undefined,
-    t.context.processingModuleManager
+    t.context.processingModuleManager,
+    t.context.clientManager
   );
 });
 

@@ -4,7 +4,12 @@ import uuidv4 from 'uuid/v4';
 import TestUtility from '../../testUtility';
 import Utils from '../../../src/utilities';
 
-import { SessionManager, DeviceManager, ProcessingModuleManager } from '../../../src/index';
+import {
+  SessionManager,
+  DeviceManager,
+  ProcessingModuleManager,
+  ClientManager
+} from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
 let inputTopicSuffix = '/input/double';
@@ -102,6 +107,7 @@ let publishInput = (inputList, topicData) => {
 test.beforeEach((t) => {
   t.context.nodeID = 'test-node-id-topic-mux-demux';
   t.context.topicData = new RuntimeTopicData();
+  t.context.clientManager = new ClientManager(undefined, t.context.topicData);
   t.context.deviceManager = new DeviceManager(undefined, t.context.topicData, undefined);
   t.context.processingModuleManager = new ProcessingModuleManager(
     t.context.nodeID,
@@ -112,7 +118,8 @@ test.beforeEach((t) => {
     t.context.nodeID,
     t.context.topicData,
     t.context.deviceManager,
-    t.context.processingModuleManager
+    t.context.processingModuleManager,
+    t.context.clientManager
   );
 });
 
