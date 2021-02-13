@@ -8,16 +8,18 @@ const { EVENTS_SESSION_MANAGER } = require('./constants');
 const Utils = require('../utilities');
 
 class SessionManager extends EventEmitter {
-  constructor(topicData, deviceManager, processingModuleManager) {
+  constructor(masterNodeID, topicData, deviceManager, processingModuleManager, clientManager) {
     super();
 
+    this.masterNodeID = masterNodeID;
     this.topicData = topicData;
     this.deviceManager = deviceManager;
+    this.processingModuleManager = processingModuleManager;
+    this.clientManager = clientManager;
+
     this.sessions = [];
 
     this.addEventListeners();
-
-    this.processingModuleManager = processingModuleManager;
   }
 
   createSession(specs = {}) {
@@ -35,9 +37,11 @@ class SessionManager extends EventEmitter {
 
     let session = new Session(
       specs,
+      this.masterNodeID,
       this.topicData,
       this.deviceManager,
-      this.processingModuleManager
+      this.processingModuleManager,
+      this.clientManager
     );
     this.addSession(session);
     this.emit(EVENTS_SESSION_MANAGER.NEW_SESSION, session.toProtobuf());
@@ -56,6 +60,15 @@ class SessionManager extends EventEmitter {
 
     if (session instanceof Session) {
       this.sessions.push(session);
+      session.addListener(Session.EVENTS.START_FAILURE, (pmList) => {
+        namida.logFailure(
+          'SessionManager',
+          'failure to start ' +
+            session.toString() +
+            ', list of PMs not running:\n' +
+            JSON.stringify(pmList)
+        );
+      });
     }
   }
 
@@ -179,7 +192,7 @@ class SessionManager extends EventEmitter {
   onEventSessionStart(sessionSpecs) {
     this.topicData.publish(
       DEFAULT_TOPICS.INFO_TOPICS.START_SESSION,
-      { id: sessionSpecs.id },
+      sessionSpecs,
       Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
     );
   }
@@ -189,6 +202,14 @@ class SessionManager extends EventEmitter {
       DEFAULT_TOPICS.INFO_TOPICS.STOP_SESSION,
       { id: sessionSpecs.id },
       Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
+    );
+  }
+
+  verifyRemoteProcessingModule(remotePM) {
+    return this.sessions.some(
+      (session) =>
+        session.remotePMs.has(remotePM.nodeId) &&
+        session.remotePMs.get(remotePM.nodeId).some((pm) => pm.id === remotePM.id)
     );
   }
 }

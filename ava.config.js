@@ -8,7 +8,7 @@ export default {
     // not part of the tests
     '!test/mocks/*',
     '!test/files/*',
-    '!test/sessions/testUtility.js'
+    '!test/sessions/utils.js'
   ],
   cache: false,
   failFast: true,

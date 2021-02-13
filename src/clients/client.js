@@ -2,32 +2,33 @@ const {
   TIME_UNTIL_PING,
   TIME_UNTIL_STANDBY,
   TIME_UNTIL_INACTIVE,
+  TIME_UNTIL_DISCONNECT,
   SIGN_OF_LIFE_DELTA_TIME
 } = require('./constants');
 const namida = require('@tum-far/namida');
 const uuidv4 = require('uuid/v4');
 const { TOPIC_EVENTS } = require('@tum-far/ubii-topic-data');
 
-let clientStateEnum = Object.freeze({
+let CLIENT_STATE = Object.freeze({
   active: 'active',
   standby: 'standby',
-  inactive: 'inactive'
+  inactive: 'inactive',
+  disconnected: 'disconnected'
 });
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class Client {
-  constructor({ id, name = '', devices = [], tags = [], description = '' }, server, topicData) {
-    this.id = id ? id : uuidv4();
-    this.name = name;
-    this.devices = devices;
-    this.tags = tags;
-    this.description = description;
+  constructor(specs = {}, server, topicData) {
+    // take over specs
+    specs && Object.assign(this, JSON.parse(JSON.stringify(specs)));
+    // new instance is getting new ID
+    this.id = uuidv4();
 
     this.server = server;
     this.topicData = topicData;
 
-    this.state = clientStateEnum.active;
+    this.state = CLIENT_STATE.active;
     this.registrationDate = new Date();
     this.lastSignOfLife = null;
     this.topicSubscriptionTokens = new Map();
@@ -35,6 +36,7 @@ class Client {
     this.regexSubscriptions = new Map();
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
+    this.publishedTopics = [];
   }
 
   /**
@@ -48,9 +50,9 @@ class Client {
    * Set the current state.
    */
   setState(state) {
-    if (state === clientStateEnum.active) {
+    if (state === CLIENT_STATE.active) {
       this.startLifeMonitoring();
-    } else if (state === clientStateEnum.inactive) {
+    } else if (state === CLIENT_STATE.inactive) {
       this.stopLifeMonitoring();
     }
   }
@@ -93,6 +95,8 @@ class Client {
   deactivate() {
     this.stopLifeMonitoring();
     this.unsubscribeAll();
+    this.deletePublishedTopics();
+    namida.warn(this.toString(), 'deactivated due to missing sign of life, state=' + this.state);
   }
 
   /**
@@ -108,7 +112,7 @@ class Client {
       } catch (e) {
         namida.error(
           'UpdateLastSignOfLife failed',
-          `UpdateLastSignOfLife of client with id ${this.id} failed with an error.`,
+          `UpdateLastSignOfLife of client with ID ${this.id} failed with an error.`,
           '' + (e.stack || e)
         );
       }
@@ -126,36 +130,75 @@ class Client {
       let difference = now - this.lastSignOfLife;
 
       // Determine the current state. If the state changes, ouput the feedback on the server console.
-      if (difference > TIME_UNTIL_STANDBY) {
-        if (difference > TIME_UNTIL_INACTIVE) {
-          // The client has the state inactive.
-          /*if (this.state !== clientStateEnum.inactive) {
-            namida.log(
-              `Client State has changed`,
-              `Client with id ${this.id} is not available and is now in an inactive state.`
-            );
-          }*/
-          this.state = clientStateEnum.inactive;
-        } else {
-          // The client has the state standby.
-          /*if (this.state !== clientStateEnum.standby) {
-            namida.log(
-              `Client State has changed`,
-              `Client with id ${this.id} is not available and is now in an standby state.`
-            );
-          }*/
-          this.state = clientStateEnum.standby;
+      if (difference > TIME_UNTIL_DISCONNECT) {
+        // The client has probably disconnected unexpectedly and should be removed.
+        if (this.state !== CLIENT_STATE.disconnected) {
+          namida.log(
+            `Client State has changed`,
+            `Client with ID ${this.id} is not available and is now in a disconnected state.`
+          );
         }
+        this.state = CLIENT_STATE.disconnected;
+        this.deactivate();
+      } else if (difference > TIME_UNTIL_INACTIVE) {
+        // The client has the state inactive.
+        /*if (this.state !== CLIENT_STATE.inactive) {
+          namida.log(
+            `Client State has changed`,
+            `Client with id ${this.id} is not available and is now in an inactive state.`
+          );
+        }*/
+        this.state = CLIENT_STATE.inactive;
+      } else if (difference > TIME_UNTIL_STANDBY) {
+        // The client has the state standby.
+        /*if (this.state !== CLIENT_STATE.standby) {
+          namida.log(
+            `Client State has changed`,
+            `Client with id ${this.id} is not available and is now in an standby state.`
+          );
+        }*/
+        this.state = CLIENT_STATE.standby;
       } else {
         // The client has the state active.
-        /*if (this.state !== clientStateEnum.active) {
+        /*if (this.state !== CLIENT_STATE.active) {
           namida.log(
             `Client State has changed`,
             `Client with id ${this.id} is available again and is now in an active state.`
           );
         }*/
-        this.state = clientStateEnum.active;
+        this.state = CLIENT_STATE.active;
       }
+
+      /*if (difference > TIME_UNTIL_STANDBY) {
+        if (difference > TIME_UNTIL_INACTIVE) {
+          // The client has the state inactive.
+          if (this.state !== clientStateEnum.inactive) {
+            namida.log(
+              `Client State has changed`,
+              `Client with id ${this.id} is not available and is now in an inactive state.`
+            );
+          }
+          this.state = clientStateEnum.inactive;
+        } else {
+          // The client has the state standby.
+          if (this.state !== clientStateEnum.standby) {
+            namida.log(
+              `Client State has changed`,
+              `Client with id ${this.id} is not available and is now in an standby state.`
+            );
+          }
+          this.state = clientStateEnum.standby;
+        }
+      } else {
+        // The client has the state active.
+        if (this.state !== clientStateEnum.active) {
+          namida.log(
+            `Client State has changed`,
+            `Client with id ${this.id} is available again and is now in an active state.`
+          );
+        }
+        this.state = clientStateEnum.active;
+      }*/
 
       // Should we ping the remote?
       if (difference > TIME_UNTIL_PING) {
@@ -232,10 +275,7 @@ class Client {
   subscribeTopic(topic) {
     let subscription = this.topicSubscriptions.get(topic);
     if (subscription && subscription.explicit) {
-      namida.logFailure(
-        `Topic Data subscription rejected`,
-        `Client with ID ${this.id} is already subscribed to topic ${topic}.`
-      );
+      namida.warn(this.toString(), `subscription skipped, already subscribed to topic ${topic}.`);
       return;
     }
 
@@ -398,18 +438,30 @@ class Client {
     this.regexSubscriptions.clear();
   }
 
+  deletePublishedTopics() {
+    this.publishedTopics.forEach((topic) => {
+      this.topicData.remove(topic);
+    });
+  }
+
   toProtobuf() {
     return {
       id: this.id,
       name: this.name,
       devices: this.devices,
       tags: this.tags,
-      description: this.description
+      description: this.description,
+      isDedicatedProcessingNode: this.isDedicatedProcessingNode,
+      processingModules: this.processingModules
     };
+  }
+
+  toString() {
+    return 'Client "' + this.name + '" (ID ' + this.id + ')';
   }
 }
 
 module.exports = {
   Client: Client,
-  clientStateEnum: clientStateEnum
+  CLIENT_STATE: CLIENT_STATE
 };

@@ -1,9 +1,9 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('./../service.js');
-const ProcessingModuleDatabase = require('../../storage/processingModuleDatabase');
+const ProcessingModuleStorage = require('../../storage/processingModuleStorage');
 
-class ProcessingModuleGetService extends Service {
+class ProcessingModuleDatabaseGetService extends Service {
   constructor() {
     super(
       DEFAULT_TOPICS.SERVICES.PM_DATABASE_GET,
@@ -13,7 +13,7 @@ class ProcessingModuleGetService extends Service {
   }
 
   reply(pmMessage) {
-    let pm = ProcessingModuleDatabase.getByName(pmMessage.name);
+    let pm = ProcessingModuleStorage.getByName(pmMessage.name);
     if (typeof pm === 'undefined') {
       return {
         error: {
@@ -22,9 +22,13 @@ class ProcessingModuleGetService extends Service {
         }
       };
     } else {
-      return { processingModuleList: [pm.protobuf] };
+      return {
+        processingModuleList: {
+          elements: [pm.protobuf]
+        }
+      };
     }
   }
 }
 
-module.exports = new ProcessingModuleGetService();
+module.exports = new ProcessingModuleDatabaseGetService();

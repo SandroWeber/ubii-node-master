@@ -1,3 +1,5 @@
+const EventEmitter = require('events');
+
 const namida = require('@tum-far/namida/src/namida');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { proto } = require('@tum-far/ubii-msg-formats');
@@ -5,10 +7,13 @@ const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 
 const Utils = require('../utilities');
 const { ProcessingModule } = require('./processingModule');
-const ProcessingModuleDatabase = require('../storage/processingModuleDatabase');
+const ProcessingModuleStorage = require('../storage/processingModuleStorage');
 
-class ProcessingModuleManager {
-  constructor(deviceManager, topicData = undefined) {
+class ProcessingModuleManager extends EventEmitter {
+  constructor(nodeID, deviceManager, topicData = undefined) {
+    super();
+
+    this.nodeID = nodeID;
     this.deviceManager = deviceManager;
     this.topicData = topicData;
 
@@ -26,18 +31,30 @@ class ProcessingModuleManager {
     };*/
   }
 
-  createModule(specs) {
+  createModule(spec) {
+    if (spec.id && this.processingModules.has(spec.id)) {
+      namida.logFailure(
+        'ProcessingModuleManager',
+        "can't create module " + spec.name + ', ID already exists: ' + spec.id
+      );
+    }
+
     let pm = undefined;
-    if (ProcessingModuleDatabase.hasEntry(specs.name)) {
-      pm = ProcessingModuleDatabase.createInstanceByName(specs.name);
+    if (ProcessingModuleStorage.hasEntry(spec.name)) {
+      pm = ProcessingModuleStorage.createInstanceByName(spec.name);
+      if (spec.id) pm.id = spec.id;
     } else {
-      // create new module based on specs
-      if (!specs.onProcessingStringified) {
-        namida.logFailure('ProcessingModuleManager', 'can\'t create PM "' + specs.name + '" based on specs, missing onProcessing definition.');
+      // create new module based on spec
+      if (!spec.onProcessingStringified) {
+        namida.logFailure(
+          'ProcessingModuleManager',
+          'can\'t create PM "' + spec.name + '" based on spec, missing onProcessing definition.'
+        );
         return undefined;
       }
-      pm = new ProcessingModule(specs);
+      pm = new ProcessingModule(spec);
     }
+    pm.nodeId = this.nodeID;
 
     let success = this.addModule(pm);
     if (!success) {
@@ -129,8 +146,13 @@ class ProcessingModuleManager {
   /* I/O <-> topic mapping functions */
 
   applyIOMappings(ioMappings, sessionID) {
+    // filter out I/O mappings for PMs that run on this node
+    let applicableIOMappings = ioMappings.filter((ioMapping) =>
+      this.processingModules.has(ioMapping.processingModuleId)
+    );
+
     //TODO: refactor into something more readable
-    ioMappings.forEach((mapping) => {
+    applicableIOMappings.forEach((mapping) => {
       this.ioMappings.set(mapping.processingModuleId, mapping);
       let processingModule =
         this.getModuleByID(mapping.processingModuleId) ||
@@ -165,7 +187,11 @@ class ProcessingModuleManager {
             return;
           }
 
-          let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
+          let topicSource =
+            inputMapping[inputMapping.topicSource] ||
+            inputMapping.topicSource ||
+            inputMapping.topic ||
+            inputMapping.topicMux;
           // single topic input
           if (typeof topicSource === 'string') {
             // decide if we pull from lockstep data or asynchronously
@@ -224,7 +250,10 @@ class ProcessingModuleManager {
           }
 
           let topicDestination =
-            outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
+            outputMapping[outputMapping.topicDestination] ||
+            outputMapping.topicDestination ||
+            outputMapping.topic ||
+            outputMapping.topicDemux;
           // single topic output
           if (typeof topicDestination === 'string') {
             let messageFormat = processingModule.getIOMessageFormat(outputMapping.outputName);
@@ -288,7 +317,7 @@ class ProcessingModuleManager {
   /* lockstep processing functions */
 
   sendLockstepProcessingRequest(nodeId, request) {
-    if (nodeId === undefined || nodeId === 'local') {
+    if (nodeId === this.nodeID) {
       // server side PM
       return new Promise((resolve, reject) => {
         // assign input
@@ -350,5 +379,9 @@ class ProcessingModuleManager {
 
   /* lockstep processing functions end */
 }
+
+ProcessingModuleManager.EVENTS = Object.freeze({
+  PM_STARTED: 'PM_STARTED'
+});
 
 module.exports = ProcessingModuleManager;

@@ -9,6 +9,7 @@ const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
 const ProcessingModuleManager = require('../processing/processingModuleManager');
+const { has } = require('../storage/sessionDatabase.js');
 
 class MasterNode {
   constructor() {
@@ -44,13 +45,20 @@ class MasterNode {
       this.connectionsManager.connections.topicDataZMQ
     );
 
-    this.processingModuleManager = new ProcessingModuleManager(this.deviceManager, this.topicData);
+    // PM Manager Component:
+    this.processingModuleManager = new ProcessingModuleManager(
+      this.id,
+      this.deviceManager,
+      this.topicData
+    );
 
     // Session manager component:
     this.sessionManager = new SessionManager(
+      this.id,
       this.topicData,
       this.deviceManager,
-      this.processingModuleManager
+      this.processingModuleManager,
+      this.clientManager
     );
 
     // Service Manager Component:
@@ -60,6 +68,7 @@ class MasterNode {
       this.deviceManager,
       this.sessionManager,
       this.connectionsManager,
+      this.processingModuleManager,
       this.topicData
     );
   }
@@ -68,7 +77,6 @@ class MasterNode {
     try {
       // Decode buffer.
       let request = this.serviceRequestTranslator.createMessageFromBuffer(message);
-
       // Process request.
       let reply = this.serviceManager.processRequest(request);
 
@@ -151,7 +159,7 @@ class MasterNode {
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
 
       // Process message.
-      this.processTopicDataMessage(topicDataMessage);
+      this.processTopicDataMessage(topicDataMessage, clientID);
     } catch (error) {
       let title = 'TopicData message publishing failed (ZMQ)';
       let message = `TopicData message publishing failed (ZMQ) with an error:`;
@@ -199,7 +207,7 @@ class MasterNode {
       // Process message.
       //let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
 
-      this.processTopicDataMessage(topicDataMessage);
+      this.processTopicDataMessage(topicDataMessage, clientID);
     } catch (error) {
       let title = 'TopicData message publishing failed (WS)';
       let message = `TopicData message publishing failed (WS) with an error:`;
@@ -230,12 +238,32 @@ class MasterNode {
     return message;
   }
 
-  processTopicDataMessage(topicDataMessage) {
+  processTopicDataMessage(topicDataMessage, clientID) {
+    let client = this.clientManager.getClient(clientID);
+
     let records = topicDataMessage.topicDataRecordList
       ? topicDataMessage.topicDataRecordList.elements
       : [];
     if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
+
     records.forEach((record) => {
+      let topic = record.topic;
+      // confirm that the client is the rightful publisher of this topic
+      if (!client.publishedTopics.includes(topic)) {
+        let topicRaw = this.topicData.pull(topic);
+        let topicHasData = topicRaw && topicRaw.data ? true : false;
+
+        if (!topicHasData) {
+          client.publishedTopics.push(topic);
+        } else {
+          namida.logFailure(
+            'TopicData message',
+            client.toString() + ' is not the original publisher of ' + topic
+          );
+          return;
+        }
+      }
+
       this.topicData.publish(record.topic, record[record.type], record.type, record.timestamp);
     });
   }

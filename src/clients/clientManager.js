@@ -1,4 +1,4 @@
-const { clientStateEnum, Client } = require('./client.js');
+const { CLIENT_STATE, Client } = require('./client.js');
 const namida = require('@tum-far/namida');
 
 class ClientManager {
@@ -6,8 +6,6 @@ class ClientManager {
     this.server = server;
     this.topicData = topicData;
     this.clients = new Map();
-
-    namida.log('Client Manager Ready', 'The Client Manager is initialized and ready to work.');
   }
 
   /**
@@ -50,13 +48,6 @@ class ClientManager {
     this.clients.delete(id);
   }
 
-  setClientInactive(id) {
-    let client = this.clients.get(id);
-    if (client) {
-      client.setState(clientStateEnum.inactive);
-    }
-  }
-
   /**
    * Register the referred client and initialize some client functionalities.
    * @param {Object} client Client object.
@@ -92,10 +83,9 @@ class ClientManager {
     // Check if a client with the specified id is already registered...
     if (spec.id && this.hasClient(spec.id)) {
       // ... if so, check the state of the registered client if reregistering is possible.
-      if (this.getClient(spec.id).getState() === clientStateEnum.active) {
+      if (this.getClient(spec.id).getState() === CLIENT_STATE.active) {
         // => Re-registering is NOT an option: Reject the registration.
-        let errorMessage =
-          'Client with ID ' + spec.id + ' is already registered and active';
+        let errorMessage = 'Client with ID ' + spec.id + ' is already registered and active';
 
         // Ouput the feedback on the server console.
         namida.logFailure('ClientManager', errorMessage);
@@ -105,13 +95,13 @@ class ClientManager {
         // => Re-registering is possible: Prepare the registration.
 
         // Update the context feedback.
-        let errorMessage =
+        let warnMessage =
           'Reregistration of Client with ID ' +
           spec.id +
           ' initialized because it is already registered but in standby or inactive.';
 
         // Ouput the feedback on the server console.
-        namida.logWarn('ClientManager', errorMessage);
+        namida.logWarn('ClientManager', warnMessage);
 
         // Prepare the reregistration.
         this.clients.delete(spec.id);
@@ -133,6 +123,21 @@ class ClientManager {
 
     // Return the client
     return currentClient;
+  }
+
+  getNodeIDsForProcessingModule(pmSpec) {
+    let nodeIDs = [];
+    this.clients.forEach((client) => {
+      if (
+        client.isDedicatedProcessingNode &&
+        client.getState() === CLIENT_STATE.active &&
+        client.processingModules.some((pm) => (pm.name = pmSpec.name))
+      ) {
+        nodeIDs.push(client.id);
+      }
+    });
+
+    return nodeIDs;
   }
 }
 
