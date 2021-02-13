@@ -2,7 +2,12 @@ import test from 'ava';
 
 import TestUtility from '../../testUtility';
 
-import { SessionManager, ProcessingModule, ProcessingModuleManager } from '../../../src/index';
+import {
+  SessionManager,
+  ProcessingModule,
+  ProcessingModuleManager,
+  ClientManager
+} from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 const { proto } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
@@ -61,7 +66,7 @@ let getGenericTopicOutputString = (session, pm) => {
   return session.id + '/' + pm.id + '/' + 'OutputString';
 };
 
-let setupGenericProcessingModules = (session, count, topicData) => {
+let setupGenericProcessingModules = (session, pmManager, count, topicData) => {
   for (let i = 0; i < count; i = i + 1) {
     let processCB = (deltaT, input, output, state) => {
       state.counter = state.counter + 1;
@@ -97,19 +102,28 @@ let setupGenericProcessingModules = (session, count, topicData) => {
       topicData.publish(outputTopicString, value, 'string');
     });
 
-    session.addProcessingModule(pm);
+    pmManager.addModule(pm);
+    session.processingModules.push(pm);
   }
 };
 
 /* test setup */
 
 test.beforeEach((t) => {
+  t.context.nodeID = 'test-node-id-running-sessions';
   t.context.topicData = new RuntimeTopicData();
-  t.context.processingModuleManager = new ProcessingModuleManager(undefined, t.context.topicData);
+  t.context.clientManager = new ClientManager(undefined, t.context.topicData);
+  t.context.processingModuleManager = new ProcessingModuleManager(
+    t.context.nodeID,
+    undefined,
+    t.context.topicData
+  );
   t.context.sessionManager = new SessionManager(
+    t.context.nodeID,
     t.context.topicData,
     undefined,
-    t.context.processingModuleManager
+    t.context.processingModuleManager,
+    t.context.clientManager
   );
 });
 
@@ -118,14 +132,13 @@ test.beforeEach((t) => {
 test('single session - two processing modules', async (t) => {
   let sessionManager = t.context.sessionManager;
   let topicData = t.context.topicData;
-
-  let session = sessionManager.createSession();
+  let pmManager = t.context.processingModuleManager;
 
   let pm1 = new ProcessingModule(getPM1Specs());
-  session.addProcessingModule(pm1);
+  pmManager.addModule(pm1);
 
   let pm2 = new ProcessingModule(getPM2Specs());
-  session.addProcessingModule(pm2);
+  pmManager.addModule(pm2);
   pm2.state.triggerToggle = true;
   pm2.state.outputNumber = 0;
   pm2.setInputGetter(pm2.inputFormats[0].internalName, () => {
@@ -138,6 +151,13 @@ test('single session - two processing modules', async (t) => {
   let topicIntegerTarget = 21;
   topicData.publish(topicNameInteger, topicIntegerTarget);
   topicData.publish(topicNameString, '0');
+
+  let session = sessionManager.createSession();
+  //session.processingModules = [];
+  [pm1, pm2].forEach((pm) => {
+    session.processingModules.push(pm.toProtobuf());
+  });
+  session.initialize();
 
   // start
   await sessionManager.startAllSessions();
@@ -214,15 +234,17 @@ test('single session - two processing modules', async (t) => {
 test('two sessions - one processing module each', async (t) => {
   let sessionManager = t.context.sessionManager;
   let topicData = t.context.topicData;
+  let pmManager = t.context.processingModuleManager;
 
   let session1 = sessionManager.createSession();
   let session2 = sessionManager.createSession();
 
   let pm1 = new ProcessingModule(getPM1Specs());
-  session1.addProcessingModule(pm1);
+  pmManager.addModule(pm1);
+  session1.processingModules.push(pm1);
+  session1.initialize();
 
   let pm2 = new ProcessingModule(getPM2Specs());
-  session2.addProcessingModule(pm2);
   pm2.state.triggerToggle = true;
   pm2.state.outputNumber = 0;
   pm2.setInputGetter(pm2.inputFormats[0].internalName, () => {
@@ -231,6 +253,9 @@ test('two sessions - one processing module each', async (t) => {
   pm2.setOutputSetter(pm2.outputFormats[0].internalName, (value) => {
     topicData.publish(topicNameString, value, pm2.outputFormats[0].messageFormat);
   });
+  pmManager.addModule(pm2);
+  session2.processingModules.push(pm2);
+  session2.initialize();
 
   let topicIntegerTarget = 21;
   topicData.publish(topicNameInteger, topicIntegerTarget);
@@ -313,12 +338,14 @@ test('two sessions - one processing module each', async (t) => {
 test('100 generic sessions with 100 generic interactions each', async (t) => {
   let sessionManager = t.context.sessionManager;
   let topicData = t.context.topicData;
+  let pmManager = t.context.processingModuleManager;
 
   let sessionCount = 100;
   let waitTimePerSession = 20;
   for (let i = 0; i < sessionCount; i = i + 1) {
     let session = sessionManager.createSession();
-    setupGenericProcessingModules(session, 100, topicData);
+    setupGenericProcessingModules(session, pmManager, 100, topicData);
+    session.initialize();
   }
 
   await sessionManager.startAllSessions();

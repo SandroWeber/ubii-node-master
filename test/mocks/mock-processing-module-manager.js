@@ -6,7 +6,10 @@ class MockProcessingModuleManager {
     this.addModule = sinon.fake();
     this.applyIOMappings = sinon.fake();
     this.removeModule = sinon.fake();
+
+    this.addListener = sinon.fake();
+    this.removeListener = sinon.fake();
   }
 }
 
-module.exports = { MockProcessingModuleManager: MockProcessingModuleManager };
+module.exports = MockProcessingModuleManager ;

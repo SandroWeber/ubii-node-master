@@ -1,10 +1,10 @@
 import test from 'ava';
 import sinon from 'sinon';
 
-import { SessionManager, Session } from '../../../src/index'
+import { SessionManager, Session } from '../../../src/index';
 
 import MockTopicData from '../../mocks/mock-topicdata.js';
-
+import MockProcessingModuleManager from '../../mocks/mock-processing-module-manager';
 
 /* utility functions */
 
@@ -25,23 +25,28 @@ let getRandomSession = (sessionManager) => {
   return sessionManager.sessions[index];
 };
 
-
 /* test setup */
 
-test.beforeEach(t => {
-  t.context.topicData = new MockTopicData();
-  t.context.sessionManager = new SessionManager(t.context.topicData);
+test.beforeEach((t) => {
+  t.context.nodeID = 'test-node-id-session-manager';
+  t.context.mockTopicData = new MockTopicData();
+  t.context.mockProcessingModuleManager = new MockProcessingModuleManager();
+  t.context.sessionManager = new SessionManager(
+    t.context.nodeID,
+    t.context.mockTopicData,
+    undefined,
+    t.context.mockProcessingModuleManager
+  );
 });
-
 
 /* run tests */
 
-test('constructor', t => {
+test('constructor', (t) => {
   t.is(t.context.sessionManager !== null, true);
   t.is(t.context.sessionManager.sessions.length, 0);
 });
 
-test('createSession', t => {
+test('createSession', (t) => {
   let sessionManager = t.context.sessionManager;
 
   let numberOfSessions = 16;
@@ -49,18 +54,18 @@ test('createSession', t => {
   t.is(sessionManager.sessions.length, numberOfSessions);
 });
 
-test('addSession', t => {
+test('addSession', (t) => {
   let sessionManager = t.context.sessionManager;
 
   let numberOfSessions = 16;
   for (let i = 0; i < numberOfSessions; i = i + 1) {
-    let session = new Session({});
+    let session = new Session({}, undefined, undefined, undefined, t.context.mockProcessingModuleManager);
     sessionManager.addSession(session);
   }
   t.is(sessionManager.sessions.length, numberOfSessions);
 });
 
-test('removeSession', t => {
+test('removeSession', (t) => {
   let sessionManager = t.context.sessionManager;
 
   createSessions(sessionManager, 16);
@@ -72,7 +77,7 @@ test('removeSession', t => {
   t.is(sessionManager.sessions.length, 0);
 });
 
-test('getSession', t => {
+test('getSession', (t) => {
   let sessionManager = t.context.sessionManager;
 
   createSessions(sessionManager, 16);
@@ -82,7 +87,7 @@ test('getSession', t => {
   t.deepEqual(session, randomSession);
 });
 
-test('startSession', t => {
+test('startSession', (t) => {
   let sessionManager = t.context.sessionManager;
 
   createSessions(sessionManager, 16);
@@ -93,7 +98,7 @@ test('startSession', t => {
   t.is(randomSession.start.callCount, 1);
 });
 
-test('startAllSessions', t => {
+test('startAllSessions', (t) => {
   let sessionManager = t.context.sessionManager;
 
   createSessions(sessionManager, 16);
@@ -105,7 +110,7 @@ test('startAllSessions', t => {
   });
 });
 
-test('stopSession', t => {
+test('stopSession', (t) => {
   let sessionManager = t.context.sessionManager;
 
   createSessions(sessionManager, 16);
@@ -115,7 +120,7 @@ test('stopSession', t => {
   t.is(randomSession.stop.callCount, 1);
 });
 
-test('stopAllSessions', t => {
+test('stopAllSessions', (t) => {
   let sessionManager = t.context.sessionManager;
 
   createSessions(sessionManager, 16);

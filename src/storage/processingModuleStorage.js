@@ -79,7 +79,7 @@ class PMFileHandlerJS extends FileHandler {
   }
 }
 
-class ProcessingModuleDatabase extends Storage {
+class ProcessingModuleStorage extends Storage {
   constructor() {
     let fileHandlerProto = new PMFileHandlerProtobuf();
     let fileHandlerJs = new PMFileHandlerJS();
@@ -133,4 +133,4 @@ class ProcessingModuleDatabase extends Storage {
   }
 }
 
-module.exports = new ProcessingModuleDatabase();
+module.exports = new ProcessingModuleStorage();

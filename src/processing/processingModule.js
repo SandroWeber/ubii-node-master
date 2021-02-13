@@ -10,33 +10,15 @@ const Utils = require('../utilities');
 const { set } = require('shelljs');
 
 class ProcessingModule extends EventEmitter {
-  constructor(
-    specs = {
-      name: '',
-      authors: [],
-      tags: [],
-      description: '',
-      clientId: undefined,
-      language: ProcessingModuleProto.Language.JS,
-      inputs: [],
-      outputs: [],
-      processingMode: {
-        frequency: {
-          hertz: 30
-        }
-      },
-      onCreatedStringified: undefined,
-      onProcessingStringified: undefined,
-      onHaltedStringified: undefined,
-      onDestroyedStringified: undefined
-    }
-  ) {
+  constructor(specs = {}) {
     super();
 
     // take over specs
-    Object.assign(this, specs);
+    specs && Object.assign(this, JSON.parse(JSON.stringify(specs)));
     // new instance is getting new ID
-    this.id = uuidv4();
+    this.id = this.id || uuidv4();
+    this.inputs = this.inputs || [];
+    this.outputs = this.outputs || [];
     // check that language specification for module is correct
     if (this.language === undefined) this.language = ProcessingModuleProto.Language.JS;
     if (this.language !== ProcessingModuleProto.Language.JS) {
@@ -100,7 +82,10 @@ class ProcessingModule extends EventEmitter {
 
     if (this.status === ProcessingModuleProto.Status.PROCESSING) {
       namida.logSuccess(this.toString(), 'started');
+      return true;
     }
+    
+    return false;
   }
 
   stop() {
@@ -447,7 +432,8 @@ class ProcessingModule extends EventEmitter {
       authors: this.authors,
       tags: this.tags,
       description: this.description,
-      clientId: this.clientId,
+      nodeId: this.nodeId,
+      sessionId: this.sessionId,
       status: this.status,
       processingMode: this.processingMode,
       inputs: this.inputs,
@@ -469,4 +455,4 @@ ProcessingModule.EVENTS = Object.freeze({
   PROCESSED: 3
 });
 
-module.exports = { ProcessingModule: ProcessingModule };
+module.exports = { ProcessingModule };

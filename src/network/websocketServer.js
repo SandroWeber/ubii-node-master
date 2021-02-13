@@ -4,6 +4,7 @@ const fs = require('fs');
 const url = require('url');
 
 const configService = require('../config/configService');
+const { PING_MESSAGE, PONG_MESSAGE } = require('./constants');
 
 class WebsocketServer {
   /**
@@ -77,19 +78,19 @@ class WebsocketServer {
     this.clients.set(clientID, websocket);
 
     websocket.on('message', (message) => {
-      /*if (message.toString() === PONG_MESSAGE) {
-       // Check if callback for pong device
-       if (this.waitingPongCallbacks.has(request.origin.toString())) {
-       // call callback
-       this.waitingPongCallbacks.get(request.origin.toString())();
-       // remove callback
-       this.waitingPongCallbacks.delete(request.origin.toString());
-  
-       return;
-       }
-  
-       return;
-       }*/
+      if (message === PONG_MESSAGE) {
+        // Check if callback for pong device
+        if (this.waitingPongCallbacks.has(clientID)) {
+          // call callback
+          this.waitingPongCallbacks.get(clientID)();
+          // remove callback
+          this.waitingPongCallbacks.delete(clientID);
+
+          return;
+        }
+
+        return;
+      }
 
       if (!this.onMessage) {
         namida.logFailure('Websocket Server', 'no callback for message handling set!');

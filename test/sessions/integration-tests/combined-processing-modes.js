@@ -1,40 +1,19 @@
 import test from 'ava';
-import sinon from 'sinon';
 
 import TestUtility from '../../testUtility';
+import {
+  TestProcessingModule,
+  getTopicForModuleIO,
+  getDataForModuleIO,
+  publishTopicForModuleIO,
+  addProcessingModulesToSessionSpec
+} from '../utils';
 
-import { SessionManager, ProcessingModule, ProcessingModuleManager } from '../../../src/index';
+import { SessionManager, ProcessingModuleManager } from '../../../src/index';
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
+import { ClientManager } from '../../../src/clients/clientManager';
 
 /* preparation */
-
-class TestProcessingModule extends ProcessingModule {
-  constructor() {
-    super();
-
-    this.inputs = [
-      { internalName: 'inBool', messageFormat: 'bool' },
-      { internalName: 'inInt', messageFormat: 'int32' },
-      { internalName: 'inString', messageFormat: 'string' }
-    ];
-    this.outputs = [
-      { internalName: 'outBool', messageFormat: 'bool' },
-      { internalName: 'outInt', messageFormat: 'int32' },
-      { internalName: 'outString', messageFormat: 'string' }
-    ];
-
-    let produceOutput = () => {
-      this.outputs.forEach((output) => {
-        let data = getDataForModuleIO(output);
-
-        this[output.internalName] = data;
-      });
-    };
-
-    this.onCreated = sinon.fake();
-    this.onProcessing = sinon.fake(produceOutput);
-  }
-}
 
 class PMImmediateCycles extends TestProcessingModule {
   constructor() {
@@ -88,37 +67,27 @@ class PMTriggerOnInputMinDelayUpdateAll extends TestProcessingModule {
   }
 }
 
-let getTopicForModuleIO = (processingModule, moduleIO) => {
-  return '/' + processingModule.id + '/' + moduleIO.internalName;
-};
-
-let getDataForModuleIO = (moduleIO) => {
-  if (moduleIO.messageFormat === 'bool') {
-    return true;
-  } else if (moduleIO.messageFormat === 'int32') {
-    return 42;
-  } else if (moduleIO.messageFormat === 'string') {
-    return 'placeholder';
-  }
-
-  return undefined;
-};
-
-let publishTopicForModuleIO = (topicdata, processingModule, moduleIO) => {
-  let topic = getTopicForModuleIO(processingModule, moduleIO);
-  let data = getDataForModuleIO(moduleIO);
-  topicdata.publish(topic, data, moduleIO.messageFormat);
-};
-
 /* test setup */
 
 test.beforeEach((t) => {
+  t.context.nodeID = 'test-master-node-id';
+
   t.context.topicData = new RuntimeTopicData();
-  t.context.processingModuleManager = new ProcessingModuleManager(undefined, t.context.topicData);
+
+  t.context.processingModuleManager = new ProcessingModuleManager(
+    t.context.nodeID,
+    undefined,
+    t.context.topicData
+  );
+
+  t.context.clientManager = new ClientManager(undefined, t.context.topicData);
+
   t.context.sessionManager = new SessionManager(
+    t.context.nodeID,
     t.context.topicData,
     undefined,
-    t.context.processingModuleManager
+    t.context.processingModuleManager,
+    t.context.clientManager
   );
 
   t.context.processingModules = [
@@ -134,42 +103,16 @@ test.beforeEach((t) => {
   t.context.pmTriggerOnInput = t.context.processingModules[3];
   t.context.pmTriggerOnInputMinDelayUpdateAll = t.context.processingModules[4];
   t.context.processingModules.forEach((pm) => {
-    t.context.sessionManager.processingModuleManager.addModule(pm);
+    t.context.processingModuleManager.addModule(pm);
   });
 
-  let sessionSpecs = {
+  let sessionSpec = {
     name: 'test-session-combined-processing-modes',
     processingModules: [],
     ioMappings: []
   };
-  t.context.processingModules.forEach((pm) => {
-    sessionSpecs.processingModules.push({ id: pm.id });
-
-    let inputMappings = [];
-    pm.inputs.forEach((input) => {
-      inputMappings.push({
-        inputName: input.internalName,
-        topic: getTopicForModuleIO(pm, input),
-        topicSource: 'topic'
-      });
-    });
-
-    let outputMappings = [];
-    pm.outputs.forEach((output) => {
-      outputMappings.push({
-        outputName: output.internalName,
-        topic: getTopicForModuleIO(pm, output),
-        topicDestination: 'topic'
-      });
-    });
-
-    sessionSpecs.ioMappings.push({
-      processingModuleId: pm.id,
-      inputMappings: inputMappings,
-      outputMappings: outputMappings
-    });
-  });
-  t.context.session = t.context.sessionManager.createSession(sessionSpecs);
+  addProcessingModulesToSessionSpec(sessionSpec, t.context.processingModules);
+  t.context.session = t.context.sessionManager.createSession(sessionSpec);
 });
 
 test.afterEach((t) => {

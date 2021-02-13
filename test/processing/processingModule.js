@@ -66,7 +66,7 @@ test('constructor() - with specs', (t) => {
   let regexUUID = new RegExp(Utils.getUUIDv4Regex());
   t.true(regexUUID.test(processingModule.id));
   t.is(processingModule.name, specs.name);
-  t.is(processingModule.authors, specs.authors);
+  t.deepEqual(processingModule.authors, specs.authors);
   t.is(processingModule.description, specs.description);
 
   // with ID defined, should be overwritten though

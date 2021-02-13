@@ -1,4 +1,4 @@
-const { clientStateEnum, Client } = require('./client.js');
+const { CLIENT_STATE, Client } = require('./client.js');
 const namida = require('@tum-far/namida');
 
 class ClientManager {
@@ -6,26 +6,24 @@ class ClientManager {
     this.server = server;
     this.topicData = topicData;
     this.clients = new Map();
-
-    namida.log('Client Manager Ready', 'The Client Manager is initialized and ready to work.');
   }
 
   /**
    * Get the Client with the specified identifier.
-   * @param {String} clientIdentifier Universally unique identifier of a Client.
+   * @param {String} id Universally unique identifier of a Client.
    * @returns Client object with the specified identifier.
    */
-  getClient(clientIdentifier) {
-    return this.clients.get(clientIdentifier);
+  getClient(id) {
+    return this.clients.get(id);
   }
 
   /**
    * Is there a client with the specified identifier in the clients map?
-   * @param {String} clientIdentifier Universally unique identifier of a Client.
+   * @param {String} id Universally unique identifier of a Client.
    * @returns Boolean indicating if there is a client with the specified identifier.
    */
-  hasClient(clientIdentifier) {
-    return this.clients.has(clientIdentifier);
+  hasClient(id) {
+    return this.clients.has(id);
   }
 
   /**
@@ -50,13 +48,6 @@ class ClientManager {
     this.clients.delete(id);
   }
 
-  setClientInactive(id) {
-    let client = this.clients.get(id);
-    if (client) {
-      client.setState(clientStateEnum.inactive);
-    }
-  }
-
   /**
    * Register the referred client and initialize some client functionalities.
    * @param {Object} client Client object.
@@ -71,11 +62,11 @@ class ClientManager {
 
   /**
    * Verify the specified client.
-   * @param {String} clientIdentifier Universally unique identifier of a Client.
+   * @param {String} id Universally unique identifier of a Client.
    * @returns Returns true if the specified client is a verfied client, returns false otherwise.
    */
-  verifyClient(clientIdentifier) {
-    if (!this.hasClient(clientIdentifier)) {
+  verifyClient(id) {
+    if (!this.hasClient(id)) {
       return false;
     } else {
       return true;
@@ -84,40 +75,36 @@ class ClientManager {
 
   /**
    * Process the registration of the specified client at the client manager.
-   * @param {Object} clientSpecification
+   * @param {Object} spec - client specification
    * @param {*} context Context for the feedback.
    * @returns Returns the payload of the process result. This can be the client specification or an error.
    */
-  processClientRegistration(clientSpecification) {
-    // Prepare some variables.
-    let clientIdentifier = clientSpecification.id;
-
+  processClientRegistration(spec) {
     // Check if a client with the specified id is already registered...
-    if (clientIdentifier && this.hasClient(clientIdentifier)) {
+    if (spec.id && this.hasClient(spec.id)) {
       // ... if so, check the state of the registered client if reregistering is possible.
-      if (this.getClient(clientIdentifier).getState() === clientStateEnum.active) {
+      if (this.getClient(spec.id).getState() === CLIENT_STATE.active) {
         // => Re-registering is NOT an option: Reject the registration.
-        let errorMessage =
-          'Client with ID ' + clientIdentifier + ' is already registered and active';
+        let errorMessage = 'Client with ID ' + spec.id + ' is already registered and active';
 
         // Ouput the feedback on the server console.
         namida.logFailure('ClientManager', errorMessage);
 
         throw new Error(errorMessage);
-      } else if (this.getClient(clientIdentifier).name === clientSpecification.name) {
+      } else if (this.getClient(spec.id).name === spec.name) {
         // => Re-registering is possible: Prepare the registration.
 
         // Update the context feedback.
-        let errorMessage =
+        let warnMessage =
           'Reregistration of Client with ID ' +
-          clientIdentifier +
+          spec.id +
           ' initialized because it is already registered but in standby or inactive.';
 
         // Ouput the feedback on the server console.
-        namida.logWarn('ClientManager', errorMessage);
+        namida.logWarn('ClientManager', warnMessage);
 
         // Prepare the reregistration.
-        this.clients.delete(clientIdentifier);
+        this.clients.delete(spec.id);
 
         // Continue with the normal registration process...
       }
@@ -125,7 +112,7 @@ class ClientManager {
     // No client ID, normal registration steps:
 
     // Create a new client based on the client specification and register it.
-    let currentClient = new Client(clientSpecification, this.server, this.topicData);
+    let currentClient = new Client(spec, this.server, this.topicData);
     this.registerClient(currentClient);
 
     // Update the client information.
@@ -136,6 +123,21 @@ class ClientManager {
 
     // Return the client
     return currentClient;
+  }
+
+  getNodeIDsForProcessingModule(pmSpec) {
+    let nodeIDs = [];
+    this.clients.forEach((client) => {
+      if (
+        client.isDedicatedProcessingNode &&
+        client.getState() === CLIENT_STATE.active &&
+        client.processingModules.some((pm) => (pm.name = pmSpec.name))
+      ) {
+        nodeIDs.push(client.id);
+      }
+    });
+
+    return nodeIDs;
   }
 }
 
