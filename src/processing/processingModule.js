@@ -70,6 +70,8 @@ class ProcessingModule extends EventEmitter {
   /* execution control */
 
   start() {
+    this.openWorkerpoolExecutions = [];
+
     if (this.processingMode && this.processingMode.frequency) {
       this.startProcessingByFrequency();
     } else if (this.processingMode && this.processingMode.triggerOnInput) {
@@ -84,7 +86,7 @@ class ProcessingModule extends EventEmitter {
       namida.logSuccess(this.toString(), 'started');
       return true;
     }
-    
+
     return false;
   }
 
@@ -100,6 +102,11 @@ class ProcessingModule extends EventEmitter {
     this.onProcessingLockstepPass = () => {
       return undefined;
     };
+
+    this.openWorkerpoolExecutions.forEach((exec) => {
+      exec.cancel();
+    });
+
     namida.logSuccess(this.toString(), 'stopped');
   }
 
@@ -117,15 +124,28 @@ class ProcessingModule extends EventEmitter {
 
       // processing
       //TODO: procedure testing worker pool viability, full PM client and IPC
-      this.workerPool.exec(this.onProcessing, [deltaTime, this.ioProxy, {}, this.state])
-      .then((result) => {
-        console.info(result);
-        this.outputs.forEach(output => {
-          if (result[output.internalName]) {
-            this.ioProxy[output.internalName] = result[output.internalName];
-          }
+      let wpExecPromise = this.workerPool
+        .exec(this.onProcessing, [deltaTime, this.ioProxy, {}, this.state])
+        .then((result) => {
+          //console.info(result);
+          this.outputs.forEach((output) => {
+            if (result[output.internalName]) {
+              this.ioProxy[output.internalName] = result[output.internalName];
+            }
+          });
+          this.openWorkerpoolExecutions.splice(
+            this.openWorkerpoolExecutions.indexOf(wpExecPromise),
+            1
+          );
         })
-      });
+        .catch((error) => {
+          //console.info(error);
+          if (error.message && error.message !== 'promise cancelled') {
+            // executuion was not just cancelled via workerpool API
+            namida.logFailure(this.toString(), 'workerpool execution failed:\n' + error);
+          }
+        });
+      this.openWorkerpoolExecutions.push(wpExecPromise);
       //this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
 
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
