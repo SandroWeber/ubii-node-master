@@ -88,12 +88,19 @@ import { ServerMock, createClientSpecificationMock } from '../mocks/serverMock.j
   });
 
   test('processClientRegistration', (t) => {
-    let clientSpecs = createClientSpecificationMock('uniqueId');
+    let clientSpecs = {
+      name: 'test-name-processClientRegistration'
+    };
 
-    let result = t.context.clientManager.processClientRegistration(clientSpecs, {});
+    let result = t.context.clientManager.processClientRegistration(clientSpecs);
 
-    t.is(result.error, undefined);
-    t.is(result.id, 'uniqueId');
+    t.true(result !== undefined);
+    t.is(result.name, clientSpecs.name);
+    // register again with same ID -> throws error
+    clientSpecs.id = result.id;
+    t.throws(() => {
+      t.context.clientManager.processClientRegistration(clientSpecs);
+    });
   });
 
   test('processClientRegistration - double registration', (t) => {

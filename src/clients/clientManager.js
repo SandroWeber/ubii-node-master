@@ -95,13 +95,13 @@ class ClientManager {
         // => Re-registering is possible: Prepare the registration.
 
         // Update the context feedback.
-        let errorMessage =
+        let warnMessage =
           'Reregistration of Client with ID ' +
           spec.id +
           ' initialized because it is already registered but in standby or inactive.';
 
         // Ouput the feedback on the server console.
-        namida.logWarn('ClientManager', errorMessage);
+        namida.logWarn('ClientManager', warnMessage);
 
         // Prepare the reregistration.
         this.clients.delete(spec.id);
