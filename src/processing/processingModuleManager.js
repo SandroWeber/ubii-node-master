@@ -64,8 +64,8 @@ class ProcessingModuleManager extends EventEmitter {
     if (!success) {
       return undefined;
     } else {
-      pm.setWorkerPool(this.workerPool);
       pm && pm.onCreated && pm.onCreated(pm.state);
+      pm.setWorkerPool(this.workerPool);
       return pm;
     }
   }

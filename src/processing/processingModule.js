@@ -123,30 +123,31 @@ class ProcessingModule extends EventEmitter {
       tLastProcess = tNow;
 
       // processing
-      //TODO: procedure testing worker pool viability, full PM client and IPC
-      let wpExecPromise = this.workerPool
-        .exec(this.onProcessing, [deltaTime, this.ioProxy, {}, this.state])
-        .then((result) => {
-          //console.info(result);
-          this.outputs.forEach((output) => {
-            if (result[output.internalName]) {
-              this.ioProxy[output.internalName] = result[output.internalName];
+      if (this.workerPool) {
+        let wpExecPromise = this.workerPool
+          .exec(this.onProcessing, [deltaTime, this.ioProxy, {}, this.state])
+          .then((result) => {
+            //console.info(result);
+            this.outputs.forEach((output) => {
+              if (result[output.internalName]) {
+                this.ioProxy[output.internalName] = result[output.internalName];
+              }
+            });
+            this.openWorkerpoolExecutions.splice(
+              this.openWorkerpoolExecutions.indexOf(wpExecPromise),
+              1
+            );
+          })
+          .catch((error) => {
+            if (!error.message || error.message !== 'promise cancelled') {
+              // executuion was not just cancelled via workerpool API
+              namida.logFailure(this.toString(), 'workerpool execution failed:\n' + error);
             }
           });
-          this.openWorkerpoolExecutions.splice(
-            this.openWorkerpoolExecutions.indexOf(wpExecPromise),
-            1
-          );
-        })
-        .catch((error) => {
-          //console.info(error);
-          if (error.message && error.message !== 'promise cancelled') {
-            // executuion was not just cancelled via workerpool API
-            namida.logFailure(this.toString(), 'workerpool execution failed:\n' + error);
-          }
-        });
-      this.openWorkerpoolExecutions.push(wpExecPromise);
-      //this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
+        this.openWorkerpoolExecutions.push(wpExecPromise);
+      } else {
+        this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
+      }
 
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
@@ -215,7 +216,26 @@ class ProcessingModule extends EventEmitter {
   }
 
   setWorkerPool(workerPool) {
-    this.workerPool = workerPool;
+    this.isWorkerpoolViable(workerPool).then((viable) => {
+      if (viable) {
+        this.workerPool = workerPool;
+      } else {
+        namida.warn(
+          this.toString(),
+          'not viable to be executed via workerpool, might slow down system significantly'
+        );
+      }
+    });
+  }
+
+  async isWorkerpoolViable(workerPool) {
+    console.info('testing workerpool for ' + this.toString());
+    try {
+      await workerPool.exec(this.onProcessing, [1, this.ioProxy, {}, this.state]);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   /**
@@ -428,10 +448,6 @@ class ProcessingModule extends EventEmitter {
     this.ioProxy[name] = value;
   }
 
-  /* I/O functions end */
-
-  /* helper functions */
-
   getIOMessageFormat(name) {
     let ios = [...this.inputs, ...this.outputs];
     let io = ios.find((io) => {
@@ -440,6 +456,10 @@ class ProcessingModule extends EventEmitter {
 
     return io.messageFormat;
   }
+
+  /* I/O functions end */
+
+  /* helper functions */
 
   toString() {
     return 'ProcessingModule ' + this.name + ' (ID ' + this.id + ')';
