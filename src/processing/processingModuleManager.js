@@ -64,9 +64,21 @@ class ProcessingModuleManager extends EventEmitter {
     if (!success) {
       return undefined;
     } else {
-      pm && pm.onCreated && pm.onCreated(pm.state);
-      pm.setWorkerPool(this.workerPool);
+      pm.initialized = this.initializeModule(pm);
       return pm;
+    }
+  }
+
+  async initializeModule(pm) {
+    try {
+      pm.onCreated && await pm.onCreated(pm.state);
+      await pm.setWorkerPool(this.workerPool);
+
+      return true;
+    }
+    catch (error) {
+      namida.logFailure(this.toString(), 'PM initialization error:\n' + error);
+      return false;
     }
   }
 
@@ -166,11 +178,11 @@ class ProcessingModuleManager extends EventEmitter {
         namida.logFailure(
           'ProcessingModuleManager',
           "can't find processing module for I/O mapping, given: ID = " +
-            mapping.processingModuleId +
-            ', name = ' +
-            mapping.processingModuleName +
-            ', session ID = ' +
-            sessionID
+          mapping.processingModuleId +
+          ', name = ' +
+          mapping.processingModuleName +
+          ', session ID = ' +
+          sessionID
         );
         return;
       }
@@ -184,10 +196,10 @@ class ProcessingModuleManager extends EventEmitter {
             namida.logFailure(
               'ProcessingModuleManager',
               'IO-Mapping for module ' +
-                processingModule.name +
-                '->' +
-                inputMapping.inputName +
-                ' is invalid'
+              processingModule.name +
+              '->' +
+              inputMapping.inputName +
+              ' is invalid'
             );
             return;
           }
@@ -246,10 +258,10 @@ class ProcessingModuleManager extends EventEmitter {
             namida.logFailure(
               'ProcessingModuleManager',
               'IO-Mapping for module ' +
-                processingModule.toString() +
-                '->' +
-                outputMapping.outputName +
-                ' is invalid'
+              processingModule.toString() +
+              '->' +
+              outputMapping.outputName +
+              ' is invalid'
             );
             return;
           }

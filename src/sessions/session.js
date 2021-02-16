@@ -119,8 +119,10 @@ class Session extends EventEmitter {
     this.status = SessionStatus.RUNNING;
 
     // start processing modules
-    this.localPMs.forEach((pm) => {
-      let success = this.processingModuleManager.getModuleByID(pm.id).start();
+    this.localPMs.forEach(async (pmSpec) => {
+      let pm = this.processingModuleManager.getModuleByID(pmSpec.id);
+      await pm.initialized;
+      let success = pm.start();
       if (success) {
         this.processingModuleManager.emit(ProcessingModuleManager.EVENTS.PM_STARTED, pm);
       }

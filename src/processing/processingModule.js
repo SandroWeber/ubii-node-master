@@ -25,12 +25,12 @@ class ProcessingModule extends EventEmitter {
       namida.error(
         'ProcessingModule ' + this.toString(),
         'trying to create module under javascript, but specification says ' +
-          ProcessingModuleProto.Language[this.language]
+        ProcessingModuleProto.Language[this.language]
       );
       throw new Error(
         'Incompatible language specifications (javascript vs. ' +
-          ProcessingModuleProto.Language[this.language] +
-          ')'
+        ProcessingModuleProto.Language[this.language] +
+        ')'
       );
     }
     // default processing mode
@@ -123,31 +123,7 @@ class ProcessingModule extends EventEmitter {
       tLastProcess = tNow;
 
       // processing
-      if (this.workerPool) {
-        let wpExecPromise = this.workerPool
-          .exec(this.onProcessing, [deltaTime, this.ioProxy, {}, this.state])
-          .then((result) => {
-            //console.info(result);
-            this.outputs.forEach((output) => {
-              if (result[output.internalName]) {
-                this.ioProxy[output.internalName] = result[output.internalName];
-              }
-            });
-            this.openWorkerpoolExecutions.splice(
-              this.openWorkerpoolExecutions.indexOf(wpExecPromise),
-              1
-            );
-          })
-          .catch((error) => {
-            if (!error.message || error.message !== 'promise cancelled') {
-              // executuion was not just cancelled via workerpool API
-              namida.logFailure(this.toString(), 'workerpool execution failed:\n' + error);
-            }
-          });
-        this.openWorkerpoolExecutions.push(wpExecPromise);
-      } else {
-        this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
-      }
+      this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
 
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
@@ -215,50 +191,52 @@ class ProcessingModule extends EventEmitter {
     };
   }
 
-  setWorkerPool(workerPool) {
-    this.isWorkerpoolViable(workerPool).then((viable) => {
-      if (viable) {
-        this.workerPool = workerPool;
-      } else {
-        namida.warn(
-          this.toString(),
-          'not viable to be executed via workerpool, might slow down system significantly'
-        );
+  async setWorkerPool(workerPool) {
+    let viable = await this.isWorkerpoolViable(workerPool);
+
+    if (viable) {
+      this.workerPool = workerPool;
+
+      // redefine onProcessing to be executed via workerpool
+      this.originalOnProcessing = this.onProcessing;
+      let workerpoolOnProcessing = (deltaTime, inputs, outputs, state) => {
+        let wpExecPromise = this.workerPool
+          .exec(this.originalOnProcessing, [deltaTime, inputs, {}, state])
+          .then((result) => {
+            this.outputs.forEach((output) => {
+              if (result && result[output.internalName]) {
+                this.ioProxy[output.internalName] = result[output.internalName];
+              }
+            });
+            this.openWorkerpoolExecutions.splice(
+              this.openWorkerpoolExecutions.indexOf(wpExecPromise),
+              1
+            );
+          })
+          .catch((error) => {
+            if (!error.message || error.message !== 'promise cancelled') {
+              // executuion was not just cancelled via workerpool API
+              namida.logFailure(this.toString(), 'workerpool execution failed:\n' + error);
+            }
+          });
+        this.openWorkerpoolExecutions.push(wpExecPromise);
       }
-    });
+      this.onProcessing = workerpoolOnProcessing;
+    } else {
+      namida.warn(
+        this.toString(),
+        'not viable to be executed via workerpool, might slow down system significantly'
+      );
+    }
   }
 
   async isWorkerpoolViable(workerPool) {
-    console.info('testing workerpool for ' + this.toString());
     try {
       await workerPool.exec(this.onProcessing, [1, this.ioProxy, {}, this.state]);
       return true;
     } catch (error) {
       return false;
     }
-  }
-
-  /**
-   * LEGACY PROCESSING MODE - should not be used as it quickly hogs all ressources
-   */
-  startProcessingByCycles() {
-    this.status = ProcessingModuleProto.Status.PROCESSING;
-
-    let tLastProcess = Date.now();
-    let processIteration = () => {
-      // timing
-      let tNow = Date.now();
-      let deltaTime = tNow - tLastProcess;
-      tLastProcess = tNow;
-      // processing
-      this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
-      if (this.status === ProcessingModuleProto.Status.PROCESSING) {
-        setImmediate(() => {
-          processIteration();
-        });
-      }
-    };
-    processIteration();
   }
 
   /* execution control end */
@@ -281,7 +259,7 @@ class ProcessingModule extends EventEmitter {
     this.onDestroyed = callback;
   }
 
-  onCreated() {}
+  onCreated() { }
 
   /**
    * Lifecycle function to be called when module is supposed to process data.
@@ -307,9 +285,9 @@ class ProcessingModule extends EventEmitter {
     return undefined;
   }
 
-  onHalted() {}
+  onHalted() { }
 
-  onDestroyed() {}
+  onDestroyed() { }
 
   /* lifecycle functions end */
 
@@ -413,8 +391,8 @@ class ProcessingModule extends EventEmitter {
       namida.error(
         this.toString(),
         'the internal I/O naming "' +
-          internalName +
-          '" should not be used as it conflicts with internal properties'
+        internalName +
+        '" should not be used as it conflicts with internal properties'
       );
       return false;
     }
@@ -423,8 +401,8 @@ class ProcessingModule extends EventEmitter {
       namida.error(
         this.toString(),
         'the internal I/O naming "' +
-          internalName +
-          '" is already defined (overwrite not specified)'
+        internalName +
+        '" is already defined (overwrite not specified)'
       );
       return false;
     }
