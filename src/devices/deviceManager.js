@@ -1,10 +1,11 @@
 const namida = require('@tum-far/namida');
-
 const { proto } = require('@tum-far/ubii-msg-formats');
+
 const { Participant } = require('./../devices/participant.js');
 const { Watcher } = require('./../devices/watcher.js');
 const { TopicMultiplexer } = require('./../devices/topicMultiplexer.js');
 const { TopicDemultiplexer } = require('./../devices/topicDemultiplexer.js');
+const { ClientManager } = require('../clients/clientManager.js');
 
 /**
  * The DeviceManager manages Device objects. It is part of a server node.
@@ -89,6 +90,8 @@ class DeviceManager {
    */
   addParticipant(device) {
     this.participants.set(device.id, device);
+    // add device to client specs
+    ClientManager.instance.getClient(device.clientId).devices.push(device.toProtobuf());
   }
 
   /**
@@ -96,7 +99,15 @@ class DeviceManager {
    * @param {String} id Universally unique identifier of a Device.
    */
   removeParticipant(id) {
-    this.getParticipant(id).deactivate();
+    let participant = this.getParticipant(id);
+    let client = ClientManager.instance.getClient(participant.clientId);
+    // remove device from client specs
+    let index = client.devices.findIndex(device => device.id === id);
+    if (index > -1) {
+      client.devices.splice(index, 1);
+    }
+    // deactivate and remove participant
+    participant.deactivate();
     this.participants.delete(id);
   }
 
@@ -196,7 +207,7 @@ class DeviceManager {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (
         this.clientManager.getClient(clientID).registrationDate <
-          this.getParticipant(deviceID).lastSignOfLife ||
+        this.getParticipant(deviceID).lastSignOfLife ||
         deviceSpec.deviceType !== 'PARTICIPANT'
       ) {
         // -> REregistering is not an option: Reject the registration.
@@ -229,7 +240,7 @@ class DeviceManager {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (
         this.clientManager.getClient(clientID).registrationDate <
-          this.getWatcher(deviceID).lastSignOfLife ||
+        this.getWatcher(deviceID).lastSignOfLife ||
         deviceSpec.deviceType !== 'WATCHER'
       ) {
         // -> REregistering is not an option: Reject the registration.

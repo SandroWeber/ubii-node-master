@@ -1,23 +1,24 @@
-const { Service } = require('../service.js');
 const namida = require('@tum-far/namida');
-
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
+const { Service } = require('../service.js');
+
+const { ClientManager } = require('../../clients/clientManager.js');
+
 class DeviceRegistrationService extends Service {
-  constructor(clientManager, deviceManager) {
+  constructor(deviceManager) {
     super(
       DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
       MSG_TYPES.DEVICE,
       MSG_TYPES.DEVICE + ', ' + MSG_TYPES.ERROR
     );
 
-    this.clientManager = clientManager;
     this.deviceManager = deviceManager;
   }
 
   reply(message) {
     // Verify the device and act accordingly.
-    if (!this.clientManager.verifyClient(message.clientId)) {
+    if (!ClientManager.instance.verifyClient(message.clientId)) {
       let message = 'There is no Client registered with the ID ' + message.clientId;
 
       namida.logFailure('DeviceRegistrationService', message);
@@ -46,7 +47,8 @@ class DeviceRegistrationService extends Service {
     }
 
     if (device !== undefined) {
-      return { device: device.toProtobuf() };
+      let specs = device.toProtobuf();
+      return { device: specs };
     } else {
       return {
         error: {

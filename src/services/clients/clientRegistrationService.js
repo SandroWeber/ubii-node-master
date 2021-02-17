@@ -1,4 +1,4 @@
-const { Service } = require('./service.js');
+const { Service } = require('../service.js');
 
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 

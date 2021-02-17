@@ -24,6 +24,7 @@ class Client {
     specs && Object.assign(this, JSON.parse(JSON.stringify(specs)));
     // new instance is getting new ID
     this.id = uuidv4();
+    this.devices = this.devices ? this.devices : [];
 
     this.server = server;
     this.topicData = topicData;
@@ -451,8 +452,10 @@ class Client {
       devices: this.devices,
       tags: this.tags,
       description: this.description,
+      processingModules: this.processingModules,
       isDedicatedProcessingNode: this.isDedicatedProcessingNode,
-      processingModules: this.processingModules
+      hostIp: this.hostIp,
+      metadataJson: this.metadataJson
     };
   }
 

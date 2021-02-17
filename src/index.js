@@ -16,7 +16,7 @@ const { ProcessingModule } = require('./processing/processingModule');
 const ProcessingModuleManager = require('./processing/processingModuleManager');
 
 const { ServiceManager } = require('./services/serviceManager');
-const { ClientRegistrationService } = require('./services/clientRegistrationService');
+const { ClientRegistrationService } = require('./services/clients/clientRegistrationService');
 const { DeviceRegistrationService } = require('./services/devices/deviceRegistrationService');
 const { SubscriptionService } = require('./services/subscriptionService');
 

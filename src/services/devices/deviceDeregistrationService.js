@@ -1,23 +1,23 @@
-const { Service } = require('../service.js');
 const namida = require('@tum-far/namida');
-
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
+const { Service } = require('../service.js');
+const { ClientManager } = require('../../clients/clientManager.js');
+
 class DeviceDeregistrationService extends Service {
-  constructor(clientManager, deviceManager) {
+  constructor(deviceManager) {
     super(
       DEFAULT_TOPICS.SERVICES.DEVICE_DEREGISTRATION,
       MSG_TYPES.DEVICE,
       MSG_TYPES.SUCCESS + ', ' + MSG_TYPES.ERROR
     );
 
-    this.clientManager = clientManager;
     this.deviceManager = deviceManager;
   }
 
   reply(message) {
     // Verify the device and act accordingly.
-    if (!this.clientManager.verifyClient(message.clientId)) {
+    if (!ClientManager.instance.verifyClient(message.clientId)) {
       let errorTitle = 'DeviceDeregistrationService';
       let errorMessage = 'There is no Client registered with the ID ' + message.clientId;
 
