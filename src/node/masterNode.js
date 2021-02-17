@@ -36,7 +36,8 @@ class MasterNode {
     );
 
     // Client Manager Component:
-    this.clientManager = new ClientManager(this.connectionsManager, this.topicData);
+    this.clientManager = ClientManager.instance;
+    this.clientManager.setDependencies(this.connectionsManager, this.topicData);
 
     // Device Manager Component:
     this.deviceManager = new DeviceManager(
