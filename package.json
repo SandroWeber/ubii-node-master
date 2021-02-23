@@ -35,9 +35,6 @@
     "yargs": "15.4.0"
   },
   "dependencies": {
-    "@tensorflow/tfjs-node": "2.4.0",
-    "@baumlos/emg-classifier": "0.0.4",
-    "@tensorflow-models/coco-ssd": "2.1.0",
     "@tum-far/namida": "0.1.1",
     "@tum-far/ubii-database": "0.1.1",
     "@tum-far/ubii-msg-formats": "0.15.7",
