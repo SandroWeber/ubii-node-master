@@ -1,11 +1,34 @@
 const { CLIENT_STATE, Client } = require('./client.js');
 const namida = require('@tum-far/namida');
 
+let _instance = null;
+const SINGLETON_ENFORCER = Symbol();
+
 class ClientManager {
-  constructor(server, topicData) {
-    this.server = server;
-    this.topicData = topicData;
+  constructor(enforcer) {
+    if (enforcer !== SINGLETON_ENFORCER) {
+      throw new Error('Use ' + this.constructor.name + '.instance');
+    }
+
     this.clients = new Map();
+  }
+
+  static get instance() {
+    if (_instance == null) {
+      _instance = new ClientManager(SINGLETON_ENFORCER);
+    }
+
+    return _instance;
+  }
+
+  /**
+   * Set the connections manager and topicdata buffer dependencies.
+   * @param {NetworkConnectionsManager} connections
+   * @param {RuntimeTopicData} topicdata 
+   */
+  setDependencies(connections, topicdata) {
+    this.server = connections;
+    this.topicData = topicdata;
   }
 
   /**
@@ -15,6 +38,15 @@ class ClientManager {
    */
   getClient(id) {
     return this.clients.get(id);
+  }
+
+  /**
+   * Get a list of all clients.
+   * @returns {Array} client list
+   */
+  getClientList() {
+    //console.info(Array.from(this.clients));
+    return Array.from(this.clients).map((pairKeyValue) => pairKeyValue[1]);
   }
 
   /**

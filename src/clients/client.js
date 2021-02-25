@@ -24,6 +24,7 @@ class Client {
     specs && Object.assign(this, JSON.parse(JSON.stringify(specs)));
     // new instance is getting new ID
     this.id = uuidv4();
+    this.devices = this.devices ? this.devices : [];
 
     this.server = server;
     this.topicData = topicData;
@@ -225,28 +226,34 @@ class Client {
     }
 
     // subscribe
-    let token = this.topicData.subscribe(topic, (topic, entry) => {
-      let payload = {
-        topicDataRecord: {
-          topic: topic,
-          timestamp: entry.timestamp
-        }
-      };
-      payload.topicDataRecord[entry.type] = entry.data;
-
-      try {
-        let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
-        this.sendMessageToRemote(buffer);
-      } catch (error) {
-        console.error(error);
-      }
-    });
-
-    // save token
+    let token = this.topicData.subscribe(topic, (...params) => this.subscriptionCallback(...params));
     this.topicSubscriptionTokens.set(topic, token);
+
+    // check if topic already has data, if so send it to remote
+    let topicdata = this.topicData.pull(topic);
+    if (topicdata && topicdata.data) {
+      this.subscriptionCallback(topic, topicdata);
+    }
 
     return true;
   }
+
+  subscriptionCallback(topic, entry) {
+    let payload = {
+      topicDataRecord: {
+        topic: topic,
+        timestamp: entry.timestamp
+      }
+    };
+    payload.topicDataRecord[entry.type] = entry.data;
+
+    try {
+      let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
+      this.sendMessageToRemote(buffer);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   /**
    * Internally unsubscribes from a topic at the topicData.
@@ -451,8 +458,10 @@ class Client {
       devices: this.devices,
       tags: this.tags,
       description: this.description,
+      processingModules: this.processingModules,
       isDedicatedProcessingNode: this.isDedicatedProcessingNode,
-      processingModules: this.processingModules
+      hostIp: this.hostIp,
+      metadataJson: this.metadataJson
     };
   }
 
