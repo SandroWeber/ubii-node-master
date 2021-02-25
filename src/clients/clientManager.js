@@ -162,7 +162,7 @@ class ClientManager {
       if (
         client.isDedicatedProcessingNode &&
         client.getState() === CLIENT_STATE.active &&
-        client.processingModules.some((pm) => (pm.name = pmSpec.name))
+        client.processingModules.some((pm) => (pm.name === pmSpec.name))
       ) {
         nodeIDs.push(client.id);
       }
