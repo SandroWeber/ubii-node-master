@@ -150,7 +150,7 @@ class ClientManager {
     currentClient.updateInformation();
 
     // Ouput the feedback on the server console.
-    namida.logSuccess('ClientManager', 'New Client with ID ' + currentClient.id + ' registered');
+    namida.logSuccess('ClientManager', 'New ' + currentClient.toString() + ' registered');
 
     // Return the client
     return currentClient;

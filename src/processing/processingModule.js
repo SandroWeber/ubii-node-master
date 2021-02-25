@@ -83,7 +83,11 @@ class ProcessingModule extends EventEmitter {
     }
 
     if (this.status === ProcessingModuleProto.Status.PROCESSING) {
-      namida.logSuccess(this.toString(), 'started');
+      let message = 'started';
+      if (this.workerPool) {
+        message += ' (using workerpool)';
+      }
+      namida.logSuccess(this.toString(), message);
       return true;
     }
 
@@ -204,7 +208,7 @@ class ProcessingModule extends EventEmitter {
           .exec(this.originalOnProcessing, [deltaTime, inputs, {}, state])
           .then((result) => {
             this.outputs.forEach((output) => {
-              if (result && result[output.internalName]) {
+              if (result && result.hasOwnProperty(output.internalName)) {
                 this.ioProxy[output.internalName] = result[output.internalName];
               }
             });
