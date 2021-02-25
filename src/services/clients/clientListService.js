@@ -23,7 +23,6 @@ class ClientListService extends Service {
     clientList.forEach(client => {
       response.elements.push(client.toProtobuf());
     });
-    console.info(response);
 
     return response;
   }

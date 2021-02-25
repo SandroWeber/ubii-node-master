@@ -45,7 +45,6 @@ class ClientManager {
    * @returns {Array} client list
    */
   getClientList() {
-    //console.info(Array.from(this.clients));
     return Array.from(this.clients).map((pairKeyValue) => pairKeyValue[1]);
   }
 
