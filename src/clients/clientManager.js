@@ -45,7 +45,6 @@ class ClientManager {
    * @returns {Array} client list
    */
   getClientList() {
-    //console.info(Array.from(this.clients));
     return Array.from(this.clients).map((pairKeyValue) => pairKeyValue[1]);
   }
 
@@ -151,7 +150,7 @@ class ClientManager {
     currentClient.updateInformation();
 
     // Ouput the feedback on the server console.
-    namida.logSuccess('ClientManager', 'New Client with ID ' + currentClient.id + ' registered');
+    namida.logSuccess('ClientManager', 'New ' + currentClient.toString() + ' registered');
 
     // Return the client
     return currentClient;
@@ -163,7 +162,7 @@ class ClientManager {
       if (
         client.isDedicatedProcessingNode &&
         client.getState() === CLIENT_STATE.active &&
-        client.processingModules.some((pm) => (pm.name = pmSpec.name))
+        client.processingModules.some((pm) => (pm.name === pmSpec.name))
       ) {
         nodeIDs.push(client.id);
       }

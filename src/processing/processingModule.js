@@ -25,12 +25,12 @@ class ProcessingModule extends EventEmitter {
       namida.error(
         'ProcessingModule ' + this.toString(),
         'trying to create module under javascript, but specification says ' +
-          ProcessingModuleProto.Language[this.language]
+        ProcessingModuleProto.Language[this.language]
       );
       throw new Error(
         'Incompatible language specifications (javascript vs. ' +
-          ProcessingModuleProto.Language[this.language] +
-          ')'
+        ProcessingModuleProto.Language[this.language] +
+        ')'
       );
     }
     // default processing mode
@@ -70,6 +70,8 @@ class ProcessingModule extends EventEmitter {
   /* execution control */
 
   start() {
+    this.openWorkerpoolExecutions = [];
+
     if (this.processingMode && this.processingMode.frequency) {
       this.startProcessingByFrequency();
     } else if (this.processingMode && this.processingMode.triggerOnInput) {
@@ -81,10 +83,14 @@ class ProcessingModule extends EventEmitter {
     }
 
     if (this.status === ProcessingModuleProto.Status.PROCESSING) {
-      namida.logSuccess(this.toString(), 'started');
+      let message = 'started';
+      if (this.workerPool) {
+        message += ' (using workerpool)';
+      }
+      namida.logSuccess(this.toString(), message);
       return true;
     }
-    
+
     return false;
   }
 
@@ -100,6 +106,11 @@ class ProcessingModule extends EventEmitter {
     this.onProcessingLockstepPass = () => {
       return undefined;
     };
+
+    this.openWorkerpoolExecutions.forEach((exec) => {
+      exec.cancel();
+    });
+
     namida.logSuccess(this.toString(), 'stopped');
   }
 
@@ -108,13 +119,16 @@ class ProcessingModule extends EventEmitter {
 
     let tLastProcess = Date.now();
     let msFrequency = 1000 / this.processingMode.frequency.hertz;
+
     let processIteration = () => {
       // timing
       let tNow = Date.now();
       let deltaTime = tNow - tLastProcess;
       tLastProcess = tNow;
+
       // processing
       this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
+
       if (this.status === ProcessingModuleProto.Status.PROCESSING) {
         setTimeout(() => {
           processIteration();
@@ -181,27 +195,52 @@ class ProcessingModule extends EventEmitter {
     };
   }
 
-  /**
-   * LEGACY PROCESSING MODE - should not be used as it quickly hogs all ressources
-   */
-  startProcessingByCycles() {
-    this.status = ProcessingModuleProto.Status.PROCESSING;
+  async setWorkerPool(workerPool) {
+    let viable = await this.isWorkerpoolViable(workerPool);
 
-    let tLastProcess = Date.now();
-    let processIteration = () => {
-      // timing
-      let tNow = Date.now();
-      let deltaTime = tNow - tLastProcess;
-      tLastProcess = tNow;
-      // processing
-      this.onProcessing(deltaTime, this.ioProxy, this.ioProxy, this.state);
-      if (this.status === ProcessingModuleProto.Status.PROCESSING) {
-        setImmediate(() => {
-          processIteration();
-        });
+    if (viable) {
+      this.workerPool = workerPool;
+
+      // redefine onProcessing to be executed via workerpool
+      this.originalOnProcessing = this.onProcessing;
+      let workerpoolOnProcessing = (deltaTime, inputs, outputs, state) => {
+        let wpExecPromise = this.workerPool
+          .exec(this.originalOnProcessing, [deltaTime, inputs, {}, state])
+          .then((result) => {
+            this.outputs.forEach((output) => {
+              if (result && result.hasOwnProperty(output.internalName)) {
+                this.ioProxy[output.internalName] = result[output.internalName];
+              }
+            });
+            this.openWorkerpoolExecutions.splice(
+              this.openWorkerpoolExecutions.indexOf(wpExecPromise),
+              1
+            );
+          })
+          .catch((error) => {
+            if (!error.message || error.message !== 'promise cancelled') {
+              // executuion was not just cancelled via workerpool API
+              namida.logFailure(this.toString(), 'workerpool execution failed:\n' + error);
+            }
+          });
+        this.openWorkerpoolExecutions.push(wpExecPromise);
       }
-    };
-    processIteration();
+      this.onProcessing = workerpoolOnProcessing;
+    } else {
+      namida.warn(
+        this.toString(),
+        'not viable to be executed via workerpool, might slow down system significantly'
+      );
+    }
+  }
+
+  async isWorkerpoolViable(workerPool) {
+    try {
+      await workerPool.exec(this.onProcessing, [1, this.ioProxy, {}, this.state]);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   /* execution control end */
@@ -224,7 +263,7 @@ class ProcessingModule extends EventEmitter {
     this.onDestroyed = callback;
   }
 
-  onCreated() {}
+  onCreated() { }
 
   /**
    * Lifecycle function to be called when module is supposed to process data.
@@ -250,9 +289,9 @@ class ProcessingModule extends EventEmitter {
     return undefined;
   }
 
-  onHalted() {}
+  onHalted() { }
 
-  onDestroyed() {}
+  onDestroyed() { }
 
   /* lifecycle functions end */
 
@@ -356,8 +395,8 @@ class ProcessingModule extends EventEmitter {
       namida.error(
         this.toString(),
         'the internal I/O naming "' +
-          internalName +
-          '" should not be used as it conflicts with internal properties'
+        internalName +
+        '" should not be used as it conflicts with internal properties'
       );
       return false;
     }
@@ -366,8 +405,8 @@ class ProcessingModule extends EventEmitter {
       namida.error(
         this.toString(),
         'the internal I/O naming "' +
-          internalName +
-          '" is already defined (overwrite not specified)'
+        internalName +
+        '" is already defined (overwrite not specified)'
       );
       return false;
     }
@@ -391,10 +430,6 @@ class ProcessingModule extends EventEmitter {
     this.ioProxy[name] = value;
   }
 
-  /* I/O functions end */
-
-  /* helper functions */
-
   getIOMessageFormat(name) {
     let ios = [...this.inputs, ...this.outputs];
     let io = ios.find((io) => {
@@ -403,6 +438,10 @@ class ProcessingModule extends EventEmitter {
 
     return io.messageFormat;
   }
+
+  /* I/O functions end */
+
+  /* helper functions */
 
   toString() {
     return 'ProcessingModule ' + this.name + ' (ID ' + this.id + ')';
