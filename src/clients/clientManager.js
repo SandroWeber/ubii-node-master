@@ -114,9 +114,10 @@ class ClientManager {
     // Check if a client with the specified id is already registered...
     if (spec.id && this.hasClient(spec.id)) {
       // ... if so, check the state of the registered client if reregistering is possible.
-      if (this.getClient(spec.id).getState() === CLIENT_STATE.active) {
+      let client = this.getClient(spec.id);
+      if (client.getState() === CLIENT_STATE.active) {
         // => Re-registering is NOT an option: Reject the registration.
-        let errorMessage = 'Client with ID ' + spec.id + ' is already registered and active';
+        let errorMessage = client.toString() + ' is already registered and active';
 
         // Ouput the feedback on the server console.
         namida.logFailure('ClientManager', errorMessage);
