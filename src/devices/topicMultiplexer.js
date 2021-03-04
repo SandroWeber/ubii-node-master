@@ -45,9 +45,10 @@ class TopicMultiplexer {
     this.topicList.forEach((topic) => {
       let entry = this.topicData.pull(topic);
       if (entry && entry.type === this.dataType && entry.data !== undefined) {
-        let record = { topic: topic, data: entry.data };
+        let record = { topic: topic };
         record.type = entry.type;
         record[entry.type] = record.data;
+        record.timestamp = entry.timestamp;
 
         if (this.identityMatchRegExp) {
           let matches = topic.match(this.identityMatchRegExp);
