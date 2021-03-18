@@ -30,13 +30,14 @@ install from https://cmake.org/download/
 
 ### install dependencies
 
+Open a non-admin shell for the ubii-node-master folder, then run
 ```
 npm install
 ```
 
 ### run with default config
 
-Create a copy of "config.json.template" called "config.json" and adjust settings to your needs (or keep as is). Then run:
+Create a copy of "config.json.template" called "config.json" and adjust settings to your needs (or keep as is). If you're not using web interfaces to connect to master node you probably want to set https->enabled to "false". Then run:
 
 ```
 npm start
