@@ -1,5 +1,6 @@
-const { CLIENT_STATE, Client } = require('./client.js');
+const { Client } = require('./client.js');
 const namida = require('@tum-far/namida');
+const { proto } = require('@tum-far/ubii-msg-formats');
 
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();
@@ -114,7 +115,7 @@ class ClientManager {
     // Check if a client with the specified id is already registered...
     if (spec.id && this.hasClient(spec.id)) {
       // ... if so, check the state of the registered client if reregistering is possible.
-      if (this.getClient(spec.id).getState() === CLIENT_STATE.active) {
+      if (this.getClient(spec.id).state === proto.ubii.clients.Client.State.ACTIVE) {
         // => Re-registering is NOT an option: Reject the registration.
         let errorMessage = 'Client with ID ' + spec.id + ' is already registered and active';
 
@@ -161,7 +162,7 @@ class ClientManager {
     this.clients.forEach((client) => {
       if (
         client.isDedicatedProcessingNode &&
-        client.getState() === CLIENT_STATE.active &&
+        client.getState() === proto.ubii.clients.Client.State.ACTIVE &&
         client.processingModules.some((pm) => (pm.name === pmSpec.name))
       ) {
         nodeIDs.push(client.id);

@@ -1,22 +1,13 @@
 const {
   TIME_UNTIL_PING,
-  TIME_UNTIL_STANDBY,
   TIME_UNTIL_INACTIVE,
-  TIME_UNTIL_DISCONNECT,
+  TIME_UNTIL_UNAVAILABLE,
   SIGN_OF_LIFE_DELTA_TIME
 } = require('./constants');
 const namida = require('@tum-far/namida');
 const uuidv4 = require('uuid/v4');
 const { TOPIC_EVENTS } = require('@tum-far/ubii-topic-data');
-
-let CLIENT_STATE = Object.freeze({
-  active: 'active',
-  standby: 'standby',
-  inactive: 'inactive',
-  disconnected: 'disconnected'
-});
-
-const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 
 class Client {
   constructor(specs = {}, server, topicData) {
@@ -29,7 +20,7 @@ class Client {
     this.server = server;
     this.topicData = topicData;
 
-    this.state = CLIENT_STATE.active;
+    this.state = proto.ubii.clients.Client.State.ACTIVE;
     this.registrationDate = new Date();
     this.lastSignOfLife = null;
     this.topicSubscriptionTokens = new Map();
@@ -41,19 +32,12 @@ class Client {
   }
 
   /**
-   * Get the current state.
-   */
-  getState() {
-    return this.state;
-  }
-
-  /**
    * Set the current state.
    */
   setState(state) {
-    if (state === CLIENT_STATE.active) {
+    if (state === proto.ubii.clients.Client.State.ACTIVE) {
       this.startLifeMonitoring();
-    } else if (state === CLIENT_STATE.inactive) {
+    } else if (state === proto.ubii.clients.Client.State.INACTIVE) {
       this.stopLifeMonitoring();
     }
   }
@@ -131,75 +115,35 @@ class Client {
       let difference = now - this.lastSignOfLife;
 
       // Determine the current state. If the state changes, ouput the feedback on the server console.
-      if (difference > TIME_UNTIL_DISCONNECT) {
+      if (difference > TIME_UNTIL_UNAVAILABLE) {
         // The client has probably disconnected unexpectedly and should be removed.
-        if (this.state !== CLIENT_STATE.disconnected) {
+        if (this.state !== proto.ubii.clients.Client.State.UNAVAILABLE) {
           namida.log(
             `Client State has changed`,
-            `Client with ID ${this.id} is not available and is now in a disconnected state.`
+            `Client with ID ${this.id} is not available and is now in state "unavailable".`
           );
         }
-        this.state = CLIENT_STATE.disconnected;
+        this.state = proto.ubii.clients.Client.State.UNAVAILABLE;
         this.deactivate();
       } else if (difference > TIME_UNTIL_INACTIVE) {
         // The client has the state inactive.
-        /*if (this.state !== CLIENT_STATE.inactive) {
+        /*if (this.state !== proto.ubii.clients.Client.State.INACTIVE) {
           namida.log(
             `Client State has changed`,
             `Client with id ${this.id} is not available and is now in an inactive state.`
           );
         }*/
-        this.state = CLIENT_STATE.inactive;
-      } else if (difference > TIME_UNTIL_STANDBY) {
-        // The client has the state standby.
-        /*if (this.state !== CLIENT_STATE.standby) {
-          namida.log(
-            `Client State has changed`,
-            `Client with id ${this.id} is not available and is now in an standby state.`
-          );
-        }*/
-        this.state = CLIENT_STATE.standby;
+        this.state = proto.ubii.clients.Client.State.INACTIVE;
       } else {
         // The client has the state active.
-        /*if (this.state !== CLIENT_STATE.active) {
+        /*if (this.state !== proto.ubii.clients.Client.State.ACTIVE) {
           namida.log(
             `Client State has changed`,
             `Client with id ${this.id} is available again and is now in an active state.`
           );
         }*/
-        this.state = CLIENT_STATE.active;
+        this.state = proto.ubii.clients.Client.State.ACTIVE;
       }
-
-      /*if (difference > TIME_UNTIL_STANDBY) {
-        if (difference > TIME_UNTIL_INACTIVE) {
-          // The client has the state inactive.
-          if (this.state !== clientStateEnum.inactive) {
-            namida.log(
-              `Client State has changed`,
-              `Client with id ${this.id} is not available and is now in an inactive state.`
-            );
-          }
-          this.state = clientStateEnum.inactive;
-        } else {
-          // The client has the state standby.
-          if (this.state !== clientStateEnum.standby) {
-            namida.log(
-              `Client State has changed`,
-              `Client with id ${this.id} is not available and is now in an standby state.`
-            );
-          }
-          this.state = clientStateEnum.standby;
-        }
-      } else {
-        // The client has the state active.
-        if (this.state !== clientStateEnum.active) {
-          namida.log(
-            `Client State has changed`,
-            `Client with id ${this.id} is available again and is now in an active state.`
-          );
-        }
-        this.state = clientStateEnum.active;
-      }*/
 
       // Should we ping the remote?
       if (difference > TIME_UNTIL_PING) {
@@ -461,7 +405,8 @@ class Client {
       processingModules: this.processingModules,
       isDedicatedProcessingNode: this.isDedicatedProcessingNode,
       hostIp: this.hostIp,
-      metadataJson: this.metadataJson
+      metadataJson: this.metadataJson,
+      state: this.state
     };
   }
 
@@ -471,6 +416,5 @@ class Client {
 }
 
 module.exports = {
-  Client: Client,
-  CLIENT_STATE: CLIENT_STATE
+  Client: Client
 };
