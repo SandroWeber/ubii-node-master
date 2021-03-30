@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Storage, FileHandler, StorageEntry } = require('./storage.js');
@@ -10,10 +11,17 @@ class SessionDatabase extends Storage {
       // read
       (filepath) => {
         let file = fs.readFileSync(filepath);
-        let proto = JSON.parse(file);
-        let entry = new StorageEntry(proto.name, filepath);
-        entry.protobuf = proto;
-        return entry;
+        let protobuf = JSON.parse(file);
+        let entry = new StorageEntry(protobuf.name, protobuf);
+        entry.protobuf = protobuf;
+        entry.createInstance = () => {
+          return new ProcessingModule(protobuf);
+        };
+    
+        return {
+          key: protobuf.name,
+          value: entry
+        };
       },
       // write
       (filepath, protoSpecs) => {
