@@ -47,7 +47,7 @@ class SessionStartService extends Service {
     // check session database for existing session by ID
     if (SessionDatabase.has(sessionSpecs)) {
       try {
-        let specs = SessionDatabase.get(sessionSpecs.name);
+        let specs = SessionDatabase.getByName(sessionSpecs.name).fileData;
         let session = this.sessionManager.createSession(specs);
         this.sessionManager.startSessionByID(session.id);
 

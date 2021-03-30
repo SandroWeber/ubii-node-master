@@ -47,7 +47,7 @@ class TopicMultiplexer {
       if (entry && entry.type === this.dataType && entry.data !== undefined) {
         let record = { topic: topic };
         record.type = entry.type;
-        record[entry.type] = record.data;
+        record[entry.type] = entry.data;
         record.timestamp = entry.timestamp;
 
         if (this.identityMatchRegExp) {
