@@ -17,6 +17,7 @@ class ClientDeregistrationService extends Service {
 
   reply(message) {
     // Process the registration of the sepcified client at the client manager
+    let clientString = this.clientManager.getClient(message.id).toString();
     try {
       this.deviceManager.removeClientDevices(message.id);
       this.clientManager.removeClient(message.id);
@@ -33,12 +34,13 @@ class ClientDeregistrationService extends Service {
 
     namida.logSuccess(
       'ClientDeregistrationService SUCCESS',
-      'Client with ID ' + message.id + ' was successfully removed'
+      clientString + ' successfully unregistered'
     );
+
     return {
       success: {
         title: 'ClientDeregistrationService SUCCESS',
-        message: 'Client with ID ' + message.id + ' was successfully removed'
+        message: clientString + ' was successfully unregistered'
       }
     };
   }
