@@ -41,7 +41,7 @@
     "@tum-far/ubii-topic-data": "0.3.9",
     "body-parser": "1.18.3",
     "express": "4.16.4",
-    "printf": "0.5.1",
+    "printf": "0.6.1",
     "shelljs": "0.8.4",
     "uuid": "3.3.2",
     "workerpool": "6.0.3",
