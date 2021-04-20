@@ -33,54 +33,6 @@ class Participant extends Device {
     }
 
     /**
-     * Subscribe to a topic at the topicData
-     * @param {String} topic 
-     */
-    /*subscribe(topic) {
-        if (this.subscriptionTokens.has(topic)) {
-            namida.logFailure(`Topic Data subscription rejected`,
-                `Device (Participant) with id ${this.identifier} is already subscribed to this topic.`);
-            return;
-        }
-
-        // subscribe
-        let token = this.topicData.subscribe(topic, (topic, data) => {
-            let payload = {
-                deviceIdentifier: 'masterNode',
-                topicDataRecord:{
-                    topic: topic
-                }
-            };
-            payload.topicDataRecord[data.type] = data.value;
-
-            let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
-
-            this.sendMessageToRemote(buffer);
-        });
-
-        // save token
-        this.subscriptionTokens.set(topic, token);
-    }*/
-
-    /**
-     * Unsubscribes from a topic at the topicData.
-     * @param {String} topic 
-     */
-    /*unsubscribe(topic) {
-        if(this.subscriptionTokens.has(topic)){
-            namida.logFailure(`Topic Data unsubscription rejected`,
-                `Device (Particpiant) with id ${this.identifier} is not subscribed to this topic.`);
-            return;
-        }
-
-        // get token
-        let token = this.subscriptionTokens.get(topic);
-
-        // unsubscribe
-        this.topicData.unsubscribe(token);
-    }*/
-
-    /**
      * Deactivate the client: clear all intervalls, unsubsribe from all topics, ...
      * You should call this method before clearing all references to a client.
      */

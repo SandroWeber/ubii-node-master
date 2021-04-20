@@ -17,6 +17,9 @@ class Device {
     this.name = name;
     this.deviceType = deviceType;
     this.components = components;
+    this.components.forEach(component => {
+      component.id = uuidv4();
+    });
     this.clientId = clientId;
 
     this.client = client;

@@ -9,7 +9,6 @@ const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
 const ProcessingModuleManager = require('../processing/processingModuleManager');
-const { has } = require('../storage/sessionDatabase.js');
 
 class MasterNode {
   constructor() {
