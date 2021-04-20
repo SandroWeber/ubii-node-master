@@ -18,8 +18,7 @@ class ClientDeregistrationService extends Service {
   reply(message) {
     let client = this.clientManager.getClient(message.id);
     let clientString = client.toString();
-    // Process the registration of the sepcified client at the client manager
-    let clientString = this.clientManager.getClient(message.id).toString();
+    
     try {
       this.deviceManager.removeClientDevices(client.id);
       this.clientManager.removeClient(client.id);
