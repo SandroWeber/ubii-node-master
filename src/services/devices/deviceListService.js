@@ -1,9 +1,9 @@
 const { Service } = require('../service.js');
 
-const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const { DEFAULT_TOPICS, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 
 class DeviceListService extends Service {
-  constructor(deviceManager) {
+  constructor(deviceManager, clientManager) {
     super(
       DEFAULT_TOPICS.SERVICES.DEVICE_GET_LIST,
       undefined,
@@ -11,10 +11,13 @@ class DeviceListService extends Service {
     );
 
     this.deviceManager = deviceManager;
+    this.clientManager = clientManager;
   }
 
   reply() {
-    let devices = this.deviceManager.getAllParticipants().map((device) => device.toProtobuf());
+    let devices = this.deviceManager.getAllParticipants()
+      .filter(device => this.clientManager.getClient(device.clientId).state !== proto.ubii.clients.Client.State.UNAVAILABLE)
+      .map((device) => device.toProtobuf());
 
     return { deviceList: { elements: devices } };
   }

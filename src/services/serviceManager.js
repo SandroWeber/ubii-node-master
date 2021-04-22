@@ -54,7 +54,7 @@ class ServiceManager {
     /* add device services */
     this.addService(new DeviceRegistrationService(this.deviceManager));
     this.addService(new DeviceDeregistrationService(this.deviceManager));
-    this.addService(new DeviceListService(this.deviceManager));
+    this.addService(new DeviceListService(this.deviceManager, this.clientManager));
     /* add processing module services */
     this.addService(ProcessingModuleGetService);
     this.addService(
