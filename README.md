@@ -18,6 +18,13 @@ npm install --vs2015 -g windows-build-tools
 
 in case of errors, also see: https://www.npmjs.com/package/zeromq
 
+### macOS pre-requisists
+
+#### X-code command line tools
+https://developer.apple.com/download/more/
+
+### Windows & macOS pre-requisists
+
 #### CMake
 
 install from https://cmake.org/download/
