@@ -29,7 +29,7 @@ https://developer.apple.com/download/more/
 
 install from https://cmake.org/download/
 
-### install dependencies
+### NPM dependencies
 
 Open a non-admin shell for the ubii-node-master folder, then run
 ```
