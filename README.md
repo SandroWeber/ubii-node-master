@@ -13,16 +13,10 @@ Install Node.js v14.15.X (https://nodejs.org/en/download/).
 from admin shell:
 
 ```
-npm install -g windows-build-tools
-```
-
-if it complains about not being able to find v140 of build tools, try
-
-```
 npm install --vs2015 -g windows-build-tools
 ```
 
-also see: https://www.npmjs.com/package/zeromq
+in case of errors, also see: https://www.npmjs.com/package/zeromq
 
 #### CMake
 
