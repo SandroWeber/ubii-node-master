@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.js",
   "license": "",
-  "repository": "https://gitlab.lrz.de/IN-FAR/Ubi-Interact/ubii-nodejs-backend",
+  "repository": "https://github.com/SandroWeber/ubii-node-master",
   "contributors": [
     {
       "name": "Sandro Weber",
