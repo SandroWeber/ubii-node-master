@@ -13,29 +13,30 @@ Install Node.js v14.15.X (https://nodejs.org/en/download/).
 from admin shell:
 
 ```
-npm install -g windows-build-tools
-```
-
-if it complains about not being able to find v140 of build tools, try
-
-```
 npm install --vs2015 -g windows-build-tools
 ```
 
-also see: https://www.npmjs.com/package/zeromq
+in case of errors, also see: https://www.npmjs.com/package/zeromq
+
+### macOS pre-requisists
+
+#### X-code command line tools
+https://developer.apple.com/download/more/
+
+### Windows & macOS pre-requisists
 
 #### CMake
 
 install from https://cmake.org/download/
 
-### install dependencies
+### NPM dependencies
 
 Open a non-admin shell for the ubii-node-master folder, then run
 ```
 npm install
 ```
 
-### run with default config
+### Run with default config
 
 Create a copy of "config.json.template" called "config.json" and adjust settings to your needs (or keep as is). If you're not using web interfaces to connect to master node you probably want to set https->enabled to "false". Then run:
 
