@@ -1,4 +1,4 @@
-const uuidv4 = require('uuid/v4');
+const { v4: uuidv4 } = require('uuid');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');

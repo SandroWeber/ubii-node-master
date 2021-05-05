@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const uuidv4 = require('uuid/v4');
+const { v4: uuidv4 } = require('uuid');
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const ExternalLibrariesService = require('../processing/externalLibrariesService');

@@ -21,7 +21,7 @@ class ProcessingModuleManager extends EventEmitter {
 
     this.processingModules = new Map();
     this.ioMappings = new Map();
-    this.inputTriggerSubscriptions = new Map();
+    this.pmTopicSubscriptions = new Map();
 
     //TODO: optimize for use without real TopicData, avoiding write/read cycles for each lockstep request/reply
     this.lockstepTopicData = new RuntimeTopicData();
@@ -35,28 +35,30 @@ class ProcessingModuleManager extends EventEmitter {
     this.workerPool = workerpool.pool();
   }
 
-  createModule(spec) {
-    if (spec.id && this.processingModules.has(spec.id)) {
+  createModule(specs) {
+    if (specs.id && this.processingModules.has(specs.id)) {
       namida.logFailure(
         'ProcessingModuleManager',
-        "can't create module " + spec.name + ', ID already exists: ' + spec.id
+        "can't create module " + specs.name + ', ID already exists: ' + specs.id
       );
     }
 
     let pm = undefined;
-    if (ProcessingModuleStorage.hasEntry(spec.name)) {
-      pm = ProcessingModuleStorage.createInstanceByName(spec.name);
-      if (spec.id) pm.id = spec.id;
+    if (ProcessingModuleStorage.hasEntry(specs.name)) {
+      pm = ProcessingModuleStorage.createInstance(specs);
+      //TODO: make ID and sessionID / whole specs part of the instace creation call parameters for storage
+      //if (specs.id) pm.id = specs.id;
+      //if (specs.sessionId) pm.sessionId = specs.sessionId;
     } else {
-      // create new module based on spec
-      if (!spec.onProcessingStringified) {
+      // create new module based on specs
+      if (!specs.onProcessingStringified) {
         namida.logFailure(
           'ProcessingModuleManager',
-          'can\'t create PM "' + spec.name + '" based on spec, missing onProcessing definition.'
+          'can\'t create PM "' + specs.name + '" based on specs, missing onProcessing definition.'
         );
         return undefined;
       }
-      pm = new ProcessingModule(spec);
+      pm = new ProcessingModule(specs);
     }
     pm.nodeId = this.nodeID;
 
@@ -84,10 +86,7 @@ class ProcessingModuleManager extends EventEmitter {
 
   addModule(pm) {
     if (!pm.id) {
-      namida.logFailure(
-        'ProcessingModuleManager',
-        'module ' + pm.name + " does not have an ID, can't add"
-      );
+      namida.logFailure('ProcessingModuleManager', 'module ' + pm.name + " does not have an ID, can't add");
       return false;
     }
     this.processingModules.set(pm.id, pm);
@@ -96,19 +95,16 @@ class ProcessingModuleManager extends EventEmitter {
 
   removeModule(pm) {
     if (!pm.id) {
-      namida.logFailure(
-        'ProcessingModuleManager',
-        'module ' + pm.name + " does not have an ID, can't remove"
-      );
+      namida.logFailure('ProcessingModuleManager', 'module ' + pm.name + " does not have an ID, can't remove");
       return false;
     }
 
-    if (this.inputTriggerSubscriptions.has(pm.id)) {
-      let subscriptionTokens = this.inputTriggerSubscriptions.get(pm.id);
+    if (this.pmTopicSubscriptions.has(pm.id)) {
+      let subscriptionTokens = this.pmTopicSubscriptions.get(pm.id);
       subscriptionTokens.forEach((token) => {
         this.topicData.unsubscribe(token);
       });
-      this.inputTriggerSubscriptions.delete(pm.id);
+      this.pmTopicSubscriptions.delete(pm.id);
     }
 
     this.processingModules.delete(pm.id);
@@ -160,6 +156,39 @@ class ProcessingModuleManager extends EventEmitter {
       .filter((pm) => pm.status === status);
   }
 
+  /* running modules */
+
+  startModule(pmSpec) {
+    let pm = this.processingModules.get(pmSpec.id);
+    pm && pm.start();
+  }
+
+  stopModule(pmSpec) {
+    let pm = this.processingModules.get(pmSpec.id);
+    pm && pm.stop();
+    let subs = this.pmTopicSubscriptions.get(pmSpec.id);
+    subs &&
+      subs.forEach((token) => {
+        this.topicData.unsubscribe(token);
+      });
+  }
+
+  startSessionModules(session) {
+    this.processingModuleManager.processingModules.forEach((pm) => {
+      if (pm.sessionId === session.id) {
+        pm.start();
+      }
+    });
+  }
+  
+  stopSessionModules(session) {
+    this.processingModuleManager.processingModules.forEach((pm) => {
+      if (pm.sessionId === session.id) {
+        pm.stop();
+      }
+    });
+  }
+
   /* I/O <-> topic mapping functions */
 
   applyIOMappings(ioMappings, sessionID) {
@@ -169,20 +198,22 @@ class ProcessingModuleManager extends EventEmitter {
     );
 
     //TODO: refactor into something more readable
+    console.info('\napplicableIOMappings');
+    console.info(applicableIOMappings);
+
     applicableIOMappings.forEach((mapping) => {
       this.ioMappings.set(mapping.processingModuleId, mapping);
       let processingModule =
-        this.getModuleByID(mapping.processingModuleId) ||
-        this.getModuleByName(mapping.processingModuleName, sessionID);
+      this.getModuleByID(mapping.processingModuleId) || this.getModuleByName(mapping.processingModuleName, sessionID);
       if (!processingModule) {
         namida.logFailure(
           'ProcessingModuleManager',
           "can't find processing module for I/O mapping, given: ID = " +
-          mapping.processingModuleId +
-          ', name = ' +
-          mapping.processingModuleName +
-          ', session ID = ' +
-          sessionID
+            mapping.processingModuleId +
+            ', name = ' +
+            mapping.processingModuleName +
+            ', session ID = ' +
+            sessionID
         );
         return;
       }
@@ -195,11 +226,7 @@ class ProcessingModuleManager extends EventEmitter {
           if (!this.isValidIOMapping(processingModule, inputMapping)) {
             namida.logFailure(
               'ProcessingModuleManager',
-              'IO-Mapping for module ' +
-              processingModule.name +
-              '->' +
-              inputMapping.inputName +
-              ' is invalid'
+              'IO-Mapping for module ' + processingModule.name + '->' + inputMapping.inputName + ' is invalid'
             );
             return;
           }
@@ -219,18 +246,22 @@ class ProcessingModuleManager extends EventEmitter {
               return entry && entry.data;
             });
 
-            // if PM is triggered on input, notify PM for new input
-            //TODO: needs to be done for topic muxer too? does it make sense for accumulated topics to trigger processing?
-            // use-case seems not to match but leaving opportunity open could be nice
-            if (processingModule.processingMode && processingModule.processingMode.triggerOnInput) {
-              let subscriptionToken = this.topicData.subscribe(topicSource, () => {
-                processingModule.emit(ProcessingModule.EVENTS.NEW_INPUT, inputMapping.inputName);
-              });
-
-              if (!this.inputTriggerSubscriptions.has(processingModule.id)) {
-                this.inputTriggerSubscriptions.set(processingModule.id, []);
+            if (!isLockstep) {
+              let callback = () => {};
+              // if PM is triggered on input, notify PM for new input
+              //TODO: needs to be done for topic muxer too? does it make sense for accumulated topics to trigger processing?
+              // use-case seems not to match but leaving opportunity open could be nice
+              if (processingModule.processingMode && processingModule.processingMode.triggerOnInput) {
+                callback = () => {
+                  processingModule.emit(ProcessingModule.EVENTS.NEW_INPUT, inputMapping.inputName);
+                };
               }
-              this.inputTriggerSubscriptions.get(processingModule.id).push(subscriptionToken);
+
+              let subscriptionToken = this.topicData.subscribe(topicSource, callback);
+              if (!this.pmTopicSubscriptions.has(processingModule.id)) {
+                this.pmTopicSubscriptions.set(processingModule.id, []);
+              }
+              this.pmTopicSubscriptions.get(processingModule.id).push(subscriptionToken);
             }
           }
           // topic muxer input
@@ -241,10 +272,7 @@ class ProcessingModuleManager extends EventEmitter {
               multiplexer = this.deviceManager.getTopicMux(topicSource.id);
             } else {
               let topicDataBuffer = isLockstep ? this.lockstepTopicData : this.topicData;
-              multiplexer = this.deviceManager.createTopicMuxerBySpecs(
-                topicSource,
-                topicDataBuffer
-              );
+              multiplexer = this.deviceManager.createTopicMuxerBySpecs(topicSource, topicDataBuffer);
             }
             processingModule.setInputGetter(inputMapping.inputName, () => {
               return multiplexer.get();
@@ -257,11 +285,7 @@ class ProcessingModuleManager extends EventEmitter {
           if (!this.isValidIOMapping(processingModule, outputMapping)) {
             namida.logFailure(
               'ProcessingModuleManager',
-              'IO-Mapping for module ' +
-              processingModule.toString() +
-              '->' +
-              outputMapping.outputName +
-              ' is invalid'
+              'IO-Mapping for module ' + processingModule.toString() + '->' + outputMapping.outputName + ' is invalid'
             );
             return;
           }
@@ -302,10 +326,7 @@ class ProcessingModuleManager extends EventEmitter {
               demultiplexer = this.deviceManager.getTopicDemux(topicDestination.id);
             } else {
               let topicDataBuffer = isLockstep ? this.lockstepTopicData : this.topicData;
-              demultiplexer = this.deviceManager.createTopicDemuxerBySpecs(
-                topicDestination,
-                topicDataBuffer
-              );
+              demultiplexer = this.deviceManager.createTopicDemuxerBySpecs(topicDestination, topicDataBuffer);
             }
             processingModule.setOutputSetter(outputMapping.outputName, (value) => {
               demultiplexer.push(value);
@@ -317,13 +338,9 @@ class ProcessingModuleManager extends EventEmitter {
 
   isValidIOMapping(processingModule, ioMapping) {
     if (ioMapping.inputName) {
-      return processingModule.inputs.some(
-        (element) => element.internalName === ioMapping.inputName
-      );
+      return processingModule.inputs.some((element) => element.internalName === ioMapping.inputName);
     } else if (ioMapping.outputName) {
-      return processingModule.outputs.some(
-        (element) => element.internalName === ioMapping.outputName
-      );
+      return processingModule.outputs.some((element) => element.internalName === ioMapping.outputName);
     }
 
     return false;
@@ -350,9 +367,7 @@ class ProcessingModuleManager extends EventEmitter {
         // lockstep pass calls to PMs
         let lockstepPasses = [];
         request.processingModuleIds.forEach((id) => {
-          lockstepPasses.push(
-            this.processingModules.get(id).onProcessingLockstepPass(request.deltaTimeMs)
-          );
+          lockstepPasses.push(this.processingModules.get(id).onProcessingLockstepPass(request.deltaTimeMs));
         });
 
         Promise.all(lockstepPasses).then(() => {
@@ -374,8 +389,7 @@ class ProcessingModuleManager extends EventEmitter {
         let outputMapping = this.ioMappings
           .get(id)
           .outputMappings.find((mapping) => mapping.outputName === pmOutput.internalName);
-        let destination =
-          outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
+        let destination = outputMapping[outputMapping.topicDestination] || outputMapping.topicDestination;
 
         // single topic
         let topicdataEntry = this.lockstepTopicData.pull(destination);

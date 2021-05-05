@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
-const uuidv4 = require('uuid/v4');
-const { proto } = require('@tum-far/ubii-msg-formats');
+const { v4: uuidv4 } = require('uuid');
+const { proto, ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const ProcessingModuleProto = proto.ubii.processing.ProcessingModule;
 const namida = require('@tum-far/namida');
 
@@ -25,12 +25,10 @@ class ProcessingModule extends EventEmitter {
       namida.error(
         'ProcessingModule ' + this.toString(),
         'trying to create module under javascript, but specification says ' +
-        ProcessingModuleProto.Language[this.language]
+          ProcessingModuleProto.Language[this.language]
       );
       throw new Error(
-        'Incompatible language specifications (javascript vs. ' +
-        ProcessingModuleProto.Language[this.language] +
-        ')'
+        'Incompatible language specifications (javascript vs. ' + ProcessingModuleProto.Language[this.language] + ')'
       );
     }
     // default processing mode
@@ -65,6 +63,8 @@ class ProcessingModule extends EventEmitter {
       },
       configurable: true
     });
+
+    this.translatorProtobuf = new ProtobufTranslator(MSG_TYPES.PM);
   }
 
   /* execution control */
@@ -159,8 +159,7 @@ class ProcessingModule extends EventEmitter {
     let checkProcessingNeeded = false;
     let checkProcessing = () => {
       let inputUpdatesFulfilled =
-        !allInputsNeedUpdate ||
-        this.inputs.every((element) => inputFlags.includes(element.internalName));
+        !allInputsNeedUpdate || this.inputs.every((element) => inputFlags.includes(element.internalName));
       let minDelayFulfilled = !minDelayMs || Date.now() - tLastProcess >= minDelayMs;
       if (inputUpdatesFulfilled && minDelayFulfilled) {
         processingPass();
@@ -263,7 +262,7 @@ class ProcessingModule extends EventEmitter {
     this.onDestroyed = callback;
   }
 
-  onCreated() { }
+  onCreated() {}
 
   /**
    * Lifecycle function to be called when module is supposed to process data.
@@ -289,9 +288,9 @@ class ProcessingModule extends EventEmitter {
     return undefined;
   }
 
-  onHalted() { }
+  onHalted() {}
 
-  onDestroyed() { }
+  onDestroyed() {}
 
   /* lifecycle functions end */
 
@@ -305,18 +304,12 @@ class ProcessingModule extends EventEmitter {
 
     // make sure getter is defined
     if (getter === undefined) {
-      namida.error(
-        this.toString(),
-        'trying to set input getter for ' + internalName + ' but getter is undefined'
-      );
+      namida.error(this.toString(), 'trying to set input getter for ' + internalName + ' but getter is undefined');
       return false;
     }
     // make sure getter is a function
     if (typeof getter !== 'function') {
-      namida.error(
-        this.toString(),
-        'trying to set input getter for ' + internalName + ' but getter is not a function'
-      );
+      namida.error(this.toString(), 'trying to set input getter for ' + internalName + ' but getter is not a function');
       return false;
     }
 
@@ -344,10 +337,7 @@ class ProcessingModule extends EventEmitter {
 
     // make sure setter is defined
     if (setter === undefined) {
-      namida.error(
-        this.toString(),
-        'trying to set output setter for ' + internalName + ' but setter is undefined'
-      );
+      namida.error(this.toString(), 'trying to set output setter for ' + internalName + ' but setter is undefined');
       return false;
     }
     // make sure setter is a function
@@ -394,9 +384,7 @@ class ProcessingModule extends EventEmitter {
     if (this.hasOwnProperty(internalName) && !this.ioProxy.hasOwnProperty(internalName)) {
       namida.error(
         this.toString(),
-        'the internal I/O naming "' +
-        internalName +
-        '" should not be used as it conflicts with internal properties'
+        'the internal I/O naming "' + internalName + '" should not be used as it conflicts with internal properties'
       );
       return false;
     }
@@ -404,18 +392,13 @@ class ProcessingModule extends EventEmitter {
     if (this.ioProxy.hasOwnProperty(internalName) && !overwrite) {
       namida.error(
         this.toString(),
-        'the internal I/O naming "' +
-        internalName +
-        '" is already defined (overwrite not specified)'
+        'the internal I/O naming "' + internalName + '" is already defined (overwrite not specified)'
       );
       return false;
     }
     // case: the internal name is empty
     if (internalName === '') {
-      namida.error(
-        this.toString(),
-        'the internal I/O naming "' + internalName + '" can\'t be used (empty)'
-      );
+      namida.error(this.toString(), 'the internal I/O naming "' + internalName + '" can\'t be used (empty)');
       return false;
     }
 
@@ -430,6 +413,10 @@ class ProcessingModule extends EventEmitter {
     this.ioProxy[name] = value;
   }
 
+  /* I/O functions end */
+
+  /* helper functions */
+
   getIOMessageFormat(name) {
     let ios = [...this.inputs, ...this.outputs];
     let io = ios.find((io) => {
@@ -439,33 +426,12 @@ class ProcessingModule extends EventEmitter {
     return io.messageFormat;
   }
 
-  /* I/O functions end */
-
-  /* helper functions */
-
   toString() {
     return 'ProcessingModule ' + this.name + ' (ID ' + this.id + ')';
   }
 
   toProtobuf() {
-    return {
-      id: this.id,
-      name: this.name,
-      authors: this.authors,
-      tags: this.tags,
-      description: this.description,
-      nodeId: this.nodeId,
-      sessionId: this.sessionId,
-      status: this.status,
-      processingMode: this.processingMode,
-      inputs: this.inputs,
-      outputs: this.outputs,
-      language: this.language,
-      onProcessingStringified: this.onProcessing.toString(),
-      onCreatedStringified: this.onCreated.toString(),
-      onHaltedStringified: this.onHalted.toString(),
-      onDestroyedStringified: this.onDestroyed.toString()
-    };
+    return this.translatorProtobuf.createMessageFromPayload(this);
   }
 
   /* helper functions end */
