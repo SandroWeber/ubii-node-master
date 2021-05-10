@@ -30,6 +30,7 @@ class RESTServer {
       'http://localhost:8080',
       'http://localhost:8081'
     ]);
+    this.allowedOrigins = this.allowedOrigins.map((string) => new RegExp(string));
 
     this.ready = false;
 
@@ -57,9 +58,12 @@ class RESTServer {
 
     // CORS
     this.app.use((req, res, next) => {
-      let validOrigin = this.allowedOrigins.find((element) => element === req.headers.origin);
-      res.header('Access-Control-Allow-Origin', validOrigin);
-      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      //let validOrigin = this.allowedOrigins.find((element) => element === req.headers.origin);
+      let validOrigin = this.allowedOrigins.some((allowed) => allowed.test(req.headers.origin));
+      if (validOrigin) {
+        res.header('Access-Control-Allow-Origin', req.headers.origin);
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      }
 
       next();
     });
