@@ -25,8 +25,9 @@ class PMFileHandlerProtobuf extends FileHandler {
     let file = fs.readFileSync(filepath);
     let protobuf = JSON.parse(file);
     let entry = new StorageEntry(filename, protobuf);
-    entry.createInstance = () => {
-      return new ProcessingModule(protobuf);
+    entry.createInstance = (spec) => {
+      let specification = spec ? spec : protobuf;
+      return new ProcessingModule(specification);
     };
 
     return {
@@ -64,8 +65,9 @@ class PMFileHandlerJS extends FileHandler {
     let protobuf = pm.toProtobuf();
     delete protobuf.id;
     let entry = new StorageEntry(filename, pmClass);
-    entry.createInstance = () => {
-      return new pmClass();
+    entry.createInstance = (spec) => {
+      let specification = spec ? spec : protobuf;
+      return new pmClass(specification);
     };
 
     return {
@@ -130,6 +132,15 @@ class ProcessingModuleStorage extends Storage {
   createInstanceByName(name) {
     let pm = this.getEntry(name).createInstance();
     return pm;
+  }
+
+  createInstance(spec) {
+    let pm = this.getEntry(spec.name).createInstance(spec);
+    return pm;
+  }
+
+  getAllSpecs() {
+    return this.getAllLocalEntries().map(entry => entry.fileData.specs);
   }
 }
 

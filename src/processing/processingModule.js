@@ -431,7 +431,7 @@ class ProcessingModule extends EventEmitter {
   }
 
   toProtobuf() {
-    return this.translatorProtobuf.createMessageFromPayload(this);
+    return this.translatorProtobuf.proto.fromObject(this);
   }
 
   /* helper functions end */

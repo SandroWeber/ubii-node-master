@@ -24,7 +24,7 @@ class SessionRuntimeGetListService extends Service {
       };
     } else {
       return {
-        sessionList: sessions
+        sessionList: sessions.map(session => session.toProtobuf())
       };
     }
   }

@@ -1,7 +1,7 @@
 const EventEmitter = require('events');
 
 const { v4: uuidv4 } = require('uuid');
-const { proto } = require('@tum-far/ubii-msg-formats');
+const { proto, ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
 const namida = require('@tum-far/namida');
 
@@ -40,6 +40,8 @@ class Session extends EventEmitter {
     this.initialize();
 
     this.status = SessionStatus.CREATED;
+
+    this.translatorProtobuf = new ProtobufTranslator(MSG_TYPES.SESSION);
   }
 
   initialize() {
@@ -274,14 +276,18 @@ class Session extends EventEmitter {
   }
 
   toProtobuf() {
+    //return this.translatorProtobuf.proto.fromObject(this);
+
     return {
       id: this.id,
       name: this.name,
-      authors: this.authors,
       tags: this.tags,
       description: this.description,
+      authors: this.authors,
+      status: this.status,
       processingModules: this.processingModules,
-      ioMappings: this.ioMappings
+      ioMappings: this.ioMappings,
+      editable: this.editable
     };
   }
 
