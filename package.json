@@ -38,6 +38,7 @@
     "@tum-far/namida": "0.1.1",
     "@tum-far/ubii-database": "0.1.1",
     "@tum-far/ubii-msg-formats": "0.15.12",
+    "@tum-far/ubii-node-nodejs": "0.1.1",
     "@tum-far/ubii-topic-data": "0.3.9",
     "body-parser": "1.18.3",
     "express": "4.16.4",
