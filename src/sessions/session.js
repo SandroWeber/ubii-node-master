@@ -1,11 +1,10 @@
 const EventEmitter = require('events');
-
 const { v4: uuidv4 } = require('uuid');
+
 const { proto, ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
 const namida = require('@tum-far/namida');
-
-const ProcessingModuleManager = require('../processing/processingModuleManager');
+const { ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
 
 const TIMEOUT_START_REMOTE_PMS = 10000;
 

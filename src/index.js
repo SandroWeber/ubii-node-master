@@ -1,3 +1,5 @@
+const { ProcessingModule, ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
+
 const { MasterNode } = require('./node/masterNode');
 
 const { Client } = require('./clients/client');
@@ -11,9 +13,6 @@ const { TopicDemultiplexer } = require('./devices/topicDemultiplexer');
 
 const { Session } = require('./sessions/session');
 const { SessionManager } = require('./sessions/sessionManager');
-
-const { ProcessingModule } = require('./processing/processingModule');
-const ProcessingModuleManager = require('./processing/processingModuleManager');
 
 const { ServiceManager } = require('./services/serviceManager');
 const { ClientRegistrationService } = require('./services/clients/clientRegistrationService');

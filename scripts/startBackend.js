@@ -1,10 +1,11 @@
+const { ExternalLibrariesService } = require('@tum-far/ubii-node-nodejs/src/index');
+
 const { MasterNode } = require('../src/index.js');
-const ExternalLibrariesService = require('../src/processing/externalLibrariesService');
 
 const fs = require('fs');
 
 (function () {
-  ExternalLibrariesService.addExternalLibrary('fs', fs);
+  ExternalLibrariesService.instance.addExternalLibrary('fs', fs);
 
   let master = new MasterNode();
 })();

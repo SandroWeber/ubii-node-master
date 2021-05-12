@@ -4,12 +4,10 @@ const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
 const { NetworkConnectionsManager, ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
 
-//const { NetworkConnectionsManager } = require('../network/networkConnectionsManager.js');
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
-//const ProcessingModuleManager = require('../processing/processingModuleManager');
 
 class MasterNode {
   constructor() {
