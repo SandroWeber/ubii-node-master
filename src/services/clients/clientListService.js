@@ -18,10 +18,12 @@ class ClientListService extends Service {
   reply() {
     let clientList = this.clientManager.getClientList();
     let response = {
-      elements: []
+      clientList: {
+        elements: []
+      }
     };
     clientList.forEach(client => {
-      response.elements.push(client.toProtobuf());
+      response.clientList.elements.push(client.toProtobuf());
     });
 
     return response;

@@ -23,7 +23,9 @@ class SessionDatabaseGetListService extends Service {
       };
     } else {
       return {
-        sessionList: sessions
+        sessionList: {
+          elements: sessions.map(session => session.toProtobuf())
+        } 
       };
     }
   }
