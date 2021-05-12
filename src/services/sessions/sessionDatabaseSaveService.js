@@ -53,9 +53,11 @@ class SessionDatabaseSaveService extends Service {
     });
 
     return {
-      sessionList: newSessions.map((session) => {
-        return session.toProtobuf();
-      })
+      sessionList: {
+        elements: newSessions.map(session => {
+          return session.toProtobuf();
+        })
+      }
     };
   }
 }
