@@ -21,6 +21,7 @@ class MasterNode {
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
 
+    // network connections manager
     this.connectionsManager = new NetworkConnectionsManager();
     this.connectionsManager.onServiceMessageREST((...params) =>
       this.onServiceMessageREST(...params)
@@ -38,11 +39,8 @@ class MasterNode {
     this.clientManager.setDependencies(this.connectionsManager, this.topicData);
 
     // Device Manager Component:
-    this.deviceManager = new DeviceManager(
-      this.clientManager,
-      this.topicData,
-      this.connectionsManager.connections.topicDataZMQ
-    );
+    this.deviceManager = DeviceManager.instance;
+    this.deviceManager.setTopicData(this.topicData);
 
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(
@@ -63,8 +61,6 @@ class MasterNode {
     // Service Manager Component:
     this.serviceManager = new ServiceManager(
       this.id,
-      this.clientManager,
-      this.deviceManager,
       this.sessionManager,
       this.connectionsManager,
       this.processingModuleManager,

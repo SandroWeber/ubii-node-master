@@ -1,3 +1,5 @@
+const namida = require('@tum-far/namida');
+
 const { ClientRegistrationService } = require('./clients/clientRegistrationService.js');
 const { ClientDeregistrationService } = require('./clients/clientDeregistrationService.js');
 const { ClientListService } = require('./clients/clientListService.js');
@@ -18,26 +20,27 @@ const { SessionRuntimeGetService } = require('./sessions/sessionRuntimeGetServic
 const { SessionDatabaseSaveService } = require('./sessions/sessionDatabaseSaveService.js');
 const { SessionStartService } = require('./sessions/sessionStartService');
 const { SessionStopService } = require('./sessions/sessionStopService');
-const namida = require('@tum-far/namida');
+
+const { ClientManager } = require('../clients/clientManager');
+const { DeviceManager } = require('../devices/deviceManager');
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 class ServiceManager {
   constructor(
     nodeID,
-    clientManager,
-    deviceManager,
     sessionManager,
     connectionsManager,
     processingModuleManager,
     topicData
   ) {
-    this.clientManager = clientManager;
-    this.deviceManager = deviceManager;
     this.sessionManager = sessionManager;
     this.connectionsManager = connectionsManager;
     this.processingModuleManager = processingModuleManager;
     this.topicData = topicData;
+
+    this.clientManager = ClientManager.instance;
+    this.deviceManager = DeviceManager.instance;
 
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
