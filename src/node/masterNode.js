@@ -53,9 +53,7 @@ class MasterNode {
     this.sessionManager = new SessionManager(
       this.id,
       this.topicData,
-      this.deviceManager,
-      this.processingModuleManager,
-      this.clientManager
+      this.processingModuleManager
     );
 
     // Service Manager Component:

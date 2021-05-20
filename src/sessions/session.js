@@ -6,6 +6,9 @@ const SessionStatus = proto.ubii.sessions.SessionStatus;
 const namida = require('@tum-far/namida');
 const { ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
 
+const { ClientManager } = require('../clients/clientManager');
+const { DeviceManager } = require('../devices/deviceManager');
+
 const TIMEOUT_START_REMOTE_PMS = 10000;
 
 class Session extends EventEmitter {
@@ -13,9 +16,7 @@ class Session extends EventEmitter {
     specs = {},
     masterNodeID,
     topicData,
-    deviceManager,
-    processingModuleManager,
-    clientManager
+    processingModuleManager
   ) {
     super();
 
@@ -28,9 +29,7 @@ class Session extends EventEmitter {
 
     this.masterNodeID = masterNodeID;
     this.topicData = topicData;
-    this.deviceManager = deviceManager;
     this.processingModuleManager = processingModuleManager;
-    this.clientManager = clientManager;
 
     this.lockstepPMs = new Map();
     this.localPMs = [];
@@ -50,7 +49,7 @@ class Session extends EventEmitter {
       // if PM isn't assigned to run on a particular node, assign one (preferably dedicated processing node)
       //TODO: check if dedicated processing nodes are available to run it (requires load balancing and communication)
       if (!pmSpec.nodeId) {
-        let processingNodeIDs = this.clientManager.getNodeIDsForProcessingModule(pmSpec);
+        let processingNodeIDs = ClientManager.instance.getNodeIDsForProcessingModule(pmSpec);
         if (processingNodeIDs.length > 0) {
           //TODO: some more sophisticated load assessment for each processing node
           // nodes reporting metrics on open resources
@@ -231,7 +230,7 @@ class Session extends EventEmitter {
             }
             // topic muxer input
             else if (typeof topicSource === 'object') {
-              let records = this.deviceManager.getTopicMux(topicSource.id).get();
+              let records = DeviceManager.instance.getTopicMux(topicSource.id).get();
               lockstepProcessingRequest.records.push(...records);
             }
           });
