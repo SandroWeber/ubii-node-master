@@ -35,35 +35,33 @@ class MasterNode {
     );
 
     // Client Manager Component:
-    this.clientManager = ClientManager.instance;
-    this.clientManager.setDependencies(this.connectionsManager, this.topicData);
+    ClientManager.instance.setDependencies(this.connectionsManager, this.topicData);
 
     // Device Manager Component:
-    this.deviceManager = DeviceManager.instance;
-    this.deviceManager.setTopicData(this.topicData);
+    DeviceManager.instance.setTopicData(this.topicData);
 
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(
       this.id,
-      this.deviceManager,
+      DeviceManager.instance,
       this.topicData
     );
 
     // Session manager component:
-    this.sessionManager = new SessionManager(
+    SessionManager.instance.setDependencies(
       this.id,
       this.topicData,
       this.processingModuleManager
     );
 
     // Service Manager Component:
-    this.serviceManager = new ServiceManager(
+    ServiceManager.instance.setDependencies(
       this.id,
-      this.sessionManager,
       this.connectionsManager,
       this.processingModuleManager,
       this.topicData
     );
+    ServiceManager.instance.addDefaultServices();
   }
 
   onServiceMessageZMQ(message) {
@@ -71,7 +69,7 @@ class MasterNode {
       // Decode buffer.
       let request = this.serviceRequestTranslator.createMessageFromBuffer(message);
       // Process request.
-      let reply = this.serviceManager.processRequest(request);
+      let reply = ServiceManager.instance.processRequest(request);
 
       // Return reply.
       return this.serviceReplyTranslator.createBufferFromPayload(reply);
@@ -107,7 +105,7 @@ class MasterNode {
       let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
 
       // Process request.
-      let reply = this.serviceManager.processRequest(requestMessage);
+      let reply = ServiceManager.instance.processRequest(requestMessage);
 
       // Return reply.
       // VARIANT A: PROTOBUF
@@ -139,12 +137,12 @@ class MasterNode {
 
   onTopicDataMessageZMQ(envelope, message) {
     let clientID = envelope.toString();
-    if (!this.clientManager.verifyClient(clientID)) {
+    if (!ClientManager.instance.verifyClient(clientID)) {
       console.error('Topic data received from unregistered client with ID ' + clientID);
       return;
     }
 
-    let client = this.clientManager.getClient(clientID);
+    let client = ClientManager.instance.getClient(clientID);
     client.updateLastSignOfLife();
 
     try {
@@ -185,12 +183,12 @@ class MasterNode {
   }
 
   onTopicDataMessageWS(clientID, message) {
-    if (!this.clientManager.verifyClient(clientID)) {
+    if (!ClientManager.instance.verifyClient(clientID)) {
       console.error('Topic data received from unregistered client with ID ' + clientID);
       return;
     }
 
-    let client = this.clientManager.getClient(clientID);
+    let client = ClientManager.instance.getClient(clientID);
     client.updateLastSignOfLife();
 
     try {
@@ -198,7 +196,7 @@ class MasterNode {
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
 
       // Process message.
-      //let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
+      //let clientID = DeviceManager.instance.getParticipant(topicDataMessage.deviceId).client.identifier;
 
       this.processTopicDataMessage(topicDataMessage, clientID);
     } catch (error) {
@@ -232,7 +230,7 @@ class MasterNode {
   }
 
   processTopicDataMessage(topicDataMessage, clientID) {
-    let client = this.clientManager.getClient(clientID);
+    let client = ClientManager.instance.getClient(clientID);
 
     let records = topicDataMessage.topicDataRecordList
       ? topicDataMessage.topicDataRecordList.elements

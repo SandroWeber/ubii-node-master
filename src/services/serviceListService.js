@@ -1,6 +1,6 @@
-const { Service } = require('./service.js');
-
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+
+const { Service } = require('./service.js');
 
 class ServiceListService extends Service {
   constructor(serviceManager) {
