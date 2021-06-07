@@ -4,7 +4,7 @@
 
 ### Node.js
 
-Install Node.js v14.15.X (https://nodejs.org/en/download/).
+Install Node.js LTS v14.X.X (https://nodejs.org/en/download/).
 Make sure to install the necessary additional tools with it if asked!
 
 <!--
