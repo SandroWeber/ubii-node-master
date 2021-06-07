@@ -7,7 +7,7 @@
 Install Node.js LTS v14.X.X (https://nodejs.org/en/download/).
 Make sure to install the necessary additional tools with it if asked!
 
-<!--
+
 ### Windows pre-requisists
 
 ##### windows build tools
@@ -19,12 +19,13 @@ npm install --vs2015 -g windows-build-tools
 ```
 
 in case of errors, also see: https://www.npmjs.com/package/zeromq
--->
+
 
 ### macOS pre-requisists
 
 ##### X-code command line tools
 https://developer.apple.com/download/more/
+
 
 ### Windows & macOS pre-requisists
 
@@ -32,6 +33,7 @@ https://developer.apple.com/download/more/
 install from https://cmake.org/download/
 
 <br />
+
 
 ## Installing and running Master Node
 
