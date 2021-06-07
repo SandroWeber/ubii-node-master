@@ -7,6 +7,7 @@
 Install Node.js v14.15.X (https://nodejs.org/en/download/).
 Make sure to install the necessary additional tools with it if asked!
 
+<!--
 ### Windows pre-requisists
 
 ##### windows build tools
@@ -18,6 +19,7 @@ npm install --vs2015 -g windows-build-tools
 ```
 
 in case of errors, also see: https://www.npmjs.com/package/zeromq
+-->
 
 ### macOS pre-requisists
 
