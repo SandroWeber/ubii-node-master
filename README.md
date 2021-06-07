@@ -28,6 +28,8 @@ https://developer.apple.com/download/more/
 ##### CMake
 install from https://cmake.org/download/
 
+<br />
+
 ## Installing and running Master Node
 
 From a **non-admin shell** inside the **ubii-node-master folder**:
