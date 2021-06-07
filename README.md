@@ -46,7 +46,7 @@ Create a copy of "config.json.template" called "config.json" and adjust settings
 npm start
 ```
 
-#### HTTPS setup
+### HTTPS setup
 
 ##### How to create your own HTTPS certification
 
@@ -76,7 +76,7 @@ Alternatives:
 - add IPs / URLs of allowed origins for CORS (usually the machine running your web frontend / other web clients) to your config.json
 - localhost and local IPs are automatically added, if you want web communication from outside you need to configure it manually
 
-##### Debugging
+### Debugging
 
 ##### NodeJS inspection
 - start the master node via "npm run start-profiling" (will run with additional command-line flags "--inspect")
