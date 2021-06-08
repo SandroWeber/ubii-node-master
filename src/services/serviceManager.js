@@ -99,13 +99,28 @@ class ServiceManager {
     if (!request.topic) {
       namida.logFailure(
         'ServiceManager',
-        'request missing topic! request:\n' + JSON.stringify(request)
+        'request is missing topic! request:\n' + JSON.stringify(request)
       );
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
           title: 'Service request error',
           message: 'Request does not contain a topic',
+          stack: JSON.stringify(request)
+        }
+      });
+    }
+
+    if (!this.services.has(request.topic)) {
+      namida.logFailure(
+        'ServiceManager',
+        'no service for topic "' + request.topic + '" registered! request:\n' + JSON.stringify(request)
+      );
+
+      return this.serviceReplyTranslator.createBufferFromPayload({
+        error: {
+          title: 'Service request error',
+          message: 'unknown topic: ' + request.topic,
           stack: JSON.stringify(request)
         }
       });
