@@ -15,7 +15,7 @@ class ProcessingModuleDatabaseGetService extends Service {
   }
 
   reply() {
-    let pmList = Array.from(this.processingModuleManager.processingModules.values());
+    let pmList = Array.from(this.processingModuleManager.processingModules.values()).map(pm => pm.toProtobuf());
     if (typeof pmList === 'undefined') {
       return {
         error: {
