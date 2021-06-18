@@ -14,7 +14,7 @@ class ProcessingModule extends EventEmitter {
     super();
 
     // take over specs
-    specs && Object.assign(this, JSON.parse(JSON.stringify(specs)));
+    specs && Object.assign(this, specs);
     // new instance is getting new ID
     this.id = this.id || uuidv4();
     this.inputs = this.inputs || [];
