@@ -281,7 +281,8 @@ class Session extends EventEmitter {
       tags: this.tags,
       description: this.description,
       processingModules: this.processingModules,
-      ioMappings: this.ioMappings
+      ioMappings: this.ioMappings,
+      status: this.status
     };
   }
 
