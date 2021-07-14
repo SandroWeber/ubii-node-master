@@ -71,12 +71,11 @@ class ProcessingModuleManager extends EventEmitter {
 
   async initializeModule(pm) {
     try {
-      pm.onCreated && await pm.onCreated(pm.state);
+      pm.onCreated && (await pm.onCreated(pm.state));
       await pm.setWorkerPool(this.workerPool);
 
       return true;
-    }
-    catch (error) {
+    } catch (error) {
       namida.logFailure(this.toString(), 'PM initialization error:\n' + error);
       return false;
     }
@@ -178,11 +177,11 @@ class ProcessingModuleManager extends EventEmitter {
         namida.logFailure(
           'ProcessingModuleManager',
           "can't find processing module for I/O mapping, given: ID = " +
-          mapping.processingModuleId +
-          ', name = ' +
-          mapping.processingModuleName +
-          ', session ID = ' +
-          sessionID
+            mapping.processingModuleId +
+            ', name = ' +
+            mapping.processingModuleName +
+            ', session ID = ' +
+            sessionID
         );
         return;
       }
@@ -196,10 +195,10 @@ class ProcessingModuleManager extends EventEmitter {
             namida.logFailure(
               'ProcessingModuleManager',
               'IO-Mapping for module ' +
-              processingModule.name +
-              '->' +
-              inputMapping.inputName +
-              ' is invalid'
+                processingModule.name +
+                '->' +
+                inputMapping.inputName +
+                ' is invalid'
             );
             return;
           }
@@ -216,7 +215,7 @@ class ProcessingModuleManager extends EventEmitter {
             // set accessor accordingly
             processingModule.setInputGetter(inputMapping.inputName, () => {
               let entry = topicDataBuffer.pull(topicSource);
-              return entry && entry.data;
+              return entry && entry[entry.type];
             });
 
             // if PM is triggered on input, notify PM for new input
@@ -258,10 +257,10 @@ class ProcessingModuleManager extends EventEmitter {
             namida.logFailure(
               'ProcessingModuleManager',
               'IO-Mapping for module ' +
-              processingModule.toString() +
-              '->' +
-              outputMapping.outputName +
-              ' is invalid'
+                processingModule.toString() +
+                '->' +
+                outputMapping.outputName +
+                ' is invalid'
             );
             return;
           }
@@ -278,7 +277,12 @@ class ProcessingModuleManager extends EventEmitter {
 
             let topicDataBuffer = isLockstep ? this.lockstepTopicData : this.topicData;
             processingModule.setOutputSetter(outputMapping.outputName, (value) => {
-              topicDataBuffer.publish(topicDestination, value, type);
+              let record = {
+                topic: topicDestination,
+                type: type
+              };
+              record[type] = value;
+              topicDataBuffer.publish(topicDestination, record);
             });
 
             /*// lockstep mode
