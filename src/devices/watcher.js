@@ -53,15 +53,11 @@ class Watcher extends Device {
     }
 
     // Subscribe to all.
-    let token = this.topicData.subscribeAll((topic, data) => {
+    let token = this.topicData.subscribeAll((record) => {
       let payload = {
         deviceIdentifier: 'masterNode',
-        topicDataRecord: {
-          topic: topic
-        }
+        topicDataRecord: record
       };
-      payload.topicDataRecord[data.type] = data.value;
-
       let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
 
       this.sendMessageToRemote(buffer);

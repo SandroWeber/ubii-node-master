@@ -7,6 +7,7 @@ const { DeviceRegistrationService } = require('./devices/deviceRegistrationServi
 const { DeviceDeregistrationService } = require('./devices/deviceDeregistrationService.js');
 const { DeviceListService } = require('./devices/deviceListService.js');
 const ProcessingModuleGetService = require('./processing/pmDatabaseGetService.js');
+const ProcessingModuleGetListService = require('./processing/pmDatabaseGetListService.js');
 const ProcessingModuleRuntimeAddService = require('./processing/pmRuntimeAddService.js');
 const { SubscriptionService } = require('./subscriptionService.js');
 const { ServerConfigService } = require('./serverConfigService.js');
@@ -72,6 +73,7 @@ class ServiceManager {
     this.addService(new DeviceListService(DeviceManager.instance, ClientManager.instance));
     /* add processing module services */
     this.addService(ProcessingModuleGetService);
+    this.addService(new ProcessingModuleGetListService(this.processingModuleManager));
     this.addService(
       new ProcessingModuleRuntimeAddService(this.processingModuleManager, SessionManager.instance)
     );
@@ -114,13 +116,28 @@ class ServiceManager {
     if (!request.topic) {
       namida.logFailure(
         'ServiceManager',
-        'request missing topic! request:\n' + JSON.stringify(request)
+        'request is missing topic! request:\n' + JSON.stringify(request)
       );
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
           title: 'Service request error',
           message: 'Request does not contain a topic',
+          stack: JSON.stringify(request)
+        }
+      });
+    }
+
+    if (!this.services.has(request.topic)) {
+      namida.logFailure(
+        'ServiceManager',
+        'no service for topic "' + request.topic + '" registered! request:\n' + JSON.stringify(request)
+      );
+
+      return this.serviceReplyTranslator.createBufferFromPayload({
+        error: {
+          title: 'Service request error',
+          message: 'unknown topic: ' + request.topic,
           stack: JSON.stringify(request)
         }
       });
