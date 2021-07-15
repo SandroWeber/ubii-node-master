@@ -24,7 +24,6 @@ class Client {
     this.registrationDate = new Date();
     this.lastSignOfLife = null;
     this.topicSubscriptionTokens = new Map();
-    //this.topicSubscriptions = new Map();
     this.regexSubscriptions = new Map();
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
@@ -186,7 +185,6 @@ class Client {
     let payload = {
       topicDataRecord: record
     };
-    //payload.topicDataRecord[entry.type] = entry.data;
 
     try {
       let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
@@ -205,12 +203,8 @@ class Client {
       return false;
     }
 
-    // get token
     let token = this.topicSubscriptionTokens.get(topic);
-
-    // unsubscribe
     this.topicData.unsubscribe(token);
-    // remove token
     this.topicSubscriptionTokens.delete(topic);
 
     return true;
@@ -281,44 +275,7 @@ class Client {
     let token = this.regexSubscriptions.get(regexString);
     this.topicData.unsubscribe(token);
     this.regexSubscriptions.delete(regexString);
-
-    /*
-    // get subscription data
-    let regexSubscriptionData = this.regexSubscriptions.get(regexString);
-
-    // remove checkSubscriptionForTopic
-    this.topicData.events.removeListener(
-      TOPIC_EVENTS.NEW_TOPIC,
-      regexSubscriptionData.checkSubscriptionForTopic
-    );
-
-    // remove regex subscription
-    this.regexSubscriptions.delete(regexString);
-
-    // check topic subscriptions
-    this.topicSubscriptions.forEach((subs, topic) => {
-      let index = subs.regExes.indexOf(regexString);
-      if (index !== -1) {
-        subs.regExes.splice(index, 1);
-      }
-
-      // if no subscriptions remain, unsubscribe at TopicData
-      if (!subs.explicit && subs.regExes.length === 0) {
-        this.unsubscribeAtTopicData(topic);
-        this.topicSubscriptions.delete(topic);
-      }
-    });*/
   }
-
-  /*hasRegexSubscription(topic) {
-    let sub = this.topicSubscriptions.get(topic);
-
-    if (sub) {
-      return sub.regExes.length > 0;
-    }
-
-    return false;
-  }*/
 
   unsubscribeAll() {
     for (let token in this.topicSubscriptionTokens) {
