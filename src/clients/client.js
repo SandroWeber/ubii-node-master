@@ -6,7 +6,6 @@ const {
 } = require('./constants');
 const namida = require('@tum-far/namida');
 const uuidv4 = require('uuid/v4');
-const { TOPIC_EVENTS } = require('@tum-far/ubii-topic-data');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 
 class Client {
@@ -23,7 +22,7 @@ class Client {
     this.state = proto.ubii.clients.Client.State.ACTIVE;
     this.registrationDate = new Date();
     this.lastSignOfLife = null;
-    this.topicSubscriptionTokens = new Map();
+    this.topicSubscriptions = new Map();
     this.regexSubscriptions = new Map();
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
@@ -164,13 +163,13 @@ class Client {
    * @param {String} topic
    */
   subscribeAtTopicData(topic) {
-    if (this.topicSubscriptionTokens.has(topic)) {
+    if (this.topicSubscriptions.has(topic)) {
       return false;
     }
 
     // subscribe
     let token = this.topicData.subscribe(topic, (record) => this.subscriptionCallback(record));
-    this.topicSubscriptionTokens.set(topic, token);
+    this.topicSubscriptions.set(topic, token);
 
     // check if topic already has data, if so send it to remote
     let record = this.topicData.pull(topic);
@@ -199,13 +198,13 @@ class Client {
    * @param {String} topic
    */
   unsubscribeAtTopicData(topic) {
-    if (!this.topicSubscriptionTokens.has(topic)) {
+    if (!this.topicSubscriptions.has(topic)) {
       return false;
     }
 
-    let token = this.topicSubscriptionTokens.get(topic);
+    let token = this.topicSubscriptions.get(topic);
     this.topicData.unsubscribe(token);
-    this.topicSubscriptionTokens.delete(topic);
+    this.topicSubscriptions.delete(topic);
 
     return true;
   }
@@ -215,7 +214,7 @@ class Client {
    * @param {String} topic
    */
   subscribeTopic(topic) {
-    let token = this.topicSubscriptionTokens.get(topic);
+    let token = this.topicSubscriptions.get(topic);
     if (token) {
       namida.warn(this.toString(), `subscription skipped, already subscribed to topic ${topic}.`);
       return;
@@ -239,7 +238,7 @@ class Client {
    */
   unsubscribeTopic(topic) {
     // no (explicit) subscription?
-    if (!this.topicSubscriptionTokens.has(topic)) {
+    if (!this.topicSubscriptions.has(topic)) {
       namida.logFailure(this.toString(), `not subscribed to topic ${topic}.`);
       return;
     }
@@ -256,7 +255,9 @@ class Client {
       return false;
     }
 
-    let token = this.topicData.subscribeRegex(regexString, (record) => this.subscriptionCallback(record));
+    let token = this.topicData.subscribeRegex(regexString, (record) =>
+      this.subscriptionCallback(record)
+    );
     this.regexSubscriptions.set(regexString, token);
 
     return true;
@@ -278,13 +279,13 @@ class Client {
   }
 
   unsubscribeAll() {
-    for (let token in this.topicSubscriptionTokens) {
+    for (let token in this.topicSubscriptions) {
       this.topicData.unsubscribe(token);
     }
     for (let token in this.regexSubscriptions) {
       this.topicData.unsubscribe(token);
     }
-    this.topicSubscriptionTokens.clear();
+    this.topicSubscriptions.clear();
     this.regexSubscriptions.clear();
   }
 
