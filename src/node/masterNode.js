@@ -204,9 +204,6 @@ class MasterNode {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
 
-      // Process message.
-      //let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
-
       this.processTopicDataMessage(topicDataMessage, clientID);
     } catch (error) {
       let title = 'TopicData message publishing failed (WS)';
@@ -250,8 +247,7 @@ class MasterNode {
       let topic = record.topic;
       // confirm that the client is the rightful publisher of this topic
       if (!client.publishedTopics.includes(topic)) {
-        let topicRaw = this.topicData.pull(topic);
-        let topicHasData = topicRaw && topicRaw.data ? true : false;
+        let topicHasData = this.topicData.hasData(topic);
 
         if (!topicHasData) {
           client.publishedTopics.push(topic);
@@ -264,7 +260,7 @@ class MasterNode {
         }
       }
 
-      this.topicData.publish(record.topic, record[record.type], record.type, record.timestamp);
+      this.topicData.publish(record.topic, record);
     });
   }
 }
