@@ -204,9 +204,6 @@ class MasterNode {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
 
-      // Process message.
-      //let clientID = this.deviceManager.getParticipant(topicDataMessage.deviceId).client.identifier;
-
       this.processTopicDataMessage(topicDataMessage, clientID);
     } catch (error) {
       let title = 'TopicData message publishing failed (WS)';

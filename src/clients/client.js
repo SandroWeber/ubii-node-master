@@ -250,14 +250,6 @@ class Client {
       return;
     }
     this.unsubscribeAtTopicData(topic);
-
-    // change subscription not to be explicit
-    /*token.explicit = false;
-    // check if no subscription remaining, if so completely unsub at TopicData and delete entry
-    if (token.regExes.length === 0) {
-      this.unsubscribeAtTopicData(topic);
-      this.topicSubscriptions.delete(topic);
-    }*/
   }
 
   /**
@@ -270,52 +262,8 @@ class Client {
       return false;
     }
 
-    let token = this.topicData.subscribeRegex(regexString);
+    let token = this.topicData.subscribeRegex(regexString, (record) => this.subscriptionCallback(record));
     this.regexSubscriptions.set(regexString, token);
-
-    /*let regex = new RegExp(regexString);
-
-    // callback to check if necessary to subscribe to certain topic
-    let checkSubscriptionForTopic = (topic) => {
-      if (regex.test(topic)) {
-        let subscription = this.topicSubscriptions.get(topic);
-
-        // no subscription to this topic yet?
-        if (!subscription) {
-          let success = this.subscribeAtTopicData(topic);
-          if (success) {
-            // add new subscription to map, regex only for now
-            this.topicSubscriptions.set(topic, {
-              explicit: false,
-              regExes: [regexString]
-            });
-          }
-        }
-        // already subscribed explicitly, add subscription via regex
-        else {
-          subscription.regExes.push(regexString);
-        }
-      }
-    };
-
-    // save regexSubscriptionData
-    let regexSubscriptionData = {
-      regexString: regexString,
-      regex: regex,
-      id: this.id,
-      type: 'single',
-      checkSubscriptionForTopic: checkSubscriptionForTopic
-    };
-    this.regexSubscriptions.set(regexString, regexSubscriptionData);
-
-    // auto-subscribe on new matching topics
-    this.topicData.events.addListener(TOPIC_EVENTS.NEW_TOPIC, checkSubscriptionForTopic);
-
-    // add subscriptions to existing topics
-    this.topicData
-      .getAllTopicsWithData()
-      .map((entry) => entry.topic)
-      .forEach(checkSubscriptionForTopic);*/
 
     return true;
   }
