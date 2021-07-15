@@ -7,19 +7,34 @@ const { Session } = require('./session.js');
 const { EVENTS_SESSION_MANAGER } = require('./constants');
 const Utils = require('../utilities');
 
-class SessionManager extends EventEmitter {
-  constructor(masterNodeID, topicData, deviceManager, processingModuleManager, clientManager) {
-    super();
+let _instance = null;
+const SINGLETON_ENFORCER = Symbol();
 
-    this.masterNodeID = masterNodeID;
-    this.topicData = topicData;
-    this.deviceManager = deviceManager;
-    this.processingModuleManager = processingModuleManager;
-    this.clientManager = clientManager;
+class SessionManager extends EventEmitter {
+  constructor(enforcer) {
+    if (enforcer !== SINGLETON_ENFORCER) {
+      throw new Error('Use ' + this.constructor.name + '.instance');
+    }
+
+    super();
 
     this.sessions = [];
 
     this.addEventListeners();
+  }
+
+  static get instance() {
+    if (_instance == null) {
+      _instance = new SessionManager(SINGLETON_ENFORCER);
+    }
+
+    return _instance;
+  }
+
+  setDependencies(masterNodeID, topicData, processingModuleManager) {
+    this.masterNodeID = masterNodeID;
+    this.topicData = topicData;
+    this.processingModuleManager = processingModuleManager;
   }
 
   createSession(specs = {}) {
@@ -39,9 +54,7 @@ class SessionManager extends EventEmitter {
       specs,
       this.masterNodeID,
       this.topicData,
-      this.deviceManager,
-      this.processingModuleManager,
-      this.clientManager
+      this.processingModuleManager
     );
     this.addSession(session);
     this.emit(EVENTS_SESSION_MANAGER.NEW_SESSION, session.toProtobuf());

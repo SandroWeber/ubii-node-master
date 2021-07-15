@@ -1,8 +1,8 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const NetworkConfigManager = require('@tum-far/ubii-node-nodejs/src/networking/networkConfigManager');
 
 const { Service } = require('./service.js');
 const configService = require('../config/configService');
-const NetworkConfigManager = require('../network/networkConfigManager');
 
 class ServerConfigService extends Service {
   constructor(id, name, connectionManager) {

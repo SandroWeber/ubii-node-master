@@ -1,14 +1,13 @@
-const uuidv4 = require('uuid/v4');
+const { v4: uuidv4 } = require('uuid');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
+const { NetworkConnectionsManager, ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
 
-const { NetworkConnectionsManager } = require('../network/networkConnectionsManager.js');
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
-const ProcessingModuleManager = require('../processing/processingModuleManager');
 
 class MasterNode {
   constructor() {
@@ -22,6 +21,7 @@ class MasterNode {
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
 
+    // network connections manager
     this.connectionsManager = new NetworkConnectionsManager();
     this.connectionsManager.onServiceMessageREST((...params) =>
       this.onServiceMessageREST(...params)
@@ -35,42 +35,33 @@ class MasterNode {
     );
 
     // Client Manager Component:
-    this.clientManager = ClientManager.instance;
-    this.clientManager.setDependencies(this.connectionsManager, this.topicData);
+    ClientManager.instance.setDependencies(this.connectionsManager, this.topicData);
 
     // Device Manager Component:
-    this.deviceManager = new DeviceManager(
-      this.clientManager,
-      this.topicData,
-      this.connectionsManager.connections.topicDataZMQ
-    );
+    DeviceManager.instance.setTopicData(this.topicData);
 
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(
       this.id,
-      this.deviceManager,
+      DeviceManager.instance,
       this.topicData
     );
 
     // Session manager component:
-    this.sessionManager = new SessionManager(
+    SessionManager.instance.setDependencies(
       this.id,
       this.topicData,
-      this.deviceManager,
-      this.processingModuleManager,
-      this.clientManager
+      this.processingModuleManager
     );
 
     // Service Manager Component:
-    this.serviceManager = new ServiceManager(
+    ServiceManager.instance.setDependencies(
       this.id,
-      this.clientManager,
-      this.deviceManager,
-      this.sessionManager,
       this.connectionsManager,
       this.processingModuleManager,
       this.topicData
     );
+    ServiceManager.instance.addDefaultServices();
   }
 
   onServiceMessageZMQ(message) {
@@ -78,7 +69,7 @@ class MasterNode {
       // Decode buffer.
       let request = this.serviceRequestTranslator.createMessageFromBuffer(message);
       // Process request.
-      let reply = this.serviceManager.processRequest(request);
+      let reply = ServiceManager.instance.processRequest(request);
 
       // Return reply.
       return this.serviceReplyTranslator.createBufferFromPayload(reply);
@@ -114,7 +105,7 @@ class MasterNode {
       let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
 
       // Process request.
-      let reply = this.serviceManager.processRequest(requestMessage);
+      let reply = ServiceManager.instance.processRequest(requestMessage);
 
       // Return reply.
       // VARIANT A: PROTOBUF
@@ -146,12 +137,12 @@ class MasterNode {
 
   onTopicDataMessageZMQ(envelope, message) {
     let clientID = envelope.toString();
-    if (!this.clientManager.verifyClient(clientID)) {
+    if (!ClientManager.instance.verifyClient(clientID)) {
       console.error('Topic data received from unregistered client with ID ' + clientID);
       return;
     }
 
-    let client = this.clientManager.getClient(clientID);
+    let client = ClientManager.instance.getClient(clientID);
     client.updateLastSignOfLife();
 
     try {
@@ -192,12 +183,12 @@ class MasterNode {
   }
 
   onTopicDataMessageWS(clientID, message) {
-    if (!this.clientManager.verifyClient(clientID)) {
+    if (!ClientManager.instance.verifyClient(clientID)) {
       console.error('Topic data received from unregistered client with ID ' + clientID);
       return;
     }
 
-    let client = this.clientManager.getClient(clientID);
+    let client = ClientManager.instance.getClient(clientID);
     client.updateLastSignOfLife();
 
     try {
@@ -236,7 +227,7 @@ class MasterNode {
   }
 
   processTopicDataMessage(topicDataMessage, clientID) {
-    let client = this.clientManager.getClient(clientID);
+    let client = ClientManager.instance.getClient(clientID);
 
     let records = topicDataMessage.topicDataRecordList
       ? topicDataMessage.topicDataRecordList.elements

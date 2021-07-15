@@ -6,7 +6,7 @@ const {
   DEFAULT_PORT_TOPICDATA_ZMQ,
   DEFAULT_PORT_TOPICDATA_WS,
   DEFAULT_USE_HTTPS
-} = require('../network/constants');
+} = require('@tum-far/ubii-node-nodejs/src/networking/constants');
 
 class ConfigService {
   constructor() {
