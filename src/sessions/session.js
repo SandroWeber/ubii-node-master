@@ -260,7 +260,7 @@ class Session extends EventEmitter {
 
             // publish received records to topicdata
             lockstepProcessingReply.records.forEach((record) => {
-              this.topicData.publish(record.topic, record[record.type], record.type);
+              this.topicData.publish(record.topic, record);
             });
           })
       );

@@ -181,40 +181,55 @@ class SessionManager extends EventEmitter {
   onEventNewSession(sessionSpecs) {
     this.topicData.publish(
       DEFAULT_TOPICS.INFO_TOPICS.NEW_SESSION,
-      sessionSpecs,
-      Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
+      {
+        topic: DEFAULT_TOPICS.INFO_TOPICS.NEW_SESSION,
+        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),
+        session: sessionSpecs
+      }
     );
   }
 
   onEventSessionChange(sessionSpecs) {
     this.topicData.publish(
       DEFAULT_TOPICS.INFO_TOPICS.CHANGE_SESSION,
-      sessionSpecs,
-      Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
+      {
+        topic: DEFAULT_TOPICS.INFO_TOPICS.CHANGE_SESSION,
+        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),
+        session: sessionSpecs
+      }
     );
   }
 
   onEventSessionDelete(sessionSpecs) {
     this.topicData.publish(
       DEFAULT_TOPICS.INFO_TOPICS.DELETE_SESSION,
-      sessionSpecs,
-      Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
+      {
+        topic: DEFAULT_TOPICS.INFO_TOPICS.DELETE_SESSION,
+        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),
+        session: sessionSpecs
+      }
     );
   }
 
   onEventSessionStart(sessionSpecs) {
     this.topicData.publish(
       DEFAULT_TOPICS.INFO_TOPICS.START_SESSION,
-      sessionSpecs,
-      Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
+      {
+        topic: DEFAULT_TOPICS.INFO_TOPICS.START_SESSION,
+        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),
+        session: sessionSpecs
+      }
     );
   }
 
   onEventSessionStop(sessionSpecs) {
     this.topicData.publish(
       DEFAULT_TOPICS.INFO_TOPICS.STOP_SESSION,
-      { id: sessionSpecs.id },
-      Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION)
+      {
+        topic: DEFAULT_TOPICS.INFO_TOPICS.STOP_SESSION,
+        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),
+        session: { id: sessionSpecs.id }
+      }
     );
   }
 

@@ -1,8 +1,8 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const NetworkConfigManager = require('@tum-far/ubii-node-nodejs/src/networking/networkConfigManager');
+const ConfigService = require('@tum-far/ubii-node-nodejs/src/config/configService');
 
 const { Service } = require('./service.js');
-const configService = require('../config/configService');
 
 class ServerConfigService extends Service {
   constructor(id, name, connectionManager) {
@@ -23,12 +23,12 @@ class ServerConfigService extends Service {
       server: {
         id: this.id,
         name: this.name,
-        ipEthernet: NetworkConfigManager.hostAdresses.ethernet.toString(),
-        ipWlan: NetworkConfigManager.hostAdresses.wifi.toString(),
-        portServiceZmq: configService.getPortServiceZMQ().toString(),
-        portServiceRest: configService.getPortServiceREST().toString(),
-        portTopicDataZmq: configService.getPortTopicdataZMQ().toString(),
-        portTopicDataWs: configService.getPortTopicdataWS().toString(),
+        ipEthernet: NetworkConfigManager.instance.hostAdresses.ethernet.toString(),
+        ipWlan: NetworkConfigManager.instance.hostAdresses.wifi.toString(),
+        portServiceZmq: ConfigService.instance.getPortServiceZMQ().toString(),
+        portServiceRest: ConfigService.instance.getPortServiceREST().toString(),
+        portTopicDataZmq: ConfigService.instance.getPortTopicdataZMQ().toString(),
+        portTopicDataWs: ConfigService.instance.getPortTopicdataWS().toString(),
         constantsJson: JSON.stringify(constants)
       }
     };
