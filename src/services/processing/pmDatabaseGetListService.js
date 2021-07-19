@@ -1,7 +1,6 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../service.js');
-const ProcessingModuleStorage = require('../../storage/processingModuleStorage');
 
 class ProcessingModuleDatabaseGetService extends Service {
   constructor(processingModuleManager) {

@@ -22,7 +22,8 @@ class MasterNode {
     this.topicData = new RuntimeTopicData();
 
     // network connections manager
-    this.connectionsManager = new NetworkConnectionsManager();
+    this.connectionsManager = NetworkConnectionsManager.instance;
+    this.connectionsManager.openConnections();
     this.connectionsManager.onServiceMessageREST((...params) =>
       this.onServiceMessageREST(...params)
     );
