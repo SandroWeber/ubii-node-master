@@ -1,3 +1,5 @@
+const namida = require('@tum-far/namida');
+
 const { ClientRegistrationService } = require('./clients/clientRegistrationService.js');
 const { ClientDeregistrationService } = require('./clients/clientDeregistrationService.js');
 const { ClientListService } = require('./clients/clientListService.js');
@@ -5,6 +7,7 @@ const { DeviceRegistrationService } = require('./devices/deviceRegistrationServi
 const { DeviceDeregistrationService } = require('./devices/deviceDeregistrationService.js');
 const { DeviceListService } = require('./devices/deviceListService.js');
 const ProcessingModuleGetService = require('./processing/pmDatabaseGetService.js');
+const ProcessingModuleGetListService = require('./processing/pmDatabaseGetListService.js');
 const ProcessingModuleRuntimeAddService = require('./processing/pmRuntimeAddService.js');
 const { SubscriptionService } = require('./subscriptionService.js');
 const { ServerConfigService } = require('./serverConfigService.js');
@@ -18,57 +21,71 @@ const { SessionRuntimeGetService } = require('./sessions/sessionRuntimeGetServic
 const { SessionDatabaseSaveService } = require('./sessions/sessionDatabaseSaveService.js');
 const { SessionStartService } = require('./sessions/sessionStartService');
 const { SessionStopService } = require('./sessions/sessionStopService');
-const namida = require('@tum-far/namida');
+
+const { ClientManager } = require('../clients/clientManager');
+const { DeviceManager } = require('../devices/deviceManager');
+const { SessionManager } = require('../sessions/sessionManager');
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
+let _instance = null;
+const SINGLETON_ENFORCER = Symbol();
+
 class ServiceManager {
-  constructor(
-    nodeID,
-    clientManager,
-    deviceManager,
-    sessionManager,
-    connectionsManager,
-    processingModuleManager,
-    topicData
-  ) {
-    this.clientManager = clientManager;
-    this.deviceManager = deviceManager;
-    this.sessionManager = sessionManager;
-    this.connectionsManager = connectionsManager;
-    this.processingModuleManager = processingModuleManager;
-    this.topicData = topicData;
+  constructor(enforcer) {
+    if (enforcer !== SINGLETON_ENFORCER) {
+      throw new Error('Use ' + this.constructor.name + '.instance');
+    }
 
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
     this.services = new Map();
+  }
+
+  static get instance() {
+    if (_instance == null) {
+      _instance = new ServiceManager(SINGLETON_ENFORCER);
+    }
+
+    return _instance;
+  }
+
+  setDependencies(masterNodeID, connectionsManager, processingModuleManager, topicData) {
+    this.masterNodeID = masterNodeID;
+    this.connectionsManager = connectionsManager;
+    this.processingModuleManager = processingModuleManager;
+    this.topicData = topicData;
+  }
+
+  addDefaultServices() {
     /* add general services */
-    this.addService(new SubscriptionService(this.clientManager, this.topicData));
-    this.addService(new ServerConfigService(nodeID, 'master-node', this.connectionsManager));
-    this.addService(new TopicListService(this.topicData, this));
+    this.addService(new SubscriptionService(ClientManager.instance, this.topicData));
+    this.addService(new ServerConfigService(this.masterNodeID, 'master-node', this.connectionsManager));
+    this.addService(new TopicListService(this, this.topicData));
     this.addService(new ServiceListService(this));
     /* add client services */
-    this.addService(new ClientRegistrationService(this.clientManager));
-    this.addService(new ClientDeregistrationService(this.clientManager, this.deviceManager));
-    this.addService(new ClientListService(this.clientManager));
+    this.addService(new ClientRegistrationService(ClientManager.instance));
+    this.addService(new ClientDeregistrationService(ClientManager.instance, DeviceManager.instance));
+    this.addService(new ClientListService(ClientManager.instance));
     /* add device services */
-    this.addService(new DeviceRegistrationService(this.deviceManager));
-    this.addService(new DeviceDeregistrationService(this.deviceManager));
-    this.addService(new DeviceListService(this.deviceManager, this.clientManager));
+    this.addService(new DeviceRegistrationService(DeviceManager.instance));
+    this.addService(new DeviceDeregistrationService(DeviceManager.instance));
+    this.addService(new DeviceListService(DeviceManager.instance, ClientManager.instance));
     /* add processing module services */
     this.addService(ProcessingModuleGetService);
+    this.addService(new ProcessingModuleGetListService(this.processingModuleManager));
     this.addService(
-      new ProcessingModuleRuntimeAddService(this.processingModuleManager, this.sessionManager)
+      new ProcessingModuleRuntimeAddService(this.processingModuleManager, SessionManager.instance)
     );
     /* add session services */
     this.addService(new SessionDatabaseDeleteService());
     this.addService(new SessionDatabaseGetListService());
     this.addService(new SessionDatabaseGetService());
-    this.addService(new SessionRuntimeGetListService(this.sessionManager));
-    this.addService(new SessionRuntimeGetService(this.sessionManager));
-    this.addService(new SessionDatabaseSaveService(this.sessionManager));
-    this.addService(new SessionStartService(this.sessionManager));
-    this.addService(new SessionStopService(this.sessionManager));
+    this.addService(new SessionRuntimeGetListService(SessionManager.instance));
+    this.addService(new SessionRuntimeGetService(SessionManager.instance));
+    this.addService(new SessionDatabaseSaveService(SessionManager.instance));
+    this.addService(new SessionStartService(SessionManager.instance));
+    this.addService(new SessionStopService(SessionManager.instance));
   }
 
   addService(service) {

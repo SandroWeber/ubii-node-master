@@ -1,7 +1,7 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const { ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
 
 const { Service } = require('./../service.js');
-const ProcessingModuleManager = require('../../processing/processingModuleManager');
 
 /**
  * Handles requests from client nodes to add processing modules to the runtime of their

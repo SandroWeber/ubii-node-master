@@ -36,11 +36,8 @@ import { ClientManagerMock } from '../mocks/clientManagerMock';
     t.context.topicDataMock = new TopicDataMock();
     t.context.serverMock = new ServerMock();
     t.context.clientMock = new ClientMock();
-    t.context.deviceManager = new DeviceManager(
-      new ClientManagerMock(),
-      t.context.topicDataMock,
-      t.context.serverMock
-    );
+    t.context.deviceManager = DeviceManager.instance;
+    t.context.deviceManager.setTopicData(t.context.topicDataMock);
   });
 
   // Test cases:
