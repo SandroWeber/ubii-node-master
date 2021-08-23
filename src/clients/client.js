@@ -5,14 +5,13 @@ const {
   SIGN_OF_LIFE_DELTA_TIME
 } = require('./constants');
 const namida = require('@tum-far/namida');
-const uuidv4 = require('uuid/v4');
-const { TOPIC_EVENTS } = require('@tum-far/ubii-topic-data');
+const { v4: uuidv4 } = require('uuid');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 
 class Client {
   constructor(specs = {}, server, topicData) {
     // take over specs
-    specs && Object.assign(this, JSON.parse(JSON.stringify(specs)));
+    specs && Object.assign(this, specs);
     // new instance is getting new ID
     this.id = uuidv4();
     this.devices = this.devices ? this.devices : [];
@@ -23,7 +22,6 @@ class Client {
     this.state = proto.ubii.clients.Client.State.ACTIVE;
     this.registrationDate = new Date();
     this.lastSignOfLife = null;
-    this.topicSubscriptionTokens = new Map();
     this.topicSubscriptions = new Map();
     this.regexSubscriptions = new Map();
 
@@ -165,31 +163,27 @@ class Client {
    * @param {String} topic
    */
   subscribeAtTopicData(topic) {
-    if (this.topicSubscriptionTokens.has(topic)) {
+    if (this.topicSubscriptions.has(topic)) {
       return false;
     }
 
     // subscribe
-    let token = this.topicData.subscribe(topic, (...params) => this.subscriptionCallback(...params));
-    this.topicSubscriptionTokens.set(topic, token);
+    let token = this.topicData.subscribe(topic, (record) => this.subscriptionCallback(record));
+    this.topicSubscriptions.set(topic, token);
 
     // check if topic already has data, if so send it to remote
-    let topicdata = this.topicData.pull(topic);
-    if (topicdata && topicdata.data) {
-      this.subscriptionCallback(topic, topicdata);
+    let record = this.topicData.pull(topic);
+    if (record) {
+      this.subscriptionCallback(record);
     }
 
     return true;
   }
 
-  subscriptionCallback(topic, entry) {
+  subscriptionCallback(record) {
     let payload = {
-      topicDataRecord: {
-        topic: topic,
-        timestamp: entry.timestamp
-      }
+      topicDataRecord: record
     };
-    payload.topicDataRecord[entry.type] = entry.data;
 
     try {
       let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
@@ -197,24 +191,20 @@ class Client {
     } catch (error) {
       console.error(error);
     }
-  };
+  }
 
   /**
    * Internally unsubscribes from a topic at the topicData.
    * @param {String} topic
    */
   unsubscribeAtTopicData(topic) {
-    if (!this.topicSubscriptionTokens.has(topic)) {
+    if (!this.topicSubscriptions.has(topic)) {
       return false;
     }
 
-    // get token
-    let token = this.topicSubscriptionTokens.get(topic);
-
-    // unsubscribe
+    let token = this.topicSubscriptions.get(topic);
     this.topicData.unsubscribe(token);
-    // remove token
-    this.topicSubscriptionTokens.delete(topic);
+    this.topicSubscriptions.delete(topic);
 
     return true;
   }
@@ -224,24 +214,21 @@ class Client {
    * @param {String} topic
    */
   subscribeTopic(topic) {
-    let subscription = this.topicSubscriptions.get(topic);
-    if (subscription && subscription.explicit) {
+    let token = this.topicSubscriptions.get(topic);
+    if (token) {
       namida.warn(this.toString(), `subscription skipped, already subscribed to topic ${topic}.`);
       return;
     }
 
-    if (!subscription) {
+    if (!token) {
       let success = this.subscribeAtTopicData(topic);
       // successfully subscribed just now or already subscribed by some other means
-      if (success) {
-        // add explicit subscription to topic
-        this.topicSubscriptions.set(topic, {
-          explicit: true,
-          regExes: []
-        });
+      if (!success) {
+        namida.logFailure(
+          this.toString(),
+          'failed to subscribe to ' + topic + ' at topic data buffer'
+        );
       }
-    } else {
-      subscription.explicit = true;
     }
   }
 
@@ -250,24 +237,12 @@ class Client {
    * @param {String} topic
    */
   unsubscribeTopic(topic) {
-    let subscription = this.topicSubscriptions.get(topic);
-
     // no (explicit) subscription?
-    if (!subscription || !subscription.explicit) {
-      namida.logFailure(
-        `Topic Data unsubscription rejected`,
-        `Client with ID ${this.id} is not subscribed to topic ${topic}.`
-      );
+    if (!this.topicSubscriptions.has(topic)) {
+      namida.logFailure(this.toString(), `not subscribed to topic ${topic}.`);
       return;
     }
-
-    // change subscription not to be explicit
-    subscription.explicit = false;
-    // check if no subscription remaining, if so completely unsub at TopicData and delete entry
-    if (subscription.regExes.length === 0) {
-      this.unsubscribeAtTopicData(topic);
-      this.topicSubscriptions.delete(topic);
-    }
+    this.unsubscribeAtTopicData(topic);
   }
 
   /**
@@ -276,56 +251,14 @@ class Client {
    */
   subscribeRegex(regexString) {
     if (this.regexSubscriptions.has(regexString)) {
-      namida.logFailure(
-        `RegExp subscription rejected`,
-        `Client with id ${this.id} is already subscribed to this RegExp.`
-      );
+      namida.logFailure(this.toString(), `already subscribed to regex "${regexString}"`);
       return false;
     }
 
-    let regex = new RegExp(regexString);
-
-    // callback to check if necessary to subscribe to certain topic
-    let checkSubscriptionForTopic = (topic) => {
-      if (regex.test(topic)) {
-        let subscription = this.topicSubscriptions.get(topic);
-
-        // no subscription to this topic yet?
-        if (!subscription) {
-          let success = this.subscribeAtTopicData(topic);
-          if (success) {
-            // add new subscription to map, regex only for now
-            this.topicSubscriptions.set(topic, {
-              explicit: false,
-              regExes: [regexString]
-            });
-          }
-        }
-        // already subscribed explicitly, add subscription via regex
-        else {
-          subscription.regExes.push(regexString);
-        }
-      }
-    };
-
-    // save regexSubscriptionData
-    let regexSubscriptionData = {
-      regexString: regexString,
-      regex: regex,
-      id: this.id,
-      type: 'single',
-      checkSubscriptionForTopic: checkSubscriptionForTopic
-    };
-    this.regexSubscriptions.set(regexString, regexSubscriptionData);
-
-    // auto-subscribe on new matching topics
-    this.topicData.events.addListener(TOPIC_EVENTS.NEW_TOPIC, checkSubscriptionForTopic);
-
-    // add subscriptions to existing topics
-    this.topicData
-      .getAllTopicsWithData()
-      .map((entry) => entry.topic)
-      .forEach(checkSubscriptionForTopic);
+    let token = this.topicData.subscribeRegex(regexString, (record) =>
+      this.subscriptionCallback(record)
+    );
+    this.regexSubscriptions.set(regexString, token);
 
     return true;
   }
@@ -336,55 +269,22 @@ class Client {
    */
   unsubscribeRegex(regexString) {
     if (!this.regexSubscriptions.has(regexString)) {
-      namida.logFailure(
-        `RegExp unsubscription rejected`,
-        `Client with ID ${this.id} is not subscribed to RegExp ${regexString}.`
-      );
+      namida.logFailure(this.toString(), `not subscribed to regex "${regexString}"`);
       return;
     }
 
-    // get subscription data
-    let regexSubscriptionData = this.regexSubscriptions.get(regexString);
-
-    // remove checkSubscriptionForTopic
-    this.topicData.events.removeListener(
-      TOPIC_EVENTS.NEW_TOPIC,
-      regexSubscriptionData.checkSubscriptionForTopic
-    );
-
-    // remove regex subscription
+    let token = this.regexSubscriptions.get(regexString);
+    this.topicData.unsubscribe(token);
     this.regexSubscriptions.delete(regexString);
-
-    // check topic subscriptions
-    this.topicSubscriptions.forEach((subs, topic) => {
-      let index = subs.regExes.indexOf(regexString);
-      if (index !== -1) {
-        subs.regExes.splice(index, 1);
-      }
-
-      // if no subscriptions remain, unsubscribe at TopicData
-      if (!subs.explicit && subs.regExes.length === 0) {
-        this.unsubscribeAtTopicData(topic);
-        this.topicSubscriptions.delete(topic);
-      }
-    });
-  }
-
-  hasRegexSubscription(topic) {
-    let sub = this.topicSubscriptions.get(topic);
-
-    if (sub) {
-      return sub.regExes.length > 0;
-    }
-
-    return false;
   }
 
   unsubscribeAll() {
-    for (let token in this.topicSubscriptionTokens) {
+    for (let token in this.topicSubscriptions) {
       this.topicData.unsubscribe(token);
     }
-    this.topicSubscriptionTokens.clear();
+    for (let token in this.regexSubscriptions) {
+      this.topicData.unsubscribe(token);
+    }
     this.topicSubscriptions.clear();
     this.regexSubscriptions.clear();
   }
