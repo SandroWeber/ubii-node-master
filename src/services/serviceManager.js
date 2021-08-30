@@ -19,6 +19,7 @@ const { SessionRuntimeGetService } = require('./sessions/sessionRuntimeGetServic
 const { SessionDatabaseSaveService } = require('./sessions/sessionDatabaseSaveService.js');
 const { SessionStartService } = require('./sessions/sessionStartService');
 const { SessionStopService } = require('./sessions/sessionStopService');
+const { NetworkInfoService } = require('./networkInfo/networkInfoService')
 const namida = require('@tum-far/namida');
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
@@ -71,6 +72,8 @@ class ServiceManager {
     this.addService(new SessionDatabaseSaveService(this.sessionManager));
     this.addService(new SessionStartService(this.sessionManager));
     this.addService(new SessionStopService(this.sessionManager));
+    /* network statistics */
+    this.addService(new NetworkInfoService(this.clientManager));
   }
 
   addService(service) {

@@ -71,6 +71,8 @@ class MasterNode {
       this.processingModuleManager,
       this.topicData
     );
+
+    // Latenz Management Component:
   }
 
   onServiceMessageZMQ(message) {
@@ -112,7 +114,7 @@ class MasterNode {
 
       // VARIANT B: JSON
       let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
-
+    
       // Process request.
       let reply = this.serviceManager.processRequest(requestMessage);
 

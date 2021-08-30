@@ -2,6 +2,7 @@ const WebSocket = require('ws');
 var https = require('https');
 const fs = require('fs');
 const url = require('url');
+const lz = require('./latenz')
 
 const configService = require('../config/configService');
 const { PING_MESSAGE, PONG_MESSAGE } = require('./constants');
@@ -22,7 +23,7 @@ class WebsocketServer {
     this.clients = new Map();
 
     this.waitingPongCallbacks = new Map();
-
+  
     if (autoconnect) {
       this.start();
     }
@@ -79,6 +80,7 @@ class WebsocketServer {
 
     websocket.on('message', (message) => {
       if (message === PONG_MESSAGE) {
+        lz.addLatenz(clientID);
         // Check if callback for pong device
         if (this.waitingPongCallbacks.has(clientID)) {
           // call callback
@@ -138,6 +140,7 @@ class WebsocketServer {
    * @param {function} callback Callback function called when the pong message is received from the specified client.
    */
   ping(toClientId, callback) {
+    lz.addPing(toClientId);
     this.waitingPongCallbacks.set(toClientId.toString(), callback);
     this.send(toClientId, PING_MESSAGE);
   }

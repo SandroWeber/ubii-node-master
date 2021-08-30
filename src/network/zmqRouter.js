@@ -1,5 +1,6 @@
 const zmq = require('zeromq');
 const { PING_MESSAGE, PONG_MESSAGE } = require('./constants.js');
+const namida = require('@tum-far/namida/src/namida');
 
 class ZmqRouter {
   /**
@@ -32,11 +33,11 @@ class ZmqRouter {
     // init
     this.socket = zmq.socket('router');
     this.socket.identity = this.identity;
-
     // add callbacks
     this.socket.on('message', (envelope, payload) => {
       // Process pongs
       if (payload.toString() === PONG_MESSAGE) {
+        lz.addLatenz(envelope.toString());
         // Check if callback for pong device
         if (this.waitingPongCallbacks.has(envelope.toString())) {
           // call callback
@@ -101,7 +102,7 @@ class ZmqRouter {
    * @param {string} toClientId
    * @param {function} callback Callback function called when the pong message is received from the specified client.
    */
-  ping(toClientId, callback) {
+  ping(toClientId, callback) { 
     this.waitingPongCallbacks.set(toClientId.toString(), callback);
     this.send(toClientId, PING_MESSAGE);
   }

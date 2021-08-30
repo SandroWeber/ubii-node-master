@@ -29,6 +29,7 @@ class Client {
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
     this.publishedTopics = [];
+    this.latenz = 0;
   }
 
   /**
@@ -40,6 +41,13 @@ class Client {
     } else if (state === proto.ubii.clients.Client.State.INACTIVE) {
       this.stopLifeMonitoring();
     }
+  }
+
+  /**
+   * Update the latency of the client.
+   */
+  updateLatency(lzInMs) {
+    this.latenz = lzInMs;
   }
 
   /**
@@ -393,6 +401,13 @@ class Client {
     this.publishedTopics.forEach((topic) => {
       this.topicData.remove(topic);
     });
+  }
+
+  latenzToProtobuf() {
+    return {
+      id: this.id,
+      latenz: this.latenz
+    }
   }
 
   toProtobuf() {
