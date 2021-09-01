@@ -91,7 +91,21 @@ class Session extends EventEmitter {
       let ioMapping = this.ioMappings.find(
         (mapping) => !mapping.processingModuleId && mapping.processingModuleName === pmSpec.name
       );
-      if (ioMapping) ioMapping.processingModuleId = pmSpec.id;
+      if (ioMapping) {
+        ioMapping.processingModuleId = pmSpec.id;
+
+        for (let inputMapping of ioMapping.inputMappings) {
+          if (inputMapping.topicMux) {
+            inputMapping.topicMux.id = uuidv4();
+          }
+        }
+
+        for (let outputMapping of ioMapping.outputMappings) {
+          if (outputMapping.topicDemux) {
+            outputMapping.topicDemux.id = uuidv4();
+          }
+        }
+      }
 
       // gather PMs running in lockstep, group PMs by node ID they're running on
       if (pmSpec.processingMode && pmSpec.processingMode.lockstep) {
