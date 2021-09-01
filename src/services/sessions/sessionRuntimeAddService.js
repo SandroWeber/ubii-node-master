@@ -1,5 +1,6 @@
 const { Service } = require('./../service.js');
 const { SessionManager } = require('../../sessions/sessionManager');
+const SessionDatabase = require('../../storage/sessionDatabase');
 
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
@@ -12,18 +13,41 @@ class SessionRuntimeAddService extends Service {
     );
   }
 
-  reply(msgSessionSpec) {
-    // Todo: Change to runtime
-    let session = this.sessionManager.getSession(sessionMessage.id);
-    if (typeof session === 'undefined') {
+  reply(sessionSpecs) {
+    console.info('SessionRuntimeAddService - ' + sessionSpecs.name);
+    if (typeof sessionSpecs === 'undefined') {
       return {
         error: {
-          title: 'SessionRuntimeGetService Error',
-          message: 'Could not find session with ID ' + sessionMessage.id
+          title: 'SessionRuntimeAddService Error',
+          message: 'No session specifications given'
         }
       };
-    } else {
-      return { session: session.toProtobuf() };
+    }
+
+    try {
+      let specs = undefined;
+      if (SessionDatabase.has(sessionSpecs)) {
+        // check session database
+        specs = SessionDatabase.getByName(sessionSpecs.name).fileData;
+      }
+      else {
+        // try creating new session from message
+        specs = sessionSpecs;
+        specs.id = undefined; // ID is assigned by server upon creation
+      }
+
+      let session = SessionManager.instance.createSession(specs);
+      return {
+        session: session.toProtobuf()
+      };
+    } catch (error) {
+      return {
+        error: {
+          title: 'SessionRuntimeAddService Error',
+          message: error.toString(),
+          stack: error.stack && error.stack.toString()
+        }
+      };
     }
   }
 }

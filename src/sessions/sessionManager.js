@@ -50,6 +50,8 @@ class SessionManager extends EventEmitter {
       );
     }
 
+    console.info('sessionmanager.createSession() - ' + specs.name);
+
     let session = new Session(
       specs,
       this.masterNodeID,
@@ -79,7 +81,7 @@ class SessionManager extends EventEmitter {
           'failure to start ' +
             session.toString() +
             ', list of PMs not running:\n' +
-            JSON.stringify(pmList)
+            pmList.map(pm => 'ProcessingModule "' + pm.name + '" (ID ' + pm.id + ')')
         );
       });
     }
@@ -113,15 +115,17 @@ class SessionManager extends EventEmitter {
   }
 
   startSession(session) {
-    let success = session && session.start();
-    if (success) {
+    console.info('SessionManager preparing to start ' + session.toString());
+    session.on(Session.EVENTS.START_SUCCESS, () => {
       this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
       namida.logSuccess('SessionManager', 'succesfully started ' + session.toString());
-    } else {
+    });
+    session.on(Session.EVENTS.START_FAILURE, () => {
+      this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
       namida.logFailure('SessionManager', 'failed to start ' + session.toString());
-    }
+    });
 
-    return success;
+    session.start();
   }
 
   startAllSessions() {

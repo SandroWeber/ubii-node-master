@@ -18,9 +18,10 @@ const { SessionDatabaseGetListService } = require('./sessions/sessionDatabaseGet
 const { SessionDatabaseGetService } = require('./sessions/sessionDatabaseGetService.js');
 const { SessionRuntimeGetListService } = require('./sessions/sessionRuntimeGetListService.js');
 const { SessionRuntimeGetService } = require('./sessions/sessionRuntimeGetService.js');
+const { SessionRuntimeAddService } = require('./sessions/sessionRuntimeAddService');
 const { SessionDatabaseSaveService } = require('./sessions/sessionDatabaseSaveService.js');
-const { SessionStartService } = require('./sessions/sessionStartService');
-const { SessionStopService } = require('./sessions/sessionStopService');
+const { SessionRuntimeStartService } = require('./sessions/sessionRuntimeStartService');
+const { SessionRuntimeStopService } = require('./sessions/sessionRuntimeStopService');
 
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
@@ -83,9 +84,10 @@ class ServiceManager {
     this.addService(new SessionDatabaseGetService());
     this.addService(new SessionRuntimeGetListService(SessionManager.instance));
     this.addService(new SessionRuntimeGetService(SessionManager.instance));
+    this.addService(new SessionRuntimeAddService());
     this.addService(new SessionDatabaseSaveService(SessionManager.instance));
-    this.addService(new SessionStartService(SessionManager.instance));
-    this.addService(new SessionStopService(SessionManager.instance));
+    this.addService(new SessionRuntimeStartService(SessionManager.instance));
+    this.addService(new SessionRuntimeStopService(SessionManager.instance));
   }
 
   addService(service) {

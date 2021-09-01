@@ -122,15 +122,17 @@ class Session extends EventEmitter {
   start() {
     if (this.status === SessionStatus.RUNNING) {
       namida.logFailure('Session ' + this.id, "can't be started again, already processing");
-      return false;
+      this.emit(Session.EVENTS.START_FAILURE);
+      return;
     }
 
     if (!this.processingModules || this.processingModules.length === 0) {
       namida.logFailure('Session ' + this.id, 'session has no processing modules to start');
-      return false;
+      this.emit(Session.EVENTS.START_FAILURE);
+      return;
     }
 
-    this.status = SessionStatus.RUNNING;
+    console.info(this.toString() + ' start called');
 
     // start processing modules
     this.localPMs.forEach(async (pmSpec) => {
@@ -159,13 +161,16 @@ class Session extends EventEmitter {
           this.emit(Session.EVENTS.START_FAILURE, this.pmsAwaitingRemoteStart);
         }
       }, TIMEOUT_START_REMOTE_PMS);
+    } else {
+      this.status = SessionStatus.RUNNING;
+      this.emit(Session.EVENTS.START_SUCCESS);
     }
 
     // start lockstep cycles
     this.tLastLockstepPass = Date.now();
     this.lockstepProcessingPass();
 
-    return true;
+    return;
   }
 
   stop() {
@@ -194,6 +199,7 @@ class Session extends EventEmitter {
   }
 
   onProcessingModuleStarted(remotePMSpec) {
+    console.info('onProcessingModuleStarted: ' + remotePMSpec.id);
     let index = this.pmsAwaitingRemoteStart.findIndex(
       (pm) => pm.sessionId === this.id && pm.id === remotePMSpec.id
     );
@@ -202,6 +208,8 @@ class Session extends EventEmitter {
     }
 
     if (this.pmsAwaitingRemoteStart.length === 0) {
+      this.status = SessionStatus.RUNNING;
+      this.emit(Session.EVENTS.START_SUCCESS);
       namida.logSuccess(this.toString(), 'all remote PMs started');
     }
   }
@@ -310,6 +318,7 @@ class Session extends EventEmitter {
 }
 
 Session.EVENTS = Object.freeze({
+  START_SUCCESS: 0,
   START_FAILURE: 1
 });
 

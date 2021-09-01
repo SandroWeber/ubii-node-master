@@ -1,8 +1,8 @@
-const { Service } = require('./../service.js');
+const { Service } = require('../service.js');
 
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
-class SessionStopService extends Service {
+class SessionRuntimeStopService extends Service {
   constructor(sessionManager) {
     super(
       DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_STOP,
@@ -17,7 +17,7 @@ class SessionStopService extends Service {
     if (typeof message === 'undefined') {
       return {
         error: {
-          title: 'SessionStopService Error',
+          title: 'SessionRuntimeStopService Error',
           message: 'No session specifications given'
         }
       };
@@ -26,14 +26,14 @@ class SessionStopService extends Service {
     if (this.sessionManager.stopSessionByID(message.id)) {
       return {
         success: {
-          title: 'SessionStopService Success',
+          title: 'SessionRuntimeStopService Success',
           message: 'Stop session (ID ' + message.id + ') SUCCESS'
         }
       };
     } else {
       return {
         error: {
-          title: 'SessionStopService Error',
+          title: 'SessionRuntimeStopService Error',
           message: 'Stop session (ID ' + message.id + ') FAILED'
         }
       };
@@ -41,6 +41,4 @@ class SessionStopService extends Service {
   }
 }
 
-module.exports = {
-  SessionStopService: SessionStopService
-};
+module.exports = { SessionRuntimeStopService };
