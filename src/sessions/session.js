@@ -155,6 +155,8 @@ class Session extends EventEmitter {
       this.remotePMs.forEach((nodePMs) => {
         this.pmsAwaitingRemoteStart.push(...nodePMs);
       });
+      console.info('PMs awaiting remote start:');
+      console.info(this.pmsAwaitingRemoteStart);
 
       setTimeout(() => {
         if (this.pmsAwaitingRemoteStart.length > 0) {
@@ -163,12 +165,15 @@ class Session extends EventEmitter {
       }, TIMEOUT_START_REMOTE_PMS);
     } else {
       this.status = SessionStatus.RUNNING;
+      console.info(this.toString() + ' started completely, emitting START_SUCCESS!');
       this.emit(Session.EVENTS.START_SUCCESS);
     }
 
     // start lockstep cycles
     this.tLastLockstepPass = Date.now();
     this.lockstepProcessingPass();
+
+    console.info(this.toString() + ' start done');
 
     return;
   }
@@ -209,8 +214,8 @@ class Session extends EventEmitter {
 
     if (this.pmsAwaitingRemoteStart.length === 0) {
       this.status = SessionStatus.RUNNING;
-      this.emit(Session.EVENTS.START_SUCCESS);
       namida.logSuccess(this.toString(), 'all remote PMs started');
+      this.emit(Session.EVENTS.START_SUCCESS);
     }
   }
 

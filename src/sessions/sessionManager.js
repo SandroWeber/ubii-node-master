@@ -117,8 +117,12 @@ class SessionManager extends EventEmitter {
   startSession(session) {
     console.info('SessionManager preparing to start ' + session.toString());
     session.on(Session.EVENTS.START_SUCCESS, () => {
-      this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
       namida.logSuccess('SessionManager', 'succesfully started ' + session.toString());
+      this.topicData.publish(DEFAULT_TOPICS.INFO_TOPICS.RUNNING_SESSION, {
+        topic: DEFAULT_TOPICS.INFO_TOPICS.RUNNING_SESSION,
+        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),
+        session: session.toProtobuf()
+      });
     });
     session.on(Session.EVENTS.START_FAILURE, () => {
       this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
@@ -126,6 +130,7 @@ class SessionManager extends EventEmitter {
     });
 
     session.start();
+    this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
   }
 
   startAllSessions() {
@@ -207,6 +212,7 @@ class SessionManager extends EventEmitter {
   }
 
   onEventSessionStart(sessionSpecs) {
+    console.info('publishing DEFAULT_TOPICS.INFO_TOPICS.START_SESSION ...');
     this.topicData.publish(DEFAULT_TOPICS.INFO_TOPICS.START_SESSION, {
       topic: DEFAULT_TOPICS.INFO_TOPICS.START_SESSION,
       type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),
