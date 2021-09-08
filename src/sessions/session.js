@@ -155,8 +155,8 @@ class Session extends EventEmitter {
       this.remotePMs.forEach((nodePMs) => {
         this.pmsAwaitingRemoteStart.push(...nodePMs);
       });
-      console.info('PMs awaiting remote start:');
-      console.info(this.pmsAwaitingRemoteStart);
+      //console.info('PMs awaiting remote start:');
+      //console.info(this.pmsAwaitingRemoteStart);
 
       setTimeout(() => {
         if (this.pmsAwaitingRemoteStart.length > 0) {
