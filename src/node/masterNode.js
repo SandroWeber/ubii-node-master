@@ -12,6 +12,7 @@ const { SessionManager } = require('../sessions/sessionManager');
 class MasterNode {
   constructor() {
     this.id = uuidv4();
+    namida.logSuccess('MasterNode', 'ID ' + this.id);
 
     // Translators:
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
@@ -44,7 +45,6 @@ class MasterNode {
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(
       this.id,
-      DeviceManager.instance,
       this.topicData
     );
 
