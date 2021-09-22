@@ -50,8 +50,6 @@ class SessionManager extends EventEmitter {
       );
     }
 
-    console.info('sessionmanager.createSession() - ' + specs.name);
-
     let session = new Session(
       specs,
       this.masterNodeID,
@@ -81,7 +79,7 @@ class SessionManager extends EventEmitter {
           'failure to start ' +
             session.toString() +
             ', list of PMs not running:\n' +
-            pmList.map(pm => 'ProcessingModule "' + pm.name + '" (ID ' + pm.id + ')')
+            pmList.map((pm) => 'ProcessingModule "' + pm.name + '" (ID ' + pm.id + ')')
         );
       });
     }
@@ -115,7 +113,6 @@ class SessionManager extends EventEmitter {
   }
 
   startSession(session) {
-    console.info('SessionManager preparing to start ' + session.toString());
     session.on(Session.EVENTS.START_SUCCESS, () => {
       namida.logSuccess('SessionManager', 'succesfully started ' + session.toString());
       this.topicData.publish(DEFAULT_TOPICS.INFO_TOPICS.RUNNING_SESSION, {
@@ -212,7 +209,6 @@ class SessionManager extends EventEmitter {
   }
 
   onEventSessionStart(sessionSpecs) {
-    console.info('publishing DEFAULT_TOPICS.INFO_TOPICS.START_SESSION ...');
     this.topicData.publish(DEFAULT_TOPICS.INFO_TOPICS.START_SESSION, {
       topic: DEFAULT_TOPICS.INFO_TOPICS.START_SESSION,
       type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),

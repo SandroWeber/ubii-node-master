@@ -9,15 +9,8 @@ const { ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 
-const TIMEOUT_START_REMOTE_PMS = 10000;
-
 class Session extends EventEmitter {
-  constructor(
-    specs = {},
-    masterNodeID,
-    topicData,
-    processingModuleManager
-  ) {
+  constructor(specs = {}, masterNodeID, topicData, processingModuleManager) {
     super();
 
     // take over specs
@@ -132,8 +125,6 @@ class Session extends EventEmitter {
       return;
     }
 
-    console.info(this.toString() + ' start called');
-
     // start processing modules
     this.localPMs.forEach(async (pmSpec) => {
       let pm = this.processingModuleManager.getModuleByID(pmSpec.id);
@@ -155,25 +146,20 @@ class Session extends EventEmitter {
       this.remotePMs.forEach((nodePMs) => {
         this.pmsAwaitingRemoteStart.push(...nodePMs);
       });
-      //console.info('PMs awaiting remote start:');
-      //console.info(this.pmsAwaitingRemoteStart);
 
       setTimeout(() => {
         if (this.pmsAwaitingRemoteStart.length > 0) {
           this.emit(Session.EVENTS.START_FAILURE, this.pmsAwaitingRemoteStart);
         }
-      }, TIMEOUT_START_REMOTE_PMS);
+      }, Session.CONSTANTS.TIMEOUT_START_REMOTE_PMS);
     } else {
       this.status = SessionStatus.RUNNING;
-      console.info(this.toString() + ' started completely, emitting START_SUCCESS!');
       this.emit(Session.EVENTS.START_SUCCESS);
     }
 
     // start lockstep cycles
     this.tLastLockstepPass = Date.now();
     this.lockstepProcessingPass();
-
-    console.info(this.toString() + ' start done');
 
     return;
   }
@@ -204,7 +190,6 @@ class Session extends EventEmitter {
   }
 
   onProcessingModuleStarted(remotePMSpec) {
-    console.info('onProcessingModuleStarted: ' + remotePMSpec.id);
     let index = this.pmsAwaitingRemoteStart.findIndex(
       (pm) => pm.sessionId === this.id && pm.id === remotePMSpec.id
     );
@@ -321,6 +306,11 @@ class Session extends EventEmitter {
     return 'Session ' + this.name + ' (ID ' + this.id + ')';
   }
 }
+
+Session.CONSTANTS = Object.freeze({
+  TIMEOUT_START_REMOTE_PMS: 10000,
+  TIMEOUT_STOP_REMOTE_PMS: 10000
+});
 
 Session.EVENTS = Object.freeze({
   START_SUCCESS: 0,
