@@ -9,15 +9,8 @@ const { ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 
-const TIMEOUT_START_REMOTE_PMS = 10000;
-
 class Session extends EventEmitter {
-  constructor(
-    specs = {},
-    masterNodeID,
-    topicData,
-    processingModuleManager
-  ) {
+  constructor(specs = {}, masterNodeID, topicData, processingModuleManager) {
     super();
 
     // take over specs
@@ -91,7 +84,21 @@ class Session extends EventEmitter {
       let ioMapping = this.ioMappings.find(
         (mapping) => !mapping.processingModuleId && mapping.processingModuleName === pmSpec.name
       );
-      if (ioMapping) ioMapping.processingModuleId = pmSpec.id;
+      if (ioMapping) {
+        ioMapping.processingModuleId = pmSpec.id;
+
+        for (let inputMapping of ioMapping.inputMappings) {
+          if (inputMapping.topicMux) {
+            inputMapping.topicMux.id = uuidv4();
+          }
+        }
+
+        for (let outputMapping of ioMapping.outputMappings) {
+          if (outputMapping.topicDemux) {
+            outputMapping.topicDemux.id = uuidv4();
+          }
+        }
+      }
 
       // gather PMs running in lockstep, group PMs by node ID they're running on
       if (pmSpec.processingMode && pmSpec.processingMode.lockstep) {
@@ -107,19 +114,48 @@ class Session extends EventEmitter {
 
   start() {
     if (this.status === SessionStatus.RUNNING) {
-      namida.logFailure('Session ' + this.id, "can't be started again, already processing");
-      return false;
+      namida.logFailure('Session ' + this.id, "can't be started again, already running");
+      this.emit(Session.EVENTS.START_FAILURE);
+      return;
     }
 
     if (!this.processingModules || this.processingModules.length === 0) {
       namida.logFailure('Session ' + this.id, 'session has no processing modules to start');
-      return false;
+      this.emit(Session.EVENTS.START_FAILURE);
+      return;
     }
 
-    this.status = SessionStatus.RUNNING;
+    // listen for events to check if all PMs have been started
+    this.onProcessingModuleStartedListener = this.onProcessingModuleStarted.bind(this);
+    this.processingModuleManager.addListener(
+      ProcessingModuleManager.EVENTS.PM_STARTED,
+      this.onProcessingModuleStartedListener
+    );
+
+    this.pmsAwaitingStart = [];
+    this.localPMs.forEach((localPM) => {
+      this.pmsAwaitingStart.push(localPM);
+    });
+    this.remotePMs.forEach((nodePMs) => {
+      this.pmsAwaitingStart.push(...nodePMs);
+    });
+
+    // start local processing modules
+    this.localPMs.forEach(async (pmSpec) => {
+      await this.processingModuleManager.startModule(pmSpec);
+    });
+
+    this.timeoutStartPMs = setTimeout(() => {
+      if (this.pmsAwaitingStart.length > 0) {
+        this.startDone(false);
+      }
+    }, Session.CONSTANTS.TIMEOUT_START_PMS);
+
+
+    /// ### old
 
     // start processing modules
-    this.localPMs.forEach(async (pmSpec) => {
+    /*this.localPMs.forEach(async (pmSpec) => {
       let pm = this.processingModuleManager.getModuleByID(pmSpec.id);
       await pm.initialized;
       let success = pm.start();
@@ -140,26 +176,51 @@ class Session extends EventEmitter {
         this.pmsAwaitingRemoteStart.push(...nodePMs);
       });
 
-      setTimeout(() => {
+      this.timeoutStartRemotePMs = setTimeout(() => {
         if (this.pmsAwaitingRemoteStart.length > 0) {
-          this.emit(Session.EVENTS.START_FAILURE, this.pmsAwaitingRemoteStart);
+          this.startDone(false);
         }
-      }, TIMEOUT_START_REMOTE_PMS);
+      }, Session.CONSTANTS.TIMEOUT_START_REMOTE_PMS);
+    } else {
+      this.startDone(true);
     }
 
     // start lockstep cycles
     this.tLastLockstepPass = Date.now();
-    this.lockstepProcessingPass();
+    this.lockstepProcessingPass();*/
 
-    return true;
+    return;
+  }
+
+  onProcessingModuleStarted(pmSpec) {
+    let index = this.pmsAwaitingStart.findIndex(
+      (pm) => pm.sessionId === this.id && pm.id === pmSpec.id
+    );
+    if (index !== -1) {
+      this.pmsAwaitingStart.splice(index, 1);
+    }
+
+    if (this.pmsAwaitingStart.length === 0) {
+      namida.logSuccess(this.toString(), 'all PMs started');
+      this.startDone(true);
+    }
+  }
+
+  startDone(success) {
+    this.timeoutStartPMs && clearTimeout(this.timeoutStartPMs);
+
+    if (success) {
+      this.status = SessionStatus.RUNNING;
+      this.emit(Session.EVENTS.START_SUCCESS);
+    } else {
+      this.emit(Session.EVENTS.START_FAILURE, this.pmsAwaitingStart);
+    }
   }
 
   stop() {
     if (this.status !== SessionStatus.RUNNING) {
       return false;
     }
-
-    this.status = SessionStatus.STOPPED;
 
     if (this.onProcessingModuleStartedListener) {
       this.processingModuleManager.removeListener(
@@ -168,27 +229,96 @@ class Session extends EventEmitter {
       );
     }
 
-    for (let processingModule of this.localPMs) {
+    this.onProcessingModuleStoppedListener = this.onProcessingModuleStopped.bind(this);
+    this.processingModuleManager.addListener(
+      ProcessingModuleManager.EVENTS.PM_STOPPED,
+      this.onProcessingModuleStoppedListener
+    );
+
+    this.pmsAwaitingStop = [];
+    this.localPMs.forEach((localPM) => {
+      this.pmsAwaitingStop.push(localPM);
+    });
+    this.remotePMs.forEach((nodePMs) => {
+      this.pmsAwaitingStop.push(...nodePMs);
+    });
+
+    for (let localPM of this.localPMs) {
+      this.processingModuleManager.stopModule(localPM);
+    }
+
+    this.timeoutStopPMs = setTimeout(() => {
+      let success = true;
+      if (this.pmsAwaitingStop.length > 0) {
+        success = false;
+      }
+      this.stopDone(success);
+    }, Session.CONSTANTS.TIMEOUT_STOP_PMS);
+
+    // old
+
+    /*for (let processingModule of this.localPMs) {
       this.processingModuleManager.getModuleByID(processingModule.id).stop();
     }
 
-    this.lockstepPMs = new Map();
-    this.localPMs = [];
-    this.remotePMs = new Map();
+    if (this.remotePMs.size > 0) {
+      this.onProcessingModuleStoppedListener = this.onProcessingModuleStopped.bind(this);
+      this.processingModuleManager.addListener(
+        ProcessingModuleManager.EVENTS.PM_STOPPED,
+        this.onProcessingModuleStoppedListener
+      );
+
+      this.pmsAwaitingRemoteStop = [];
+      this.remotePMs.forEach((nodePMs) => {
+        this.pmsAwaitingRemoteStop.push(...nodePMs);
+      });
+
+      this.timeoutStopRemotePMs = setTimeout(() => {
+        let success = true;
+        if (this.pmsAwaitingRemoteStop.length > 0) {
+          success = false;
+        }
+        this.stopDone(success);
+      }, Session.CONSTANTS.TIMEOUT_STOP_PMS);
+    } else {
+      this.stopDone(true);
+    }*/
 
     return true;
   }
 
-  onProcessingModuleStarted(remotePMSpec) {
-    let index = this.pmsAwaitingRemoteStart.findIndex(
-      (pm) => pm.sessionId === this.id && pm.id === remotePMSpec.id
+  onProcessingModuleStopped(pmSpec) {
+    let index = this.pmsAwaitingStop.findIndex(
+      (pm) => pm.sessionId === this.id && pm.id === pmSpec.id
     );
     if (index !== -1) {
-      this.pmsAwaitingRemoteStart.splice(index, 1);
+      this.pmsAwaitingStop.splice(index, 1);
     }
 
-    if (this.pmsAwaitingRemoteStart.length === 0) {
-      namida.logSuccess(this.toString(), 'all remote PMs started');
+    if (this.pmsAwaitingStop.length === 0) {
+      namida.logSuccess(this.toString(), 'all PMs stopped');
+      this.stopDone(true);
+    }
+  }
+
+  stopDone(success) {
+    this.timeoutStopPMs && clearTimeout(this.timeoutStopPMs);
+
+    if (success) {
+      this.status = SessionStatus.STOPPED;
+      this.lockstepPMs = new Map();
+      this.localPMs = [];
+      this.remotePMs = new Map();
+      this.emit(Session.EVENTS.STOP_SUCCESS);
+    } else {
+      this.emit(Session.EVENTS.STOP_FAILURE, this.pmsAwaitingStop);
+    }
+
+    if (this.onProcessingModuleStoppedListener) {
+      this.processingModuleManager.removeListener(
+        ProcessingModuleManager.EVENTS.PM_STOPPED,
+        this.onProcessingModuleStoppedListener
+      );
     }
   }
 
@@ -212,8 +342,9 @@ class Session extends EventEmitter {
         lockstepProcessingRequest.processingModuleIds.push(pm.id);
 
         // gather inputs for all PMs running under client ID
-        let inputMappings = this.ioMappings.find((element) => element.processingModuleId === pm.id)
-          .inputMappings;
+        let inputMappings = this.ioMappings.find(
+          (element) => element.processingModuleId === pm.id
+        ).inputMappings;
         if (inputMappings) {
           pm.inputs.forEach((input) => {
             let inputMapping = inputMappings.find(
@@ -295,8 +426,16 @@ class Session extends EventEmitter {
   }
 }
 
+Session.CONSTANTS = Object.freeze({
+  TIMEOUT_START_PMS: 10000,
+  TIMEOUT_STOP_PMS: 10000
+});
+
 Session.EVENTS = Object.freeze({
-  START_FAILURE: 1
+  START_SUCCESS: 0,
+  START_FAILURE: 1,
+  STOP_SUCCESS: 2,
+  STOP_FAILURE: 3
 });
 
 module.exports = { Session };

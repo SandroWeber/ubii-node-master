@@ -12,6 +12,7 @@ const { SessionManager } = require('../sessions/sessionManager');
 class MasterNode {
   constructor() {
     this.id = uuidv4();
+    namida.logSuccess('MasterNode', 'ID ' + this.id);
 
     // Translators:
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
@@ -44,7 +45,6 @@ class MasterNode {
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(
       this.id,
-      DeviceManager.instance,
       this.topicData
     );
 
@@ -148,7 +148,7 @@ class MasterNode {
 
     try {
       // Decode buffer.
-      let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
+      let topicDataMessage = this.topicDataTranslator.createPayloadFromBuffer(message);
 
       // Process message.
       this.processTopicDataMessage(topicDataMessage, clientID);
@@ -194,7 +194,7 @@ class MasterNode {
 
     try {
       // Decode buffer.
-      let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
+      let topicDataMessage = this.topicDataTranslator.createPayloadFromBuffer(message);
 
       this.processTopicDataMessage(topicDataMessage, clientID);
     } catch (error) {

@@ -1,9 +1,9 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
-const { Service } = require('./../service.js');
+const { Service } = require('../service.js');
 const SessionDatabase = require('../../storage/sessionDatabase');
 
-class SessionStartService extends Service {
+class SessionRuntimeStartService extends Service {
   constructor(sessionManager) {
     super(
       DEFAULT_TOPICS.SERVICES.SESSION_RUNTIME_START,
@@ -18,7 +18,7 @@ class SessionStartService extends Service {
     if (typeof sessionSpecs === 'undefined') {
       return {
         error: {
-          title: 'SessionStartService Error',
+          title: 'SessionRuntimeStartService Error',
           message: 'No session specifications given'
         }
       };
@@ -36,7 +36,7 @@ class SessionStartService extends Service {
       } catch (error) {
         return {
           error: {
-            title: 'SessionStartService Error',
+            title: 'SessionRuntimeStartService Error',
             message: error.toString(),
             stack: error.stack && error.stack.toString()
           }
@@ -57,7 +57,7 @@ class SessionStartService extends Service {
       } catch (error) {
         return {
           error: {
-            title: 'SessionStartService Error',
+            title: 'SessionRuntimeStartService Error',
             message: error.toString(),
             stack: error.stack && error.stack.toString()
           }
@@ -77,7 +77,7 @@ class SessionStartService extends Service {
     } catch (error) {
       return {
         error: {
-          title: 'SessionStartService Error',
+          title: 'SessionRuntimeStartService Error',
           message: error.toString(),
           stack: error.stack && error.stack.toString()
         }
@@ -86,6 +86,4 @@ class SessionStartService extends Service {
   }
 }
 
-module.exports = {
-  SessionStartService: SessionStartService
-};
+module.exports = { SessionRuntimeStartService };

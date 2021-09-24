@@ -2,6 +2,7 @@ const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../service.js');
 
+//TODO: rename to RuntimeGetList
 class ProcessingModuleDatabaseGetService extends Service {
   constructor(processingModuleManager) {
     super(

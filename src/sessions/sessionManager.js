@@ -79,7 +79,7 @@ class SessionManager extends EventEmitter {
           'failure to start ' +
             session.toString() +
             ', list of PMs not running:\n' +
-            JSON.stringify(pmList)
+            pmList.map((pm) => 'ProcessingModule "' + pm.name + '" (ID ' + pm.id + ')')
         );
       });
     }
@@ -113,15 +113,20 @@ class SessionManager extends EventEmitter {
   }
 
   startSession(session) {
-    let success = session && session.start();
-    if (success) {
-      this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
+    session.on(Session.EVENTS.START_SUCCESS, () => {
       namida.logSuccess('SessionManager', 'succesfully started ' + session.toString());
-    } else {
+      this.topicData.publish(DEFAULT_TOPICS.INFO_TOPICS.RUNNING_SESSION, {
+        topic: DEFAULT_TOPICS.INFO_TOPICS.RUNNING_SESSION,
+        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),
+        session: session.toProtobuf()
+      });
+    });
+    session.on(Session.EVENTS.START_FAILURE, () => {
       namida.logFailure('SessionManager', 'failed to start ' + session.toString());
-    }
+    });
 
-    return success;
+    session.start();
+    this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
   }
 
   startAllSessions() {
@@ -137,15 +142,15 @@ class SessionManager extends EventEmitter {
   }
 
   stopSession(session) {
-    let success = session && session.stop();
-    if (success) {
-      this.emit(EVENTS_SESSION_MANAGER.STOP_SESSION, session.toProtobuf());
+    session.on(Session.EVENTS.STOP_SUCCESS, () => {
       namida.logSuccess('SessionManager', 'succesfully stopped ' + session.toString());
-    } else {
+    });
+    session.on(Session.EVENTS.STOP_FAILURE, () => {
       namida.logFailure('SessionManager', 'failed to stop ' + session.toString());
-    }
+    });
 
-    return success;
+    session.stop();
+    this.emit(EVENTS_SESSION_MANAGER.STOP_SESSION, session.toProtobuf());
   }
 
   stopAllSessions() {
