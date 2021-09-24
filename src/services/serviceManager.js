@@ -9,6 +9,7 @@ const { DeviceListService } = require('./devices/deviceListService.js');
 const ProcessingModuleGetService = require('./processing/pmDatabaseGetService.js');
 const ProcessingModuleGetListService = require('./processing/pmDatabaseGetListService.js');
 const ProcessingModuleRuntimeAddService = require('./processing/pmRuntimeAddService.js');
+const ProcessingModuleRuntimeRemoveService = require('./processing/pmRuntimeRemoveService');
 const { SubscriptionService } = require('./subscriptionService.js');
 const { ServerConfigService } = require('./serverConfigService.js');
 const { TopicListService } = require('./topicListService');
@@ -61,12 +62,16 @@ class ServiceManager {
   addDefaultServices() {
     /* add general services */
     this.addService(new SubscriptionService(ClientManager.instance, this.topicData));
-    this.addService(new ServerConfigService(this.masterNodeID, 'master-node', this.connectionsManager));
+    this.addService(
+      new ServerConfigService(this.masterNodeID, 'master-node', this.connectionsManager)
+    );
     this.addService(new TopicListService(this, this.topicData));
     this.addService(new ServiceListService(this));
     /* add client services */
     this.addService(new ClientRegistrationService(ClientManager.instance));
-    this.addService(new ClientDeregistrationService(ClientManager.instance, DeviceManager.instance));
+    this.addService(
+      new ClientDeregistrationService(ClientManager.instance, DeviceManager.instance)
+    );
     this.addService(new ClientListService(ClientManager.instance));
     /* add device services */
     this.addService(new DeviceRegistrationService(DeviceManager.instance));
@@ -77,6 +82,12 @@ class ServiceManager {
     this.addService(new ProcessingModuleGetListService(this.processingModuleManager));
     this.addService(
       new ProcessingModuleRuntimeAddService(this.processingModuleManager, SessionManager.instance)
+    );
+    this.addService(
+      new ProcessingModuleRuntimeRemoveService(
+        this.processingModuleManager,
+        SessionManager.instance
+      )
     );
     /* add session services */
     this.addService(new SessionDatabaseDeleteService());
@@ -133,7 +144,10 @@ class ServiceManager {
     if (!this.services.has(request.topic)) {
       namida.logFailure(
         'ServiceManager',
-        'no service for topic "' + request.topic + '" registered! request:\n' + JSON.stringify(request)
+        'no service for topic "' +
+          request.topic +
+          '" registered! request:\n' +
+          JSON.stringify(request)
       );
 
       return this.serviceReplyTranslator.createBufferFromPayload({

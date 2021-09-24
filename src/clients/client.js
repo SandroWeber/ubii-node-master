@@ -239,7 +239,7 @@ class Client {
   unsubscribeTopic(topic) {
     // no (explicit) subscription?
     if (!this.topicSubscriptions.has(topic)) {
-      namida.logFailure(this.toString(), `not subscribed to topic ${topic}.`);
+      namida.warn(this.toString(), `not subscribed to topic ${topic}.`);
       return;
     }
     this.unsubscribeAtTopicData(topic);
@@ -269,7 +269,7 @@ class Client {
    */
   unsubscribeRegex(regexString) {
     if (!this.regexSubscriptions.has(regexString)) {
-      namida.logFailure(this.toString(), `not subscribed to regex "${regexString}"`);
+      namida.warn(this.toString(), `not subscribed to regex "${regexString}"`);
       return;
     }
 

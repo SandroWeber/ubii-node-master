@@ -14,7 +14,6 @@ class SessionRuntimeAddService extends Service {
   }
 
   reply(sessionSpecs) {
-    console.info('SessionRuntimeAddService - ' + sessionSpecs.name);
     if (typeof sessionSpecs === 'undefined') {
       return {
         error: {

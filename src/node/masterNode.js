@@ -148,7 +148,7 @@ class MasterNode {
 
     try {
       // Decode buffer.
-      let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
+      let topicDataMessage = this.topicDataTranslator.createPayloadFromBuffer(message);
 
       // Process message.
       this.processTopicDataMessage(topicDataMessage, clientID);
@@ -194,7 +194,7 @@ class MasterNode {
 
     try {
       // Decode buffer.
-      let topicDataMessage = this.topicDataTranslator.createMessageFromBuffer(message);
+      let topicDataMessage = this.topicDataTranslator.createPayloadFromBuffer(message);
 
       this.processTopicDataMessage(topicDataMessage, clientID);
     } catch (error) {

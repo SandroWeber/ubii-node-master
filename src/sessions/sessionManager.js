@@ -122,7 +122,6 @@ class SessionManager extends EventEmitter {
       });
     });
     session.on(Session.EVENTS.START_FAILURE, () => {
-      this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
       namida.logFailure('SessionManager', 'failed to start ' + session.toString());
     });
 
@@ -143,15 +142,15 @@ class SessionManager extends EventEmitter {
   }
 
   stopSession(session) {
-    let success = session && session.stop();
-    if (success) {
-      this.emit(EVENTS_SESSION_MANAGER.STOP_SESSION, session.toProtobuf());
+    session.on(Session.EVENTS.STOP_SUCCESS, () => {
       namida.logSuccess('SessionManager', 'succesfully stopped ' + session.toString());
-    } else {
+    });
+    session.on(Session.EVENTS.STOP_FAILURE, () => {
       namida.logFailure('SessionManager', 'failed to stop ' + session.toString());
-    }
+    });
 
-    return success;
+    session.stop();
+    this.emit(EVENTS_SESSION_MANAGER.STOP_SESSION, session.toProtobuf());
   }
 
   stopAllSessions() {
