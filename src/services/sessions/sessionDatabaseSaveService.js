@@ -24,23 +24,25 @@ class SessionDatabaseSaveService extends Service {
       };
     }
 
-    if (!Array.isArray(sessionSpecs)) {
+    if (sessionSpecs.elements) {
+      sessionSpecs = sessionSpecs.elements;
+    }
+    else if (!Array.isArray(sessionSpecs)) {
       sessionSpecs = [sessionSpecs];
     }
 
     let newSessions = [];
     sessionSpecs.forEach((spec) => {
       try {
+        if (SessionDatabase.has(spec)) {
+          SessionDatabase.updateSession(spec);
+        }
         // new session
-        if (!spec.id || spec.id === '') {
+        else {
           spec.id = undefined; // ID is assigned by server upon creation
           let session = this.sessionManager.createSession(spec);
           newSessions.push(session);
           SessionDatabase.addSession(session.toProtobuf());
-        }
-        // update existing session (known ID)
-        else {
-          SessionDatabase.updateSession(spec);
         }
       } catch (error) {
         return {
