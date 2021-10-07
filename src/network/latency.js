@@ -11,7 +11,7 @@ class Latenz  {
         this.activePingMap.set(cId, this.getTimeStamp(cId))
     }
 
-    addLatenz(cId) {
+    addLatency(cId) {
         if (this.activePingMap.has(cId)) {
             let client = this.clientManager.getClient(cId);
             client.updateLatency(this.calcDiffTimeStamps(cId));
@@ -28,4 +28,4 @@ class Latenz  {
     }
 }
 
-module.exports = new Latenz();
+module.exports = new Latency();

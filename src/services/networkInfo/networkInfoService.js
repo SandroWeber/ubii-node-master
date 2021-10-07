@@ -16,7 +16,7 @@ class NetworkInfoService extends Service {
         }
       };
       clientList.forEach(client => {
-        response.clientList.elements.push(client.latenzToProtobuf());
+        response.clientList.elements.push(client.latencyToProtobuf());
       });
 
       return response;

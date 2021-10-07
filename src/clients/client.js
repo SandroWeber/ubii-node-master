@@ -27,7 +27,7 @@ class Client {
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
     this.publishedTopics = [];
-    this.latenz = 0;
+    this.latency = 0;
   }
 
   /**
@@ -45,7 +45,7 @@ class Client {
    * Update the latency of the client.
    */
   updateLatency(lzInMs) {
-    this.latenz = lzInMs;
+    this.latency = lzInMs;
   }
 
   /**
@@ -303,10 +303,10 @@ class Client {
     });
   }
 
-  latenzToProtobuf() {
+  latencyToProtobuf() {
     return {
       id: this.id,
-      latenz: this.latenz
+      latency: this.latency
     }
   }
 
