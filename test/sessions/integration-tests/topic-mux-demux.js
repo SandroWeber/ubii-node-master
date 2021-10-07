@@ -108,7 +108,9 @@ test.beforeEach((t) => {
   t.context.nodeID = 'test-node-id-topic-mux-demux';
   t.context.topicData = new RuntimeTopicData();
   t.context.clientManager = new ClientManager(undefined, t.context.topicData);
-  t.context.deviceManager = new DeviceManager(undefined, t.context.topicData, undefined);
+  t.context.deviceManager = DeviceManager.instance;
+  t.context.deviceManager.setTopicData(t.context.topicData);
+  
   t.context.processingModuleManager = new ProcessingModuleManager(
     t.context.nodeID,
     t.context.deviceManager,

@@ -7,21 +7,45 @@ const { TopicMultiplexer } = require('./../devices/topicMultiplexer.js');
 const { TopicDemultiplexer } = require('./../devices/topicDemultiplexer.js');
 const { ClientManager } = require('../clients/clientManager.js');
 
+let _instance = null;
+const SINGLETON_ENFORCER = Symbol();
+
 /**
  * The DeviceManager manages Device objects. It is part of a server node.
  * The server node uses it to manages all entities that interact with the functionalities of the server.
  */
 class DeviceManager {
-  constructor(clientManager, topicData, server) {
-    this.clientManager = clientManager;
+  constructor(enforcer) {
+    if (enforcer !== SINGLETON_ENFORCER) {
+      throw new Error('Use ' + this.constructor.name + '.instance');
+    }
+
+    this.participants = new Map();
+    this.watchers = new Map();
+    this.topicMuxers = new Map();
+    this.topicDemuxers = new Map();
+  }
+
+  static get instance() {
+    if (_instance == null) {
+      _instance = new DeviceManager(SINGLETON_ENFORCER);
+    }
+
+    return _instance;
+  }
+
+  /*constructor(topicData) {
     this.topicData = topicData;
-    this.server = server;
     this.participants = new Map();
     this.watchers = new Map();
     this.topicMuxers = new Map();
     this.topicDemuxers = new Map();
 
-    namida.log('Device Manager Ready', 'The Device Manager is initialized and ready to work.');
+    //namida.log('Device Manager Ready', 'The Device Manager is initialized and ready to work.');
+  }*/
+
+  setTopicData(topicdata) {
+    this.topicData = topicdata;
   }
 
   getDevice(id) {
@@ -206,7 +230,7 @@ class DeviceManager {
     if (deviceID && this.hasParticipant(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (
-        this.clientManager.getClient(clientID).registrationDate <
+        ClientManager.instance.getClient(clientID).registrationDate <
         this.getParticipant(deviceID).lastSignOfLife ||
         deviceSpec.deviceType !== 'PARTICIPANT'
       ) {
@@ -239,7 +263,7 @@ class DeviceManager {
     if (deviceID && this.hasWatcher(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (
-        this.clientManager.getClient(clientID).registrationDate <
+        ClientManager.instance.getClient(clientID).registrationDate <
         this.getWatcher(deviceID).lastSignOfLife ||
         deviceSpec.deviceType !== 'WATCHER'
       ) {
@@ -273,7 +297,7 @@ class DeviceManager {
     if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
       currentDevice = new Participant(
         deviceSpec,
-        this.clientManager.getClient(clientID),
+        ClientManager.instance.getClient(clientID),
         this.topicData
       );
       this.addParticipant(currentDevice);
@@ -283,7 +307,7 @@ class DeviceManager {
     if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
       currentDevice = new Watcher(
         deviceSpec,
-        this.clientManager.getClient(clientID),
+        ClientManager.instance.getClient(clientID),
         this.topicData
       );
       this.registerWatcher(currentDevice);

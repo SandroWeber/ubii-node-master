@@ -1,4 +1,4 @@
-const uuidv4 = require('uuid/v4');
+const { v4: uuidv4 } = require('uuid');
 
 const {Device} = require('./device.js');
 const {ProtobufTranslator, MSG_TYPES} = require('@tum-far/ubii-msg-formats');
@@ -53,15 +53,11 @@ class Watcher extends Device {
     }
 
     // Subscribe to all.
-    let token = this.topicData.subscribeAll((topic, data) => {
+    let token = this.topicData.subscribeAll((record) => {
       let payload = {
         deviceIdentifier: 'masterNode',
-        topicDataRecord: {
-          topic: topic
-        }
+        topicDataRecord: record
       };
-      payload.topicDataRecord[data.type] = data.value;
-
       let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
 
       this.sendMessageToRemote(buffer);

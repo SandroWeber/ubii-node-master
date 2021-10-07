@@ -7,10 +7,10 @@ const { Service } = require('../service.js');
  * Handles requests from client nodes to add processing modules to the runtime of their
  * respective session as active and processing.
  */
-class ProcessingModuleRuntimeAddService extends Service {
+class ProcessingModuleRuntimeRemoveService extends Service {
   constructor(processingModuleManager, sessionManager) {
     super(
-      DEFAULT_TOPICS.SERVICES.PM_RUNTIME_ADD,
+      DEFAULT_TOPICS.SERVICES.PM_RUNTIME_REMOVE,
       MSG_TYPES.PM_LIST,
       MSG_TYPES.SUCCESS + ', ' + MSG_TYPES.ERROR
     );
@@ -25,7 +25,7 @@ class ProcessingModuleRuntimeAddService extends Service {
     let invalidPMs = [];
     pmSpecList.forEach((pm) => {
       if (this.sessionManager.verifyRemoteProcessingModule(pm)) {
-        this.processingModuleManager.emit(ProcessingModuleManager.EVENTS.PM_STARTED, pm);
+        this.processingModuleManager.emit(ProcessingModuleManager.EVENTS.PM_STOPPED, pm);
       } else {
         invalidPMs.push(pm);
       }
@@ -34,7 +34,7 @@ class ProcessingModuleRuntimeAddService extends Service {
     if (invalidPMs.length > 0) {
       return {
         error: {
-          title: 'ProcessingModuleRuntimeAddService',
+          title: 'ProcessingModuleRuntimeRemoveService',
           message:
             'not all processing modules could be verified: ' +
             invalidPMs.map((pm) => {
@@ -45,12 +45,12 @@ class ProcessingModuleRuntimeAddService extends Service {
     } else {
       return {
         success: {
-          title: 'ProcessingModuleRuntimeAddService',
-          message: 'all processing modules verified to be started'
+          title: 'ProcessingModuleRuntimeRemoveService',
+          message: 'all processing modules verified to be removed'
         }
       };
     }
   }
 }
 
-module.exports = ProcessingModuleRuntimeAddService;
+module.exports = ProcessingModuleRuntimeRemoveService;

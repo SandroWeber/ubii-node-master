@@ -3,7 +3,7 @@ const fs = require('fs');
 const yargs = require('yargs');
 
 (function () {
-  console.info('WARNING! experimental feature, does not work reliably yet!');
+  console.warn('WARNING! experimental feature, does not work reliably yet!');
 
   // command line argument specifications
   const scriptArguments = yargs.usage('Usage: -n <name>').option('n', {
@@ -73,6 +73,6 @@ const yargs = require('yargs');
     fs.writeFileSync(pathCertificates + filenamePrivate, pems.private);
     console.info('All files written.');
   } catch (error) {
-    console.info(error);
+    console.error(error);
   }
 })();
