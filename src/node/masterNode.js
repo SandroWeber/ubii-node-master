@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
-const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
 const { NetworkConnectionsManager, ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
 
@@ -107,6 +107,7 @@ class MasterNode {
 
       // Process request.
       let reply = ServiceManager.instance.processRequest(requestMessage);
+      let replyMessage = this.serviceReplyTranslator.createPayloadFromMessage(reply);
 
       // Return reply.
       // VARIANT A: PROTOBUF
@@ -117,7 +118,7 @@ class MasterNode {
       return replyBuffer;*/
 
       // VARIANT B: JSON
-      response.json(reply);
+      response.json(replyMessage);
       return reply;
     } catch (error) {
       let title = 'Service Request';
