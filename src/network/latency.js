@@ -1,6 +1,6 @@
 const { ClientManager } = require('../clients/clientManager');
 
-class Latenz  {
+class Latency  {
 
     constructor() {
         this.activePingMap = new Map();

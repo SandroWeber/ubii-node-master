@@ -119,7 +119,6 @@ class Client {
       // Determine the time since the last sign of life.
       let now = new Date();
       let difference = now - this.lastSignOfLife;
-
       // Determine the current state. If the state changes, ouput the feedback on the server console.
       if (difference > TIME_UNTIL_UNAVAILABLE) {
         // The client has probably disconnected unexpectedly and should be removed.

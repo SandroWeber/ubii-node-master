@@ -23,7 +23,7 @@ const { SessionRuntimeAddService } = require('./sessions/sessionRuntimeAddServic
 const { SessionDatabaseSaveService } = require('./sessions/sessionDatabaseSaveService.js');
 const { SessionRuntimeStartService } = require('./sessions/sessionRuntimeStartService');
 const { SessionRuntimeStopService } = require('./sessions/sessionRuntimeStopService');
-const { NetworkInfoService } = require('./networkInfo/networkInfoService')
+const { NetworkInfoService } = require('./networkInfo/networkInfoService.js')
 
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
@@ -102,7 +102,7 @@ class ServiceManager {
     this.addService(new SessionRuntimeStopService(SessionManager.instance));
 
     /* network statistics */
-    this.addService(new NetworkInfoService(this.clientManager));
+    this.addService(new NetworkInfoService(ClientManager.instance));
   }
 
   addService(service) {
