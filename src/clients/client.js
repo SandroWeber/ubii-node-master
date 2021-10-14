@@ -7,7 +7,7 @@ const {
 const namida = require('@tum-far/namida');
 const { v4: uuidv4 } = require('uuid');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
-
+const lz = require('../network/latency')
 class Client {
   constructor(specs = {}, server, topicData) {
     // take over specs
@@ -99,6 +99,7 @@ class Client {
     // Specify the ping behaviour.
     let signOfLifePingCallback = () => {
       try {
+        lz.addLatency(this);
         this.updateLastSignOfLife();
       } catch (e) {
         namida.error(
@@ -152,6 +153,7 @@ class Client {
 
       // Should we ping the remote?
       if (difference > TIME_UNTIL_PING) {
+        lz.addPing(this.id)
         this.pingRemote(() => {
           signOfLifePingCallback();
         });
@@ -302,13 +304,6 @@ class Client {
     });
   }
 
-  latencyToProtobuf() {
-    return {
-      id: this.id,
-      latency: this.latency
-    }
-  }
-
   toProtobuf() {
     return {
       id: this.id,
@@ -320,7 +315,8 @@ class Client {
       isDedicatedProcessingNode: this.isDedicatedProcessingNode,
       hostIp: this.hostIp,
       metadataJson: this.metadataJson,
-      state: this.state
+      state: this.state,
+      latency: this.latency
     };
   }
 

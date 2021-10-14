@@ -16,7 +16,8 @@ class NetworkInfoService extends Service {
         }
       };
       clientList.forEach(client => {
-        response.clientList.elements.push(client.latencyToProtobuf());
+        let unwrap = ({id, latency}) => ({id, latency});
+        response.clientList.elements.push(unwrap(client.toProtobuf()));
       });
 
       return response;

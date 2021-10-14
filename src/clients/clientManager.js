@@ -10,10 +10,10 @@ class ClientManager {
     if (enforcer !== SINGLETON_ENFORCER) {
       throw new Error('Use ' + this.constructor.name + '.instance');
     }
-
+    
     this.clients = new Map();
   }
-
+  
   static get instance() {
     if (_instance == null) {
       _instance = new ClientManager(SINGLETON_ENFORCER);

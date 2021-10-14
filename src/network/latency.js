@@ -1,21 +1,18 @@
-const { ClientManager } = require('../clients/clientManager');
-
 class Latency  {
 
     constructor() {
         this.activePingMap = new Map();
-        this.clientManager = ClientManager.instance;
     }
 
     addPing(cId) {
         this.activePingMap.set(cId, this.getTimeStamp(cId))
     }
 
-    addLatency(cId) {
-        if (this.activePingMap.has(cId)) {
-            let client = this.clientManager.getClient(cId);
-            client.updateLatency(this.calcDiffTimeStamps(cId));
-            this.activePingMap.delete(cId);
+    addLatency(c) {
+        if (this.activePingMap.has(c.id)) {
+            // let client = this.clientManager.getClient(cId);
+            c.updateLatency(this.calcDiffTimeStamps(c.id));
+            this.activePingMap.delete(c.id);
         }
     }
 
