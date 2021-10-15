@@ -42,7 +42,7 @@ class SessionDatabaseSaveService extends Service {
           spec.id = undefined; // ID is assigned by server upon creation
           let session = this.sessionManager.createSession(spec);
           newSessions.push(session);
-          SessionDatabase.addSession(session.toProtobuf());
+          SessionDatabase.addProto(session.toProtobuf());
         }
       } catch (error) {
         return {
