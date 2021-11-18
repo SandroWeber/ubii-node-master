@@ -104,7 +104,7 @@ class MasterNode {
 
       // VARIANT B: JSON
       let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
-
+    
       // Process request.
       let reply = ServiceManager.instance.processRequest(requestMessage);
       let replyMessage = this.serviceReplyTranslator.createPayloadFromMessage(reply);

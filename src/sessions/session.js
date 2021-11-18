@@ -416,8 +416,7 @@ class Session extends EventEmitter {
       status: this.status,
       processingModules: this.processingModules,
       ioMappings: this.ioMappings,
-      editable: this.editable,
-      status: this.status
+      editable: this.editable
     };
   }
 

@@ -7,7 +7,7 @@ const {
 const namida = require('@tum-far/namida');
 const { v4: uuidv4 } = require('uuid');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
-
+const lz = require('../network/latency')
 class Client {
   constructor(specs = {}, server, topicData) {
     // take over specs
@@ -27,6 +27,7 @@ class Client {
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
     this.publishedTopics = [];
+    this.latency = 0;
   }
 
   /**
@@ -38,6 +39,13 @@ class Client {
     } else if (state === proto.ubii.clients.Client.State.INACTIVE) {
       this.stopLifeMonitoring();
     }
+  }
+
+  /**
+   * Update the latency of the client.
+   */
+  updateLatency(lzInMs) {
+    this.latency = lzInMs;
   }
 
   /**
@@ -91,6 +99,7 @@ class Client {
     // Specify the ping behaviour.
     let signOfLifePingCallback = () => {
       try {
+        lz.addLatency(this);
         this.updateLastSignOfLife();
       } catch (e) {
         namida.error(
@@ -111,7 +120,6 @@ class Client {
       // Determine the time since the last sign of life.
       let now = new Date();
       let difference = now - this.lastSignOfLife;
-
       // Determine the current state. If the state changes, ouput the feedback on the server console.
       if (difference > TIME_UNTIL_UNAVAILABLE) {
         // The client has probably disconnected unexpectedly and should be removed.
@@ -145,6 +153,7 @@ class Client {
 
       // Should we ping the remote?
       if (difference > TIME_UNTIL_PING) {
+        lz.addPing(this.id)
         this.pingRemote(() => {
           signOfLifePingCallback();
         });
@@ -306,7 +315,8 @@ class Client {
       isDedicatedProcessingNode: this.isDedicatedProcessingNode,
       hostIp: this.hostIp,
       metadataJson: this.metadataJson,
-      state: this.state
+      state: this.state,
+      latency: this.latency
     };
   }
 
