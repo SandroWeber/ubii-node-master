@@ -302,15 +302,19 @@ class DeviceManager {
       );
       this.addParticipant(currentDevice);
     }
-
     // Handle the registration of a watcher.
-    if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
+     else if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
       currentDevice = new Watcher(
         deviceSpec,
         ClientManager.instance.getClient(clientID),
         this.topicData
       );
       this.registerWatcher(currentDevice);
+    }
+    else {
+      let message = 'device type not specified while trying to register';
+      namida.logFailure('DeviceManager', message);
+      throw new Error(message);
     }
 
     // Update the feedback to the default registartion feedback.
