@@ -30,10 +30,10 @@ class MasterNode {
     );
     this.connectionsManager.onServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
     this.connectionsManager.onTopicDataMessageWS((...params) =>
-      this.onTopicDataMessageWS(...params)
+      this.onTopicDataMessage(...params)
     );
-    this.connectionsManager.onTopicDataMessageZMQ((...params) =>
-      this.onTopicDataMessageZMQ(...params)
+    this.connectionsManager.onTopicDataMessageZMQ((envelope, message) =>
+      this.onTopicDataMessage(envelope.toString(), message)
     );
 
     // Client Manager Component:
@@ -137,10 +137,10 @@ class MasterNode {
     }
   }
 
-  onTopicDataMessageZMQ(envelope, message) {
-    let clientID = envelope.toString();
+  //TODO: unify with WS code
+  onTopicDataMessage(clientID, message) {
     if (!ClientManager.instance.verifyClient(clientID)) {
-      console.error('Topic data received from unregistered client with ID ' + clientID);
+      namida.logFailure('Topic data received from unregistered client with ID ' + clientID);
       return;
     }
 
@@ -154,53 +154,8 @@ class MasterNode {
       // Process message.
       this.processTopicDataMessage(topicDataMessage, clientID);
     } catch (error) {
-      let title = 'TopicData message publishing failed (ZMQ)';
-      let message = `TopicData message publishing failed (ZMQ) with an error:`;
-      let stack = '' + (error.stack || error);
-
-      namida.logFailure(title, message + '\n' + stack);
-
-      try {
-        // Send error:
-        this.connectionsManager.connections.topicDataZMQ.send(
-          clientID,
-          this.topicDataTranslator.createBufferFromPayload({
-            error: {
-              title: title,
-              message: message,
-              stack: stack
-            }
-          })
-        );
-      } catch (error) {
-        title = 'TopicData error response sending failed (ZMQ)';
-        message = `TopicData error response sending failed (ZMQ) with an error:`;
-        stack = '' + (error.stack || error);
-
-        namida.logFailure(title, message + '\n' + stack);
-      }
-    }
-
-    return message;
-  }
-
-  onTopicDataMessageWS(clientID, message) {
-    if (!ClientManager.instance.verifyClient(clientID)) {
-      console.error('Topic data received from unregistered client with ID ' + clientID);
-      return;
-    }
-
-    let client = ClientManager.instance.getClient(clientID);
-    client.updateLastSignOfLife();
-
-    try {
-      // Decode buffer.
-      let topicDataMessage = this.topicDataTranslator.createPayloadFromBuffer(message);
-
-      this.processTopicDataMessage(topicDataMessage, clientID);
-    } catch (error) {
-      let title = 'TopicData message publishing failed (WS)';
-      let message = `TopicData message publishing failed (WS) with an error:`;
+      let title = 'TopicData reception failed (Client ID ' + clientID + ')';
+      let message = 'error stack:';
       let stack = '' + (error.stack || error);
 
       namida.logFailure(title, message + '\n' + stack);
@@ -216,10 +171,10 @@ class MasterNode {
             }
           })
         );
-      } catch (e) {
-        title = 'TopicData error response sending failed (WS)';
-        message = 'TopicData error response sending failed (WS) with an error:';
-        stack = '' + (e.stack || e);
+      } catch (error) {
+        title = 'TopicData error response sending failed (Client ID ' + clientID + ')';
+        message = 'error stack:';
+        stack = '' + (error.stack || error);
 
         namida.logFailure(title, message + '\n' + stack);
       }
