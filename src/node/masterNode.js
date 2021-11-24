@@ -97,10 +97,10 @@ class MasterNode {
       // VARIANT A: PROTOBUF
       /*let requestBuffer = new Uint8Array(request.body);
       let requestMessage = this.serviceRequestTranslator.createMessageFromBuffer(requestBuffer);
-      console.info('### onServiceMessageREST - request ###');
-      console.info(requestMessage);
-      console.info(requestBuffer.length);
-      console.info(requestBuffer);*/
+      console.log('### onServiceMessageREST - request ###');
+      console.log(requestMessage);
+      console.log(requestBuffer.length);
+      console.log(requestBuffer);*/
 
       // VARIANT B: JSON
       let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
@@ -112,8 +112,8 @@ class MasterNode {
       // Return reply.
       // VARIANT A: PROTOBUF
       /*let replyBuffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
-      console.info(replyBuffer.length);
-      console.info(replyBuffer);
+      console.log(replyBuffer.length);
+      console.log(replyBuffer);
       response.send(replyBuffer);
       return replyBuffer;*/
 
@@ -137,7 +137,6 @@ class MasterNode {
     }
   }
 
-  //TODO: unify with WS code
   onTopicDataMessage(clientID, message) {
     if (!ClientManager.instance.verifyClient(clientID)) {
       namida.logFailure('Topic data received from unregistered client with ID ' + clientID);

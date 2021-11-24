@@ -35,6 +35,7 @@ const yargs = require('yargs');
   });
 
   let selfsignedOptions = {
+    keySize: 2048,
     days: 365,
     extensions: [
       { name: 'basicConstraints', cA: true },
