@@ -191,8 +191,9 @@ class MasterNode {
     if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
 
     records.forEach((record) => {
-      let topic = record.topic;
+      /*let topic = record.topic;
       // confirm that the client is the rightful publisher of this topic
+      //TODO: smarter behaviour, only PUBLISHER components that are registered by other clients block publishing on the same topic
       if (!client.publishedTopics.includes(topic)) {
         let topicHasData = this.topicData.hasData(topic);
 
@@ -205,7 +206,7 @@ class MasterNode {
           );
           return;
         }
-      }
+      }*/
 
       this.topicData.publish(record.topic, record);
     });
