@@ -1,8 +1,11 @@
 const { v4: uuidv4 } = require('uuid');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
-const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
-const { NetworkConnectionsManager, ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
+const {
+  NetworkConnectionsManager,
+  ProcessingModuleManager
+} = require('@tum-far/ubii-node-nodejs/src/index');
 
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
@@ -29,9 +32,7 @@ class MasterNode {
       this.onServiceMessageREST(...params)
     );
     this.connectionsManager.onServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
-    this.connectionsManager.onTopicDataMessageWS((...params) =>
-      this.onTopicDataMessage(...params)
-    );
+    this.connectionsManager.onTopicDataMessageWS((...params) => this.onTopicDataMessage(...params));
     this.connectionsManager.onTopicDataMessageZMQ((envelope, message) =>
       this.onTopicDataMessage(envelope.toString(), message)
     );
@@ -43,17 +44,10 @@ class MasterNode {
     DeviceManager.instance.setTopicData(this.topicData);
 
     // PM Manager Component:
-    this.processingModuleManager = new ProcessingModuleManager(
-      this.id,
-      this.topicData
-    );
+    this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicData);
 
     // Session manager component:
-    SessionManager.instance.setDependencies(
-      this.id,
-      this.topicData,
-      this.processingModuleManager
-    );
+    SessionManager.instance.setDependencies(this.id, this.topicData, this.processingModuleManager);
 
     // Service Manager Component:
     ServiceManager.instance.setDependencies(
@@ -102,15 +96,6 @@ class MasterNode {
       console.log(requestBuffer.length);
       console.log(requestBuffer);*/
 
-      // VARIANT B: JSON
-      let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
-    
-      // Process request.
-      let reply = ServiceManager.instance.processRequest(requestMessage);
-      let replyMessage = this.serviceReplyTranslator.createPayloadFromMessage(reply);
-
-      // Return reply.
-      // VARIANT A: PROTOBUF
       /*let replyBuffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
       console.log(replyBuffer.length);
       console.log(replyBuffer);
@@ -118,7 +103,14 @@ class MasterNode {
       return replyBuffer;*/
 
       // VARIANT B: JSON
-      response.json(replyMessage);
+      let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
+
+      let reply = ServiceManager.instance.processRequest(requestMessage);
+      if (!this.serviceReplyTranslator.verify(reply)) {
+        namida.logFailure('onServiceMessageREST()', 'service reply seems malformed, verification failed. reply:\n' + reply);
+      }
+      response.json(reply);
+      
       return reply;
     } catch (error) {
       let title = 'Service Request';
