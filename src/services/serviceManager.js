@@ -136,13 +136,13 @@ class ServiceManager {
         'request is missing topic! request:\n' + JSON.stringify(request)
       );
 
-      return this.serviceReplyTranslator.createBufferFromPayload({
+      return {
         error: {
           title: 'Service request error',
           message: 'Request does not contain a topic',
           stack: JSON.stringify(request)
         }
-      });
+      };
     }
 
     if (!this.services.has(request.topic)) {
@@ -154,13 +154,13 @@ class ServiceManager {
           JSON.stringify(request)
       );
 
-      return this.serviceReplyTranslator.createBufferFromPayload({
+      return {
         error: {
           title: 'Service request error',
           message: 'unknown topic: ' + request.topic,
           stack: JSON.stringify(request)
         }
-      });
+      };
     }
 
     return this.services.get(request.topic).reply(request[request.type]);
