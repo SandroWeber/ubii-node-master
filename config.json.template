@@ -14,5 +14,6 @@
     "pathPrivateKey": "./certificates/ubii.private-key.pem",
     "pathPublicKey": "./certificates/ubii.public-key.pem",
     "allowedOrigins": ["https://localhost"]
-  }
+  },
+  "allowedHosts": ["localhost:8102"]
 }
