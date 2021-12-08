@@ -7,7 +7,9 @@ const {
 const namida = require('@tum-far/namida');
 const { v4: uuidv4 } = require('uuid');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
-const lz = require('../network/latency')
+const latency = require('../network/latency');
+const { DeviceManager } = require('../devices/deviceManager');
+
 class Client {
   constructor(specs = {}, server, topicData) {
     // take over specs
@@ -44,8 +46,8 @@ class Client {
   /**
    * Update the latency of the client.
    */
-  updateLatency(lzInMs) {
-    this.latency = lzInMs;
+  updateLatency(latencyInMs) {
+    this.latency = latencyInMs;
   }
 
   /**
@@ -87,6 +89,7 @@ class Client {
     this.stopLifeMonitoring();
     this.unsubscribeAll();
     this.deletePublishedTopics();
+    this.removeTopicsOfRegisteredComponents();
     namida.warn(this.toString(), 'deactivated due to missing sign of life, state=' + this.state);
   }
 
@@ -99,7 +102,7 @@ class Client {
     // Specify the ping behaviour.
     let signOfLifePingCallback = () => {
       try {
-        lz.addLatency(this);
+        latency.addLatency(this);
         this.updateLastSignOfLife();
       } catch (e) {
         namida.error(
@@ -153,7 +156,7 @@ class Client {
 
       // Should we ping the remote?
       if (difference > TIME_UNTIL_PING) {
-        lz.addPing(this.id)
+        latency.addPing(this.id);
         this.pingRemote(() => {
           signOfLifePingCallback();
         });
@@ -302,6 +305,14 @@ class Client {
     this.publishedTopics.forEach((topic) => {
       this.topicData.remove(topic);
     });
+  }
+
+  removeTopicsOfRegisteredComponents() {
+    for (const device of DeviceManager.instance.getDevicesByClientId(this.id)) {
+      for (const component of device.components) {
+        this.topicData.remove(component.topic);
+      }
+    }
   }
 
   toProtobuf() {

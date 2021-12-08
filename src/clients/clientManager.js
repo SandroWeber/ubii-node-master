@@ -10,10 +10,10 @@ class ClientManager {
     if (enforcer !== SINGLETON_ENFORCER) {
       throw new Error('Use ' + this.constructor.name + '.instance');
     }
-    
+
     this.clients = new Map();
   }
-  
+
   static get instance() {
     if (_instance == null) {
       _instance = new ClientManager(SINGLETON_ENFORCER);
@@ -25,7 +25,7 @@ class ClientManager {
   /**
    * Set the connections manager and topicdata buffer dependencies.
    * @param {NetworkConnectionsManager} connections
-   * @param {RuntimeTopicData} topicdata 
+   * @param {RuntimeTopicData} topicdata
    */
   setDependencies(connections, topicdata) {
     this.server = connections;
@@ -163,7 +163,7 @@ class ClientManager {
       if (
         client.isDedicatedProcessingNode &&
         client.state === proto.ubii.clients.Client.State.ACTIVE &&
-        client.processingModules.some((pm) => (pm.name === pmSpec.name))
+        client.processingModules.some((pm) => pm.name === pmSpec.name)
       ) {
         nodeIDs.push(client.id);
       }

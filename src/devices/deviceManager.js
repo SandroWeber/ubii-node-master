@@ -126,7 +126,7 @@ class DeviceManager {
     let participant = this.getParticipant(id);
     let client = ClientManager.instance.getClient(participant.clientId);
     // remove device from client specs
-    let index = client.devices.findIndex(device => device.id === id);
+    let index = client.devices.findIndex((device) => device.id === id);
     if (index > -1) {
       client.devices.splice(index, 1);
     }
@@ -230,8 +230,7 @@ class DeviceManager {
     if (deviceID && this.hasParticipant(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (
-        ClientManager.instance.getClient(clientID).registrationDate <
-        this.getParticipant(deviceID).lastSignOfLife ||
+        ClientManager.instance.getClient(clientID).registrationDate < this.getParticipant(deviceID).lastSignOfLife ||
         deviceSpec.deviceType !== 'PARTICIPANT'
       ) {
         // -> REregistering is not an option: Reject the registration.
@@ -263,8 +262,7 @@ class DeviceManager {
     if (deviceID && this.hasWatcher(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (
-        ClientManager.instance.getClient(clientID).registrationDate <
-        this.getWatcher(deviceID).lastSignOfLife ||
+        ClientManager.instance.getClient(clientID).registrationDate < this.getWatcher(deviceID).lastSignOfLife ||
         deviceSpec.deviceType !== 'WATCHER'
       ) {
         // -> REregistering is not an option: Reject the registration.
@@ -295,23 +293,14 @@ class DeviceManager {
     let currentDevice = {};
     // Handle the registration of a participant.
     if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
-      currentDevice = new Participant(
-        deviceSpec,
-        ClientManager.instance.getClient(clientID),
-        this.topicData
-      );
+      currentDevice = new Participant(deviceSpec, ClientManager.instance.getClient(clientID), this.topicData);
       this.addParticipant(currentDevice);
     }
     // Handle the registration of a watcher.
-     else if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
-      currentDevice = new Watcher(
-        deviceSpec,
-        ClientManager.instance.getClient(clientID),
-        this.topicData
-      );
+    else if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
+      currentDevice = new Watcher(deviceSpec, ClientManager.instance.getClient(clientID), this.topicData);
       this.registerWatcher(currentDevice);
-    }
-    else {
+    } else {
       let message = 'device type not specified while trying to register';
       namida.logFailure('DeviceManager', message);
       throw new Error(message);
@@ -396,6 +385,27 @@ class DeviceManager {
 
   getTopicDemuxList() {
     return Array.from(this.topicDemuxers.values());
+  }
+
+  getComponentByTopic(topic) {
+    for (const [deviceID, device] of this.participants) {
+      for (const component of device.components) {
+        if (component.topic === topic) {
+          return component;
+        }
+      }
+    }
+  }
+
+  getDevicesByClientId(clientId) {
+    let devices = [];
+    for (const [deviceID, device] of this.participants) {
+      if (device.clientId === clientId) {
+        devices.push(device);
+      }
+    }
+
+    return devices;
   }
 }
 

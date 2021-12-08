@@ -107,10 +107,13 @@ class MasterNode {
 
       let reply = ServiceManager.instance.processRequest(requestMessage);
       if (!this.serviceReplyTranslator.verify(reply)) {
-        namida.logFailure('onServiceMessageREST()', 'service reply seems malformed, verification failed. reply:\n' + reply);
+        namida.logFailure(
+          'onServiceMessageREST()',
+          'service reply seems malformed, verification failed. reply:\n' + reply
+        );
       }
       response.json(reply);
-      
+
       return reply;
     } catch (error) {
       let title = 'Service Request';
@@ -183,10 +186,10 @@ class MasterNode {
     if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
 
     records.forEach((record) => {
-      /*let topic = record.topic;
+      let topic = record.topic;
       // confirm that the client is the rightful publisher of this topic
       //TODO: smarter behaviour, only PUBLISHER components that are registered by other clients block publishing on the same topic
-      if (!client.publishedTopics.includes(topic)) {
+      /*if (!client.publishedTopics.includes(topic)) {
         let topicHasData = this.topicData.hasData(topic);
 
         if (!topicHasData) {
@@ -199,6 +202,9 @@ class MasterNode {
           return;
         }
       }*/
+      if (!client.publishedTopics.includes(topic) && !this.topicData.hasData(topic)) {
+        client.publishedTopics.push(topic);
+      }
 
       this.topicData.publish(record.topic, record);
     });
