@@ -8,7 +8,7 @@ const namida = require('@tum-far/namida');
 const { v4: uuidv4 } = require('uuid');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 const latency = require('../network/latency');
-const { DeviceManager } = require('../devices/deviceManager');
+//const { DeviceManager } = require('../devices/deviceManager');
 
 class Client {
   constructor(specs = {}, server, topicData) {
@@ -89,7 +89,7 @@ class Client {
     this.stopLifeMonitoring();
     this.unsubscribeAll();
     this.deletePublishedTopics();
-    this.removeTopicsOfRegisteredComponents();
+    //this.removeTopicsOfRegisteredComponents();
     namida.warn(this.toString(), 'deactivated due to missing sign of life, state=' + this.state);
   }
 
@@ -307,13 +307,13 @@ class Client {
     });
   }
 
-  removeTopicsOfRegisteredComponents() {
+  /*removeTopicsOfRegisteredComponents() {
     for (const device of DeviceManager.instance.getDevicesByClientId(this.id)) {
       for (const component of device.components) {
         this.topicData.remove(component.topic);
       }
     }
-  }
+  }*/
 
   toProtobuf() {
     return {
