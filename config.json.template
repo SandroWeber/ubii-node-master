@@ -9,11 +9,11 @@
     "ipcEndpointTopicData": "/ubii-ipc-topicdata"
   },
   "https": {
-    "enabled": true,
+    "enabled": false,
     "pathCert": "./certificates/ubii.cert.pem",
     "pathPrivateKey": "./certificates/ubii.private-key.pem",
     "pathPublicKey": "./certificates/ubii.public-key.pem",
-    "allowedOrigins": ["https://localhost"]
+    "allowedOrigins": ["https://.*", "http://.*"]
   },
-  "allowedHosts": ["localhost:8102"]
+  "allowedHosts": [".*"]
 }
