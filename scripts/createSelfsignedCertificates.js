@@ -6,9 +6,9 @@ const yargs = require('yargs');
   console.warn('WARNING! experimental feature, does not work reliably yet!');
 
   // command line argument specifications
-  const scriptArguments = yargs.usage('Usage: -n <name>').option('n', {
-    alias: 'name',
-    describe: 'URIs (domain names) the certificates should be valid for.',
+  const scriptArguments = yargs.usage('Usage: -d <domain>').option('d', {
+    alias: 'domain',
+    describe: 'domains the certificates should be valid for.',
     type: 'string',
     demandOption: true
   }).argv;
@@ -25,13 +25,13 @@ const yargs = require('yargs');
 
   // define options for certificates
 
-  // create list of alternative names for self-signed options from --name arguments
-  if (!Array.isArray(scriptArguments.name)) {
-    scriptArguments.name = [scriptArguments.name];
+  // create list of alternative names for self-signed options from --domain arguments
+  if (!Array.isArray(scriptArguments.domain)) {
+    scriptArguments.domain = [scriptArguments.domain];
   }
-  let altNames = [];
-  scriptArguments.name.forEach((element) => {
-    altNames.push({ type: 6 /* URI */, value: element });
+  let altDomains = [];
+  scriptArguments.domain.forEach((element) => {
+    altDomains.push({ type: 6 /* URI */, value: element });
   });
 
   let selfsignedOptions = {
@@ -49,7 +49,7 @@ const yargs = require('yargs');
       },
       {
         name: 'subjectAltName',
-        altNames: altNames
+        altNames: altDomains
       }
     ]
   };
