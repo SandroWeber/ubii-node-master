@@ -33,6 +33,8 @@ const yargs = require('yargs');
   scriptArguments.domain.forEach((element) => {
     altDomains.push({ type: 6 /* URI */, value: element });
   });
+  console.info('domains: ');
+  console.info(altDomains);
 
   let selfsignedOptions = {
     keySize: 2048,

@@ -30,7 +30,7 @@
   "devDependencies": {
     "@ava/babel": "1.0.1",
     "ava": "^3.13.0",
-    "selfsigned": "^1.10.8",
+    "selfsigned": "2.0.0",
     "sinon": "6.0.1",
     "yargs": "15.4.0"
   },
@@ -38,7 +38,7 @@
     "@tum-far/namida": "0.1.1",
     "@tum-far/ubii-database": "0.1.1",
     "@tum-far/ubii-msg-formats": "0.15.16",
-    "@tum-far/ubii-node-nodejs": "0.3.10",
+    "@tum-far/ubii-node-nodejs": "0.3.12",
     "@tum-far/ubii-topic-data": "0.4.4",
     "body-parser": "1.18.3",
     "express": "4.17.1",
