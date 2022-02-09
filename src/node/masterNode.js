@@ -2,15 +2,14 @@ const { v4: uuidv4 } = require('uuid');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
-const {
-  NetworkConnectionsManager,
-  ProcessingModuleManager
-} = require('@tum-far/ubii-node-nodejs/src/index');
+const { NetworkConnectionsManager, ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
 
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
+const { config } = require('yargs');
+const ConfigService = require('@tum-far/ubii-node-nodejs/src/config/configService');
 
 class MasterNode {
   constructor() {
@@ -28,9 +27,7 @@ class MasterNode {
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
     this.connectionsManager.openConnections();
-    this.connectionsManager.onServiceMessageREST((...params) =>
-      this.onServiceMessageREST(...params)
-    );
+    this.connectionsManager.onServiceMessageREST((...params) => this.onServiceMessageREST(...params));
     this.connectionsManager.onServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
     this.connectionsManager.onTopicDataMessageWS((...params) => this.onTopicDataMessage(...params));
     this.connectionsManager.onTopicDataMessageZMQ((envelope, message) =>
@@ -87,34 +84,37 @@ class MasterNode {
 
   onServiceMessageREST(request, response) {
     try {
-      // Decode buffer.
-      // VARIANT A: PROTOBUF
-      /*let requestBuffer = new Uint8Array(request.body);
-      let requestMessage = this.serviceRequestTranslator.createMessageFromBuffer(requestBuffer);
-      console.log('### onServiceMessageREST - request ###');
-      console.log(requestMessage);
-      console.log(requestBuffer.length);
-      console.log(requestBuffer);*/
+      if (ConfigService.instance.config.serviceMessageMode === 'binary') {
+        // VARIANT A: PROTOBUF binary
+        let requestBuffer = new Uint8Array(request.body);
+        let requestMessage = this.serviceRequestTranslator.createMessageFromBuffer(requestBuffer);
+        console.log('### onServiceMessageREST - request ###');
+        console.log(requestMessage);
+        console.log(requestBuffer.length);
+        console.log(requestBuffer);
 
-      /*let replyBuffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
-      console.log(replyBuffer.length);
-      console.log(replyBuffer);
-      response.send(replyBuffer);
-      return replyBuffer;*/
+        let replyBuffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
+        console.log(replyBuffer.length);
+        console.log(replyBuffer);
+        response.send(replyBuffer);
+        return replyBuffer;
+      } else if (ConfigService.instance.config.serviceMessageMode === 'json') {
+        // VARIANT B: JSON
+        let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
 
-      // VARIANT B: JSON
-      let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
+        let reply = ServiceManager.instance.processRequest(requestMessage);
+        if (!this.serviceReplyTranslator.verify(reply)) {
+          namida.logFailure(
+            'onServiceMessageREST()',
+            'service reply seems malformed, verification failed. reply:\n' + reply
+          );
+        }
+        response.json(reply);
 
-      let reply = ServiceManager.instance.processRequest(requestMessage);
-      if (!this.serviceReplyTranslator.verify(reply)) {
-        namida.logFailure(
-          'onServiceMessageREST()',
-          'service reply seems malformed, verification failed. reply:\n' + reply
-        );
+        return reply;
+      } else {
+        namida.logFailure('MasterNode', "REST service call can't determine service message mode (binary/json)!");
       }
-      response.json(reply);
-
-      return reply;
     } catch (error) {
       let title = 'Service Request';
       let message = `processing failed with an error:`;
@@ -180,9 +180,7 @@ class MasterNode {
   processTopicDataMessage(topicDataMessage, clientID) {
     let client = ClientManager.instance.getClient(clientID);
 
-    let records = topicDataMessage.topicDataRecordList
-      ? topicDataMessage.topicDataRecordList.elements
-      : [];
+    let records = topicDataMessage.topicDataRecordList ? topicDataMessage.topicDataRecordList.elements : [];
     if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
 
     records.forEach((record) => {
