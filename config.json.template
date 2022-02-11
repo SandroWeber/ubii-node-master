@@ -8,7 +8,6 @@
   "ipc": {
     "ipcEndpointTopicData": "/ubii-ipc-topicdata"
   },
-  "serviceMessageMode": "binary",
   "https": {
     "enabled": false,
     "pathCert": "./certificates/ubii.cert.pem",
