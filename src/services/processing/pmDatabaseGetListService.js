@@ -1,26 +1,32 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const { ProcessingModuleStorage } = require('@tum-far/ubii-node-nodejs');
 
 const { Service } = require('../service.js');
 
 //TODO: rename to RuntimeGetList
-class ProcessingModuleDatabaseGetService extends Service {
-  constructor(processingModuleManager) {
+class ProcessingModuleDatabaseGetListService extends Service {
+  constructor(clientManager) {
     super(
       DEFAULT_TOPICS.SERVICES.PM_DATABASE_GET_LIST,
       undefined,
       MSG_TYPES.PM_LIST + ', ' + MSG_TYPES.ERROR
     );
 
-    this.processingModuleManager = processingModuleManager;
+    this.clientManager = clientManager;
   }
 
   reply() {
-    let pmList = Array.from(this.processingModuleManager.processingModules.values()).map(pm => pm.toProtobuf());
+    let pmList = ProcessingModuleStorage.instance.getAllSpecs();
+    this.clientManager.getClientList().forEach(client => {
+      client.processingModules.forEach(pm => {
+        pmList.push(pm);
+      })
+    });
 
     if (typeof pmList === 'undefined') {
       return {
         error: {
-          title: 'ProcessingModuleGetListService Error',
+          title: 'ProcessingModuleDatabaseGetService Error',
           message: 'error getting list of PMs'
         }
       };
@@ -34,4 +40,4 @@ class ProcessingModuleDatabaseGetService extends Service {
   }
 }
 
-module.exports = ProcessingModuleDatabaseGetService;
+module.exports = ProcessingModuleDatabaseGetListService;

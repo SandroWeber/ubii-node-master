@@ -4,7 +4,7 @@ const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const { Storage, FileHandler, StorageEntry } = require('./storage.js');
 const { Session } = require('../sessions/session');
 
-class SessionDatabase extends Storage {
+class SessionStorage extends Storage {
   constructor() {
     let fileHandlerProto = new FileHandler(
       '.session',
@@ -111,4 +111,4 @@ class SessionDatabase extends Storage {
   }
 }
 
-module.exports = new SessionDatabase();
+module.exports = new SessionStorage();

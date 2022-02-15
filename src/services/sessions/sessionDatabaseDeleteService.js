@@ -1,5 +1,5 @@
 const { Service } = require('../service.js');
-const SessionDatabase = require('../../storage/sessionDatabase');
+const SessionStorage = require('../../storage/sessionStorage');
 
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
@@ -13,7 +13,7 @@ class SessionDatabaseDeleteService extends Service {
   }
 
   reply(sessionMessage) {
-    let session = SessionDatabase.getSession(sessionMessage.id);
+    let session = SessionStorage.getSession(sessionMessage.id);
     if (typeof session === 'undefined') {
       return {
         error: {
@@ -23,7 +23,7 @@ class SessionDatabaseDeleteService extends Service {
       };
     } else {
       try {
-        SessionDatabase.deleteSession(sessionMessage.id);
+        SessionStorage.deleteSession(sessionMessage.id);
       } catch (error) {
         return {
           error: {

@@ -17,7 +17,7 @@ class ProcessingModuleDatabaseGetService extends Service {
     if (typeof pm === 'undefined') {
       return {
         error: {
-          title: 'ProcessingModuleGetService Error',
+          title: 'ProcessingModuleDatabaseGetService Error',
           message: 'Could not find processing module with name ' + pmMessage.name
         }
       };
@@ -31,4 +31,4 @@ class ProcessingModuleDatabaseGetService extends Service {
   }
 }
 
-module.exports = new ProcessingModuleDatabaseGetService();
+module.exports = ProcessingModuleDatabaseGetService;
