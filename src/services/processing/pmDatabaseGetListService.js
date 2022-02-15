@@ -35,7 +35,6 @@ class ProcessingModuleDatabaseGetListService extends Service {
     });
 
     if (request) {
-      console.info(request);
       if (request.name) {
         pmList = pmList.filter(pm => pm.name === request.name);
       }
