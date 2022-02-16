@@ -72,8 +72,6 @@ class ProcessingModuleDatabaseGetListService extends Service {
             return true;
           });
         }
-        console.info('filteredList')
-        console.info(filteredList)
         responseList = responseList.concat(filteredList);
       });
     }
