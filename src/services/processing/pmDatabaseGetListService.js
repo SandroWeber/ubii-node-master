@@ -8,7 +8,7 @@ const { Service } = require('../service.js');
 
 const protoSpecs = {
   topic: DEFAULT_TOPICS.SERVICES.PM_DATABASE_GET_LIST,
-  requestMessageFormat: MSG_TYPES.PM,
+  requestMessageFormat: MSG_TYPES.PM_LIST,
   responseMessageFormat: MSG_TYPES.PM_LIST + ', ' + MSG_TYPES.ERROR,
   description: 'Get a list of all PMs registered for all nodes. Sending a PM specification in the request is optional. When supplied it will filter responses'
 }
@@ -27,30 +27,35 @@ class ProcessingModuleDatabaseGetListService extends Service {
   }
 
   reply(request) {
-    let pmList = ProcessingModuleStorage.instance.getAllSpecs();
+    let allPMs = ProcessingModuleStorage.instance.getAllSpecs();
     this.clientManager.getClientList().forEach(client => {
       client.processingModules.forEach(pm => {
-        pmList.push(pm);
+        allPMs.push(pm);
       })
     });
 
+    let responseList = [];
     if (request) {
-      if (request.name) {
-        pmList = pmList.filter(pm => pm.name === request.name);
-      }
-      if (request.authors) {
-        pmList = pmList.filter(pm => 
-          request.authors.every(requestAuthor => pm.authors.includes(requestAuthor))
-        );
-      }
-      if (request.tags) {
-        pmList = pmList.filter(pm => 
-          request.tags.every(requestTag => pm.tags.includes(requestTag))
-        );
-      }
+      request.elements.forEach(pmRequestAlternative => {
+        let filteredList = allPMs;
+        if (pmRequestAlternative.name) {
+          filteredList = filteredList.filter(pm => pm.name === pmRequestAlternative.name);
+        }
+        if (pmRequestAlternative.authors) {
+          filteredList = filteredList.filter(pm => 
+            pmRequestAlternative.authors.every(requestAuthor => pm.authors.includes(requestAuthor))
+          );
+        }
+        if (pmRequestAlternative.tags) {
+          filteredList = filteredList.filter(pm => 
+            pmRequestAlternative.tags.every(requestTag => pm.tags.includes(requestTag))
+          );
+        }
+        responseList = responseList.concat(filteredList);
+      });
     }
 
-    if (typeof pmList === 'undefined') {
+    if (typeof allPMs === 'undefined') {
       return {
         error: {
           title: 'ProcessingModuleDatabaseGetService Error',
@@ -60,7 +65,7 @@ class ProcessingModuleDatabaseGetListService extends Service {
     } else {
       return {
         processingModuleList: {
-          elements: pmList
+          elements: responseList
         }
       };
     }
