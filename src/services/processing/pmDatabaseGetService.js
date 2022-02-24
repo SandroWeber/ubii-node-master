@@ -5,11 +5,7 @@ const { Service } = require('./../service.js');
 
 class ProcessingModuleDatabaseGetService extends Service {
   constructor() {
-    super(
-      DEFAULT_TOPICS.SERVICES.PM_DATABASE_GET,
-      MSG_TYPES.PM,
-      MSG_TYPES.PM_LIST + ', ' + MSG_TYPES.ERROR
-    );
+    super(DEFAULT_TOPICS.SERVICES.PM_DATABASE_GET, MSG_TYPES.PM, MSG_TYPES.PM_LIST + ', ' + MSG_TYPES.ERROR);
   }
 
   reply(pmMessage) {
