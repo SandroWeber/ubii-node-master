@@ -8,8 +8,6 @@ const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
-const { config } = require('yargs');
-const ConfigService = require('@tum-far/ubii-node-nodejs/src/config/configService');
 
 class MasterNode {
   constructor() {
@@ -21,16 +19,14 @@ class MasterNode {
     this.serviceRequestTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REQUEST);
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
-    console.info('serviceMessageModeHTTP=' + ConfigService.instance.config.serviceMessageModeHTTP);
-
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
 
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
     this.connectionsManager.openConnections();
-    this.connectionsManager.setServiceRoute('/services/json', (...params) => this.onServiceMessageRestJson(...params));
-    this.connectionsManager.setServiceRoute('/services/binary', (...params) => this.onServiceMessageRestBinary(...params));
+    this.connectionsManager.setServiceRouteHTTP('/services/json', (...params) => this.onServiceMessageRestJson(...params));
+    this.connectionsManager.setServiceRouteHTTP('/services/binary', (...params) => this.onServiceMessageRestBinary(...params));
     this.connectionsManager.onServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
     this.connectionsManager.onTopicDataMessageWS((...params) => this.onTopicDataMessage(...params));
     this.connectionsManager.onTopicDataMessageZMQ((envelope, message) =>
