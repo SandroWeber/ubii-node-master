@@ -1,5 +1,5 @@
 const { Service } = require('../service.js');
-const SessionDatabase = require('../../storage/sessionDatabase');
+const SessionStorage = require('../../storage/sessionStorage');
 
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
@@ -34,15 +34,15 @@ class SessionDatabaseSaveService extends Service {
     let newSessions = [];
     sessionSpecs.forEach((spec) => {
       try {
-        if (SessionDatabase.has(spec)) {
-          SessionDatabase.updateSession(spec);
+        if (SessionStorage.has(spec)) {
+          SessionStorage.updateSession(spec);
         }
         // new session
         else {
           spec.id = undefined; // ID is assigned by server upon creation
           let session = this.sessionManager.createSession(spec);
           newSessions.push(session);
-          SessionDatabase.addProto(session.toProtobuf());
+          SessionStorage.addProto(session.toProtobuf());
         }
       } catch (error) {
         return {

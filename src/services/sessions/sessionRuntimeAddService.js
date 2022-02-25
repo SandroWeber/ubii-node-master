@@ -1,6 +1,6 @@
 const { Service } = require('./../service.js');
 const { SessionManager } = require('../../sessions/sessionManager');
-const SessionDatabase = require('../../storage/sessionDatabase');
+const SessionStorage = require('../../storage/sessionStorage');
 
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
@@ -25,9 +25,9 @@ class SessionRuntimeAddService extends Service {
 
     try {
       let specs = undefined;
-      if (SessionDatabase.has(sessionSpecs)) {
+      if (SessionStorage.has(sessionSpecs)) {
         // check session database
-        specs = SessionDatabase.getByName(sessionSpecs.name).fileData;
+        specs = SessionStorage.getByName(sessionSpecs.name).fileData;
       }
       else {
         // try creating new session from message

@@ -6,8 +6,8 @@ const { ClientListService } = require('./clients/clientListService.js');
 const { DeviceRegistrationService } = require('./devices/deviceRegistrationService.js');
 const { DeviceDeregistrationService } = require('./devices/deviceDeregistrationService.js');
 const { DeviceListService } = require('./devices/deviceListService.js');
-const ProcessingModuleGetService = require('./processing/pmDatabaseGetService.js');
-const ProcessingModuleGetListService = require('./processing/pmDatabaseGetListService.js');
+const ProcessingModuleDatabaseGetService = require('./processing/pmDatabaseGetService.js');
+const ProcessingModuleDatabaseGetListService = require('./processing/pmDatabaseGetListService.js');
 const ProcessingModuleRuntimeAddService = require('./processing/pmRuntimeAddService.js');
 const ProcessingModuleRuntimeRemoveService = require('./processing/pmRuntimeRemoveService');
 const { SubscriptionService } = require('./subscriptionService.js');
@@ -23,7 +23,7 @@ const { SessionRuntimeAddService } = require('./sessions/sessionRuntimeAddServic
 const { SessionDatabaseSaveService } = require('./sessions/sessionDatabaseSaveService.js');
 const { SessionRuntimeStartService } = require('./sessions/sessionRuntimeStartService');
 const { SessionRuntimeStopService } = require('./sessions/sessionRuntimeStopService');
-const { NetworkInfoService } = require('./networkInfo/networkInfoService.js')
+const { NetworkInfoService } = require('./networkInfo/networkInfoService.js');
 
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
@@ -63,33 +63,22 @@ class ServiceManager {
   addDefaultServices() {
     /* add general services */
     this.addService(new SubscriptionService(ClientManager.instance, this.topicData));
-    this.addService(
-      new ServerConfigService(this.masterNodeID, 'master-node', this.connectionsManager)
-    );
+    this.addService(new ServerConfigService(this.masterNodeID, 'master-node', this.connectionsManager));
     this.addService(new TopicListService(this, this.topicData));
     this.addService(new ServiceListService(this));
     /* add client services */
     this.addService(new ClientRegistrationService(ClientManager.instance));
-    this.addService(
-      new ClientDeregistrationService(ClientManager.instance, DeviceManager.instance)
-    );
+    this.addService(new ClientDeregistrationService(ClientManager.instance, DeviceManager.instance));
     this.addService(new ClientListService(ClientManager.instance));
     /* add device services */
     this.addService(new DeviceRegistrationService(DeviceManager.instance));
     this.addService(new DeviceDeregistrationService(DeviceManager.instance));
     this.addService(new DeviceListService(DeviceManager.instance, ClientManager.instance));
     /* add processing module services */
-    this.addService(ProcessingModuleGetService);
-    this.addService(new ProcessingModuleGetListService(this.processingModuleManager));
-    this.addService(
-      new ProcessingModuleRuntimeAddService(this.processingModuleManager, SessionManager.instance)
-    );
-    this.addService(
-      new ProcessingModuleRuntimeRemoveService(
-        this.processingModuleManager,
-        SessionManager.instance
-      )
-    );
+    this.addService(new ProcessingModuleDatabaseGetService());
+    this.addService(new ProcessingModuleDatabaseGetListService(ClientManager.instance));
+    this.addService(new ProcessingModuleRuntimeAddService(this.processingModuleManager, SessionManager.instance));
+    this.addService(new ProcessingModuleRuntimeRemoveService(this.processingModuleManager, SessionManager.instance));
     /* add session services */
     this.addService(new SessionDatabaseDeleteService());
     this.addService(new SessionDatabaseGetListService());
@@ -109,16 +98,13 @@ class ServiceManager {
     if (!service.topic) {
       namida.logFailure(
         'Service Manager',
-        'can not add service, no topic: ' + service.constructor.name
+        'can not add service of class "' + service.prototype.constructor.name + '", no topic specified'
       );
       return;
     }
 
     if (this.services.has(service.topic)) {
-      namida.warn(
-        'Service already registered',
-        'Service for topic "' + service.topic + '" already registered.'
-      );
+      namida.warn('Service already registered', 'Service for topic "' + service.topic + '" already registered.');
       return;
     }
 
@@ -131,10 +117,7 @@ class ServiceManager {
 
   processRequest(request) {
     if (!request.topic) {
-      namida.logFailure(
-        'ServiceManager',
-        'request is missing topic! request:\n' + JSON.stringify(request)
-      );
+      namida.logFailure('ServiceManager', 'request is missing topic! request:\n' + JSON.stringify(request));
 
       return {
         error: {
@@ -148,10 +131,7 @@ class ServiceManager {
     if (!this.services.has(request.topic)) {
       namida.logFailure(
         'ServiceManager',
-        'no service for topic "' +
-          request.topic +
-          '" registered! request:\n' +
-          JSON.stringify(request)
+        'no service for topic "' + request.topic + '" registered! request:\n' + JSON.stringify(request)
       );
 
       return {

@@ -1,5 +1,5 @@
 const { Service } = require('./../service.js');
-const SessionDatabase = require('../../storage/sessionDatabase');
+const SessionStorage = require('../../storage/sessionStorage');
 
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 

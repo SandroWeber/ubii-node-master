@@ -5,11 +5,7 @@ const { Service } = require('./../service.js');
 
 class ProcessingModuleDatabaseGetService extends Service {
   constructor() {
-    super(
-      DEFAULT_TOPICS.SERVICES.PM_DATABASE_GET,
-      MSG_TYPES.PM,
-      MSG_TYPES.PM_LIST + ', ' + MSG_TYPES.ERROR
-    );
+    super(DEFAULT_TOPICS.SERVICES.PM_DATABASE_GET, MSG_TYPES.PM, MSG_TYPES.PM_LIST + ', ' + MSG_TYPES.ERROR);
   }
 
   reply(pmMessage) {
@@ -17,7 +13,7 @@ class ProcessingModuleDatabaseGetService extends Service {
     if (typeof pm === 'undefined') {
       return {
         error: {
-          title: 'ProcessingModuleGetService Error',
+          title: 'ProcessingModuleDatabaseGetService Error',
           message: 'Could not find processing module with name ' + pmMessage.name
         }
       };
@@ -31,4 +27,4 @@ class ProcessingModuleDatabaseGetService extends Service {
   }
 }
 
-module.exports = new ProcessingModuleDatabaseGetService();
+module.exports = ProcessingModuleDatabaseGetService;

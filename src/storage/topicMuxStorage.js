@@ -1,7 +1,7 @@
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const Storage = require('./storage.js');
 
-class TopicMuxDatabase extends Storage {
+class TopicMuxStorage extends Storage {
   constructor() {
     super('devices/topicMultiplexer', 'mux');
   }
@@ -49,4 +49,4 @@ class TopicMuxDatabase extends Storage {
   }
 }
 
-module.exports = new TopicMuxDatabase();
+module.exports = new TopicMuxStorage();

@@ -1,5 +1,5 @@
 const { Service } = require('./../service.js');
-const SessionDatabase = require('../../storage/sessionDatabase');
+const SessionStorage = require('../../storage/sessionStorage');
 
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
@@ -13,7 +13,7 @@ class SessionDatabaseGetListService extends Service {
   }
 
   reply() {
-    let sessions = SessionDatabase.getSessionList();
+    let sessions = SessionStorage.getSessionList();
     if (typeof sessions === 'undefined') {
       return {
         error: {

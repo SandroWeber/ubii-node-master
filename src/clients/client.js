@@ -17,6 +17,7 @@ class Client {
     // new instance is getting new ID
     this.id = uuidv4();
     this.devices = this.devices ? this.devices : [];
+    this.processingModules = this.processingModules ? this.processingModules : [];
 
     this.server = server;
     this.topicData = topicData;

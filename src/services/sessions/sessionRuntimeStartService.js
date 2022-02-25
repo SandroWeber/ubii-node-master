@@ -1,7 +1,7 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../service.js');
-const SessionDatabase = require('../../storage/sessionDatabase');
+const SessionStorage = require('../../storage/sessionStorage');
 
 class SessionRuntimeStartService extends Service {
   constructor(sessionManager) {
@@ -45,9 +45,9 @@ class SessionRuntimeStartService extends Service {
     }
 
     // check session database for existing session by ID
-    if (SessionDatabase.has(sessionSpecs)) {
+    if (SessionStorage.has(sessionSpecs)) {
       try {
-        let specs = SessionDatabase.getByName(sessionSpecs.name).fileData;
+        let specs = SessionStorage.getByName(sessionSpecs.name).fileData;
         let session = this.sessionManager.createSession(specs);
         this.sessionManager.startSessionByID(session.id);
 
