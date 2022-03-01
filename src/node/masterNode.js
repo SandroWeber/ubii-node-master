@@ -2,10 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
-const {
-  NetworkConnectionsManager,
-  ProcessingModuleManager
-} = require('@tum-far/ubii-node-nodejs/src/index');
+const { NetworkConnectionsManager, ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
 
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
@@ -28,9 +25,8 @@ class MasterNode {
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
     this.connectionsManager.openConnections();
-    this.connectionsManager.onServiceMessageREST((...params) =>
-      this.onServiceMessageREST(...params)
-    );
+    this.connectionsManager.setServiceRouteHTTP('/services/json', (...params) => this.onServiceMessageRestJson(...params));
+    this.connectionsManager.setServiceRouteHTTP('/services/binary', (...params) => this.onServiceMessageRestBinary(...params));
     this.connectionsManager.onServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
     this.connectionsManager.onTopicDataMessageWS((...params) => this.onTopicDataMessage(...params));
     this.connectionsManager.onTopicDataMessageZMQ((envelope, message) =>
@@ -85,51 +81,58 @@ class MasterNode {
     }
   }
 
-  onServiceMessageREST(request, response) {
+  onServiceMessageRestJson(request, response) {
     try {
-      // Decode buffer.
-      // VARIANT A: PROTOBUF
-      /*let requestBuffer = new Uint8Array(request.body);
-      let requestMessage = this.serviceRequestTranslator.createMessageFromBuffer(requestBuffer);
-      console.log('### onServiceMessageREST - request ###');
-      console.log(requestMessage);
-      console.log(requestBuffer.length);
-      console.log(requestBuffer);*/
-
-      /*let replyBuffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
-      console.log(replyBuffer.length);
-      console.log(replyBuffer);
-      response.send(replyBuffer);
-      return replyBuffer;*/
-
-      // VARIANT B: JSON
       let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
 
       let reply = ServiceManager.instance.processRequest(requestMessage);
       if (!this.serviceReplyTranslator.verify(reply)) {
         namida.logFailure(
-          'onServiceMessageREST()',
+          'onServiceMessageRestJson()',
           'service reply seems malformed, verification failed. reply:\n' + reply
         );
       }
+
       response.json(reply);
+      return reply;
+    } catch (error) {
+      let errorMessage = this.onServiceResponseError(error);
+      response.json(errorMessage);
+      return errorMsg;
+    }
+  }
+
+  onServiceMessageRestBinary(request, response) {
+    try {
+      let requestBuffer = new Uint8Array(request.body);
+      let requestMessage = this.serviceRequestTranslator.createMessageFromBuffer(requestBuffer);
+
+      let reply = ServiceManager.instance.processRequest(requestMessage);
+      let replyBuffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
+      response.send(replyBuffer);
 
       return reply;
     } catch (error) {
-      let title = 'Service Request';
-      let message = `processing failed with an error:`;
-      let stack = '' + (error.stack.toString() || error.toString());
-
-      namida.logFailure(title, message + '\n' + stack);
-
-      return this.serviceReplyTranslator.createBufferFromPayload({
-        error: {
-          title: title,
-          message: message,
-          stack: stack
-        }
-      });
+      let errorMessage = this.onServiceResponseError(error);
+      response.send(this.serviceReplyTranslator.createBufferFromPayload(errorMessage));
+      return errorMessage;
     }
+  }
+
+  onServiceResponseError(error) {
+    let title = 'Service Request';
+    let message = `processing failed with an error:`;
+    let stack = '' + (error.stack.toString() || error.toString());
+
+    namida.logFailure(title, message + '\n' + stack);
+
+    return {
+      error: {
+        title: title,
+        message: message,
+        stack: stack
+      }
+    };
   }
 
   onTopicDataMessage(clientID, message) {
@@ -180,9 +183,7 @@ class MasterNode {
   processTopicDataMessage(topicDataMessage, clientID) {
     let client = ClientManager.instance.getClient(clientID);
 
-    let records = topicDataMessage.topicDataRecordList
-      ? topicDataMessage.topicDataRecordList.elements
-      : [];
+    let records = topicDataMessage.topicDataRecordList ? topicDataMessage.topicDataRecordList.elements : [];
     if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
 
     records.forEach((record) => {
