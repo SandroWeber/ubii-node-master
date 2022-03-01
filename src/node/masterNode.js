@@ -104,21 +104,13 @@ class MasterNode {
 
   onServiceMessageRestBinary(request, response) {
     try {
-      console.info('### onServiceMessageRestBinary - request ###');
       let requestBuffer = new Uint8Array(request.body);
-      console.info(requestBuffer.length);
-      //console.info(requestBuffer);
       let requestMessage = this.serviceRequestTranslator.createMessageFromBuffer(requestBuffer);
-      console.info(requestMessage);
 
       let reply = ServiceManager.instance.processRequest(requestMessage);
       let replyBuffer = this.serviceReplyTranslator.createBufferFromMessage(reply);
-      console.info('### onServiceMessageRestBinary - reply ###');
-      console.info(replyBuffer.length);
-      //console.info(replyBuffer);
       response.send(replyBuffer);
 
-      console.info(reply);
       return reply;
     } catch (error) {
       let errorMessage = this.onServiceResponseError(error);
