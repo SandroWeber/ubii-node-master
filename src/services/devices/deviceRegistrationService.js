@@ -16,10 +16,11 @@ class DeviceRegistrationService extends Service {
     this.deviceManager = deviceManager;
   }
 
-  reply(message) {
+  reply(request) {
+    console.info(request);
     // Verify the device and act accordingly.
-    if (!ClientManager.instance.verifyClient(message.clientId)) {
-      let message = 'There is no Client registered with the ID ' + message.clientId;
+    if (!ClientManager.instance.verifyClient(request.clientId)) {
+      let message = 'There is no Client registered with the ID ' + request.clientId;
 
       namida.logFailure('DeviceRegistrationService', message);
 
@@ -34,7 +35,7 @@ class DeviceRegistrationService extends Service {
     // Process the registration of the sepcified device at the device manager
     let device = undefined;
     try {
-      device = this.deviceManager.registerDeviceSpecs(message);
+      device = this.deviceManager.registerDeviceSpecs(request);
     } catch (error) {
       namida.logFailure('DeviceRegistrationService', error.toString());
       return {
