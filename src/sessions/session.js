@@ -150,46 +150,6 @@ class Session extends EventEmitter {
         this.startDone(false);
       }
     }, Session.CONSTANTS.TIMEOUT_START_PMS);
-
-
-    /// ### old
-
-    // start processing modules
-    /*this.localPMs.forEach(async (pmSpec) => {
-      let pm = this.processingModuleManager.getModuleByID(pmSpec.id);
-      await pm.initialized;
-      let success = pm.start();
-      if (success) {
-        this.processingModuleManager.emit(ProcessingModuleManager.EVENTS.PM_STARTED, pm);
-      }
-    });
-
-    if (this.remotePMs.size > 0) {
-      this.onProcessingModuleStartedListener = this.onProcessingModuleStarted.bind(this);
-      this.processingModuleManager.addListener(
-        ProcessingModuleManager.EVENTS.PM_STARTED,
-        this.onProcessingModuleStartedListener
-      );
-
-      this.pmsAwaitingRemoteStart = [];
-      this.remotePMs.forEach((nodePMs) => {
-        this.pmsAwaitingRemoteStart.push(...nodePMs);
-      });
-
-      this.timeoutStartRemotePMs = setTimeout(() => {
-        if (this.pmsAwaitingRemoteStart.length > 0) {
-          this.startDone(false);
-        }
-      }, Session.CONSTANTS.TIMEOUT_START_REMOTE_PMS);
-    } else {
-      this.startDone(true);
-    }
-
-    // start lockstep cycles
-    this.tLastLockstepPass = Date.now();
-    this.lockstepProcessingPass();*/
-
-    return;
   }
 
   onProcessingModuleStarted(pmSpec) {
@@ -421,7 +381,7 @@ class Session extends EventEmitter {
   }
 
   toString() {
-    return 'Session ' + this.name + ' (ID ' + this.id + ')';
+    return 'Session "' + this.name + '" (ID ' + this.id + ')';
   }
 }
 

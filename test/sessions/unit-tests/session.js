@@ -30,7 +30,6 @@ test.beforeEach((t) => {
     {},
     t.context.nodeID,
     t.context.mockTopicData,
-    undefined,
     t.context.mockProcessingModuleManager
   );
 });

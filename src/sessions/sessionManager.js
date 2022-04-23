@@ -1,6 +1,7 @@
 const EventEmitter = require('events');
 
 const { DEFAULT_TOPICS, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
+const SessionStatus = proto.ubii.sessions.SessionStatus;
 const namida = require('@tum-far/namida');
 
 const { Session } = require('./session.js');
@@ -43,19 +44,11 @@ class SessionManager extends EventEmitter {
       throw new Errror('Session with ID ' + specs.id + ' already exists.');
     }
 
-    if (!specs.ioMappings || specs.ioMappings.length === 0) {
-      namida.warn(
-        'SessionManager',
-        'Session ' + specs.id + ' has no I/O Mappings (topics <-> processing modules)'
-      );
+    let session = new Session(specs, this.masterNodeID, this.topicData, this.processingModuleManager);
+    if (!session.ioMappings || session.ioMappings.length === 0) {
+      namida.warn('SessionManager', session.toString() + ' has no I/O Mappings (topics <-> processing modules)');
     }
 
-    let session = new Session(
-      specs,
-      this.masterNodeID,
-      this.topicData,
-      this.processingModuleManager
-    );
     this.addSession(session);
     this.emit(EVENTS_SESSION_MANAGER.NEW_SESSION, session.toProtobuf());
 
@@ -96,6 +89,10 @@ class SessionManager extends EventEmitter {
     }
   }
 
+  removeAllSessions() {
+    this.sessions = [];
+  }
+
   getSession(id) {
     return this.sessions.find((session) => {
       return session.id === id;
@@ -126,13 +123,40 @@ class SessionManager extends EventEmitter {
     });
 
     session.start();
-    this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
   }
 
-  startAllSessions() {
-    for (let i = 0; i < this.sessions.length; i++) {
+  async startAllSessions() {
+    return new Promise((resolve, reject) => {
+      let sessionIds = this.sessions.map((session) => session.id);
+      console.info(['### sessions to start: id-name', sessionIds, this.sessions.map((session) => session.name)]);
+
+      for (let session of this.sessions) {
+        if (session.status === SessionStatus.RUNNING) {
+          sessionIds = sessionIds.filter(id => id !== session.id);
+        } else {
+          let onSessionStartSuccess = () => {
+            sessionIds = sessionIds.filter(id => id !== session.id);
+            if (sessionIds.length === 0) {
+              namida.logSuccess('SessionManager', 'all sessions started');
+              resolve();
+            }
+          };
+          session.addListener(Session.EVENTS.START_SUCCESS, onSessionStartSuccess);
+          this.startSession(session);
+        }
+      }
+      
+      setTimeout(() => {
+        if (sessionIds.length > 0) {
+          namida.logFailure('SessionManager', 'failed to start all sessions, remaining: ' + sessionIds);
+          reject();
+        }
+      }, SessionManager.CONSTANTS.TIMEOUT_START_SESSION);
+    });
+
+    /*for (let i = 0; i < this.sessions.length; i++) {
       this.startSession(this.sessions[i]);
-    }
+    }*/
   }
 
   stopSessionByID(id) {
@@ -231,5 +255,9 @@ class SessionManager extends EventEmitter {
     );
   }
 }
+
+SessionManager.CONSTANTS = Object.freeze({
+  TIMEOUT_START_SESSION: 15000
+});
 
 module.exports = { SessionManager };
