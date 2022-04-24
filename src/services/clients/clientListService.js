@@ -12,7 +12,6 @@ class ClientListService extends Service {
   }
 
   reply(request) {
-    console.info(['ClientListService request', request]);
     let clientList = this.clientManager.getClientList().map((client) => client.toProtobuf());
     
     let responseList = [];
