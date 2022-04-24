@@ -48,7 +48,6 @@ test('constructor', (t) => {
     { ioMappings: ioMappings },
     t.context.nodeID,
     t.context.mockTopicData,
-    undefined,
     t.context.mockProcessingModuleManager
   );
   t.is(typeof session.id, 'string');

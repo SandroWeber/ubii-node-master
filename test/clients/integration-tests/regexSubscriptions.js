@@ -1,9 +1,12 @@
 import test from 'ava';
+import sinon from 'sinon';
+
 import { RuntimeTopicData } from '@tum-far/ubii-topic-data';
 
 import { Client } from '../../../src/index.js';
 import { ServerMock } from '../../mocks/serverMock';
 
+//TODO: needs rework
 (function () {
   // Helpers:
 
@@ -45,7 +48,9 @@ import { ServerMock } from '../../mocks/serverMock';
     let topicData = t.context.topicData;
     let topics = t.context.topics;
 
-    let regexString = '/my/topics/*';
+    client.subscriptionCallback = sinon.fake();
+
+    let regexString = '/my/topics/*'; // matches topics 0-2
 
     // pre-publish some topics
     topicData.publish(topics[0].topic, true, 'boolean');
@@ -57,17 +62,16 @@ import { ServerMock } from '../../mocks/serverMock';
     t.true(client.regexSubscriptions.has(regexString));
 
     // check subscriptions to existing topics matching regex
-    t.true(client.topicSubscriptionTokens.has(topics[0].topic));
-    t.true(client.topicSubscriptionTokens.has(topics[1].topic));
-    t.false(client.topicSubscriptionTokens.has(topics[3].topic));
+    setTimeout(() => {
+      t.is(client.subscriptionCallback.callCount, 2);
+    }, 0);
 
     // publish other topics
     topicData.publish(topics[2].topic, true, 'boolean');
     topicData.publish(topics[4].topic, true, 'boolean');
 
     // check new subscriptions
-    t.true(client.topicSubscriptionTokens.has(topics[2].topic));
-    t.false(client.topicSubscriptionTokens.has(topics[4].topic));
+    t.is(client.subscriptionCallback.callCount, 3);
   });
 
   test('subscribeRegex - double subscribe', (t) => {
@@ -96,27 +100,27 @@ import { ServerMock } from '../../mocks/serverMock';
     topicData.publish(topics[0].topic, true, 'boolean');
     topicData.publish(topics[1].topic, true, 'boolean');
     // check subscriptions to existing topics matching regex
-    t.true(client.topicSubscriptionTokens.has(topics[0].topic));
-    t.true(client.topicSubscriptionTokens.has(topics[1].topic));
+    t.true(client.topicSubscriptions.has(topics[0].topic));
+    t.true(client.topicSubscriptions.has(topics[1].topic));
 
     // unsubscribe
     let callCountSendBeforeUnsubscribe = server.send.callCount;
     client.unsubscribeRegex(regexString);
     // check that subscriptions are gone
-    t.false(client.topicSubscriptionTokens.has(topics[0].topic));
-    t.false(client.topicSubscriptionTokens.has(topics[1].topic));
+    t.false(client.topicSubscriptions.has(topics[0].topic));
+    t.false(client.topicSubscriptions.has(topics[1].topic));
     //publish again
     topicData.publish(topics[0].topic, true, 'boolean');
     topicData.publish(topics[1].topic, true, 'boolean');
     // should not send out any more messages
     t.is(server.send.callCount, callCountSendBeforeUnsubscribe);
     // check subscriptions again, should not resubscribe after publishing
-    t.false(client.topicSubscriptionTokens.has(topics[0].topic));
-    t.false(client.topicSubscriptionTokens.has(topics[1].topic));
+    t.false(client.topicSubscriptions.has(topics[0].topic));
+    t.false(client.topicSubscriptions.has(topics[1].topic));
 
     // publish new topic matching regex, should not subscribe to it
     topicData.publish(topics[2].topic, true, 'boolean');
-    t.false(client.topicSubscriptionTokens.has(topics[2].topic));
+    t.false(client.topicSubscriptions.has(topics[2].topic));
   });
 
   test('regex and regular topic subscriptions overlapping', (t) => {
@@ -158,14 +162,14 @@ import { ServerMock } from '../../mocks/serverMock';
     });
     // check each topic has a subscription token
     [topicA, topicB, topicC].forEach((topic) => {
-      t.true(client.topicSubscriptionTokens.has(topic));
+      t.true(client.topicSubscriptions.has(topic));
     });
 
     // unsubscribe from topic A
     client.unsubscribeTopic(topicA);
     // check that general tokens are still valid but no explicit subscription to topic A
     [topicA, topicB, topicC].forEach((topic) => {
-      t.true(client.topicSubscriptionTokens.has(topic));
+      t.true(client.topicSubscriptions.has(topic));
     });
     t.deepEqual(client.topicSubscriptions.get(topicA), {
       explicit: false,
@@ -176,7 +180,7 @@ import { ServerMock } from '../../mocks/serverMock';
     client.unsubscribeRegex(regexX);
     // check that general tokens are still valid but no subs for regex X
     [topicA, topicB, topicC].forEach((topic) => {
-      t.true(client.topicSubscriptionTokens.has(topic));
+      t.true(client.topicSubscriptions.has(topic));
     });
     [topicA, topicB, topicC].forEach((topic) => {
       t.false(client.topicSubscriptions.get(topic).regExes.includes(regexX));
@@ -186,12 +190,12 @@ import { ServerMock } from '../../mocks/serverMock';
     client.unsubscribeRegex(regexY);
     // all subs to topic A should be gone, including token from topic data
     t.false(client.topicSubscriptions.has(topicA));
-    t.false(client.topicSubscriptionTokens.has(topicA));
+    t.false(client.topicSubscriptions.has(topicA));
 
     // unsub from regex Z
     client.unsubscribeRegex(regexZ);
     // topic C should still have explicit subscription
     t.true(client.topicSubscriptions.get(topicC).explicit);
-    t.true(client.topicSubscriptionTokens.has(topicC));
+    t.true(client.topicSubscriptions.has(topicC));
   });
 })();

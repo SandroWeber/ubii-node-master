@@ -13,11 +13,11 @@ const SINGLETON_ENFORCER = Symbol();
 
 class SessionManager extends EventEmitter {
   constructor(enforcer) {
+    super();
+
     if (enforcer !== SINGLETON_ENFORCER) {
       throw new Error('Use ' + this.constructor.name + '.instance');
     }
-
-    super();
 
     this.sessions = [];
 
@@ -36,6 +36,8 @@ class SessionManager extends EventEmitter {
     this.masterNodeID = masterNodeID;
     this.topicData = topicData;
     this.processingModuleManager = processingModuleManager;
+
+    return this;
   }
 
   createSession(specs = {}) {

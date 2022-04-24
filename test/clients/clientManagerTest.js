@@ -1,4 +1,6 @@
 import test from 'ava';
+import { proto } from '@tum-far/ubii-msg-formats';
+
 import { ClientManager, Client } from '../../src/index.js';
 import { ServerMock, createClientSpecificationMock } from '../mocks/serverMock.js';
 
@@ -16,7 +18,7 @@ import { ServerMock, createClientSpecificationMock } from '../mocks/serverMock.j
 
   test.beforeEach((t) => {
     t.context.serverMock = new ServerMock();
-    t.context.clientManager = new ClientManager(t.context.serverMock, undefined);
+    t.context.clientManager = ClientManager.instance.setDependencies(t.context.serverMock, undefined);
   });
 
   // Test cases:
@@ -107,9 +109,10 @@ import { ServerMock, createClientSpecificationMock } from '../mocks/serverMock.j
     let clientRegistration = createClientSpecificationMock('uniqueId');
 
     // first registration
-    let result = t.context.clientManager.processClientRegistration(clientRegistration);
-    t.not(result, undefined);
+    let client = t.context.clientManager.processClientRegistration(clientRegistration);
+    t.not(client, undefined);
     // second registration
+    client.state = proto.ubii.clients.Client.State.ACTIVE;
     t.throws(() => {
       result = t.context.clientManager.processClientRegistration(clientRegistration);
     });
