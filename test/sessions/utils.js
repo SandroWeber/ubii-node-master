@@ -8,11 +8,11 @@ let getTopicForModuleIO = (processingModule, moduleIO) => {
 
 let getDataForModuleIO = (moduleIO) => {
   if (moduleIO.messageFormat === 'bool') {
-    return true;
+    return { bool: true };
   } else if (moduleIO.messageFormat === 'int32') {
-    return 42;
+    return { int32: 42 };
   } else if (moduleIO.messageFormat === 'string') {
-    return 'placeholder';
+    return { string: 'placeholder' };
   }
 
   return undefined;
@@ -21,7 +21,8 @@ let getDataForModuleIO = (moduleIO) => {
 let publishTopicForModuleIO = (topicdata, processingModule, moduleIO) => {
   let topic = getTopicForModuleIO(processingModule, moduleIO);
   let data = getDataForModuleIO(moduleIO);
-  topicdata.publish(topic, data, moduleIO.messageFormat);
+  //console.info(['publishTopicForModuleIO()', topic, data]);
+  topicdata.publish(topic, data);
 };
 
 let addProcessingModulesToSessionSpec = (sessionSpecs, processingModules) => {
@@ -70,11 +71,16 @@ class TestProcessingModule extends ProcessingModule {
     ];
 
     let produceOutput = () => {
+      //console.info(['produceOutput()', this.name]);
+      let processingResult = {
+        outputs: {}
+      };
       this.outputs.forEach((output) => {
-        let data = getDataForModuleIO(output);
-
-        this[output.internalName] = data;
+        processingResult.outputs[output.internalName] = getDataForModuleIO(output);
       });
+
+      //console.info(['produceOutput()', this.name, processingResult]);
+      return processingResult;
     };
 
     this.onCreated = sinon.fake();

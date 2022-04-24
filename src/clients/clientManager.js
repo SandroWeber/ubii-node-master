@@ -30,6 +30,8 @@ class ClientManager {
   setDependencies(connections, topicdata) {
     this.server = connections;
     this.topicData = topicdata;
+
+    return this;
   }
 
   /**

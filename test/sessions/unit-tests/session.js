@@ -30,7 +30,6 @@ test.beforeEach((t) => {
     {},
     t.context.nodeID,
     t.context.mockTopicData,
-    undefined,
     t.context.mockProcessingModuleManager
   );
 });
@@ -49,7 +48,6 @@ test('constructor', (t) => {
     { ioMappings: ioMappings },
     t.context.nodeID,
     t.context.mockTopicData,
-    undefined,
     t.context.mockProcessingModuleManager
   );
   t.is(typeof session.id, 'string');

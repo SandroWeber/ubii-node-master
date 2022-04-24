@@ -31,12 +31,12 @@ test.beforeEach((t) => {
   t.context.nodeID = 'test-node-id-session-manager';
   t.context.mockTopicData = new MockTopicData();
   t.context.mockProcessingModuleManager = new MockProcessingModuleManager();
-  t.context.sessionManager = new SessionManager(
+  t.context.sessionManager = SessionManager.instance.setDependencies(
     t.context.nodeID,
     t.context.mockTopicData,
-    undefined,
     t.context.mockProcessingModuleManager
   );
+  SessionManager.instance.removeAllSessions();
 });
 
 /* run tests */
@@ -59,7 +59,7 @@ test('addSession', (t) => {
 
   let numberOfSessions = 16;
   for (let i = 0; i < numberOfSessions; i = i + 1) {
-    let session = new Session({}, undefined, undefined, undefined, t.context.mockProcessingModuleManager);
+    let session = new Session({}, undefined, undefined, t.context.mockProcessingModuleManager);
     sessionManager.addSession(session);
   }
   t.is(sessionManager.sessions.length, numberOfSessions);

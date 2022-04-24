@@ -115,7 +115,10 @@ class DeviceManager {
   addParticipant(device) {
     this.participants.set(device.id, device);
     // add device to client specs
-    ClientManager.instance.getClient(device.clientId).devices.push(device.toProtobuf());
+    let client = ClientManager.instance.getClient(device.clientId);
+    if (client) {
+      client.devices.push(device.toProtobuf());
+    }
   }
 
   /**
@@ -125,10 +128,12 @@ class DeviceManager {
   removeParticipant(id) {
     let participant = this.getParticipant(id);
     let client = ClientManager.instance.getClient(participant.clientId);
-    // remove device from client specs
-    let index = client.devices.findIndex((device) => device.id === id);
-    if (index > -1) {
-      client.devices.splice(index, 1);
+    if (client) {
+      // remove device from client specs
+      let index = client.devices.findIndex((device) => device.id === id);
+      if (index > -1) {
+        client.devices.splice(index, 1);
+      }
     }
     // deactivate and remove participant
     participant.deactivate();
