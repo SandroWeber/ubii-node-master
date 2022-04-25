@@ -1,8 +1,9 @@
 export default {
   files: [
-    'test/devices/**/*',
-    'test/sessions/**/*',
-    'test/clients/**/*',
+    '!test/devices/**/*',
+    '!test/sessions/**/*',
+    '!test/clients/**/*',
+    'test/services/filterUtils.js',
     '!test/processing/**/*',
     '!test/storage/**/*',
     // not part of the tests
