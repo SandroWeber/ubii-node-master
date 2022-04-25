@@ -83,7 +83,8 @@ class MasterNode {
 
   onServiceMessageRestJson(request, response) {
     try {
-      let requestMessage = this.serviceRequestTranslator.createMessageFromPayload(request.body);
+      let requestMessage = this.serviceRequestTranslator.proto.fromObject(request.body);
+      this.serviceRequestTranslator.verify(requestMessage);
 
       let reply = ServiceManager.instance.processRequest(requestMessage);
       let proto = this.serviceReplyTranslator.proto.fromObject(reply);
