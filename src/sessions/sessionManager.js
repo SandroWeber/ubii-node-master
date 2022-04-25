@@ -130,7 +130,6 @@ class SessionManager extends EventEmitter {
   async startAllSessions() {
     return new Promise((resolve, reject) => {
       let sessionIds = this.sessions.map((session) => session.id);
-      console.info(['### sessions to start: id-name', sessionIds, this.sessions.map((session) => session.name)]);
 
       for (let session of this.sessions) {
         if (session.status === SessionStatus.RUNNING) {
