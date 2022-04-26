@@ -3,7 +3,10 @@ const isEqual = (property, a, b) => {
 };
 
 const allArrayElementsIncluded = (arrayProperty, required, tested) => {
-  return required[arrayProperty].every((element) => tested[arrayProperty].includes(element));
+  return (
+    required[arrayProperty] &&
+    required[arrayProperty].every((element) => tested[arrayProperty] && tested[arrayProperty].includes(element))
+  );
 };
 
 let mapProperty2FilterFunction = new Map([
@@ -46,14 +49,19 @@ let mapProperty2FilterFunction = new Map([
 ]);
 
 class FilterUtils {
-  static filterAll(testPropertyList, requiredList, availableList) {
+  static filterAll(testPropertyList, requestedList, availableList) {
     let responseList = [];
-    for (let request of requiredList) {
+    for (let request of requestedList) {
       let filtered = availableList;
       for (let property of testPropertyList) {
-        filtered = filtered.filter((element) => mapProperty2FilterFunction.get(property)(request, element));
+        if (typeof request[property] !== 'undefined') {
+          filtered = filtered.filter((element) => mapProperty2FilterFunction.get(property)(request, element));
+        }
       }
-      responseList = responseList.concat(filtered);
+      
+      for (let filteredElement of filtered) {
+        if (!responseList.includes(filteredElement)) responseList.push(filteredElement);
+      }
     }
 
     return responseList;
