@@ -23,12 +23,6 @@ let mapProperty2FilterFunction = new Map([
     }
   ],
   [
-    'tags',
-    (requested, available) => {
-      return allArrayElementsIncluded('tags', requested, available);
-    }
-  ],
-  [
     'messageFormat',
     (requested, available) => {
       return isEqual('messageFormat', requested, available);
@@ -45,20 +39,49 @@ let mapProperty2FilterFunction = new Map([
     (requested, available) => {
       return isEqual('deviceId', requested, available);
     }
+  ],
+  [
+    'ioType',
+    (requested, available) => {
+      return isEqual('ioType', requested, available);
+    }
+  ],
+  [
+    'tags',
+    (requested, available) => {
+      return allArrayElementsIncluded('tags', requested, available);
+    }
+  ],
+  [
+    'components',
+    (requested, available) => {
+      let matchingComponents = FilterUtils.filterAll(requested.components, available.components);
+      return matchingComponents.length === requested.components.length ? true : false;
+    }
+  ],
+  [
+    'processingModules',
+    (requested, available) => {
+      let matchingPMs = FilterUtils.filterAll(requested.processingModules, available.processingModules);
+      return matchingPMs.length === requested.processingModules.length ? true : false;
+    }
   ]
 ]);
 
 class FilterUtils {
-  static filterAll(testPropertyList, requestedList, availableList) {
+  static filterAll(requestedList, availableList, testPropertyList) {
     let responseList = [];
     for (let request of requestedList) {
       let filtered = availableList;
-      for (let property of testPropertyList) {
-        if (typeof request[property] !== 'undefined') {
+      let propertyList = testPropertyList ? testPropertyList : Object.keys(request);
+      for (let property of propertyList) {
+        if (!mapProperty2FilterFunction.has(property))
+          //console.warn('FilterUtils: filter function for "' + property + '" unavailable, skipping');
+        if (typeof request[property] !== 'undefined' && mapProperty2FilterFunction.has(property)) {
           filtered = filtered.filter((element) => mapProperty2FilterFunction.get(property)(request, element));
         }
       }
-      
+
       for (let filteredElement of filtered) {
         if (!responseList.includes(filteredElement)) responseList.push(filteredElement);
       }

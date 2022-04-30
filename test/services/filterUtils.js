@@ -15,11 +15,7 @@ const availableOptions = [
 (function () {
   // Preparation:
 
-  /*test.beforeEach(t => {
-      t.context.serviceManager = new ServiceManager(8777,
-        new ClientManagerMock(true),
-        new DeviceManagerMock(true));
-    });*/
+  /*test.beforeEach(t => {});*/
 
   // Test cases:
 
@@ -30,7 +26,7 @@ const availableOptions = [
       }
     ];
 
-    let filtered = FilterUtils.filterAll(['id'], required, availableOptions);
+    let filtered = FilterUtils.filterAll(required, availableOptions, ['id']);
     t.is(filtered.length, 1);
     t.true(filtered.includes(availableOptions[0]));
   });
@@ -42,7 +38,7 @@ const availableOptions = [
       }
     ];
 
-    let filtered = FilterUtils.filterAll(['name'], required, availableOptions);
+    let filtered = FilterUtils.filterAll(required, availableOptions, ['name']);
     t.is(filtered.length, 2);
     t.true(filtered.includes(availableOptions[0]));
     t.true(filtered.includes(availableOptions[1]));
@@ -55,7 +51,7 @@ const availableOptions = [
       }
     ];
 
-    let filtered = FilterUtils.filterAll(['tags'], required, availableOptions);
+    let filtered = FilterUtils.filterAll(required, availableOptions, ['tags']);
     t.is(filtered.length, 3);
     t.true(filtered.includes(availableOptions[0]));
     t.true(filtered.includes(availableOptions[1]));
@@ -69,7 +65,7 @@ const availableOptions = [
       }
     ];
 
-    let filtered = FilterUtils.filterAll(['messageFormat'], required, availableOptions);
+    let filtered = FilterUtils.filterAll(required, availableOptions, ['messageFormat']);
     t.is(filtered.length, 2);
     t.true(filtered.includes(availableOptions[0]));
     t.true(filtered.includes(availableOptions[2]));
@@ -82,7 +78,7 @@ const availableOptions = [
       }
     ];
 
-    let filtered = FilterUtils.filterAll(['clientId'], required, availableOptions);
+    let filtered = FilterUtils.filterAll(required, availableOptions, ['clientId']);
     t.is(filtered.length, 1);
     t.true(filtered.includes(availableOptions[5]));
   });
@@ -94,7 +90,7 @@ const availableOptions = [
       }
     ];
 
-    let filtered = FilterUtils.filterAll(['deviceId'], required, availableOptions);
+    let filtered = FilterUtils.filterAll(required, availableOptions, ['deviceId']);
     t.is(filtered.length, 2);
     t.true(filtered.includes(availableOptions[0]));
     t.true(filtered.includes(availableOptions[1]));
@@ -108,14 +104,14 @@ const availableOptions = [
       }
     ];
 
-    let filtered = FilterUtils.filterAll(['name', 'tags'], required, availableOptions);
+    let filtered = FilterUtils.filterAll(required, availableOptions, ['name', 'tags']);
     t.is(filtered.length, 2);
     t.true(filtered.includes(availableOptions[0]));
     t.true(filtered.includes(availableOptions[1]));
 
     // tag-3 only
     required[0].tags = ['tag-3'];
-    filtered = FilterUtils.filterAll(['name', 'tags'], required, availableOptions);
+    filtered = FilterUtils.filterAll(required, availableOptions, ['name', 'tags']);
     t.is(filtered.length, 1);
     t.true(filtered.includes(availableOptions[0]));
   });
@@ -130,7 +126,7 @@ const availableOptions = [
       }
     ];
 
-    let filtered = FilterUtils.filterAll(['messageFormat', 'tags'], required, availableOptions);
+    let filtered = FilterUtils.filterAll(required, availableOptions, ['messageFormat', 'tags']);
     t.is(filtered.length, 4);
     t.true(filtered.includes(availableOptions[0]));
     t.true(filtered.includes(availableOptions[1]));

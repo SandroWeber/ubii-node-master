@@ -87,13 +87,7 @@ class MasterNode {
       this.serviceRequestTranslator.verify(requestMessage);
 
       let reply = ServiceManager.instance.processRequest(requestMessage);
-      let proto = this.serviceReplyTranslator.proto.fromObject(reply);
-      if (!this.serviceReplyTranslator.verify(proto)) {
-        namida.logFailure(
-          'onServiceMessageRestJson()',
-          'service reply seems malformed, verification failed. reply:\n' + reply
-        );
-      }
+      let proto = this.serviceReplyTranslator.fromObject(reply);
 
       response.json(proto);
       return proto;
