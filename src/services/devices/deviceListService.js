@@ -21,7 +21,6 @@ class DeviceListService extends Service {
     if (request && request.elements) {
       devices = FilterUtils.filterAll(request.elements, devices);
     }
-    console.info(devices);
 
     return { deviceList: { elements: devices } };
   }
