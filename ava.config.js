@@ -3,7 +3,7 @@ export default {
     'test/devices/**/*',
     'test/sessions/**/*',
     'test/clients/**/*',
-    '!test/processing/**/*',
+    'test/services/filterUtils.js',
     '!test/storage/**/*',
     // not part of the tests
     '!test/mocks/*',
