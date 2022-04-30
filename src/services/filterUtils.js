@@ -75,8 +75,8 @@ class FilterUtils {
       let filtered = availableList;
       let propertyList = testPropertyList ? testPropertyList : Object.keys(request);
       for (let property of propertyList) {
-        if (!mapProperty2FilterFunction.has(property))
-          //console.warn('FilterUtils: filter function for "' + property + '" unavailable, skipping');
+        /*if (!mapProperty2FilterFunction.has(property))
+          console.warn('FilterUtils: filter function for "' + property + '" unavailable, skipping');*/
         if (typeof request[property] !== 'undefined' && mapProperty2FilterFunction.has(property)) {
           filtered = filtered.filter((element) => mapProperty2FilterFunction.get(property)(request, element));
         }
