@@ -1,4 +1,11 @@
 {
+  "externalEndpoints": {
+    "serviceHttpJson": "server-url/ubii/services/json",
+    "serviceHttpBinary": "server-url/ubii/services/binary",
+    "serviceZmq": "network-ip:port",
+    "topicDataWs": "server-url/ubii/topicdata",
+    "topicDataZmq": "network-ip:port"
+  },
   "ports": {
     "serviceZMQ": 8101,
     "serviceREST": 8102,
