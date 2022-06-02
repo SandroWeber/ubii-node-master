@@ -5,7 +5,7 @@ const { ClientDeregistrationService } = require('./clients/clientDeregistrationS
 const { ClientListService } = require('./clients/clientListService.js');
 const { DeviceRegistrationService } = require('./devices/deviceRegistrationService.js');
 const { DeviceDeregistrationService } = require('./devices/deviceDeregistrationService.js');
-const { DeviceListService } = require('./devices/deviceListService.js');
+const { DeviceGetListService } = require('./devices/DeviceGetListService.js');
 const ComponentGetListService = require('./devices/componentGetListService');
 const ProcessingModuleDatabaseGetService = require('./processing/pmDatabaseGetService.js');
 const ProcessingModuleDatabaseGetListService = require('./processing/pmDatabaseGetListService.js');
@@ -74,7 +74,7 @@ class ServiceManager {
     /* add device services */
     this.addService(new DeviceRegistrationService(DeviceManager.instance));
     this.addService(new DeviceDeregistrationService(DeviceManager.instance));
-    this.addService(new DeviceListService(DeviceManager.instance, ClientManager.instance));
+    this.addService(new DeviceGetListService(DeviceManager.instance, ClientManager.instance));
     this.addService(new ComponentGetListService());
     /* add processing module services */
     this.addService(new ProcessingModuleDatabaseGetService());

@@ -3,9 +3,9 @@ const { DEFAULT_TOPICS, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats'
 const { Service } = require('../service.js');
 const FilterUtils = require('../filterUtils');
 
-class DeviceListService extends Service {
+class DeviceGetListService extends Service {
   constructor(deviceManager, clientManager) {
-    super(DEFAULT_TOPICS.SERVICES.DEVICE_GET_LIST, undefined, MSG_TYPES.DEVICE_LIST + ', ' + MSG_TYPES.ERROR);
+    super(DEFAULT_TOPICS.SERVICES.DEVICE_GET_LIST, 'none, ' + MSG_TYPES.DEVICE_LIST, MSG_TYPES.DEVICE_LIST + ', ' + MSG_TYPES.ERROR);
 
     this.deviceManager = deviceManager;
     this.clientManager = clientManager;
@@ -26,4 +26,4 @@ class DeviceListService extends Service {
   }
 }
 
-module.exports = { DeviceListService };
+module.exports = { DeviceGetListService };

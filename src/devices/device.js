@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
  * Devices are representations of remote entities at the server that interact with the ubii system.
  */
 class Device {
-  constructor({ id, name = '', deviceType = undefined, components = [], clientId = undefined }, client) {
+  constructor(specs, client) {
     if (new.target === Device) {
       throw new TypeError("Cannot construct Device instances directly");
     }
@@ -13,14 +13,12 @@ class Device {
       throw new TypeError("Must override deactivate");
     }
 
-    this.id = id ? id : uuidv4();
-    this.name = name;
-    this.deviceType = deviceType;
-    this.components = components;
+    specs && Object.assign(this, specs);
+
+    this.id = this.id ? this.id : uuidv4();
     this.components.forEach(component => {
       component.id = uuidv4();
     });
-    this.clientId = clientId;
 
     this.client = client;
     this.registrationDate = new Date();
