@@ -125,6 +125,7 @@ class SessionManager extends EventEmitter {
     });
 
     session.start();
+    this.emit(EVENTS_SESSION_MANAGER.START_SESSION, session.toProtobuf());
   }
 
   async startAllSessions() {
