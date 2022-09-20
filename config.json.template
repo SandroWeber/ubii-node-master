@@ -22,5 +22,9 @@
     "pathPublicKey": "./certificates/ubii.public-key.pem",
     "allowedOrigins": ["https://.*", "http://.*"]
   },
-  "allowedHosts": [".*"]
+  "allowedHosts": [".*"],
+  "profiling": {
+    "enabled": false,
+    "consoleOutput": false
+  }
 }

@@ -8,7 +8,6 @@ const namida = require('@tum-far/namida');
 const { v4: uuidv4 } = require('uuid');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 const latency = require('../network/latency');
-//const { DeviceManager } = require('../devices/deviceManager');
 
 class Client {
   constructor(specs = {}, server, topicData) {
