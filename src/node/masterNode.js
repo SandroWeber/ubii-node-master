@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
-const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
 const { ProcessingModuleManager, ConfigService } = require('@tum-far/ubii-node-nodejs');
 
@@ -9,6 +9,7 @@ const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
+const { Profiler } = require('../profiling/profiler');
 
 class MasterNode {
   constructor() {
@@ -26,11 +27,17 @@ class MasterNode {
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
     this.connectionsManager.openConnections();
-    this.connectionsManager.setServiceRouteHTTP('/services/json', (...params) => this.onServiceMessageRestJson(...params));
-    this.connectionsManager.setServiceRouteHTTP('/services/binary', (...params) => this.onServiceMessageRestBinary(...params));
+    this.connectionsManager.setServiceRouteHTTP('/services/json', (...params) =>
+      this.onServiceMessageRestJson(...params)
+    );
+    this.connectionsManager.setServiceRouteHTTP('/services/binary', (...params) =>
+      this.onServiceMessageRestBinary(...params)
+    );
     this.connectionsManager.setCallbackServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
     this.connectionsManager.setCallbackOnTopicDataWS((...params) => this.onTopicDataMessage(...params));
-    this.connectionsManager.setCallbackOnTopicDataZMQ((envelope, message) => this.onTopicDataMessage(envelope.toString(), message));
+    this.connectionsManager.setCallbackOnTopicDataZMQ((envelope, message) =>
+      this.onTopicDataMessage(envelope.toString(), message)
+    );
 
     // Client Manager Component:
     ClientManager.instance.setDependencies(this.connectionsManager, this.topicData);
@@ -55,34 +62,7 @@ class MasterNode {
 
     this.profilingConfig = ConfigService.instance.config.profiling;
     if (this.profilingConfig && this.profilingConfig.enabled) {
-      let topicStatsMsgsPerSecondReceived = this.id + '/stats/msgs_per_second_received';
-      let topicStatsMsgsPerSecondSent = this.id + '/stats/msgs_per_second_sent';
-      namida.warn('Profiler', 'ENABLED');
-
-      this.msIntervalProduceStats = 5000;
-      this.intervalGatherMsgStats = setInterval(() => {
-        let durationSeconds = this.msIntervalProduceStats / 1000;
-
-        let recordMsgsPerSecondReceived = {
-          topic: topicStatsMsgsPerSecondSent,
-          double: this.connectionsManager.statistics.counterTopicDataReceived / durationSeconds
-        }
-        this.topicData.publish(recordMsgsPerSecondReceived.topic, recordMsgsPerSecondReceived);
-        
-        let recordMsgsPerSecondSent = {
-          topic: topicStatsMsgsPerSecondReceived,
-          double: this.connectionsManager.statistics.counterTopicDataSent / durationSeconds
-        }
-        this.topicData.publish(recordMsgsPerSecondSent.topic, recordMsgsPerSecondSent);
-
-        this.connectionsManager.statistics.counterTopicDataReceived = 0;
-        this.connectionsManager.statistics.counterTopicDataSent = 0;
-
-        if(this.profilingConfig.consoleOutput) {
-          namida.log('Profiler', 'msgs/s received|sent: ' + recordMsgsPerSecondReceived.double + '|' + recordMsgsPerSecondSent.double);
-        }
-
-      }, this.msIntervalProduceStats);
+      this.profiler = new Profiler(this, this.connectionsManager);
     }
   }
 
@@ -233,9 +213,11 @@ class MasterNode {
       if (!client.publishedTopics.includes(topic) && !this.topicData.hasData(topic)) {
         client.publishedTopics.push(topic);
       }
-
-      this.topicData.publish(record.topic, record);
     });
+  }
+
+  publishRecord(record) {
+    this.topicData.publish(record.topic, record);
   }
 }
 
