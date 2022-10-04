@@ -281,7 +281,6 @@ test('two sessions - one processing module each', async (t) => {
 
   // start
   await sessionManager.startAllSessions();
-  console.info('### after sessions started');
   t.is(session1.status === SessionStatus.RUNNING, true);
   t.is(session2.status === SessionStatus.RUNNING, true);
 

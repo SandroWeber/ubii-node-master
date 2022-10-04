@@ -148,9 +148,6 @@ class MasterNode {
       return;
     }
 
-    let client = ClientManager.instance.getClient(clientID);
-    client.updateLastSignOfLife();
-
     try {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createPayloadFromBuffer(message);
@@ -189,6 +186,7 @@ class MasterNode {
 
   processTopicDataMessage(topicDataMessage, clientID) {
     let client = ClientManager.instance.getClient(clientID);
+    //client.updateLastSignOfLife();
 
     let records = topicDataMessage.topicDataRecordList ? topicDataMessage.topicDataRecordList.elements : [];
     if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
@@ -213,6 +211,8 @@ class MasterNode {
       if (!client.publishedTopics.includes(topic) && !this.topicData.hasData(topic)) {
         client.publishedTopics.push(topic);
       }
+
+      this.publishRecord(record);
     });
   }
 
