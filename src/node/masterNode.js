@@ -2,12 +2,14 @@ const { v4: uuidv4 } = require('uuid');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
-const { NetworkConnectionsManager, ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
+const { ProcessingModuleManager, ConfigService } = require('@tum-far/ubii-node-nodejs');
 
+const NetworkConnectionsManager = require('../network/networkConnectionsManager');
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
+const { Profiler } = require('../profiling/profiler');
 
 class MasterNode {
   constructor() {
@@ -25,11 +27,15 @@ class MasterNode {
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
     this.connectionsManager.openConnections();
-    this.connectionsManager.setServiceRouteHTTP('/services/json', (...params) => this.onServiceMessageRestJson(...params));
-    this.connectionsManager.setServiceRouteHTTP('/services/binary', (...params) => this.onServiceMessageRestBinary(...params));
-    this.connectionsManager.onServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
-    this.connectionsManager.onTopicDataMessageWS((...params) => this.onTopicDataMessage(...params));
-    this.connectionsManager.onTopicDataMessageZMQ((envelope, message) =>
+    this.connectionsManager.setServiceRouteHTTP('/services/json', (...params) =>
+      this.onServiceMessageRestJson(...params)
+    );
+    this.connectionsManager.setServiceRouteHTTP('/services/binary', (...params) =>
+      this.onServiceMessageRestBinary(...params)
+    );
+    this.connectionsManager.setCallbackServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
+    this.connectionsManager.setCallbackOnTopicDataWS((...params) => this.onTopicDataMessage(...params));
+    this.connectionsManager.setCallbackOnTopicDataZMQ((envelope, message) =>
       this.onTopicDataMessage(envelope.toString(), message)
     );
 
@@ -53,6 +59,11 @@ class MasterNode {
       this.topicData
     );
     ServiceManager.instance.addDefaultServices();
+
+    this.profilingConfig = ConfigService.instance.config.profiling;
+    if (this.profilingConfig && this.profilingConfig.enabled) {
+      this.profiler = new Profiler(this, this.connectionsManager);
+    }
   }
 
   onServiceMessageZMQ(message) {
@@ -137,9 +148,6 @@ class MasterNode {
       return;
     }
 
-    let client = ClientManager.instance.getClient(clientID);
-    client.updateLastSignOfLife();
-
     try {
       // Decode buffer.
       let topicDataMessage = this.topicDataTranslator.createPayloadFromBuffer(message);
@@ -178,6 +186,7 @@ class MasterNode {
 
   processTopicDataMessage(topicDataMessage, clientID) {
     let client = ClientManager.instance.getClient(clientID);
+    //client.updateLastSignOfLife();
 
     let records = topicDataMessage.topicDataRecordList ? topicDataMessage.topicDataRecordList.elements : [];
     if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
@@ -203,8 +212,12 @@ class MasterNode {
         client.publishedTopics.push(topic);
       }
 
-      this.topicData.publish(record.topic, record);
+      this.publishRecord(record);
     });
+  }
+
+  publishRecord(record) {
+    this.topicData.publish(record.topic, record);
   }
 }
 
