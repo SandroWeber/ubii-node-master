@@ -5,7 +5,7 @@ const { Participant } = require('./../devices/participant.js');
 const { Watcher } = require('./../devices/watcher.js');
 const { TopicMultiplexer } = require('./../devices/topicMultiplexer.js');
 const { TopicDemultiplexer } = require('./../devices/topicDemultiplexer.js');
-const { ClientManager } = require('../clients/clientManager.js');
+const FilterUtils = require('../utils/filterUtils.js');
 
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();
@@ -34,18 +34,9 @@ class DeviceManager {
     return _instance;
   }
 
-  /*constructor(topicData) {
-    this.topicData = topicData;
-    this.participants = new Map();
-    this.watchers = new Map();
-    this.topicMuxers = new Map();
-    this.topicDemuxers = new Map();
-
-    //namida.log('Device Manager Ready', 'The Device Manager is initialized and ready to work.');
-  }*/
-
-  setTopicData(topicdata) {
-    this.topicData = topicdata;
+  setDependencies(topicDataBuffer, clientManager) {
+    this.topicData = topicDataBuffer;
+    this.clientManager = clientManager;
   }
 
   getDevice(id) {
@@ -115,7 +106,7 @@ class DeviceManager {
   addParticipant(device) {
     this.participants.set(device.id, device);
     // add device to client specs
-    let client = ClientManager.instance.getClient(device.clientId);
+    let client = this.clientManager.getClient(device.clientId);
     if (client) {
       client.devices.push(device.toProtobuf());
     }
@@ -127,7 +118,7 @@ class DeviceManager {
    */
   removeParticipant(id) {
     let participant = this.getParticipant(id);
-    let client = ClientManager.instance.getClient(participant.clientId);
+    let client = this.clientManager.getClient(participant.clientId);
     if (client) {
       // remove device from client specs
       let index = client.devices.findIndex((device) => device.id === id);
@@ -235,7 +226,7 @@ class DeviceManager {
     if (deviceID && this.hasParticipant(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (
-        ClientManager.instance.getClient(clientID).registrationDate < this.getParticipant(deviceID).lastSignOfLife ||
+        this.clientManager.getClient(clientID).registrationDate < this.getParticipant(deviceID).lastSignOfLife ||
         deviceSpec.deviceType !== 'PARTICIPANT'
       ) {
         // -> REregistering is not an option: Reject the registration.
@@ -267,7 +258,7 @@ class DeviceManager {
     if (deviceID && this.hasWatcher(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (
-        ClientManager.instance.getClient(clientID).registrationDate < this.getWatcher(deviceID).lastSignOfLife ||
+        this.clientManager.getClient(clientID).registrationDate < this.getWatcher(deviceID).lastSignOfLife ||
         deviceSpec.deviceType !== 'WATCHER'
       ) {
         // -> REregistering is not an option: Reject the registration.
@@ -298,12 +289,12 @@ class DeviceManager {
     let currentDevice = {};
     // Handle the registration of a participant.
     if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
-      currentDevice = new Participant(deviceSpec, ClientManager.instance.getClient(clientID), this.topicData);
+      currentDevice = new Participant(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
       this.addParticipant(currentDevice);
     }
     // Handle the registration of a watcher.
     else if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
-      currentDevice = new Watcher(deviceSpec, ClientManager.instance.getClient(clientID), this.topicData);
+      currentDevice = new Watcher(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
       this.registerWatcher(currentDevice);
     } else {
       let message = 'device type not specified while trying to register';
@@ -316,9 +307,6 @@ class DeviceManager {
 
     // Ouput the feedback on the server console.
     namida.logSuccess('DeviceManager', message);
-
-    // Update the device information.
-    currentDevice.updateInformation();
 
     // Return the deviceSpecification payload.
     return currentDevice;
@@ -390,6 +378,22 @@ class DeviceManager {
 
   getTopicDemuxList() {
     return Array.from(this.topicDemuxers.values());
+  }
+
+  getAllComponents() {
+    let componentList = [];
+    for (const [deviceID, device] of this.participants) {
+      for (const component of device.components) {
+        componentList.push(component);
+      }
+    }
+
+    return componentList;
+  }
+
+  getComponentsByProfile(profile) {
+    const components = this.getAllComponents();
+    return FilterUtils.filterAll([profile], components);
   }
 
   getComponentByTopic(topic) {

@@ -10,6 +10,7 @@ const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
 const { Profiler } = require('../profiling/profiler');
+const NotifyConditionManager = require('../conditions/notifyConditionManager');
 
 class MasterNode {
   constructor() {
@@ -23,6 +24,8 @@ class MasterNode {
 
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
+
+    NotifyConditionManager.instance.setDependencies(this.topicData);
 
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
@@ -43,7 +46,7 @@ class MasterNode {
     ClientManager.instance.setDependencies(this.connectionsManager, this.topicData);
 
     // Device Manager Component:
-    DeviceManager.instance.setTopicData(this.topicData);
+    DeviceManager.instance.setDependencies(this.topicData, ClientManager.instance);
 
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicData);
@@ -212,12 +215,12 @@ class MasterNode {
         client.publishedTopics.push(topic);
       }
 
-      this.publishRecord(record);
+      this.publishRecord(record, clientID);
     });
   }
 
-  publishRecord(record) {
-    this.topicData.publish(record.topic, record);
+  publishRecord(record, clientId) {
+    this.topicData.publish(record.topic, record, clientId);
   }
 }
 

@@ -8,9 +8,10 @@ const namida = require('@tum-far/namida');
 const { v4: uuidv4 } = require('uuid');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 const latency = require('../network/latency');
+const { DeviceManager } = require('../devices/deviceManager');
 
 class Client {
-  constructor(specs = {}, server, topicData) {
+  constructor(specs = {}, server, topicData, clientManager) {
     // take over specs
     specs && Object.assign(this, specs);
     // new instance is getting new ID
@@ -20,6 +21,7 @@ class Client {
 
     this.server = server;
     this.topicData = topicData;
+    this.clientManager = clientManager;
 
     this.state = proto.ubii.clients.Client.State.ACTIVE;
     this.registrationDate = new Date();
@@ -180,7 +182,9 @@ class Client {
     }
 
     // subscribe
-    let token = this.topicData.subscribe(topic, (record) => this.subscriptionCallback(record));
+    let token = this.topicData.subscribe(topic, (record, publisherId) =>
+      this.subscriptionCallback(record, publisherId)
+    );
     this.topicSubscriptions.set(topic, token);
 
     // check if topic already has data, if so send it to remote
@@ -192,7 +196,17 @@ class Client {
     return true;
   }
 
-  subscriptionCallback(record) {
+  subscriptionCallback(record, publisherId) {
+    let component = DeviceManager.instance.getComponentByTopic(record.topic);
+    if (component && component.hasNotifyConditions()) {
+      const clientProfilePub = this.clientManager.getClient(publisherId);
+      const clientProfileSub = this.toProtobuf();
+
+      if (!component.checkNotifyConditions(clientProfilePub, clientProfileSub)) {
+        return;
+      }
+    }
+
     let payload = {
       topicDataRecord: record
     };
@@ -236,10 +250,7 @@ class Client {
       let success = this.subscribeAtTopicData(topic);
       // successfully subscribed just now or already subscribed by some other means
       if (!success) {
-        namida.logFailure(
-          this.toString(),
-          'failed to subscribe to ' + topic + ' at topic data buffer'
-        );
+        namida.logFailure(this.toString(), 'failed to subscribe to ' + topic + ' at topic data buffer');
       }
     }
   }
@@ -267,9 +278,7 @@ class Client {
       return false;
     }
 
-    let token = this.topicData.subscribeRegex(regexString, (record) =>
-      this.subscriptionCallback(record)
-    );
+    let token = this.topicData.subscribeRegex(regexString, (record) => this.subscriptionCallback(record));
     this.regexSubscriptions.set(regexString, token);
 
     return true;

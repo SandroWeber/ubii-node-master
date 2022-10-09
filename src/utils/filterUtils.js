@@ -89,6 +89,21 @@ class FilterUtils {
 
     return responseList;
   }
+
+  static matches(requested, available, testPropertyList) {
+    let propertyList = testPropertyList ? testPropertyList : Object.keys(requested);
+    for (let property of propertyList) {
+      /*if (!mapProperty2FilterFunction.has(property))
+          console.warn('FilterUtils: filter function for "' + property + '" unavailable, skipping');*/
+      if (typeof requested[property] !== 'undefined' && mapProperty2FilterFunction.has(property)) {
+        if (!mapProperty2FilterFunction.get(property)(requested, available)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
 }
 
 module.exports = FilterUtils;
