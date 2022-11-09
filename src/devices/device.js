@@ -15,6 +15,7 @@ class Device {
     this.id = uuidv4();
     this.components = [];
     specs.components && specs.components.forEach((spec) => {
+      spec.deviceId =  this.id;
       this.components.push(new Component(spec, client));
     });
 

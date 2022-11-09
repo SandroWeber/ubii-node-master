@@ -1,5 +1,10 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
+const NotifyConditionManager = require('../conditions/NotifyConditionManager');
+
+
+const LOG_TAG = 'ServiceNotifyConditionAdd';
+
 class ServiceNotifyConditionAdd {
   constructor() {
     super(
@@ -9,8 +14,20 @@ class ServiceNotifyConditionAdd {
     );
   }
 
-  reply(request) {
-    
+  reply(notifyConditionSpec) {
+    try {
+      let condition = NotifyConditionManager.instance.createNotifyCondition(notifyConditionSpec);
+      return condition.toProtobuf();
+    } catch (error) {
+      console.error(error);
+      return {
+        error: {
+          title: LOG_TAG,
+          message: error.toString(),
+          stack: error.stack
+        }
+      };
+    }
   }
 }
 

@@ -69,6 +69,10 @@ class NotifyCondition {
   toString() {
     return 'NotifyCondition "' +this.specs.name + '" (' + this.specs.id + ')';
   }
+
+  toProtobuf() {
+    return this.specs;
+  }
 }
 
 module.exports = NotifyCondition;

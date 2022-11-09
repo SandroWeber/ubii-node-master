@@ -33,6 +33,10 @@ class NotifyConditionManager {
         return condition;
     }
 
+    removeNotifyCondition(specs) {
+      return this.notifyConditions.delete(specs.id);
+    }
+
     getNotifyCondition(specs) {
         if (!specs.id) {
             namida.logFailure(LOG_TAG, 'getNotifyCondition() - can only filter by "id" currently, please provide one');
