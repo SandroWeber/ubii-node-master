@@ -1,5 +1,12 @@
+const { performance } = require('perf_hooks');
+
 const { ConfigService } = require('@tum-far/ubii-node-nodejs');
+const { proto } = require('@tum-far/ubii-msg-formats');
 const namida = require('@tum-far/namida');
+
+const { ClientManager } = require('../clients/clientManager');
+
+const LOG_TAG = 'Profiler';
 
 class Profiler {
   constructor(node, connectionsManager) {
@@ -19,7 +26,7 @@ class Profiler {
     this.topicdataReceivedPrevious = 0;
     this.topicdataSentPrevious = 0;
 
-    namida.warn('Profiler', 'ENABLED');
+    namida.warn(LOG_TAG, 'ENABLED');
   }
 
   produceStatistics() {
@@ -47,11 +54,31 @@ class Profiler {
 
       if (this.profilingConfig.consoleOutput) {
         namida.log(
-          'Profiler',
-          'msgs/s received|sent: ' + recordMsgsPerSecondReceived.double + '|' + recordMsgsPerSecondSent.double
+          LOG_TAG,
+          'msgs/s received|sent: ' +
+            recordMsgsPerSecondReceived.double +
+            '|' +
+            recordMsgsPerSecondSent.double +
+            ' ; ' +
+            'num active clients: ' +
+            ClientManager.instance
+              .getClientList()
+              .filter((client) => client.state === proto.ubii.clients.Client.State.ACTIVE).length
         );
       }
     }
+
+    let tNow = performance.now();
+    let delayFactor = (tNow - this.tLastStats) / this.msIntervalProduceStats;
+    if (this.tLastStats && delayFactor > 1.1) {
+      namida.warn(
+        LOG_TAG,
+        'target delay between statistics recording exceeded by a factor of ' +
+          delayFactor +
+          ', overall performance is probably affected!'
+      );
+    }
+    this.tLastStats = performance.now();
   }
 }
 

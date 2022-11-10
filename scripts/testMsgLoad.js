@@ -31,7 +31,6 @@ let childProcesses = [];
   if (process.argv[4]) config.targetMsgsPerSecond = process.argv[4];
   if (process.argv[5]) config.publishMethod = process.argv[5];
 
-  
   for (let i = 0; i < config.numClientNodes; i++) {
     //console.log('Forking a new subprocess....');
     const child = fork('scripts/spawnClientMsgLoad.js', [
@@ -45,9 +44,16 @@ let childProcesses = [];
     child.on('message', function (message) {
       //console.log(`main process - message from child: ${message}`);
     });
-  
+
     child.send('START_TEST');
     childProcesses.push(child);
+
+    // stretch out spawning of nodes as to not overload master node
+    if (i % 10 === 0) {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 2000);
+      });
+    }
   }
 })();
 
