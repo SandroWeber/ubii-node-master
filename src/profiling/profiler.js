@@ -8,6 +8,8 @@ const { ClientManager } = require('../clients/clientManager');
 
 const LOG_TAG = 'Profiler';
 
+const average = (array) => array.reduce((a, b) => a + b) / array.length;
+
 class Profiler {
   constructor(node, connectionsManager) {
     this.node = node;
@@ -26,6 +28,11 @@ class Profiler {
     this.topicdataReceivedPrevious = 0;
     this.topicdataSentPrevious = 0;
 
+    /*this.listMsgsReceivedPerTick = [];
+    this.listMsgsSentPerTick = [];*/
+    this.totalAvgMsgsRecv = 0;
+    this.totalAvgMsgsSent = 0;
+
     namida.warn(LOG_TAG, 'ENABLED');
   }
 
@@ -38,29 +45,35 @@ class Profiler {
       let diffTopicDataReceived = topicdataReceivedCurrent - this.topicdataReceivedPrevious;
       let diffTopicDataSent = topicdataSentCurrent - this.topicdataSentPrevious;
 
-      let recordMsgsPerSecondReceived = {
+      let recordMsgsPerSecRecv = {
         topic: this.topicStatsMsgsPerSecondSent,
         double: diffTopicDataReceived / durationSeconds
       };
-      this.node.publishRecord(recordMsgsPerSecondReceived);
-      let recordMsgsPerSecondSent = {
+      this.node.publishRecord(recordMsgsPerSecRecv);
+      let recordMsgsPerSecSent = {
         topic: this.topicStatsMsgsPerSecondReceived,
         double: diffTopicDataSent / durationSeconds
       };
-      this.node.publishRecord(recordMsgsPerSecondSent);
+      this.node.publishRecord(recordMsgsPerSecSent);
 
       this.topicdataReceivedPrevious = topicdataReceivedCurrent;
       this.topicdataSentPrevious = topicdataSentCurrent;
 
+      /*this.listMsgsReceivedPerTick.push(recordMsgsPerSecondReceived.double);
+      this.listMsgsSentPerTick.push(recordMsgsPerSecondSent.double);
+      let avgMsgsRecvTotal = average(this.listMsgsReceivedPerTick);
+      let avgMsgsSentTotal = average(this.listMsgsSentPerTick);*/
+      this.totalAvgMsgsRecv = (this.totalAvgMsgsRecv + recordMsgsPerSecRecv.double) / 2;
+      this.totalAvgMsgsSent = (this.totalAvgMsgsSent + recordMsgsPerSecSent.double) / 2;
+
       if (this.profilingConfig.consoleOutput) {
         namida.log(
           LOG_TAG,
-          'msgs/s received|sent: ' +
-            recordMsgsPerSecondReceived.double +
-            '|' +
-            recordMsgsPerSecondSent.double +
+          `msgs/s recv|sent - ${Math.round(recordMsgsPerSecRecv.double)}|${Math.round(
+            recordMsgsPerSecSent.double
+          )} (last 5s) - ${Math.round(this.totalAvgMsgsRecv)}|${Math.round(this.totalAvgMsgsSent)} (rolling sum)` +
             ' ; ' +
-            'num active clients: ' +
+            'active clients: ' +
             ClientManager.instance
               .getClientList()
               .filter((client) => client.state === proto.ubii.clients.Client.State.ACTIVE).length

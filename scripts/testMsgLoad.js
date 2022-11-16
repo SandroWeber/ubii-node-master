@@ -12,30 +12,41 @@ const { CONSTANTS } = require('./spawnClientMsgLoad');
 
 let config = {
   numClientNodes: 1,
-  testDurationMs: 0,
   targetMsgsPerSecond: 1000,
-  publishMethod: CONSTANTS.PUBLISH_METHOD_IMMEDIATELY
+  msgPayloadBytes: 0,
+  testDurationMs: 0,
+  publishMethod: CONSTANTS.PUBLISH_METHOD_BUNDLED
 };
 
 let childProcesses = [];
 
 (async function () {
-  console.log(
-    `USAGE PARAMS:\n#1 num clients (default=${config.numClientNodes})\n` +
-      `#2 test runtime (ms, default=${config.testDurationMs})\n` +
-      `#3 target msgs/s (default=${config.targetMsgsPerSecond})\n` +
-      `#4 publish method (${CONSTANTS.PUBLISH_METHOD_IMMEDIATELY} | ${CONSTANTS.PUBLISH_METHOD_NORMAL}, default=${config.publishMethod})\n`
-  );
-  if (process.argv[2]) config.numClientNodes = process.argv[2];
-  if (process.argv[3]) config.testDurationMs = process.argv[3];
-  if (process.argv[4]) config.targetMsgsPerSecond = process.argv[4];
-  if (process.argv[5]) config.publishMethod = process.argv[5];
+  if (process.argv[2] === '--help') {
+    console.log(
+      `USAGE PARAMS:\n` +
+        `#1 num clients (default=${config.numClientNodes})\n` +
+        `#2 target msgs/s per client (default=${config.targetMsgsPerSecond})\n` +
+        `#3 msg payload size (bytes, default=${config.msgPayloadBytes})\n` +
+        `#4 test runtime (ms, 0=infinite, default=${config.testDurationMs})\n` +
+        `#5 publish method (${CONSTANTS.PUBLISH_METHOD_IMMEDIATELY} | ${CONSTANTS.PUBLISH_METHOD_BUNDLED}, default=${config.publishMethod})\n`
+    );
+
+    process.exit(0);
+  }
+
+  if (process.argv[2]) config.numClientNodes = parseInt(process.argv[2], 10);
+  if (process.argv[3]) config.targetMsgsPerSecond = parseInt(process.argv[3], 10);
+  if (process.argv[4]) config.msgPayloadBytes = parseInt(process.argv[4], 10);
+  if (process.argv[5]) config.testDurationMs = parseInt(process.argv[5], 10);
+  if (process.argv[6]) config.publishMethod = process.argv[6];
+  console.info(config);
 
   for (let i = 0; i < config.numClientNodes; i++) {
     //console.log('Forking a new subprocess....');
     const child = fork('scripts/spawnClientMsgLoad.js', [
-      config.testDurationMs,
       config.targetMsgsPerSecond,
+      config.msgPayloadBytes,
+      config.testDurationMs,
       config.publishMethod
     ]);
     child.on('close', function (code) {
@@ -51,7 +62,7 @@ let childProcesses = [];
     // stretch out spawning of nodes as to not overload master node
     if (i % 10 === 0) {
       await new Promise((resolve) => {
-        setTimeout(resolve, 2000);
+        setTimeout(resolve, 5000);
       });
     }
   }

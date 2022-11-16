@@ -1,7 +1,7 @@
 const { UbiiClientNode } = require('@tum-far/ubii-node-nodejs');
 const { performance } = require('perf_hooks');
 
-const PUBLISH_METHOD_NORMAL = 'normal';
+const PUBLISH_METHOD_BUNDLED = 'bundled';
 const PUBLISH_METHOD_IMMEDIATELY = 'immediately';
 const TEST_STATUS_UNMEASURED = 'unmeasured';
 const TEST_STATUS_RUNNING = 'running';
@@ -30,15 +30,33 @@ let test = {
   timings: [],
   publishMethod: PUBLISH_METHOD_IMMEDIATELY,
   targetMessagesPerSecond: undefined,
-  targetDurationMs: undefined
+  targetDurationMs: undefined,
+  msgPayloadBytes: 0,
+  payload: ''
 };
 
 let ubiiNode = undefined;
 
+const generateRandomString = (length) => {
+  let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let str = '';
+  for (let i = 0; i < length; i++) {
+      str += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return str;
+};
+
 (async function () {
-  if (process.argv[2]) test.targetDurationMs = process.argv[2];
-  if (process.argv[3]) test.targetMessagesPerSecond = process.argv[3];
-  if (process.argv[4]) test.publishMethod = process.argv[4];
+  if (process.argv[2]) test.targetMessagesPerSecond = process.argv[2];
+  if (process.argv[3]) test.msgPayloadBytes = process.argv[3];
+  if (process.argv[4]) test.targetDurationMs = process.argv[4];
+  if (process.argv[5]) test.publishMethod = process.argv[5];
+
+  if (test.msgPayloadBytes > 0) {
+    test.payload = generateRandomString(test.msgPayloadBytes);
+    //console.log(`msg payload string: ${test.payload} (size ${Buffer.byteLength(test.payload)})`);
+  }
 
   ubiiNode = new UbiiClientNode(config.clientNode.name, config.masterNode.services, config.masterNode.topicdata);
   await ubiiNode.initialize();
@@ -124,9 +142,9 @@ let sendMessage = () => {
     timestamp: {
       millis: Math.floor(performance.now())
     },
-    string: ''
+    string: test.payload
   };
-  if (test.publishMethod === PUBLISH_METHOD_NORMAL) {
+  if (test.publishMethod === PUBLISH_METHOD_BUNDLED) {
     ubiiNode.publishRecord(record);
   } else if (test.publishMethod === PUBLISH_METHOD_IMMEDIATELY) {
     ubiiNode.publishRecordImmediately(record);
@@ -164,11 +182,11 @@ let logTestResults = () => {
 
 module.exports = {
   CONSTANTS: {
-    PUBLISH_METHOD_NORMAL: 'normal',
-    PUBLISH_METHOD_IMMEDIATELY: 'immediately',
-    TEST_STATUS_UNMEASURED: 'unmeasured',
-    TEST_STATUS_RUNNING: 'running',
-    TEST_STATUS_STOPPED: 'stopped',
-    TEST_STATUS_FINISHED: 'finished'
+    PUBLISH_METHOD_BUNDLED: PUBLISH_METHOD_BUNDLED,
+    PUBLISH_METHOD_IMMEDIATELY: PUBLISH_METHOD_IMMEDIATELY,
+    TEST_STATUS_UNMEASURED: TEST_STATUS_UNMEASURED,
+    TEST_STATUS_RUNNING: TEST_STATUS_RUNNING,
+    TEST_STATUS_STOPPED: TEST_STATUS_STOPPED,
+    TEST_STATUS_FINISHED: TEST_STATUS_FINISHED
   }
 };
