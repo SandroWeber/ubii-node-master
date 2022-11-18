@@ -8,6 +8,8 @@ const TEST_STATUS_RUNNING = 'running';
 const TEST_STATUS_STOPPED = 'stopped';
 const TEST_STATUS_FINISHED = 'finished';
 
+// localhost
+// 192.168.178.27
 let config = {
   clientNode: {
     name: 'test-node-msg-load'
@@ -15,11 +17,11 @@ let config = {
   masterNode: {
     services: {
       mode: 'zmq',
-      address: 'localhost:8101'
+      address: '192.168.178.27:8101'
     },
     topicdata: {
       mode: 'zmq',
-      address: 'localhost:8103'
+      address: '192.168.178.27:8103'
     }
   }
 };

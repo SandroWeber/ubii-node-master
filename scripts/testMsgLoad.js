@@ -12,8 +12,8 @@ const { CONSTANTS } = require('./spawnClientMsgLoad');
 
 let config = {
   numClientNodes: 1,
-  targetMsgsPerSecond: 1000,
-  msgPayloadBytes: 0,
+  targetRecordsPerSecond: 1000,
+  recordPayloadBytes: 0,
   testDurationMs: 0,
   publishMethod: CONSTANTS.PUBLISH_METHOD_BUNDLED
 };
@@ -25,8 +25,8 @@ let childProcesses = [];
     console.log(
       `USAGE PARAMS:\n` +
         `#1 num clients (default=${config.numClientNodes})\n` +
-        `#2 target msgs/s per client (default=${config.targetMsgsPerSecond})\n` +
-        `#3 msg payload size (bytes, default=${config.msgPayloadBytes})\n` +
+        `#2 target records/s per client (default=${config.targetRecordsPerSecond})\n` +
+        `#3 record payload size (bytes, default=${config.recordPayloadBytes})\n` +
         `#4 test runtime (ms, 0=infinite, default=${config.testDurationMs})\n` +
         `#5 publish method (${CONSTANTS.PUBLISH_METHOD_IMMEDIATELY} | ${CONSTANTS.PUBLISH_METHOD_BUNDLED}, default=${config.publishMethod})\n`
     );
@@ -35,17 +35,22 @@ let childProcesses = [];
   }
 
   if (process.argv[2]) config.numClientNodes = parseInt(process.argv[2], 10);
-  if (process.argv[3]) config.targetMsgsPerSecond = parseInt(process.argv[3], 10);
-  if (process.argv[4]) config.msgPayloadBytes = parseInt(process.argv[4], 10);
+  if (process.argv[3]) config.targetRecordsPerSecond = parseInt(process.argv[3], 10);
+  if (process.argv[4]) config.recordPayloadBytes = parseInt(process.argv[4], 10);
   if (process.argv[5]) config.testDurationMs = parseInt(process.argv[5], 10);
   if (process.argv[6]) config.publishMethod = process.argv[6];
+
+  if (config.publishMethod !== CONSTANTS.PUBLISH_METHOD_BUNDLED && config.publishMethod !== CONSTANTS.PUBLISH_METHOD_IMMEDIATELY) {
+    console.error('publishing method "' + config.publishMethod + '" is not recognized, aborting!');
+    process.exit(0);
+  }
   console.info(config);
 
   for (let i = 0; i < config.numClientNodes; i++) {
     //console.log('Forking a new subprocess....');
     const child = fork('scripts/spawnClientMsgLoad.js', [
-      config.targetMsgsPerSecond,
-      config.msgPayloadBytes,
+      config.targetRecordsPerSecond,
+      config.recordPayloadBytes,
       config.testDurationMs,
       config.publishMethod
     ]);
