@@ -10,18 +10,20 @@ const TEST_STATUS_FINISHED = 'finished';
 
 // localhost
 // 192.168.178.27
+// 192.168.178.36
 let config = {
   clientNode: {
     name: 'test-node-msg-load'
   },
   masterNode: {
     services: {
-      mode: 'zmq',
-      address: '192.168.178.27:8101'
+      address: 'http://192.168.178.36:8102/services/json',
+      format: 'JSON'
+      //address: 'tcp://192.168.178.36:8101'
     },
     topicdata: {
-      mode: 'zmq',
-      address: '192.168.178.27:8103'
+      address: 'ws://192.168.178.36:8104'
+      //address: 'tcp://192.168.178.36:8103'
     }
   }
 };
@@ -31,9 +33,9 @@ let test = {
   topic: undefined,
   timings: [],
   publishMethod: PUBLISH_METHOD_IMMEDIATELY,
-  targetMessagesPerSecond: undefined,
+  targetRecordsPerSecond: undefined,
   targetDurationMs: undefined,
-  msgPayloadBytes: 0,
+  recordPayloadBytes: 0,
   payload: ''
 };
 
@@ -50,13 +52,13 @@ const generateRandomString = (length) => {
 };
 
 (async function () {
-  if (process.argv[2]) test.targetMessagesPerSecond = process.argv[2];
-  if (process.argv[3]) test.msgPayloadBytes = process.argv[3];
+  if (process.argv[2]) test.targetRecordsPerSecond = process.argv[2];
+  if (process.argv[3]) test.recordPayloadBytes = process.argv[3];
   if (process.argv[4]) test.targetDurationMs = process.argv[4];
   if (process.argv[5]) test.publishMethod = process.argv[5];
 
-  if (test.msgPayloadBytes > 0) {
-    test.payload = generateRandomString(test.msgPayloadBytes);
+  if (test.recordPayloadBytes > 0) {
+    test.payload = generateRandomString(test.recordPayloadBytes);
     //console.log(`msg payload string: ${test.payload} (size ${Buffer.byteLength(test.payload)})`);
   }
 
@@ -99,8 +101,8 @@ let startTest = async () => {
     test.timeoutStopTest = setTimeout(() => stopTest(), testDurationMs);
   }
 
-  let messageIntervalMs = 1000 / parseInt(test.targetMessagesPerSecond);
-  test.intervalSendMessage = setInterval(() => sendMessage(), messageIntervalMs);
+  let messageIntervalMs = Math.ceil(1000 / test.targetRecordsPerSecond);
+  test.intervalSendMessage = setInterval(sendMessage, messageIntervalMs);
 
   test.status = TEST_STATUS_RUNNING;
 

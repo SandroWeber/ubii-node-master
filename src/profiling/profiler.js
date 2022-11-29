@@ -7,6 +7,7 @@ const namida = require('@tum-far/namida');
 const { ClientManager } = require('../clients/clientManager');
 
 const LOG_TAG = 'Profiler';
+const STAT_INTERVAL_MS_DEFAULT = 5000;
 
 const average = (array) => array.reduce((a, b) => a + b) / array.length;
 
@@ -22,7 +23,7 @@ class Profiler {
     this.topicStatsMsgsPerSecondReceived = this.node.id + '/stats/msgs_per_second_received';
     this.topicStatsMsgsPerSecondSent = this.node.id + '/stats/msgs_per_second_sent';
 
-    this.msIntervalProduceStats = 5000;
+    this.msIntervalProduceStats = STAT_INTERVAL_MS_DEFAULT;
     this.intervalProduceStats = setInterval(() => this.produceStatistics(), this.msIntervalProduceStats);
 
     this.topicdataReceivedPrevious = 0;
@@ -71,7 +72,7 @@ class Profiler {
           LOG_TAG,
           `msgs/s recv|sent - ${Math.round(recordMsgsPerSecRecv.double)}|${Math.round(
             recordMsgsPerSecSent.double
-          )} (last 5s) - ${Math.round(this.totalAvgMsgsRecv)}|${Math.round(this.totalAvgMsgsSent)} (rolling sum)` +
+          )} (last ${this.msIntervalProduceStats / 1000}s) - ${Math.round(this.totalAvgMsgsRecv)}|${Math.round(this.totalAvgMsgsSent)} (rolling sum)` +
             ' ; ' +
             'active clients: ' +
             ClientManager.instance

@@ -15,7 +15,7 @@ let config = {
   targetRecordsPerSecond: 1000,
   recordPayloadBytes: 0,
   testDurationMs: 0,
-  publishMethod: CONSTANTS.PUBLISH_METHOD_BUNDLED
+  publishMethod: CONSTANTS.PUBLISH_METHOD_IMMEDIATELY
 };
 
 let childProcesses = [];
