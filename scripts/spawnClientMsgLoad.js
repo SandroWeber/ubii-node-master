@@ -17,12 +17,12 @@ let config = {
   },
   masterNode: {
     services: {
-      address: 'http://192.168.178.36:8102/services/json',
+      address: 'http://localhost:8102/services/json',
       format: 'JSON'
       //address: 'tcp://192.168.178.36:8101'
     },
     topicdata: {
-      address: 'ws://192.168.178.36:8104'
+      address: 'ws://localhost:8104'
       //address: 'tcp://192.168.178.36:8103'
     }
   }
@@ -72,7 +72,7 @@ const generateRandomString = (length) => {
     if (message === 'START_TEST') {
       startTest();
     }
-    if (message === 'STOP_TEST') {
+    else if (message === 'STOP_TEST') {
       stopTest();
     }
   });

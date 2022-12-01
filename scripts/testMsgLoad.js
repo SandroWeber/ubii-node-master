@@ -15,7 +15,8 @@ let config = {
   targetRecordsPerSecond: 1000,
   recordPayloadBytes: 0,
   testDurationMs: 0,
-  publishMethod: CONSTANTS.PUBLISH_METHOD_IMMEDIATELY
+  publishMethod: CONSTANTS.PUBLISH_METHOD_BUNDLED,
+  newClientsPerSecond: 2
 };
 
 let childProcesses = [];
@@ -65,9 +66,10 @@ let childProcesses = [];
     childProcesses.push(child);
 
     // stretch out spawning of nodes as to not overload master node
-    if (i % 10 === 0) {
+
+    if (i % config.newClientsPerSecond === 0) {
       await new Promise((resolve) => {
-        setTimeout(resolve, 5000);
+        setTimeout(resolve, 1000);
       });
     }
   }
