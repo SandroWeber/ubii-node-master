@@ -1,5 +1,4 @@
 const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
-const { ubii } = require('@tum-far/ubii-msg-formats/dist/js/protobuf');
 const { UbiiClientNode } = require('@tum-far/ubii-node-nodejs');
 
 let config = {
@@ -42,9 +41,8 @@ let ubiiNode = undefined;
   }
 
   if (process.argv[3]) {
-    console.info('process.argv[3]: ' + process.argv[3]);
-    recordTemplate = process.argv[3]; //JSON.parse(process.argv[3]);
-    console.info(recordTemplate);
+    recordTemplate = JSON.parse(process.argv[3]); //JSON.parse(process.argv[3]);
+    recordTemplate.int32 = parseInt(recordTemplate.int32);
   } else {
     console.error('Must provide TopicDataRecord!');
     process.exit(0);
@@ -64,7 +62,9 @@ let ubiiNode = undefined;
   let list = await getMatchingTopics(regex);
   sendRecords(list, recordTemplate);
 
-  process.exit(0);
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
 })();
 
 let getMatchingTopics = async (regex) => {
@@ -73,9 +73,6 @@ let getMatchingTopics = async (regex) => {
   });
 
   if (reply.stringList && reply.stringList.elements) {
-    console.info('ALL TOPICS:');
-    console.info(reply.stringList.elements);
-
     topicList = [];
     for (let topic of reply.stringList.elements) {
       if (regex.test(topic)) {
@@ -83,7 +80,6 @@ let getMatchingTopics = async (regex) => {
       }
     }
 
-    console.info('getFilteredTopics(): ' + topicList);
     return topicList;
   }
 };
@@ -94,7 +90,7 @@ let sendRecords = (topicList, recordTemplate) => {
     let record = {};
     Object.assign(record, recordTemplate);
     record.topic = topic;
-    ubiiNode.publishRecord(record);
+    ubiiNode.publishRecordImmediately(record);
   }
 };
 

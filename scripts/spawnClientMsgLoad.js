@@ -8,9 +8,6 @@ const TEST_STATUS_RUNNING = 'running';
 const TEST_STATUS_STOPPED = 'stopped';
 const TEST_STATUS_FINISHED = 'finished';
 
-// localhost
-// 192.168.178.27
-// 192.168.178.36
 let config = {
   clientNode: {
     name: 'test-node-msg-load'
@@ -19,11 +16,11 @@ let config = {
     services: {
       address: 'http://localhost:8102/services/json',
       format: 'JSON'
-      //address: 'tcp://192.168.178.36:8101'
+      //address: 'tcp://localhost:8101'
     },
     topicdata: {
       address: 'ws://localhost:8104'
-      //address: 'tcp://192.168.178.36:8103'
+      //address: 'tcp://localhost:8103'
     }
   }
 };
@@ -40,6 +37,7 @@ let test = {
 };
 
 let ubiiNode = undefined;
+let topicSetRecsPerSec = undefined;
 
 const generateRandomString = (length) => {
   let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -52,9 +50,9 @@ const generateRandomString = (length) => {
 };
 
 (async function () {
-  if (process.argv[2]) test.targetRecordsPerSecond = process.argv[2];
-  if (process.argv[3]) test.recordPayloadBytes = process.argv[3];
-  if (process.argv[4]) test.targetDurationMs = process.argv[4];
+  if (process.argv[2]) test.targetRecordsPerSecond = parseInt(process.argv[2], 10);
+  if (process.argv[3]) test.recordPayloadBytes = parseInt(process.argv[3], 10);
+  if (process.argv[4]) test.targetDurationMs = parseInt(process.argv[4], 10);
   if (process.argv[5]) test.publishMethod = process.argv[5];
 
   if (test.recordPayloadBytes > 0) {
@@ -74,6 +72,12 @@ const generateRandomString = (length) => {
     }
     else if (message === 'STOP_TEST') {
       stopTest();
+    }
+  });
+  topicSetRecsPerSec = ubiiNode.id + '/set_rec_per_sec';
+  await ubiiNode.subscribeTopic(topicSetRecsPerSec, (record) => {
+    if (record.int32) {
+      setTargetRecordsPerSecond(record.int32);
     }
   });
 })();
@@ -101,8 +105,12 @@ let startTest = async () => {
     test.timeoutStopTest = setTimeout(() => stopTest(), testDurationMs);
   }
 
-  let messageIntervalMs = Math.ceil(1000 / test.targetRecordsPerSecond);
-  test.intervalSendMessage = setInterval(sendMessage, messageIntervalMs);
+  ubiiNode.publishRecordImmediately({
+    topic: topicSetRecsPerSec,
+    int32: test.targetRecordsPerSecond
+  });
+  /*let messageIntervalMs = Math.ceil(1000 / test.targetRecordsPerSecond);
+  test.intervalSendMessage = setInterval(sendMessage, messageIntervalMs);*/
 
   test.status = TEST_STATUS_RUNNING;
 
@@ -154,6 +162,15 @@ let sendMessage = () => {
     ubiiNode.publishRecordImmediately(record);
   }
   test.numMessagesSent++;
+};
+
+let setTargetRecordsPerSecond = (target) => {
+  test.intervalSendMessage && clearInterval(test.intervalSendMessage);
+
+  test.targetRecordsPerSecond = target;
+
+  let messageIntervalMs = Math.ceil(1000 / test.targetRecordsPerSecond);
+  test.intervalSendMessage = setInterval(sendMessage, messageIntervalMs);
 };
 
 let onMessageReceived = (record) => {

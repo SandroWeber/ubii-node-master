@@ -1,12 +1,3 @@
-//const { UbiiClientNode } = require('@tum-far/ubii-node-nodejs');
-
-/*const workerpool = require('workerpool');
-const pool = workerpool.pool();
-
-function spawnClient() {
-
-}*/
-
 const { fork } = require('child_process');
 const { CONSTANTS } = require('./spawnClientMsgLoad');
 
@@ -16,7 +7,7 @@ let config = {
   recordPayloadBytes: 0,
   testDurationMs: 0,
   publishMethod: CONSTANTS.PUBLISH_METHOD_BUNDLED,
-  newClientsPerSecond: 2
+  newClientsPerSecond: 5
 };
 
 let childProcesses = [];
