@@ -1,4 +1,7 @@
-const namida = require("@tum-far/namida");
+const namida = require('@tum-far/namida');
+
+const NotifyCondition = require('./notifyCondition.js');
+const MASTER_NODE_CONSTANTS = require('../node/constants');
 
 const LOG_TAG = 'NotifyConditionManager';
 
@@ -22,12 +25,14 @@ class NotifyConditionManager {
       return _instance;
     }
   
-    setDependencies(topicDataBuffer) {
-      this.topicDataBuffer = topicDataBuffer;
+    setUbiiNode(ubiiNode) {
+      this.ubiiNode = ubiiNode;
+      this.topicDataBuffer = this.ubiiNode.getDependency(MASTER_NODE_CONSTANTS.TOPIC_DATA_BUFFER);
+      this.deviceManager = this.ubiiNode.getDependency(MASTER_NODE_CONSTANTS.MANAGERS.DEVICES);
     }
 
     createNotifyCondition(specs) {
-        let condition = new NotifyCondition(specs, this.topicDataBuffer);
+        let condition = new NotifyCondition(specs, this.topicDataBuffer, this.deviceManager);
         this.notifyConditions.set(condition.id, condition);
 
         return condition;

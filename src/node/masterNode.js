@@ -12,6 +12,8 @@ const { SessionManager } = require('../sessions/sessionManager');
 const { Profiler } = require('../profiling/profiler');
 const NotifyConditionManager = require('../conditions/notifyConditionManager');
 
+const MASTER_NODE_CONSTANTS = require('./constants');
+
 class MasterNode {
   constructor() {
     this.id = uuidv4();
@@ -25,7 +27,7 @@ class MasterNode {
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
 
-    NotifyConditionManager.instance.setDependencies(this.topicData);
+    NotifyConditionManager.instance.setUbiiNode(this);
 
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
@@ -102,6 +104,7 @@ class MasterNode {
 
       let reply = ServiceManager.instance.processRequest(requestMessage);
       let proto = this.serviceReplyTranslator.fromObject(reply);
+      console.info(proto);
 
       response.json(proto);
       return proto;
@@ -221,6 +224,14 @@ class MasterNode {
 
   publishRecord(record, clientId) {
     this.topicData.publish(record.topic, record, clientId);
+  }
+
+  getDependency(depIdentifier) {
+    if (depIdentifier === MASTER_NODE_CONSTANTS.TOPIC_DATA_BUFFER) {
+      return this.topicData;
+    } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.DEVICES) {
+      return DeviceManager.instance;
+    }
   }
 }
 

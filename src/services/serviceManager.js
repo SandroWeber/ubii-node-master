@@ -25,6 +25,7 @@ const { SessionDatabaseSaveService } = require('./sessions/sessionDatabaseSaveSe
 const { SessionRuntimeStartService } = require('./sessions/sessionRuntimeStartService');
 const { SessionRuntimeStopService } = require('./sessions/sessionRuntimeStopService');
 const { NetworkInfoService } = require('./networkInfo/networkInfoService.js');
+const ServiceNotifyConditionAdd = require('./conditions/serviceNotifyConditionAdd.js');
 
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
@@ -62,26 +63,26 @@ class ServiceManager {
   }
 
   addDefaultServices() {
-    /* add general services */
+    /* general services */
     this.addService(new SubscriptionService(ClientManager.instance, this.topicData));
     this.addService(new ServerConfigService(this.masterNodeID, 'master-node', this.connectionsManager));
     this.addService(new TopicListService(this, this.topicData));
     this.addService(new ServiceListService(this));
-    /* add client services */
+    /* client services */
     this.addService(new ClientRegistrationService(ClientManager.instance));
     this.addService(new ClientDeregistrationService(ClientManager.instance, DeviceManager.instance));
     this.addService(new ClientListService(ClientManager.instance));
-    /* add device services */
+    /* device services */
     this.addService(new DeviceRegistrationService(DeviceManager.instance));
     this.addService(new DeviceDeregistrationService(DeviceManager.instance));
     this.addService(new DeviceGetListService(DeviceManager.instance, ClientManager.instance));
     this.addService(new ComponentGetListService());
-    /* add processing module services */
+    /* processing module services */
     this.addService(new ProcessingModuleDatabaseGetService());
     this.addService(new ProcessingModuleDatabaseGetListService(ClientManager.instance));
     this.addService(new ProcessingModuleRuntimeAddService(this.processingModuleManager, SessionManager.instance));
     this.addService(new ProcessingModuleRuntimeRemoveService(this.processingModuleManager, SessionManager.instance));
-    /* add session services */
+    /* session services */
     this.addService(new SessionDatabaseDeleteService());
     this.addService(new SessionDatabaseGetListService());
     this.addService(new SessionDatabaseGetService());
@@ -91,6 +92,8 @@ class ServiceManager {
     this.addService(new SessionDatabaseSaveService(SessionManager.instance));
     this.addService(new SessionRuntimeStartService(SessionManager.instance));
     this.addService(new SessionRuntimeStopService(SessionManager.instance));
+    /* condition services */
+    this.addService(new ServiceNotifyConditionAdd());
 
     /* network statistics */
     this.addService(new NetworkInfoService(ClientManager.instance));

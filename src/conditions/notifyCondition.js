@@ -1,17 +1,17 @@
-import namida from '@tum-far/namida';
+const namida = require('@tum-far/namida');
 const { v4: uuidv4 } = require('uuid');
 
-import { DeviceManager } from '../devices/deviceManager';
-import FilterUtils from '../utils/filterUtils';
-import Utils from '../utils/utilities';
+const FilterUtils = require('../utils/filterUtils');
+const Utils = require('../utils/utilities');
 
 const LOG_TAG = 'NotifyCondition';
 
 class NotifyCondition {
-  constructor(specs, topicDataBuffer) {
+  constructor(specs, topicDataBuffer, deviceManager) {
     this.specs = specs;
     this.specs.id = uuidv4();
     this.topicDataBuffer = topicDataBuffer;
+    this.deviceManager = deviceManager;
 
     this.evaluationFunction = Utils.createFunctionFromString(specs.evaluationFunctionStringified);
     this.pairsPubSub = new Map();
@@ -23,13 +23,13 @@ class NotifyCondition {
     } else if (topicDataSource.type === 'component') {
       let components = [];
       if (clientProfile) {
-        const devices = DeviceManager.instance.getDevicesByClientId(clientProfile.id);
+        const devices = this.deviceManager.getDevicesByClientId(clientProfile.id);
         for (const device of devices) {
           components.push(device.components);
         }
         components = FilterUtils.filterAll(topicDataSource[topicDataSource.type], components);
       } else {
-        components = DeviceManager.instance.getComponentsByProfile(topicDataSource[topicDataSource.type]);
+        components = this.deviceManager.getComponentsByProfile(topicDataSource[topicDataSource.type]);
       }
 
       if (components.length === 1) {
