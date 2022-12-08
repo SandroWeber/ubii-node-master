@@ -26,6 +26,10 @@ class MasterNode {
 
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
+    //TODO: have a topic data proxy here too in order to keep API consistent between PMs on client and master node?
+    this.topicData.publishRecordImmediately = (record) => {
+      this.topicData.publish(record.topic, record, this.id)
+    };
 
     NotifyConditionManager.instance.setUbiiNode(this);
 
@@ -104,14 +108,13 @@ class MasterNode {
 
       let reply = ServiceManager.instance.processRequest(requestMessage);
       let proto = this.serviceReplyTranslator.fromObject(reply);
-      console.info(proto);
 
       response.json(proto);
       return proto;
     } catch (error) {
       let errorMessage = this.onServiceResponseError(error);
       response.json(errorMessage);
-      return errorMsg;
+      return errorMessage;
     }
   }
 

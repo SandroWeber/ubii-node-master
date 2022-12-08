@@ -182,7 +182,7 @@ class Client {
     }
 
     // subscribe
-    let token = this.topicData.subscribe(topic, (record, publisherId) =>
+    let token = this.topicData.subscribeTopic(topic, (record, publisherId) =>
       this.subscriptionCallback(record, publisherId)
     );
     this.topicSubscriptions.set(topic, token);
