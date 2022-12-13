@@ -34,6 +34,7 @@ class NotifyConditionManager {
     createNotifyCondition(specs) {
         let condition = new NotifyCondition(specs, this.topicDataBuffer, this.deviceManager);
         this.notifyConditions.set(condition.id, condition);
+        namida.logSuccess(LOG_TAG, 'new ' + condition.toString());
 
         return condition;
     }

@@ -19,7 +19,7 @@ class Component {
       if (condition) {
         this.conditions.push(condition);
       } else {
-        namida.logFailure(this.toString(), 'could not find NotifyCondition with ID "' + conditionId + '"');
+        namida.logFailure(this.toString(), `could not find NotifyCondition with ID "${conditionId}"`);
       }
     }
   }
@@ -31,6 +31,7 @@ class Component {
   checkNotifyConditions(profilePublisher, profileSubscriber) {
     for (const condition of this.conditions) {
       let result = condition.evaluate(profilePublisher, profileSubscriber);
+      console.info('evaluated condition ' + condition.id + ' => ' + result);
       if (typeof result !== 'boolean') {
         namida.logFailure(this.toString(), 'evaluation of ' + condition.toString() + ' did not return boolean value!');
         return false;
