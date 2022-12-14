@@ -105,7 +105,7 @@ class MasterNode {
     } catch (error) {
       let errorMessage = this.onServiceResponseError(error);
       response.json(errorMessage);
-      return errorMsg;
+      return errorMessage;
     }
   }
 
