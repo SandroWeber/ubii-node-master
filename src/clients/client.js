@@ -199,7 +199,7 @@ class Client {
   subscriptionCallback(record, publisherId) {
     let component = DeviceManager.instance.getComponentByTopic(record.topic);
     if (component && component.hasNotifyConditions()) {
-      const clientProfilePub = this.clientManager.getClient(publisherId);
+      const clientProfilePub = this.clientManager.getClient(publisherId).toProtobuf();
       const clientProfileSub = this.toProtobuf();
 
       if (!component.checkNotifyConditions(clientProfilePub, clientProfileSub)) {
