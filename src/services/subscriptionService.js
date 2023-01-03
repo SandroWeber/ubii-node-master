@@ -1,10 +1,13 @@
-const { Service } = require('./service.js');
 const namida = require('@tum-far/namida');
-
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
+const { Service } = require('./service.js');
+const FilterUtils = require('../utils/filterUtils');
+
+const LOG_TAG = 'SubscriptionService';
+
 class SubscriptionService extends Service {
-  constructor(clientManager, topicData) {
+  constructor(clientManager) {
     super(
       DEFAULT_TOPICS.SERVICES.TOPIC_SUBSCRIPTION,
       MSG_TYPES.SERVICE_REUEST_TOPIC_SUBSCRIPTION,
@@ -12,7 +15,6 @@ class SubscriptionService extends Service {
     );
 
     this.clientManager = clientManager;
-    this.topicData = topicData;
   }
 
   reply(message) {
@@ -24,7 +26,7 @@ class SubscriptionService extends Service {
       let errorTitle = 'SubscriptionService';
       let errorMessage = 'There is no client registered with the ID ' + clientID;
 
-      namida.logFailure(errorTitle, errorMessage);
+      namida.logFailure(LOG_TAG, errorMessage);
 
       return {
         error: {
@@ -58,6 +60,19 @@ class SubscriptionService extends Service {
       message.unsubscribeTopicRegexp.forEach((regex) => {
         client.unsubscribeRegex(regex);
       });
+    }
+
+    if (message.subscribeComponents) {
+      for (let componentProfile of message.subscribeComponents) {
+        let subscription = client.getComponentSubscription(componentProfile);
+        if (typeof subscription === 'undefined') {
+          client.addComponentSubscription(componentProfile);
+        }
+      }
+    }
+
+    if (message.unsubscribeComponents) {
+      namida.logFailure(LOG_TAG, 'not implemented!')
     }
 
     // Reply with success message

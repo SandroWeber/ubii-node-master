@@ -13,6 +13,7 @@ const { Profiler } = require('../profiling/profiler');
 const NotifyConditionManager = require('../conditions/notifyConditionManager');
 
 const MASTER_NODE_CONSTANTS = require('./constants');
+const { Client } = require('../clients/client');
 
 class MasterNode {
   constructor() {
@@ -52,7 +53,7 @@ class MasterNode {
     ClientManager.instance.setDependencies(this.connectionsManager, this.topicData);
 
     // Device Manager Component:
-    DeviceManager.instance.setDependencies(this.topicData, ClientManager.instance);
+    DeviceManager.instance.setDependencies(this.topicData, this);
 
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicData);
@@ -234,6 +235,8 @@ class MasterNode {
       return this.topicData;
     } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.DEVICES) {
       return DeviceManager.instance;
+    } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS) {
+      return ClientManager.instance;
     }
   }
 }

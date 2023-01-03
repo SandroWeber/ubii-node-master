@@ -64,7 +64,7 @@ class ServiceManager {
 
   addDefaultServices() {
     /* general services */
-    this.addService(new SubscriptionService(ClientManager.instance, this.topicData));
+    this.addService(new SubscriptionService(ClientManager.instance));
     this.addService(new ServerConfigService(this.masterNodeID, 'master-node', this.connectionsManager));
     this.addService(new TopicListService(this, this.topicData));
     this.addService(new ServiceListService(this));

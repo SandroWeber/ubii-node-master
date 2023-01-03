@@ -9,6 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 const latency = require('../network/latency');
 const { DeviceManager } = require('../devices/deviceManager');
+const FilterUtils = require('../utils/filterUtils');
 
 class Client {
   constructor(specs = {}, server, topicData, clientManager) {
@@ -28,10 +29,15 @@ class Client {
     this.lastSignOfLife = null;
     this.topicSubscriptions = new Map();
     this.regexSubscriptions = new Map();
+    this.componentSubscriptions = new Map();
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
     this.publishedTopics = [];
     this.latency = 0;
+
+    DeviceManager.instance.on(DeviceManager.EVENTS.NEW_DEVICE, (deviceSpecs) => {
+      this.onNewDevice(deviceSpecs);
+    });
   }
 
   /**
@@ -314,6 +320,45 @@ class Client {
     this.publishedTopics.forEach((topic) => {
       this.topicData.remove(topic);
     });
+  }
+
+  getComponentSubscription(componentProfile) {
+    for (let key of this.componentSubscriptions.keys()) {
+      if (FilterUtils.matches(key, componentProfile)) {
+        return this.componentSubscriptions.get(key);
+      }
+    }
+  }
+
+  addComponentSubscription(componentProfile) {
+    if (this.getComponentSubscription(componentProfile)) return;
+
+    let subscription = {
+      tokens: []
+    };
+    this.componentSubscriptions.set(componentProfile, subscription);
+
+    let matchingComponents = DeviceManager.instance.getComponentsByProfile(componentProfile);
+    for (let component of matchingComponents) {
+      console.info('client addComponentSubscription() - found matching component ' + component.id);
+      let token = this.topicData.subscribeTopic(component.topic, (record, publisherId) => 
+        this.subscriptionCallback(record, publisherId)
+      );
+      subscription.tokens.push(token);
+    }
+  }
+
+  onNewDevice(deviceSpecs) {
+    for (let newComponent of deviceSpecs.components) {
+      console.info('client onNewDevice() - checking component ' + newComponent.id);
+      let subscription = this.getComponentSubscription(newComponent);
+      if (subscription) {
+        let token = this.topicData.subscribeTopic(newComponent.topic, (record, publisherId) =>
+          this.subscriptionCallback(record, publisherId)
+        );
+        subscription.tokens.push(token);
+      }
+    }
   }
 
   /*removeTopicsOfRegisteredComponents() {

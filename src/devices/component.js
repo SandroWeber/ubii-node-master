@@ -10,12 +10,13 @@ class Component {
   constructor(specs, client) {
     specs && Object.assign(this, specs);
     this.id = uuidv4();
+    this.topic = typeof this.topic === 'undefined' ? uuidv4() : this.topic;
 
     this.client = client;
 
     this.conditions = [];
     for (const conditionId of this.notifyConditionIds) {
-      let condition = NotifyConditionManager.instance.getNotifyCondition({ id: conditionId});
+      let condition = NotifyConditionManager.instance.getNotifyCondition({ id: conditionId });
       if (condition) {
         this.conditions.push(condition);
       } else {

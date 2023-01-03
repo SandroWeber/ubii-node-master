@@ -1,11 +1,16 @@
+const EventEmitter = require('events');
+
 const namida = require('@tum-far/namida');
-const { proto } = require('@tum-far/ubii-msg-formats');
+const { proto, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Participant } = require('./../devices/participant.js');
 const { Watcher } = require('./../devices/watcher.js');
 const { TopicMultiplexer } = require('./../devices/topicMultiplexer.js');
 const { TopicDemultiplexer } = require('./../devices/topicDemultiplexer.js');
 const FilterUtils = require('../utils/filterUtils.js');
+const Utils = require('../utils/utilities');
+
+const MASTER_NODE_CONSTANTS = require('../node/constants');
 
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();
@@ -14,8 +19,10 @@ const SINGLETON_ENFORCER = Symbol();
  * The DeviceManager manages Device objects. It is part of a server node.
  * The server node uses it to manages all entities that interact with the functionalities of the server.
  */
-class DeviceManager {
+class DeviceManager extends EventEmitter {
   constructor(enforcer) {
+    super();
+
     if (enforcer !== SINGLETON_ENFORCER) {
       throw new Error('Use ' + this.constructor.name + '.instance');
     }
@@ -34,9 +41,10 @@ class DeviceManager {
     return _instance;
   }
 
-  setDependencies(topicDataBuffer, clientManager) {
+  setDependencies(topicDataBuffer, masterNode) {
     this.topicData = topicDataBuffer;
-    this.clientManager = clientManager;
+    this.masterNode = masterNode;
+    this.clientManager = this.masterNode.getDependency(MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS);
   }
 
   getDevice(id) {
@@ -291,6 +299,13 @@ class DeviceManager {
     if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
       currentDevice = new Participant(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
       this.addParticipant(currentDevice);
+      let deviceSpecs = currentDevice.toProtobuf();
+      this.emit(DeviceManager.EVENTS.NEW_DEVICE, deviceSpecs);
+      this.masterNode.publishRecord({
+        topic: '/info/device/new', //TODO: include in msg-formats constants
+        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.DEVICE),
+        device: deviceSpecs
+      });
     }
     // Handle the registration of a watcher.
     else if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
@@ -417,6 +432,10 @@ class DeviceManager {
     return devices;
   }
 }
+
+DeviceManager.EVENTS = Object.freeze({
+  NEW_DEVICE: 'NEW_DEVICE',
+});
 
 module.exports = {
   DeviceManager: DeviceManager
