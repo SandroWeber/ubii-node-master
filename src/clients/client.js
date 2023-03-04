@@ -213,6 +213,14 @@ class Client {
       }
     }
 
+    //TODO: define tolerable delay between received and subscription callback, integrate with profiler
+    if (record.tReceived) {
+      let delay = Date.now() - record.tReceived;
+      if (delay > 10) {
+        namida.warn(this.toString(), 'sub callback delay >10ms');
+      }
+    }
+
     let payload = {
       topicDataRecord: record
     };
@@ -324,10 +332,21 @@ class Client {
 
   getComponentSubscription(componentProfile) {
     for (let key of this.componentSubscriptions.keys()) {
-      if (FilterUtils.matches(key, componentProfile)) {
+      if (FilterUtils.deepEqual(key, componentProfile)) {
         return this.componentSubscriptions.get(key);
       }
     }
+  }
+
+  getMatchingComponentSubscriptions(componentProfile) {
+    let subs = [];
+    for (let key of this.componentSubscriptions.keys()) {
+      if (FilterUtils.matches(key, componentProfile)) {
+        subs.push(this.componentSubscriptions.get(key));
+      }
+    }
+
+    return subs;
   }
 
   addComponentSubscription(componentProfile) {
@@ -340,8 +359,9 @@ class Client {
 
     let matchingComponents = DeviceManager.instance.getComponentsByProfile(componentProfile);
     for (let component of matchingComponents) {
-      console.info('client addComponentSubscription() - found matching component ' + component.id);
-      let token = this.topicData.subscribeTopic(component.topic, (record, publisherId) => 
+      //console.info('client addComponentSubscription() - found matching component with topic ' + component.topic);
+      console.info(`client ${this.id} subscribed to topic "${component.topic}`);
+      let token = this.topicData.subscribeTopic(component.topic, (record, publisherId) =>
         this.subscriptionCallback(record, publisherId)
       );
       subscription.tokens.push(token);
@@ -351,12 +371,14 @@ class Client {
   onNewDevice(deviceSpecs) {
     for (let newComponent of deviceSpecs.components) {
       console.info('client onNewDevice() - checking component ' + newComponent.id);
-      let subscription = this.getComponentSubscription(newComponent);
-      if (subscription) {
+      let subscriptions = this.getMatchingComponentSubscriptions(newComponent);
+      console.info('client onNewDevice() - matching subs: ');
+      console.info(subscriptions);
+      for (let sub of subscriptions) {
         let token = this.topicData.subscribeTopic(newComponent.topic, (record, publisherId) =>
           this.subscriptionCallback(record, publisherId)
         );
-        subscription.tokens.push(token);
+        sub.tokens.push(token);
       }
     }
   }

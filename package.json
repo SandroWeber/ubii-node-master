@@ -37,7 +37,7 @@
   "dependencies": {
     "@tum-far/namida": "0.1.1",
     "@tum-far/ubii-database": "0.1.1",
-    "@tum-far/ubii-msg-formats": "0.16.5",
+    "@tum-far/ubii-msg-formats": "0.16.6",
     "@tum-far/ubii-node-nodejs": "0.4.2",
     "@tum-far/ubii-topic-data": "0.4.8",
     "body-parser": "1.18.3",

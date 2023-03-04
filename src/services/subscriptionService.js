@@ -62,7 +62,7 @@ class SubscriptionService extends Service {
       });
     }
 
-    if (message.subscribeComponents) {
+    if (message.subscribeComponents.length > 0) {
       for (let componentProfile of message.subscribeComponents) {
         let subscription = client.getComponentSubscription(componentProfile);
         if (typeof subscription === 'undefined') {
@@ -71,8 +71,9 @@ class SubscriptionService extends Service {
       }
     }
 
-    if (message.unsubscribeComponents) {
-      namida.logFailure(LOG_TAG, 'not implemented!')
+    if (message.unsubscribeComponents.length > 0) {
+      console.info(message.unsubscribeComponents);
+      namida.logFailure(LOG_TAG, 'unsubscribeComponents not implemented!');
     }
 
     // Reply with success message

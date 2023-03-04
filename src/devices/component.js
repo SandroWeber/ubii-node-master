@@ -35,7 +35,7 @@ class Component {
     console.info(profileSubscriber);*/
     for (const condition of this.conditions) {
       let result = condition.evaluate(profilePublisher, profileSubscriber);
-      console.info('Component - evaluated condition ' + condition.id + ' => ' + result);
+      //console.info('Component - evaluated condition ' + condition.id + ' => ' + result);
       /*if (typeof result !== 'boolean') {
         namida.logFailure(this.toString(), 'evaluation of ' + condition.toString() + ' did not return boolean value!');
         return false;

@@ -26,21 +26,34 @@ let getTopicDataRecord = (topicDataSource, clientProfile) => {
     //console.info(record);
     return record;
   } else if (topicDataSource.type === 'component' || topicDataSource.component) {
-    let components = [];
+    /*console.info('getTopicDataRecord() - params - topicDataSource.component, clientProfile:');
+    console.info(topicDataSource.component);
+    console.info(clientProfile);*/
+    let matchingComponents = [];
     if (clientProfile) {
-      const devices = globalDeviceManager.getDevicesByClientId(clientProfile.id);
+      const devices = globalDeviceManager.getDevicesByClientId(clientProfile.id).map(device => device.toProtobuf());
       for (const device of devices) {
-        components.push(device.components);
+        matchingComponents.push(...device.components);
       }
-      components = FilterUtils.filterAll(topicDataSource.component, components);
+      matchingComponents = FilterUtils.filterAll([topicDataSource.component], matchingComponents);
     } else {
-      components = globalDeviceManager.getComponentsByProfile(topicDataSource.component);
+      matchingComponents = globalDeviceManager.getComponentsByProfile(topicDataSource.component);
     }
+    /*console.info('getTopicDataRecord() - matching components:');
+    console.info(components);*/
 
-    if (components.length === 1) {
-      return gobalTopicDataBuffer.pull(components[0].topic);
+    if (matchingComponents.length === 1) {
+      /*console.info('getTopicDataRecord() - retrieving record - gobalTopicDataBuffer, components[0].topic, pull() result:');
+      console.info(gobalTopicDataBuffer);
+      console.info(components[0].topic);
+      console.info(gobalTopicDataBuffer.pull(components[0].topic));*/
+      return gobalTopicDataBuffer.pull(matchingComponents[0].topic);
     } else {
       namida.logFailure(LOG_TAG, 'getTopicDataRecord() specified source as component, but multiple components match');
+      console.info('requested profile:');
+      console.info(topicDataSource.component);
+      console.info('matching profiles:');
+      console.info(matchingComponents);
     }
   } else {
     namida.logFailure(
@@ -118,13 +131,16 @@ class NotifyCondition {
       const validPublisher =
         !this.specs.clientProfilePub || FilterUtils.matches(this.specs.clientProfilePub, profilePublisher);
       const validSubscriber =
-        !this.specs.clientProfileSub || FilterUtils.matches(this.specs.clientProfileSub, profilePublisher);
+        !this.specs.clientProfileSub || FilterUtils.matches(this.specs.clientProfileSub, profileSubscriber);
       this.pairsPubSub.set(key, { valid: validPublisher && validSubscriber });
-      //console.info(this.toString() + ' - pub/sub pair ' + key + ' set to ' + this.pairsPubSub.get(key).valid);
+      console.info(this.toString() + ' - pub/sub pair ' + key + ' set to ' + this.pairsPubSub.get(key).valid);
     }
     //TODO: implement performance improvements
     // keep track of valid pub/sub and other filter/eval results
     if (!this.pairsPubSub.get(key).valid) {
+      console.info('pub/sub pairing invalid');
+      this.specs.clientProfilePub || console.info('pub: ' + FilterUtils.matches(this.specs.clientProfilePub, profilePublisher));
+      this.specs.clientProfileSub || console.info('pub: ' + FilterUtils.matches(this.specs.clientProfileSub, profileSubscriber));
       return false;
     }
 

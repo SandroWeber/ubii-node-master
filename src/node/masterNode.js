@@ -13,7 +13,6 @@ const { Profiler } = require('../profiling/profiler');
 const NotifyConditionManager = require('../conditions/notifyConditionManager');
 
 const MASTER_NODE_CONSTANTS = require('./constants');
-const { Client } = require('../clients/client');
 
 class MasterNode {
   constructor() {
@@ -227,6 +226,7 @@ class MasterNode {
   }
 
   publishRecord(record, clientId) {
+    record.tReceived = Date.now();
     this.topicData.publish(record.topic, record, clientId);
   }
 

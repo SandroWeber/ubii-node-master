@@ -1,7 +1,7 @@
 const EventEmitter = require('events');
 
 const namida = require('@tum-far/namida');
-const { proto, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const { proto, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 
 const { Participant } = require('./../devices/participant.js');
 const { Watcher } = require('./../devices/watcher.js');
@@ -299,13 +299,6 @@ class DeviceManager extends EventEmitter {
     if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
       currentDevice = new Participant(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
       this.addParticipant(currentDevice);
-      let deviceSpecs = currentDevice.toProtobuf();
-      this.emit(DeviceManager.EVENTS.NEW_DEVICE, deviceSpecs);
-      this.masterNode.publishRecord({
-        topic: '/info/device/new', //TODO: include in msg-formats constants
-        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.DEVICE),
-        device: deviceSpecs
-      });
     }
     // Handle the registration of a watcher.
     else if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
@@ -322,6 +315,14 @@ class DeviceManager extends EventEmitter {
 
     // Ouput the feedback on the server console.
     namida.logSuccess('DeviceManager', message);
+    
+    let deviceSpecs = currentDevice.toProtobuf();
+    this.emit(DeviceManager.EVENTS.NEW_DEVICE, deviceSpecs);
+    this.masterNode.publishRecord({
+      topic: DEFAULT_TOPICS.INFO_TOPICS.NEW_DEVICE, //TODO: include in msg-formats constants
+      type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.DEVICE),
+      device: deviceSpecs
+    });
 
     // Return the deviceSpecification payload.
     return currentDevice;
