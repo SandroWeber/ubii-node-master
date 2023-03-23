@@ -236,10 +236,7 @@ class Client {
       let success = this.subscribeAtTopicData(topic);
       // successfully subscribed just now or already subscribed by some other means
       if (!success) {
-        namida.logFailure(
-          this.toString(),
-          'failed to subscribe to ' + topic + ' at topic data buffer'
-        );
+        namida.logFailure(this.toString(), 'failed to subscribe to ' + topic + ' at topic data buffer');
       }
     }
   }
@@ -267,9 +264,7 @@ class Client {
       return false;
     }
 
-    let token = this.topicData.subscribeRegex(regexString, (record) =>
-      this.subscriptionCallback(record)
-    );
+    let token = this.topicData.subscribeRegex(regexString, (record) => this.subscriptionCallback(record));
     this.regexSubscriptions.set(regexString, token);
 
     return true;

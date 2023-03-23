@@ -188,7 +188,10 @@ class MasterNode {
     let client = ClientManager.instance.getClient(clientID);
     //client.updateLastSignOfLife();
 
-    let records = topicDataMessage.topicDataRecordList ? topicDataMessage.topicDataRecordList.elements : [];
+    let records =
+      topicDataMessage.topicDataRecordList && topicDataMessage.topicDataRecordList.elements
+        ? topicDataMessage.topicDataRecordList.elements
+        : [];
     if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
 
     records.forEach((record) => {
