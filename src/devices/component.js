@@ -30,16 +30,8 @@ class Component {
   }
 
   checkNotifyConditions(profilePublisher, profileSubscriber) {
-    /*console.info('checkNotifyConditions() - pub/sub profiles:');
-    console.info(profilePublisher);
-    console.info(profileSubscriber);*/
     for (const condition of this.conditions) {
       let result = condition.evaluate(profilePublisher, profileSubscriber);
-      //console.info('Component - evaluated condition ' + condition.id + ' => ' + result);
-      /*if (typeof result !== 'boolean') {
-        namida.logFailure(this.toString(), 'evaluation of ' + condition.toString() + ' did not return boolean value!');
-        return false;
-      }*/
       if (!result) {
         return false;
       }

@@ -6,7 +6,6 @@ const Utils = require('../utils/utilities');
 
 const LOG_TAG = 'NotifyCondition';
 
-//let getTopicDataRecord = undefined;
 let gobalTopicDataBuffer = undefined;
 let globalDeviceManager = undefined;
 let getTopicDataRecord = (topicDataSource, clientProfile) => {
@@ -17,18 +16,11 @@ let getTopicDataRecord = (topicDataSource, clientProfile) => {
     );
     return;
   }
-  /*console.info('getTopicDataRecord() - topicDataSource, clientProfile:');
-  console.info(topicDataSource);
-  console.info(clientProfile);*/
 
   if (topicDataSource.type === 'topic' || topicDataSource.topic) {
     let record = gobalTopicDataBuffer.pull(topicDataSource.topic);
-    //console.info(record);
     return record;
   } else if (topicDataSource.type === 'component' || topicDataSource.component) {
-    /*console.info('getTopicDataRecord() - params - topicDataSource.component, clientProfile:');
-    console.info(topicDataSource.component);
-    console.info(clientProfile);*/
     let matchingComponents = [];
     if (clientProfile) {
       const devices = globalDeviceManager.getDevicesByClientId(clientProfile.id).map(device => device.toProtobuf());
@@ -39,14 +31,8 @@ let getTopicDataRecord = (topicDataSource, clientProfile) => {
     } else {
       matchingComponents = globalDeviceManager.getComponentsByProfile(topicDataSource.component);
     }
-    /*console.info('getTopicDataRecord() - matching components:');
-    console.info(components);*/
 
     if (matchingComponents.length === 1) {
-      /*console.info('getTopicDataRecord() - retrieving record - gobalTopicDataBuffer, components[0].topic, pull() result:');
-      console.info(gobalTopicDataBuffer);
-      console.info(components[0].topic);
-      console.info(gobalTopicDataBuffer.pull(components[0].topic));*/
       return gobalTopicDataBuffer.pull(matchingComponents[0].topic);
     } else {
       namida.logFailure(LOG_TAG, 'getTopicDataRecord() specified source as component, but multiple components match');
@@ -77,55 +63,17 @@ class NotifyCondition {
     
     this.pairsPubSub = new Map();
 
-    //getTopicDataRecord = this.getTopicDataRecord;
     gobalTopicDataBuffer = topicDataBuffer;
     globalDeviceManager = deviceManager;
-    /*console.info(gobalTopicDataBuffer);
-    console.info(globalDeviceManager);
-    console.info(getTopicDataRecord);
-    console.info(getTopicDataRecord());*/
 
     this.evaluationFunction = Utils.createFunctionFromString(specs.evaluationFunctionStringified);
-    //this.evaluationFunction = new Function('return ' + specs.evaluationFunctionStringified);
-    /*console.info(specs.evaluationFunctionStringified);
-    console.info(this.evaluationFunction);*/
   }
-
-  /*getTopicDataRecord(topicDataSource, clientProfile) {
-    if (topicDataSource.type === 'topic') {
-      return this.topicDataBuffer.pull(topicDataSource[topicDataSource.type]);
-    } else if (topicDataSource.type === 'component') {
-      let components = [];
-      if (clientProfile) {
-        const devices = this.deviceManager.getDevicesByClientId(clientProfile.id);
-        for (const device of devices) {
-          components.push(device.components);
-        }
-        components = FilterUtils.filterAll(topicDataSource[topicDataSource.type], components);
-      } else {
-        components = this.deviceManager.getComponentsByProfile(topicDataSource[topicDataSource.type]);
-      }
-
-      if (components.length === 1) {
-        return this.topicDataBuffer.pull(components[0].topic);
-      } else {
-        namida.logFailure(LOG_TAG, 'getTopicDataRecord() specified source as component, but multiple components match');
-      }
-    } else {
-      namida.logFailure(
-        LOG_TAG,
-        'getTopicDataRecord() specified source "regex" is not viable, use getTopicDataRecordList() instead'
-      );
-    }
-  }*/
 
   getTopicDataRecordList() {
     console.error('not implemented');
   }
 
   evaluate(profilePublisher, profileSubscriber) {
-    //console.info('\nevaluate() - ' + this.toString());
-    //console.info(getTopicDataRecord);
     const key = profilePublisher.id + '==' + profileSubscriber.id;
     if (!this.pairsPubSub.has(key)) {
       const validPublisher =
@@ -133,22 +81,13 @@ class NotifyCondition {
       const validSubscriber =
         !this.specs.clientProfileSub || FilterUtils.matches(this.specs.clientProfileSub, profileSubscriber);
       this.pairsPubSub.set(key, { valid: validPublisher && validSubscriber });
-      console.info(this.toString() + ' - pub/sub pair ' + key + ' set to ' + this.pairsPubSub.get(key).valid);
     }
     //TODO: implement performance improvements
     // keep track of valid pub/sub and other filter/eval results
     if (!this.pairsPubSub.get(key).valid) {
-      console.info('pub/sub pairing invalid');
-      this.specs.clientProfilePub || console.info('pub: ' + FilterUtils.matches(this.specs.clientProfilePub, profilePublisher));
-      this.specs.clientProfileSub || console.info('pub: ' + FilterUtils.matches(this.specs.clientProfileSub, profileSubscriber));
       return false;
     }
 
-    /*return this.evaluationFunction.call(
-      { getTopicDataRecord: getTopicDataRecord },
-      profilePublisher,
-      profileSubscriber
-    );*/
     return this.evaluationFunction(profilePublisher, profileSubscriber, getTopicDataRecord);
   }
 

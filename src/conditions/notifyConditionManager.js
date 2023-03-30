@@ -49,7 +49,6 @@ class NotifyConditionManager {
       return;
     }
 
-    //console.info(this.notifyConditions);
     return this.notifyConditions.get(specs.id);
   }
 }
