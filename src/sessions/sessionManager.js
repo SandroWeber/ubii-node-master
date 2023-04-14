@@ -6,7 +6,7 @@ const namida = require('@tum-far/namida');
 
 const { Session } = require('./session.js');
 const { EVENTS_SESSION_MANAGER } = require('./constants');
-const Utils = require('../utilities');
+const Utils = require('../utils/utilities');
 
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();

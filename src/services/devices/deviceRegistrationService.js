@@ -5,6 +5,9 @@ const { Service } = require('../service.js');
 
 const { ClientManager } = require('../../clients/clientManager.js');
 
+
+const LOG_TAG = 'DeviceRegistrationService';
+
 class DeviceRegistrationService extends Service {
   constructor(deviceManager) {
     super(
@@ -16,16 +19,15 @@ class DeviceRegistrationService extends Service {
     this.deviceManager = deviceManager;
   }
 
-  reply(request) {
+  reply(deviceSpecs) {
     // Verify the device and act accordingly.
-    if (!ClientManager.instance.verifyClient(request.clientId)) {
-      let message = 'There is no Client registered with the ID ' + request.clientId;
-
-      namida.logFailure('DeviceRegistrationService', message);
+    if (!ClientManager.instance.verifyClient(deviceSpecs.clientId)) {
+      let message = `There is no Client registered with ID "${deviceSpecs.clientId}"`;
+      namida.logFailure(LOG_TAG, message);
 
       return {
         error: {
-          title: 'DeviceRegistrationService ERROR',
+          title: LOG_TAG,
           message: message
         }
       };
@@ -34,12 +36,12 @@ class DeviceRegistrationService extends Service {
     // Process the registration of the sepcified device at the device manager
     let device = undefined;
     try {
-      device = this.deviceManager.registerDeviceSpecs(request);
+      device = this.deviceManager.registerDeviceSpecs(deviceSpecs);
     } catch (error) {
-      namida.logFailure('DeviceRegistrationService', error.toString());
+      console.error(error);
       return {
         error: {
-          title: 'DeviceRegistrationService ERROR',
+          title: LOG_TAG,
           message: error && error.toString(),
           stack: error.stack && error.stack.toString()
         }
@@ -52,7 +54,7 @@ class DeviceRegistrationService extends Service {
     } else {
       return {
         error: {
-          title: 'DeviceRegistrationService ERROR',
+          title: LOG_TAG,
           message: 'device manager returned undefined'
         }
       };

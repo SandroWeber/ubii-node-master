@@ -10,6 +10,9 @@ const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
 const { Profiler } = require('../profiling/profiler');
+const NotifyConditionManager = require('../conditions/notifyConditionManager');
+
+const MASTER_NODE_CONSTANTS = require('./constants');
 
 class MasterNode {
   constructor() {
@@ -23,6 +26,12 @@ class MasterNode {
 
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
+    //TODO: have a topic data proxy here too in order to keep API consistent between PMs on client and master node?
+    this.topicData.publishRecordImmediately = (record) => {
+      this.topicData.publish(record.topic, record, this.id)
+    };
+
+    NotifyConditionManager.instance.setUbiiNode(this);
 
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
@@ -43,7 +52,7 @@ class MasterNode {
     ClientManager.instance.setDependencies(this.connectionsManager, this.topicData);
 
     // Device Manager Component:
-    DeviceManager.instance.setTopicData(this.topicData);
+    DeviceManager.instance.setDependencies(this.topicData, this);
 
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicData);
@@ -105,7 +114,7 @@ class MasterNode {
     } catch (error) {
       let errorMessage = this.onServiceResponseError(error);
       response.json(errorMessage);
-      return errorMsg;
+      return errorMessage;
     }
   }
 
@@ -215,12 +224,23 @@ class MasterNode {
         client.publishedTopics.push(topic);
       }
 
-      this.publishRecord(record);
+      this.publishRecord(record, clientID);
     });
   }
 
-  publishRecord(record) {
-    this.topicData.publish(record.topic, record);
+  publishRecord(record, clientId) {
+    record.tReceived = Date.now();
+    this.topicData.publish(record.topic, record, clientId);
+  }
+
+  getDependency(depIdentifier) {
+    if (depIdentifier === MASTER_NODE_CONSTANTS.TOPIC_DATA_BUFFER) {
+      return this.topicData;
+    } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.DEVICES) {
+      return DeviceManager.instance;
+    } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS) {
+      return ClientManager.instance;
+    }
   }
 }
 

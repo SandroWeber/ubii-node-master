@@ -8,9 +8,11 @@ const namida = require('@tum-far/namida');
 const { v4: uuidv4 } = require('uuid');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 const latency = require('../network/latency');
+const { DeviceManager } = require('../devices/deviceManager');
+const FilterUtils = require('../utils/filterUtils');
 
 class Client {
-  constructor(specs = {}, server, topicData) {
+  constructor(specs = {}, server, topicData, clientManager) {
     // take over specs
     specs && Object.assign(this, specs);
     // new instance is getting new ID
@@ -20,16 +22,22 @@ class Client {
 
     this.server = server;
     this.topicData = topicData;
+    this.clientManager = clientManager;
 
     this.state = proto.ubii.clients.Client.State.ACTIVE;
     this.registrationDate = new Date();
     this.lastSignOfLife = null;
     this.topicSubscriptions = new Map();
     this.regexSubscriptions = new Map();
+    this.componentSubscriptions = new Map();
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
     this.publishedTopics = [];
     this.latency = 0;
+
+    DeviceManager.instance.on(DeviceManager.EVENTS.NEW_DEVICE, (deviceSpecs) => {
+      this.onNewDevice(deviceSpecs);
+    });
   }
 
   /**
@@ -180,7 +188,9 @@ class Client {
     }
 
     // subscribe
-    let token = this.topicData.subscribe(topic, (record) => this.subscriptionCallback(record));
+    let token = this.topicData.subscribeTopic(topic, (record, publisherId) =>
+      this.subscriptionCallback(record, publisherId)
+    );
     this.topicSubscriptions.set(topic, token);
 
     // check if topic already has data, if so send it to remote
@@ -192,7 +202,25 @@ class Client {
     return true;
   }
 
-  subscriptionCallback(record) {
+  subscriptionCallback(record, publisherId) {
+    let component = DeviceManager.instance.getComponentByTopic(record.topic);
+    if (component && component.hasNotifyConditions()) {
+      const clientProfilePub = this.clientManager.getClient(publisherId).toProtobuf();
+      const clientProfileSub = this.toProtobuf();
+
+      if (!component.checkNotifyConditions(clientProfilePub, clientProfileSub)) {
+        return;
+      }
+    }
+
+    //TODO: define tolerable delay between received and subscription callback, integrate with profiler
+    if (record.tReceived) {
+      let delay = Date.now() - record.tReceived;
+      if (delay > 10) {
+        namida.warn(this.toString(), 'sub callback delay >10ms');
+      }
+    }
+
     let payload = {
       topicDataRecord: record
     };
@@ -300,6 +328,54 @@ class Client {
     this.publishedTopics.forEach((topic) => {
       this.topicData.remove(topic);
     });
+  }
+
+  getComponentSubscription(componentProfile) {
+    for (let key of this.componentSubscriptions.keys()) {
+      if (FilterUtils.deepEqual(key, componentProfile)) {
+        return this.componentSubscriptions.get(key);
+      }
+    }
+  }
+
+  getMatchingComponentSubscriptions(componentProfile) {
+    let subs = [];
+    for (let key of this.componentSubscriptions.keys()) {
+      if (FilterUtils.matches(key, componentProfile)) {
+        subs.push(this.componentSubscriptions.get(key));
+      }
+    }
+
+    return subs;
+  }
+
+  addComponentSubscription(componentProfile) {
+    if (this.getComponentSubscription(componentProfile)) return;
+
+    let subscription = {
+      tokens: []
+    };
+    this.componentSubscriptions.set(componentProfile, subscription);
+
+    let matchingComponents = DeviceManager.instance.getComponentsByProfile(componentProfile);
+    for (let component of matchingComponents) {
+      let token = this.topicData.subscribeTopic(component.topic, (record, publisherId) =>
+        this.subscriptionCallback(record, publisherId)
+      );
+      subscription.tokens.push(token);
+    }
+  }
+
+  onNewDevice(deviceSpecs) {
+    for (let newComponent of deviceSpecs.components) {
+      let subscriptions = this.getMatchingComponentSubscriptions(newComponent);
+      for (let sub of subscriptions) {
+        let token = this.topicData.subscribeTopic(newComponent.topic, (record, publisherId) =>
+          this.subscriptionCallback(record, publisherId)
+        );
+        sub.tokens.push(token);
+      }
+    }
   }
 
   /*removeTopicsOfRegisteredComponents() {
