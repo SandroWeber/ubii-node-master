@@ -180,7 +180,7 @@ class Client {
     }
 
     // subscribe
-    let token = this.topicData.subscribe(topic, (record) => this.subscriptionCallback(record));
+    let token = this.topicData.subscribeTopic(topic, (record) => this.subscriptionCallback(record));
     this.topicSubscriptions.set(topic, token);
 
     // check if topic already has data, if so send it to remote
