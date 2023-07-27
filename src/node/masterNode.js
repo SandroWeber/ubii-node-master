@@ -11,6 +11,7 @@ const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
 const { Profiler } = require('../profiling/profiler');
 const NotifyConditionManager = require('../conditions/notifyConditionManager');
+const TopicDataProxy = require('./topicDataProxy');
 
 const MASTER_NODE_CONSTANTS = require('./constants');
 
@@ -26,10 +27,7 @@ class MasterNode {
 
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
-    //TODO: have a topic data proxy here too in order to keep API consistent between PMs on client and master node?
-    this.topicData.publishRecordImmediately = (record) => {
-      this.topicData.publish(record.topic, record, this.id)
-    };
+    this.topicDataProxy = new TopicDataProxy(this.topicData);
 
     NotifyConditionManager.instance.setUbiiNode(this);
 
@@ -55,7 +53,7 @@ class MasterNode {
     DeviceManager.instance.setDependencies(this.topicData, this);
 
     // PM Manager Component:
-    this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicData);
+    this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicDataProxy);
 
     // Session manager component:
     SessionManager.instance.setDependencies(this.id, this.topicData, this.processingModuleManager);
