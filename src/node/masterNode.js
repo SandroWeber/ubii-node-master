@@ -10,6 +10,7 @@ const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
 const { Profiler } = require('../profiling/profiler');
+const TopicDataProxy = require('./topicDataProxy');
 
 class MasterNode {
   constructor() {
@@ -23,6 +24,7 @@ class MasterNode {
 
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
+    this.topicDataProxy = new TopicDataProxy(this.topicData);
 
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
@@ -46,7 +48,7 @@ class MasterNode {
     DeviceManager.instance.setTopicData(this.topicData);
 
     // PM Manager Component:
-    this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicData);
+    this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicDataProxy);
 
     // Session manager component:
     SessionManager.instance.setDependencies(this.id, this.topicData, this.processingModuleManager);
