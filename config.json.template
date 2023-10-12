@@ -26,5 +26,8 @@
   "profiling": {
     "enabled": false,
     "consoleOutput": false
+  },
+  "clients": {
+    "permitPublishingOnSharedTopic": false
   }
 }
