@@ -28,7 +28,6 @@ class Client {
     this.regexSubscriptions = new Map();
 
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
-    this.publishedTopics = [];
     this.latency = 0;
   }
 
@@ -88,7 +87,7 @@ class Client {
   deactivate() {
     this.stopLifeMonitoring();
     this.unsubscribeAll();
-    this.deletePublishedTopics();
+    this.topicData.cleanUpTopicsForClient(this.id);
     //this.removeTopicsOfRegisteredComponents();
     namida.warn(this.toString(), 'deactivated due to missing sign of life, state=' + this.state);
   }
@@ -294,12 +293,6 @@ class Client {
     }
     this.topicSubscriptions.clear();
     this.regexSubscriptions.clear();
-  }
-
-  deletePublishedTopics() {
-    this.publishedTopics.forEach((topic) => {
-      this.topicData.remove(topic);
-    });
   }
 
   /*removeTopicsOfRegisteredComponents() {
