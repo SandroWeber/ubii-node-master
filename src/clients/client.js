@@ -90,7 +90,6 @@ class Client {
     this.unsubscribeAll();
     this.deletePublishedTopics();
     //this.removeTopicsOfRegisteredComponents();
-    namida.warn(this.toString(), 'deactivated due to missing sign of life, state=' + this.state);
   }
 
   /**
@@ -133,6 +132,7 @@ class Client {
           );
         }
         this.state = proto.ubii.clients.Client.State.UNAVAILABLE;
+        namida.warn(this.toString(), 'deactivated due to missing sign of life, state=' + this.state);
         this.deactivate();
       } else if (difference > TIME_UNTIL_INACTIVE) {
         // The client has the state inactive.
