@@ -42,7 +42,7 @@ class MasterNode {
     );
 
     // Client Manager Component:
-    ClientManager.instance.setDependencies(this.connectionsManager, this.topicData);
+    ClientManager.instance.setDependencies(this.connectionsManager, this.topicDataProxy);
 
     // Device Manager Component:
     DeviceManager.instance.setTopicData(this.topicData);
@@ -197,32 +197,12 @@ class MasterNode {
     if (topicDataMessage.topicDataRecord) records.push(topicDataMessage.topicDataRecord);
 
     records.forEach((record) => {
-      let topic = record.topic;
-      // confirm that the client is the rightful publisher of this topic
-      //TODO: smarter behaviour, only PUBLISHER components that are registered by other clients block publishing on the same topic
-      /*if (!client.publishedTopics.includes(topic)) {
-        let topicHasData = this.topicData.hasData(topic);
-
-        if (!topicHasData) {
-          client.publishedTopics.push(topic);
-        } else {
-          namida.logFailure(
-            'TopicData message',
-            client.toString() + ' is not the original publisher of ' + topic
-          );
-          return;
-        }
-      }*/
-      if (!client.publishedTopics.includes(topic) && !this.topicData.hasData(topic)) {
-        client.publishedTopics.push(topic);
-      }
-
-      this.publishRecord(record);
+      this.publishRecord(record, clientID);
     });
   }
 
-  publishRecord(record) {
-    this.topicData.publish(record.topic, record);
+  publishRecord(record, clientID) {
+    this.topicDataProxy.publishRecord(record, clientID);
   }
 }
 
