@@ -196,7 +196,8 @@ class Client {
     // check if topic already has data, if so send it to remote
     let record = this.topicData.pull(topic);
     if (record) {
-      this.subscriptionCallback(record);
+      console.info(record);
+      this.subscriptionCallback(record, publisherId);
     }
 
     return true;
@@ -205,10 +206,16 @@ class Client {
   subscriptionCallback(record, publisherId) {
     let component = DeviceManager.instance.getComponentByTopic(record.topic);
     if (component && component.hasNotifyConditions()) {
-      const clientProfilePub = this.clientManager.getClient(publisherId).toProtobuf();
+      console.info('checking notify condition ...');
+      console.info('publisherId =', publisherId);
+      /*console.info('clientProfilePub:');
+      console.info(this.clientManager.getClient(publisherId)?.toProtobuf());
+      console.info('clientProfileSub:');
+      console.info(this.toProtobuf());*/
+      const clientProfilePub = this.clientManager.getClient(publisherId)?.toProtobuf();
       const clientProfileSub = this.toProtobuf();
 
-      if (!component.checkNotifyConditions(clientProfilePub, clientProfileSub)) {
+      if (clientProfilePub && clientProfileSub && !component.checkNotifyConditions(clientProfilePub, clientProfileSub)) {
         return;
       }
     }
