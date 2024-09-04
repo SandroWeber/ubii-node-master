@@ -196,7 +196,6 @@ class Client {
     // check if topic already has data, if so send it to remote
     let record = this.topicData.pull(topic);
     if (record) {
-      console.info(record);
       this.subscriptionCallback(record, publisherId);
     }
 
@@ -204,14 +203,9 @@ class Client {
   }
 
   subscriptionCallback(record, publisherId) {
+    if (!publisherId) namida.error(this.toString(), 'sub callback has no info on publisher ID = ' + publisherId);
     let component = DeviceManager.instance.getComponentByTopic(record.topic);
     if (component && component.hasNotifyConditions()) {
-      console.info('checking notify condition ...');
-      console.info('publisherId =', publisherId);
-      /*console.info('clientProfilePub:');
-      console.info(this.clientManager.getClient(publisherId)?.toProtobuf());
-      console.info('clientProfileSub:');
-      console.info(this.toProtobuf());*/
       const clientProfilePub = this.clientManager.getClient(publisherId)?.toProtobuf();
       const clientProfileSub = this.toProtobuf();
 

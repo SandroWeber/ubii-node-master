@@ -21,7 +21,6 @@ let getDataForModuleIO = (moduleIO) => {
 let publishTopicForModuleIO = (topicdata, processingModule, moduleIO) => {
   let topic = getTopicForModuleIO(processingModule, moduleIO);
   let data = getDataForModuleIO(moduleIO);
-  //console.info(['publishTopicForModuleIO()', topic, data]);
   topicdata.publish(topic, data);
 };
 
@@ -71,7 +70,6 @@ class TestProcessingModule extends ProcessingModule {
     ];
 
     let produceOutput = () => {
-      //console.info(['produceOutput()', this.name]);
       let processingResult = {
         outputs: {}
       };
@@ -79,7 +77,6 @@ class TestProcessingModule extends ProcessingModule {
         processingResult.outputs[output.internalName] = getDataForModuleIO(output);
       });
 
-      //console.info(['produceOutput()', this.name, processingResult]);
       return processingResult;
     };
 
