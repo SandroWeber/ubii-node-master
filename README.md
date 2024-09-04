@@ -2,13 +2,22 @@
 
 ## Project setup & Pre-requisits
 
-### Node.js
 
-Install Node.js LTS v14.X.X (https://nodejs.org/en/download/).
-Make sure to install the necessary additional tools with it if asked!
+### ALL (Linux, Windows, MacOS)
+
+##### Node.js
+
+Install Node.js LTS v14.X.X (https://nodejs.org/en/download/). [nvm](https://github.com/nvm-sh/nvm) might be helpful.
+IMPORTANT: Make sure to install the necessary additional tools with it if asked!
 
 
-### Windows pre-requisists
+### Windows & macOS
+
+##### CMake
+install from https://cmake.org/download/
+
+
+### Windows
 
 ##### windows build tools
 
@@ -21,16 +30,11 @@ npm install --vs2015 -g windows-build-tools
 in case of errors, also see: https://www.npmjs.com/package/zeromq
 
 
-### macOS pre-requisists
+### macOS
 
 ##### X-code command line tools
 https://developer.apple.com/download/more/
 
-
-### Windows & macOS pre-requisists
-
-##### CMake
-install from https://cmake.org/download/
 
 <br />
 
@@ -39,21 +43,25 @@ install from https://cmake.org/download/
 
 From a **non-admin shell** inside the **ubii-node-master folder**:
 
+##### Create config
+
+Create a copy of "config.json.template" called "config.json" and adjust settings to your needs (or keep as is). If you're not using web interfaces to connect to master node you probably want to set https->enabled to "false". Then run:
+
 ##### NPM dependencies
 
 ```
 npm install
 ```
 
-##### Run with default config
-
-Create a copy of "config.json.template" called "config.json" and adjust settings to your needs (or keep as is). If you're not using web interfaces to connect to master node you probably want to set https->enabled to "false". Then run:
+##### Runnin master node
 
 ```
 npm start
 ```
 
 ### HTTPS setup
+
+This can be skipped if you do not rely on HTTPS. To use HTTP instead, open config.json and set https.enabled = false.
 
 ##### How to create your own HTTPS certification
 
