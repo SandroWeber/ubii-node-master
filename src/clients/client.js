@@ -90,7 +90,6 @@ class Client {
     this.unsubscribeAll();
     this.deletePublishedTopics();
     //this.removeTopicsOfRegisteredComponents();
-    namida.warn(this.toString(), 'deactivated due to missing sign of life, state=' + this.state);
   }
 
   /**
@@ -133,6 +132,7 @@ class Client {
           );
         }
         this.state = proto.ubii.clients.Client.State.UNAVAILABLE;
+        namida.warn(this.toString(), 'deactivated due to missing sign of life, state=' + this.state);
         this.deactivate();
       } else if (difference > TIME_UNTIL_INACTIVE) {
         // The client has the state inactive.
@@ -180,7 +180,7 @@ class Client {
     }
 
     // subscribe
-    let token = this.topicData.subscribe(topic, (record) => this.subscriptionCallback(record));
+    let token = this.topicData.subscribeTopic(topic, (record) => this.subscriptionCallback(record));
     this.topicSubscriptions.set(topic, token);
 
     // check if topic already has data, if so send it to remote
@@ -236,10 +236,7 @@ class Client {
       let success = this.subscribeAtTopicData(topic);
       // successfully subscribed just now or already subscribed by some other means
       if (!success) {
-        namida.logFailure(
-          this.toString(),
-          'failed to subscribe to ' + topic + ' at topic data buffer'
-        );
+        namida.logFailure(this.toString(), 'failed to subscribe to ' + topic + ' at topic data buffer');
       }
     }
   }
@@ -267,9 +264,7 @@ class Client {
       return false;
     }
 
-    let token = this.topicData.subscribeRegex(regexString, (record) =>
-      this.subscriptionCallback(record)
-    );
+    let token = this.topicData.subscribeRegex(regexString, (record) => this.subscriptionCallback(record));
     this.regexSubscriptions.set(regexString, token);
 
     return true;
