@@ -29,7 +29,7 @@
   ],
   "devDependencies": {
     "@ava/babel": "1.0.1",
-    "ava": "^3.13.0",
+    "ava": "^5.2.0",
     "selfsigned": "2.0.0",
     "sinon": "6.0.1",
     "yargs": "15.4.0"
@@ -41,12 +41,12 @@
     "@tum-far/ubii-node-nodejs": "0.4.2",
     "@tum-far/ubii-topic-data": "0.4.8",
     "body-parser": "1.18.3",
-    "express": "4.17.1",
+    "express": "4.19.2",
     "printf": "0.6.1",
     "shelljs": "0.8.5",
     "uuid": "8.3.2",
     "workerpool": "6.1.4",
-    "ws": "7.4.6",
+    "ws": "7.5.10",
     "zeromq": "5.2.8"
   }
 }
