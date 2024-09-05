@@ -315,14 +315,17 @@ class DeviceManager extends EventEmitter {
 
     // Ouput the feedback on the server console.
     namida.logSuccess('DeviceManager', message);
-    
+
     let deviceSpecs = currentDevice.toProtobuf();
     this.emit(DeviceManager.EVENTS.NEW_DEVICE, deviceSpecs);
-    this.masterNode.publishRecord({
-      topic: DEFAULT_TOPICS.INFO_TOPICS.NEW_DEVICE, //TODO: include in msg-formats constants
-      type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.DEVICE),
-      device: deviceSpecs
-    });
+    this.masterNode.publishRecord(
+      {
+        topic: DEFAULT_TOPICS.INFO_TOPICS.NEW_DEVICE, //TODO: include in msg-formats constants
+        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.DEVICE),
+        device: deviceSpecs
+      },
+      this.masterNode.id
+    );
 
     // Return the deviceSpecification payload.
     return currentDevice;
@@ -435,7 +438,7 @@ class DeviceManager extends EventEmitter {
 }
 
 DeviceManager.EVENTS = Object.freeze({
-  NEW_DEVICE: 'NEW_DEVICE',
+  NEW_DEVICE: 'NEW_DEVICE'
 });
 
 module.exports = {

@@ -195,6 +195,7 @@ class Client {
 
     // check if topic already has data, if so send it to remote
     let record = this.topicData.pull(topic);
+    let publisherId = this.topicData.getPublisherID(topic);
     if (record) {
       this.subscriptionCallback(record, publisherId);
     }
