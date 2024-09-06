@@ -39,17 +39,17 @@ class TopicDataProxy {
     return this.topicData.unsubscribe(token);
   }
 
-  publishRecord(record) {
-    this.topicData.publish(record.topic, record);
+  publishRecord(record, publisherId) {
+    this.topicData.publish(record.topic, record, publisherId);
   }
 
-  publishRecordImmediately(record) {
-    this.publishRecord(record);
+  publishRecordImmediately(record, publisherId) {
+    this.publishRecord(record, publisherId);
   }
 
-  publishRecordList(recordList) {
+  publishRecordList(recordList, publisherId) {
     for (const record of recordList) {
-      this.publishRecord(record);
+      this.publishRecord(record, publisherId);
     }
   }
 }

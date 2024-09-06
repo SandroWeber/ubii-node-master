@@ -1,7 +1,7 @@
 const { DEFAULT_TOPICS, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../service.js');
-const FilterUtils = require('../filterUtils');
+const FilterUtils = require('../../utils/filterUtils');
 
 class DeviceGetListService extends Service {
   constructor(deviceManager, clientManager) {

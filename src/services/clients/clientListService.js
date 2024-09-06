@@ -3,7 +3,7 @@ const namida = require('@tum-far/namida');
 
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const client = require('../../clients/client.js');
-const FilterUtils = require('../filterUtils');
+const FilterUtils = require('../../utils/filterUtils');
 
 class ClientListService extends Service {
   constructor(clientManager) {

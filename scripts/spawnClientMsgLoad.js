@@ -174,7 +174,6 @@ let setTargetRecordsPerSecond = (target) => {
 };
 
 let onMessageReceived = (record) => {
-  //console.info(record);
   let tNow = performance.now();
   test.numMessagesReceived++;
 

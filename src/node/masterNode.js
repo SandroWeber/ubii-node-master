@@ -10,7 +10,10 @@ const { DeviceManager } = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
 const { Profiler } = require('../profiling/profiler');
+const NotifyConditionManager = require('../conditions/notifyConditionManager');
 const TopicDataProxy = require('./topicDataProxy');
+
+const MASTER_NODE_CONSTANTS = require('./constants');
 
 class MasterNode {
   constructor() {
@@ -25,6 +28,8 @@ class MasterNode {
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
     this.topicDataProxy = new TopicDataProxy(this.topicData);
+
+    NotifyConditionManager.instance.setUbiiNode(this);
 
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
@@ -45,7 +50,7 @@ class MasterNode {
     ClientManager.instance.setDependencies(this.connectionsManager, this.topicData);
 
     // Device Manager Component:
-    DeviceManager.instance.setTopicData(this.topicData);
+    DeviceManager.instance.setDependencies(this.topicData, this);
 
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicDataProxy);
@@ -217,12 +222,23 @@ class MasterNode {
         client.publishedTopics.push(topic);
       }
 
-      this.publishRecord(record);
+      this.publishRecord(record, clientID);
     });
   }
 
-  publishRecord(record) {
-    this.topicData.publish(record.topic, record);
+  publishRecord(record, clientId) {
+    record.tReceived = Date.now();
+    this.topicData.publish(record.topic, record, clientId);
+  }
+
+  getDependency(depIdentifier) {
+    if (depIdentifier === MASTER_NODE_CONSTANTS.TOPIC_DATA_BUFFER) {
+      return this.topicData;
+    } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.DEVICES) {
+      return DeviceManager.instance;
+    } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS) {
+      return ClientManager.instance;
+    }
   }
 }
 

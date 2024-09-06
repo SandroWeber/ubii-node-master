@@ -1,7 +1,7 @@
 const { DEFAULT_TOPICS, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../service.js');
-const FilterUtils = require('../filterUtils');
+const FilterUtils = require('../../utils/filterUtils');
 const { ClientManager } = require('../../clients/clientManager');
 const { DeviceManager } = require('../../devices/deviceManager');
 

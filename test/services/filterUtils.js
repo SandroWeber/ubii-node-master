@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import FilterUtils from '../../src/services/filterUtils';
+import FilterUtils from '../../src/utils/filterUtils';
 
 const availableOptions = [
   { id: '123', name: 'object', tags: ['tag-1', 'tag-2', 'tag-3'], messageFormat: 'message.format.a', clientId: 'client-id-123', deviceId: 'device:id:123' },

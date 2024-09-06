@@ -146,7 +146,7 @@ class ClientManager {
     // No client ID, normal registration steps:
 
     // Create a new client based on the client specification and register it.
-    let currentClient = new Client(spec, this.server, this.topicData);
+    let currentClient = new Client(spec, this.server, this.topicData, this);
     this.registerClient(currentClient);
 
     // Update the client information.
