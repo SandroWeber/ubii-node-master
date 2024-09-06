@@ -204,7 +204,7 @@ class Client {
   }
 
   subscriptionCallback(record, publisherId) {
-    if (!publisherId) namida.error(this.toString(), 'sub callback has no info on publisher ID = ' + publisherId);
+    if (!publisherId) namida.error(this.toString(), 'sub callback for topic "' + record.topic + '" has no info on publisher ID(' + publisherId + ')');
     let component = DeviceManager.instance.getComponentByTopic(record.topic);
     if (component && component.hasNotifyConditions()) {
       const clientProfilePub = this.clientManager.getClient(publisherId)?.toProtobuf();
