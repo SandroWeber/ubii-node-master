@@ -20,8 +20,8 @@
     "node": ">=4"
   },
   "scripts": {
-    "start": "node scripts/startBackend.js",
-    "start-profiling": "node --inspect scripts/startBackend.js",
+    "start": "node scripts/startUbiiMasterNode.js",
+    "start-profiling": "node --inspect scripts/startUbiiMasterNode.js",
     "test": "ava"
   },
   "keywords": [
