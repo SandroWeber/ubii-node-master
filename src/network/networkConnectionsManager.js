@@ -161,6 +161,7 @@ class NetworkConnectionsManager {
     }
 
     if (this.ready) {
+      message += '\n... all available connection endpoints started successfully';
       namida.logSuccess('NetworkConnectionsManager', message);
     } else {
       namida.logFailure('NetworkConnectionsManager', message);
