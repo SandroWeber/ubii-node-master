@@ -40,7 +40,7 @@
     "@tum-far/ubii-msg-formats": "0.16.6",
     "@tum-far/ubii-node-nodejs": "0.4.2",
     "@tum-far/ubii-topic-data": "0.4.9",
-    "body-parser": "1.18.3",
+    "body-parser": "1.20.3",
     "express": "4.19.2",
     "printf": "0.6.1",
     "shelljs": "0.8.5",
