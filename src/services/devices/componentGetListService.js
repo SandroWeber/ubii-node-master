@@ -4,8 +4,11 @@ const { Service } = require('../service.js');
 const FilterUtils = require('../../utils/filterUtils');
 const { ClientManager } = require('../../clients/clientManager');
 const { DeviceManager } = require('../../devices/deviceManager');
+const namida = require('@tum-far/namida');
 
 class ComponentGetListService extends Service {
+  static LOG_TAG = "ComponentGetListService";
+
   static DESCRIPTION =
     'Get list of available components. Optionally provide a ComponentList in request to filter by component profiles.';
   static TAGS = ['component', 'components', 'ubii.devices.ComponentList', 'get', 'filter'];
@@ -22,6 +25,11 @@ class ComponentGetListService extends Service {
   }
 
   reply(request) {
+    if (request === undefined) {
+      namida.error(LOG_TAG, 'request == ' + request);
+      return;
+    }
+
     let devices = DeviceManager.instance
       .getAllParticipants()
       .filter(
@@ -34,8 +42,14 @@ class ComponentGetListService extends Service {
     for (let device of devices) {
       components = components.concat(device.components);
     }
-    if (request && request.elements) {
+
+    // request == ComponentList
+    if (request.elements) {
       components = FilterUtils.filterAll(request.elements, components);
+    }
+    // request == Component (single)
+    else {
+      components = FilterUtils.filterAll([request], components);
     }
 
     return { componentList: { elements: components } };
