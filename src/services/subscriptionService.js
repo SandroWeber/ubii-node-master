@@ -1,10 +1,10 @@
-const namida = require('@tum-far/namida');
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const { Service } = require('./service.js');
-const FilterUtils = require('../utils/filterUtils');
 
-const LOG_TAG = 'SubscriptionService';
+const logger = LoggingService.instance.logger;
+const LOG_TAG = '[UBII SubscriptionService]';
 
 class SubscriptionService extends Service {
   constructor(clientManager) {
@@ -26,7 +26,7 @@ class SubscriptionService extends Service {
       let errorTitle = 'SubscriptionService';
       let errorMessage = 'There is no client registered with the ID ' + clientID;
 
-      namida.logFailure(LOG_TAG, errorMessage);
+      logger.error({ label: LOG_TAG, message: errorMessage });
 
       return {
         error: {
@@ -72,7 +72,7 @@ class SubscriptionService extends Service {
     }
 
     if (message.unsubscribeComponents.length > 0) {
-      namida.logFailure(LOG_TAG, 'unsubscribeComponents not implemented!');
+      logger.error({ label: LOG_TAG, message: 'unsubscribeComponents not implemented!' });
     }
 
     // Reply with success message

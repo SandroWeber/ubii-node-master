@@ -1,19 +1,19 @@
-const namida = require('@tum-far/namida');
 const { v4: uuidv4 } = require('uuid');
+const nodejs = require('@tum-far/ubii-node-nodejs');
+//const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const FilterUtils = require('../utils/filterUtils');
 const Utils = require('../utils/utilities');
 
+//const logger = LoggingService.instance.logger;
 const LOG_TAG = 'NotifyCondition';
 
 let gobalTopicDataBuffer = undefined;
 let globalDeviceManager = undefined;
 let getTopicDataRecord = (topicDataSource, clientProfile) => {
   if (!topicDataSource) {
-    namida.logFailure(
-      LOG_TAG,
-      'getTopicDataRecord() has no TopicDataSource specified!'
-    );
+    //logger.error({ label: LOG_TAG, message: 'getTopicDataRecord() has no TopicDataSource specified!' });
+    console.error('getTopicDataRecord() has no TopicDataSource specified!');
     return;
   }
 
@@ -23,7 +23,7 @@ let getTopicDataRecord = (topicDataSource, clientProfile) => {
   } else if (topicDataSource.type === 'component' || topicDataSource.component) {
     let matchingComponents = [];
     if (clientProfile) {
-      const devices = globalDeviceManager.getDevicesByClientId(clientProfile.id).map(device => device.toProtobuf());
+      const devices = globalDeviceManager.getDevicesByClientId(clientProfile.id).map((device) => device.toProtobuf());
       for (const device of devices) {
         matchingComponents.push(...device.components);
       }
@@ -35,17 +35,19 @@ let getTopicDataRecord = (topicDataSource, clientProfile) => {
     if (matchingComponents.length === 1) {
       return gobalTopicDataBuffer.pull(matchingComponents[0].topic);
     } else {
-      namida.logFailure(LOG_TAG, 'getTopicDataRecord() specified source as component, but multiple components match');
+      /*logger.error({
+        label: LOG_TAG,
+        message: 'getTopicDataRecord() specified source as component, but multiple components match'
+      });*/
+      console.error('getTopicDataRecord() specified source as component, but multiple components match');
       console.info('requested profile:');
       console.info(topicDataSource.component);
       console.info('matching profiles:');
       console.info(matchingComponents);
     }
   } else {
-    namida.logFailure(
-      LOG_TAG,
-      'getTopicDataRecord() specified source is not viable:'
-    );
+    //logger.error({ label: LOG_TAG, message: 'getTopicDataRecord() specified source is not viable:' });
+    console.error('getTopicDataRecord() specified source is not viable:');
     console.info(topicDataSource);
   }
 };
@@ -60,7 +62,7 @@ class NotifyCondition {
     this.specs.id = uuidv4();
     this.topicDataBuffer = topicDataBuffer;
     this.deviceManager = deviceManager;
-    
+
     this.pairsPubSub = new Map();
 
     gobalTopicDataBuffer = topicDataBuffer;
@@ -92,7 +94,7 @@ class NotifyCondition {
   }
 
   toString() {
-    return 'NotifyCondition "' + this.specs.name + '" (' + this.specs.id + ')';
+    return '[UBII NotifyCondition "' + this.specs.name + '" (' + this.specs.id + ')]';
   }
 
   toProtobuf() {

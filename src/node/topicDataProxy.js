@@ -1,7 +1,3 @@
-const namida = require('@tum-far/namida/src/namida');
-const { DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
-const { SUBSCRIPTION_TYPES } = require('@tum-far/ubii-topic-data');
-
 class TopicDataProxy {
   constructor(topicData) {
     this.topicData = topicData;

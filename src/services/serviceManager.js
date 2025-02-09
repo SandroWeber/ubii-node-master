@@ -1,4 +1,4 @@
-const namida = require('@tum-far/namida');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const { ClientRegistrationService } = require('./clients/clientRegistrationService.js');
 const { ClientDeregistrationService } = require('./clients/clientDeregistrationService.js');
@@ -32,6 +32,9 @@ const { DeviceManager } = require('../devices/deviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
 
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+
+const logger = LoggingService.instance.logger;
+const LOG_TAG = '[UBII ServiceManager]';
 
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();
@@ -101,15 +104,18 @@ class ServiceManager {
 
   addService(service) {
     if (!service.topic) {
-      namida.logFailure(
-        'Service Manager',
-        'can not add service of class "' + service.prototype.constructor.name + '", no topic specified'
-      );
+      logger.error({
+        label: LOG_TAG,
+        message: 'can not add service of class "' + service.prototype.constructor.name + '", no topic specified'
+      });
       return;
     }
 
     if (this.services.has(service.topic)) {
-      namida.warn('Service already registered', 'Service for topic "' + service.topic + '" already registered.');
+      logger.warn({
+        label: LOG_TAG,
+        message: 'Service for topic "' + service.topic + '" already registered.'
+      });
       return;
     }
 
@@ -122,7 +128,10 @@ class ServiceManager {
 
   processRequest(request) {
     if (!request.topic) {
-      namida.logFailure('ServiceManager', 'request is missing topic! request:\n' + JSON.stringify(request));
+      logger.error({
+        label: LOG_TAG,
+        message: 'request is missing topic! request:\n' + JSON.stringify(request)
+      });
 
       return {
         error: {
@@ -134,10 +143,10 @@ class ServiceManager {
     }
 
     if (!this.services.has(request.topic)) {
-      namida.logFailure(
-        'ServiceManager',
-        'no service for topic "' + request.topic + '" registered! request:\n' + JSON.stringify(request)
-      );
+      logger.error({
+        label: LOG_TAG,
+        message: 'no service for topic "' + request.topic + '" registered! request:\n' + JSON.stringify(request)
+      });
 
       return {
         error: {

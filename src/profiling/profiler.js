@@ -1,15 +1,15 @@
 const { performance } = require('perf_hooks');
 
-const { ConfigService } = require('@tum-far/ubii-node-nodejs');
+const { ConfigService, LoggingService } = require('@tum-far/ubii-node-nodejs');
 const { proto } = require('@tum-far/ubii-msg-formats');
-const namida = require('@tum-far/namida');
 
 const { ClientManager } = require('../clients/clientManager');
 
-const LOG_TAG = 'Profiler';
+const logger = LoggingService.instance.logger;
+const LOG_TAG = '[UBII Profiler]';
 const STAT_INTERVAL_MS_DEFAULT = 5000;
 
-const average = (array) => array.reduce((a, b) => a + b) / array.length;
+//const average = (array) => array.reduce((a, b) => a + b) / array.length;
 
 class Profiler {
   constructor(node, connectionsManager) {
@@ -34,7 +34,7 @@ class Profiler {
     this.totalAvgMsgsRecv = 0;
     this.totalAvgMsgsSent = 0;
 
-    namida.warn(LOG_TAG, 'ENABLED');
+    logger.warn({ label: LOG_TAG, message: 'ENABLED' });
   }
 
   produceStatistics() {
@@ -50,12 +50,12 @@ class Profiler {
         topic: this.topicStatsMsgsPerSecondSent,
         double: diffTopicDataReceived / durationSeconds
       };
-      this.node.publishRecord(recordMsgsPerSecRecv);
+      this.node.publishRecord(recordMsgsPerSecRecv, this.node.id);
       let recordMsgsPerSecSent = {
         topic: this.topicStatsMsgsPerSecondReceived,
         double: diffTopicDataSent / durationSeconds
       };
-      this.node.publishRecord(recordMsgsPerSecSent);
+      this.node.publishRecord(recordMsgsPerSecSent, this.node.id);
 
       this.topicdataReceivedPrevious = topicdataReceivedCurrent;
       this.topicdataSentPrevious = topicdataSentCurrent;
@@ -68,29 +68,33 @@ class Profiler {
       this.totalAvgMsgsSent = (this.totalAvgMsgsSent + recordMsgsPerSecSent.double) / 2;
 
       if (this.profilingConfig.consoleOutput) {
-        namida.log(
-          LOG_TAG,
-          `msgs/s recv|sent - ${Math.round(recordMsgsPerSecRecv.double)}|${Math.round(
-            recordMsgsPerSecSent.double
-          )} (last ${this.msIntervalProduceStats / 1000}s) - ${Math.round(this.totalAvgMsgsRecv)}|${Math.round(this.totalAvgMsgsSent)} (rolling sum)` +
+        logger.info({
+          label: LOG_TAG,
+          message:
+            `msgs/s recv|sent - ${Math.round(recordMsgsPerSecRecv.double)}|${Math.round(
+              recordMsgsPerSecSent.double
+            )} (last ${this.msIntervalProduceStats / 1000}s) - ${Math.round(this.totalAvgMsgsRecv)}|${Math.round(
+              this.totalAvgMsgsSent
+            )} (rolling sum)` +
             ' ; ' +
             'active clients: ' +
             ClientManager.instance
               .getClientList()
               .filter((client) => client.state === proto.ubii.clients.Client.State.ACTIVE).length
-        );
+        });
       }
     }
 
     let tNow = performance.now();
     let delayFactor = (tNow - this.tLastStats) / this.msIntervalProduceStats;
     if (this.tLastStats && delayFactor > 1.1) {
-      namida.warn(
-        LOG_TAG,
-        'target delay between statistics recording exceeded by a factor of ' +
+      logger.info({
+        label: LOG_TAG,
+        message:
+          'target delay between statistics recording exceeded by a factor of ' +
           delayFactor +
           ', overall performance is probably affected!'
-      );
+      });
     }
     this.tLastStats = performance.now();
   }

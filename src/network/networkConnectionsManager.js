@@ -1,12 +1,15 @@
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
-const { ConfigService, ZmqReply, ZmqRouter, WebsocketServer, HTTPServer } = require('@tum-far/ubii-node-nodejs');
-const namida = require('@tum-far/namida/src/namida');
+const {
+  ConfigService,
+  ZmqReply,
+  ZmqRouter,
+  WebsocketServer,
+  HTTPServer,
+  LoggingService
+} = require('@tum-far/ubii-node-nodejs');
 
-//const ZmqReply = require('./zmqReply');
-//const ZmqRouter = require('./zmqRouter');
-
-//const WebsocketServer = require('./websocketServer');
-//const HTTPServer = require('./httpServer');
+const logger = LoggingService.instance.logger;
+const LOG_TAG = '[UBII NetworkConnectionsManager]';
 
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();
@@ -28,7 +31,7 @@ class NetworkConnectionsManager {
       this.statistics = {
         counterTopicDataReceived: 0,
         counterTopicDataSent: 0
-      }
+      };
     }
   }
 
@@ -148,23 +151,23 @@ class NetworkConnectionsManager {
   logConnectionStatus() {
     let httpsEnabled = ConfigService.instance.useHTTPS() ? 'enabled' : 'disabled';
     let readyStatus = this.ready ? 'ready' : 'failed';
-    let message = 'status=' + readyStatus + ' | HTTPS=' + httpsEnabled + ' | connections:';
+    let msg = 'status=' + readyStatus + ' | HTTPS=' + httpsEnabled + ' | connections:';
 
-    message += '\n' + this.connections.serviceZMQ.toString();
-    message += '\n' + this.connections.serviceREST.toString();
-    message += '\n' + this.connections.topicDataZMQ.toString();
-    message += '\n' + this.connections.topicDataWS.toString();
+    msg += '\n' + this.connections.serviceZMQ.toString();
+    msg += '\n' + this.connections.serviceREST.toString();
+    msg += '\n' + this.connections.topicDataZMQ.toString();
+    msg += '\n' + this.connections.topicDataWS.toString();
     if (this.connections.topicDataIPC) {
-      message += '\n' + this.connections.topicDataIPC.toString();
+      msg += '\n' + this.connections.topicDataIPC.toString();
     } else {
-      message += '\nZMQ-IPC-Topicdata unavailable';
+      msg += '\nZMQ-IPC-Topicdata unavailable';
     }
 
     if (this.ready) {
-      message += '\n... all available connection endpoints started successfully';
-      namida.logSuccess('NetworkConnectionsManager', message);
+      msg += '\n... all available connection endpoints started successfully';
+      logger.info({ label: LOG_TAG, message: msg });
     } else {
-      namida.logFailure('NetworkConnectionsManager', message);
+      logger.error({ label: LOG_TAG, message: msg });
     }
   }
 }

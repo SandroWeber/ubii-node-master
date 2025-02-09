@@ -1,15 +1,18 @@
+const { v4: uuidv4 } = require('uuid');
+const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
+
+const latency = require('../network/latency');
+const { DeviceManager } = require('../devices/deviceManager');
+const FilterUtils = require('../utils/filterUtils');
 const {
   TIME_UNTIL_PING,
   TIME_UNTIL_INACTIVE,
   TIME_UNTIL_UNAVAILABLE,
   SIGN_OF_LIFE_DELTA_TIME
 } = require('./constants');
-const namida = require('@tum-far/namida');
-const { v4: uuidv4 } = require('uuid');
-const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
-const latency = require('../network/latency');
-const { DeviceManager } = require('../devices/deviceManager');
-const FilterUtils = require('../utils/filterUtils');
+
+const logger = LoggingService.instance.logger;
 
 class Client {
   constructor(specs = {}, server, topicData, clientManager) {
@@ -112,11 +115,10 @@ class Client {
         latency.addLatency(this);
         this.updateLastSignOfLife();
       } catch (e) {
-        namida.error(
-          'UpdateLastSignOfLife failed',
-          `UpdateLastSignOfLife of client with ID ${this.id} failed with an error.`,
-          '' + (e.stack || e)
-        );
+        logger.error({
+          label: this.toString(),
+          message: `UpdateLastSignOfLife of client with ID ${this.id} failed with an error.` + (e.stack || e)
+        });
       }
     };
 
@@ -134,31 +136,34 @@ class Client {
       if (difference > TIME_UNTIL_UNAVAILABLE) {
         // The client has probably disconnected unexpectedly and should be removed.
         if (this.state !== proto.ubii.clients.Client.State.UNAVAILABLE) {
-          namida.log(
-            `Client State has changed`,
-            `Client with ID ${this.id} is not available and is now in state "unavailable".`
-          );
+          logger.info({
+            label: this.toString(),
+            message: `Client with ID ${this.id} is not available and is now in state "unavailable".`
+          });
         }
         this.state = proto.ubii.clients.Client.State.UNAVAILABLE;
-        namida.warn(this.toString(), 'deactivated due to missing sign of life, state=' + this.state);
+        logger.info({
+          label: this.toString(),
+          message: 'deactivated due to missing sign of life, state=' + this.state
+        });
         this.deactivate();
       } else if (difference > TIME_UNTIL_INACTIVE) {
         // The client has the state inactive.
-        /*if (this.state !== proto.ubii.clients.Client.State.INACTIVE) {
-          namida.log(
-            `Client State has changed`,
-            `Client with id ${this.id} is not available and is now in an inactive state.`
-          );
-        }*/
+        if (this.state !== proto.ubii.clients.Client.State.INACTIVE) {
+          logger.verbose({
+            label: this.toString(),
+            message: `Client with id ${this.id} is not available and is now in state "inactive".`
+          });
+        }
         this.state = proto.ubii.clients.Client.State.INACTIVE;
       } else {
         // The client has the state active.
-        /*if (this.state !== proto.ubii.clients.Client.State.ACTIVE) {
-          namida.log(
-            `Client State has changed`,
-            `Client with id ${this.id} is available again and is now in an active state.`
-          );
-        }*/
+        if (this.state !== proto.ubii.clients.Client.State.ACTIVE) {
+          logger.info({
+            label: this.toString(),
+            message: `Client with id ${this.id} is available again and is now in state "active".`
+          });
+        }
         this.state = proto.ubii.clients.Client.State.ACTIVE;
       }
 
@@ -195,8 +200,18 @@ class Client {
 
     // check if topic already has data, if so send it to remote
     let record = this.topicData.pull(topic);
-    let publisherId = this.topicData.getPublisherID(topic);
     if (record) {
+      let publisherId = this.topicData.getPublisherID(topic);
+      if (!publisherId)
+        logger.warn({
+          label: this.toString(),
+          message:
+            'subscribeAtTopicData() - topic "' +
+            topic +
+            '" has no info on publisher ID(' +
+            publisherId +
+            ') at the time of subscription'
+        });
       this.subscriptionCallback(record, publisherId);
     }
 
@@ -204,13 +219,22 @@ class Client {
   }
 
   subscriptionCallback(record, publisherId) {
-    if (!publisherId) namida.error(this.toString(), 'sub callback for topic "' + record.topic + '" has no info on publisher ID(' + publisherId + ')');
+    if (!publisherId)
+      logger.warn({
+        label: this.toString(),
+        message:
+          'subscriptionCallback() - topic "' + record.topic + '" has no info on publisher ID(' + publisherId + ')'
+      });
     let component = DeviceManager.instance.getComponentByTopic(record.topic);
     if (component && component.hasNotifyConditions()) {
       const clientProfilePub = this.clientManager.getClient(publisherId)?.toProtobuf();
       const clientProfileSub = this.toProtobuf();
 
-      if (clientProfilePub && clientProfileSub && !component.checkNotifyConditions(clientProfilePub, clientProfileSub)) {
+      if (
+        clientProfilePub &&
+        clientProfileSub &&
+        !component.checkNotifyConditions(clientProfilePub, clientProfileSub)
+      ) {
         return;
       }
     }
@@ -219,7 +243,7 @@ class Client {
     if (record.tReceived) {
       let delay = Date.now() - record.tReceived;
       if (delay > 10) {
-        namida.warn(this.toString(), 'sub callback delay >10ms');
+        logger.warn({ label: this.toString(), message: 'sub callback delay >10ms' });
       }
     }
 
@@ -258,7 +282,7 @@ class Client {
   subscribeTopic(topic) {
     let token = this.topicSubscriptions.get(topic);
     if (token) {
-      namida.warn(this.toString(), `subscription skipped, already subscribed to topic ${topic}.`);
+      logger.warn({ label: this.toString(), message: `subscription skipped, already subscribed to topic ${topic}.` });
       return;
     }
 
@@ -266,7 +290,7 @@ class Client {
       let success = this.subscribeAtTopicData(topic);
       // successfully subscribed just now or already subscribed by some other means
       if (!success) {
-        namida.logFailure(this.toString(), 'failed to subscribe to ' + topic + ' at topic data buffer');
+        logger.error({ label: this.toString(), message: 'failed to subscribe to ' + topic + ' at topic data buffer' });
       }
     }
   }
@@ -278,7 +302,7 @@ class Client {
   unsubscribeTopic(topic) {
     // no (explicit) subscription?
     if (!this.topicSubscriptions.has(topic)) {
-      namida.warn(this.toString(), `not subscribed to topic ${topic}.`);
+      logger.warn({ label: this.toString(), message: `not subscribed to topic ${topic}.` });
       return;
     }
     this.unsubscribeAtTopicData(topic);
@@ -290,7 +314,7 @@ class Client {
    */
   subscribeRegex(regexString) {
     if (this.regexSubscriptions.has(regexString)) {
-      namida.logFailure(this.toString(), `already subscribed to regex "${regexString}"`);
+      logger.error({ label: this.toString(), message: `already subscribed to regex "${regexString}"` });
       return false;
     }
 
@@ -306,7 +330,7 @@ class Client {
    */
   unsubscribeRegex(regexString) {
     if (!this.regexSubscriptions.has(regexString)) {
-      namida.warn(this.toString(), `not subscribed to regex "${regexString}"`);
+      logger.warn({ label: this.toString(), message: `not subscribed to regex "${regexString}"` });
       return;
     }
 
@@ -405,7 +429,7 @@ class Client {
   }
 
   toString() {
-    return 'Client "' + this.name + '" (ID ' + this.id + ')';
+    return '[UBII Client "' + this.name + '" (ID ' + this.id + ')]';
   }
 }
 

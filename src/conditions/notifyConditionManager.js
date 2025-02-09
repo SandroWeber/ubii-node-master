@@ -1,9 +1,10 @@
-const namida = require('@tum-far/namida');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs/src/index.js');
 
 const NotifyCondition = require('./notifyCondition.js');
 const MASTER_NODE_CONSTANTS = require('../node/constants');
 
-const LOG_TAG = 'NotifyConditionManager';
+const logger = LoggingService.instance.logger;
+const LOG_TAG = '[UBII NotifyConditionManager]';
 
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();
@@ -34,7 +35,7 @@ class NotifyConditionManager {
   createNotifyCondition(specs) {
     let condition = new NotifyCondition(specs, this.topicDataBuffer, this.deviceManager);
     this.notifyConditions.set(condition.id, condition);
-    namida.logSuccess(LOG_TAG, 'new ' + condition.toString());
+    logger.info({ label: LOG_TAG, message: 'new ' + condition.toString() });
 
     return condition;
   }
@@ -45,7 +46,10 @@ class NotifyConditionManager {
 
   getNotifyCondition(specs) {
     if (!specs.id) {
-      namida.logFailure(LOG_TAG, 'getNotifyCondition() - can only filter by "id" currently, please provide one');
+      logger.error({
+        label: LOG_TAG,
+        message: 'getNotifyCondition() - can only filter by "id" currently, please provide one'
+      });
       return;
     }
 

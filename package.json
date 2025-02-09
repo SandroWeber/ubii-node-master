@@ -1,5 +1,5 @@
 {
-  "name": "@tum-far/ubii-nodejs-backend",
+  "name": "@tum-far/ubii-node-master",
   "version": "0.4.0",
   "description": "",
   "main": "src/index.js",
@@ -29,19 +29,18 @@
   ],
   "devDependencies": {
     "@ava/babel": "1.0.1",
-    "ava": "^5.2.0",
+    "ava": "6.2.0",
     "selfsigned": "2.0.0",
-    "sinon": "6.0.1",
+    "sinon": "19.0.2",
     "yargs": "15.4.0"
   },
   "dependencies": {
-    "@tum-far/namida": "0.1.1",
     "@tum-far/ubii-database": "0.1.1",
     "@tum-far/ubii-msg-formats": "0.16.6",
-    "@tum-far/ubii-node-nodejs": "0.4.2",
+    "@tum-far/ubii-node-nodejs": "0.4.7",
     "@tum-far/ubii-topic-data": "0.4.9",
-    "body-parser": "1.18.3",
-    "express": "4.19.2",
+    "body-parser": "1.20.3",
+    "express": "4.21.2",
     "printf": "0.6.1",
     "shelljs": "0.8.5",
     "uuid": "8.3.2",

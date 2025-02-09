@@ -1,7 +1,9 @@
-const namida = require('@tum-far/namida');
 const { v4: uuidv4 } = require('uuid');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const NotifyConditionManager = require('../conditions/notifyConditionManager');
+
+const logger = LoggingService.instance.logger;
 
 /**
  * Devices are representations of remote entities at the server that interact with the ubii system.
@@ -20,7 +22,7 @@ class Component {
       if (condition) {
         this.conditions.push(condition);
       } else {
-        namida.logFailure(this.toString(), `could not find NotifyCondition with ID "${conditionId}"`);
+        logger.error({ label: this.toString(), message: `could not find NotifyCondition with ID "${conditionId}"` });
       }
     }
   }
@@ -55,7 +57,7 @@ class Component {
   }
 
   toString() {
-    return 'Component "' + this.name + '" (' + this.id + ')';
+    return '[UBII Component "' + this.name + '" (' + this.id + ')]';
   }
 }
 
