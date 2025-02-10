@@ -1,19 +1,18 @@
 const { v4: uuidv4 } = require('uuid');
 const nodejs = require('@tum-far/ubii-node-nodejs');
-//const { LoggingService } = require('@tum-far/ubii-node-nodejs');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const FilterUtils = require('../utils/filterUtils');
 const Utils = require('../utils/utilities');
 
-//const logger = LoggingService.instance.logger;
-const LOG_TAG = 'NotifyCondition';
+const logger = LoggingService.instance.logger;
+const LOG_TAG = '[UBII NotifyCondition]';
 
 let gobalTopicDataBuffer = undefined;
 let globalDeviceManager = undefined;
 let getTopicDataRecord = (topicDataSource, clientProfile) => {
   if (!topicDataSource) {
-    //logger.error({ label: LOG_TAG, message: 'getTopicDataRecord() has no TopicDataSource specified!' });
-    console.error('getTopicDataRecord() has no TopicDataSource specified!');
+    logger.error({ label: LOG_TAG, message: 'getTopicDataRecord() has no TopicDataSource specified!' });
     return;
   }
 
@@ -35,20 +34,21 @@ let getTopicDataRecord = (topicDataSource, clientProfile) => {
     if (matchingComponents.length === 1) {
       return gobalTopicDataBuffer.pull(matchingComponents[0].topic);
     } else {
-      /*logger.error({
+      logger.error({
         label: LOG_TAG,
-        message: 'getTopicDataRecord() specified source as component, but multiple components match'
-      });*/
-      console.error('getTopicDataRecord() specified source as component, but multiple components match');
-      console.info('requested profile:');
-      console.info(topicDataSource.component);
-      console.info('matching profiles:');
-      console.info(matchingComponents);
+        message:
+          'getTopicDataRecord() specified source as component, but multiple components match\n' +
+          'requested profile:' +
+          topicDataSource.component +
+          'matching profiles:' +
+          matchingComponents
+      });
     }
   } else {
-    //logger.error({ label: LOG_TAG, message: 'getTopicDataRecord() specified source is not viable:' });
-    console.error('getTopicDataRecord() specified source is not viable:');
-    console.info(topicDataSource);
+    logger.error({
+      label: LOG_TAG,
+      message: 'getTopicDataRecord() specified source is not viable:\n' + topicDataSource
+    });
   }
 };
 

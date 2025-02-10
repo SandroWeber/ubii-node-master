@@ -125,7 +125,6 @@ class ClientManager {
         // => Re-registering is NOT an option: Reject the registration.
         let errorMessage = client.toString() + ' is already registered and active';
 
-        // Ouput the feedback on the server console.
         logger.error({ label: LOG_TAG, message: errorMessage });
 
         throw new Error(errorMessage);
@@ -138,7 +137,6 @@ class ClientManager {
           spec.id +
           ' initialized because it is already registered but in standby or inactive.';
 
-        // Ouput the feedback on the server console.
         logger.warn({ label: LOG_TAG, message: warnMessage });
 
         // Prepare the reregistration.
@@ -156,7 +154,6 @@ class ClientManager {
     // Update the client information.
     currentClient.updateInformation();
 
-    // Ouput the feedback on the server console.
     logger.info({ label: LOG_TAG, message: 'New ' + currentClient.toString() + ' registered' });
 
     // Return the client
