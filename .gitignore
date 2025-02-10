@@ -4,6 +4,8 @@ config.json
 .idea/
 .vscode/
 
+*.log
+
 database/processing/*.js
 database/processing/*.pm
 database/sessions/*.session

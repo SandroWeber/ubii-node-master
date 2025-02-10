@@ -3,11 +3,12 @@ const { v4: uuidv4 } = require('uuid');
 
 const { proto, ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
-const namida = require('@tum-far/namida');
-const { ProcessingModuleManager } = require('@tum-far/ubii-node-nodejs/src/index');
+const { ProcessingModuleManager, LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
+
+const logger = LoggingService.instance.logger;
 
 class Session extends EventEmitter {
   constructor(specs = {}, masterNodeID, topicData, processingModuleManager) {
@@ -62,10 +63,7 @@ class Session extends EventEmitter {
           pmSpec.id = pm.id;
           this.localPMs.push(pmSpec);
         } else {
-          namida.logFailure(
-            this.toString(),
-            'could not instantiate processing module ' + pmSpec.name
-          );
+          logger.error({ label: this.toString(), message: 'could not instantiate processing module ' + pmSpec.name });
           return false;
         }
       }
@@ -114,13 +112,13 @@ class Session extends EventEmitter {
 
   start() {
     if (this.status === SessionStatus.RUNNING) {
-      namida.logFailure('Session ' + this.id, "can't be started again, already running");
+      logger.error({ label: this.toString(), message: "can't be started again, already running" });
       this.emit(Session.EVENTS.START_FAILURE);
       return;
     }
 
     if (!this.processingModules || this.processingModules.length === 0) {
-      namida.logFailure('Session ' + this.id, 'session has no processing modules to start');
+      logger.error({ label: this.toString(), message: 'session has no processing modules to start' });
       this.emit(Session.EVENTS.START_FAILURE);
       return;
     }
@@ -153,15 +151,13 @@ class Session extends EventEmitter {
   }
 
   onProcessingModuleStarted(pmSpec) {
-    let index = this.pmsAwaitingStart.findIndex(
-      (pm) => pm.sessionId === this.id && pm.id === pmSpec.id
-    );
+    let index = this.pmsAwaitingStart.findIndex((pm) => pm.sessionId === this.id && pm.id === pmSpec.id);
     if (index !== -1) {
       this.pmsAwaitingStart.splice(index, 1);
     }
 
     if (this.pmsAwaitingStart.length === 0) {
-      namida.logSuccess(this.toString(), 'all PMs started');
+      logger.info({ label: this.toString(), message: 'all PMs started' });
       this.startDone(true);
     }
   }
@@ -248,15 +244,13 @@ class Session extends EventEmitter {
   }
 
   onProcessingModuleStopped(pmSpec) {
-    let index = this.pmsAwaitingStop.findIndex(
-      (pm) => pm.sessionId === this.id && pm.id === pmSpec.id
-    );
+    let index = this.pmsAwaitingStop.findIndex((pm) => pm.sessionId === this.id && pm.id === pmSpec.id);
     if (index !== -1) {
       this.pmsAwaitingStop.splice(index, 1);
     }
 
     if (this.pmsAwaitingStop.length === 0) {
-      namida.logSuccess(this.toString(), 'all PMs stopped');
+      logger.info({ label: this.toString(), message: 'all PMs stopped' });
       this.stopDone(true);
     }
   }
@@ -302,14 +296,10 @@ class Session extends EventEmitter {
         lockstepProcessingRequest.processingModuleIds.push(pm.id);
 
         // gather inputs for all PMs running under client ID
-        let inputMappings = this.ioMappings.find(
-          (element) => element.processingModuleId === pm.id
-        ).inputMappings;
+        let inputMappings = this.ioMappings.find((element) => element.processingModuleId === pm.id).inputMappings;
         if (inputMappings) {
           pm.inputs.forEach((input) => {
-            let inputMapping = inputMappings.find(
-              (element) => element.inputName === input.internalName
-            );
+            let inputMapping = inputMappings.find((element) => element.inputName === input.internalName);
             let topicSource = inputMapping[inputMapping.topicSource] || inputMapping.topicSource;
             // single topic input
             if (typeof topicSource === 'string') {
@@ -334,19 +324,19 @@ class Session extends EventEmitter {
           .sendLockstepProcessingRequest(clientID, lockstepProcessingRequest)
           .then((lockstepProcessingReply) => {
             // sanity check making sure all PMs were included
-            let allProcessingModulesReplied = lockstepProcessingRequest.processingModuleIds.every(
-              (id) => lockstepProcessingReply.processingModuleIds.includes(id)
+            let allProcessingModulesReplied = lockstepProcessingRequest.processingModuleIds.every((id) =>
+              lockstepProcessingReply.processingModuleIds.includes(id)
             );
             if (!allProcessingModulesReplied) {
               let missingIDs = lockstepProcessingRequest.processingModuleIds.filter(
                 (id) => !lockstepProcessingReply.processingModuleIds.includes(id)
               );
-              let message = 'not all ProcessingModules replied during lockstep pass, missing are:';
+              let msg = 'not all ProcessingModules replied during lockstep pass, missing are:';
               missingIDs.forEach((id) => {
                 let pm = this.processingModuleManager.getModuleByID(id);
-                message += '\n' + pm.toString();
+                msg += '\n' + pm.toString();
               });
-              namida.logFailure(this.toString(), message);
+              logger.error({ label: this.toString(), message: msg });
             }
 
             // publish received records to topicdata
@@ -381,7 +371,7 @@ class Session extends EventEmitter {
   }
 
   toString() {
-    return 'Session "' + this.name + '" (ID ' + this.id + ')';
+    return '[UBII Session "' + this.name + '" (ID ' + this.id + ')]';
   }
 }
 

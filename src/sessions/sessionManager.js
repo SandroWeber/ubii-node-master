@@ -2,16 +2,20 @@ const EventEmitter = require('events');
 
 const { DEFAULT_TOPICS, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 const SessionStatus = proto.ubii.sessions.SessionStatus;
-const namida = require('@tum-far/namida');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const { Session } = require('./session.js');
 const { EVENTS_SESSION_MANAGER } = require('./constants');
 const Utils = require('../utils/utilities');
 
+const logger = LoggingService.instance.logger;
+
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();
 
 class SessionManager extends EventEmitter {
+  static LOG_TAG = '[UBII SessionManager]';
+
   constructor(enforcer) {
     super();
 
@@ -42,13 +46,16 @@ class SessionManager extends EventEmitter {
 
   createSession(specs = {}) {
     if (specs.id && this.getSession(specs.id)) {
-      namida.logFailure('SessionManager', 'Session ID already exists: ' + specs.id);
+      logger.error({ label: LOG_TAG, message: 'Session ID already exists: ' + specs.id });
       throw new Errror('Session with ID ' + specs.id + ' already exists.');
     }
 
     let session = new Session(specs, this.masterNodeID, this.topicData, this.processingModuleManager);
     if (!session.ioMappings || session.ioMappings.length === 0) {
-      namida.warn('SessionManager', session.toString() + ' has no I/O Mappings (topics <-> processing modules)');
+      logger.warn({
+        label: LOG_TAG,
+        message: session.toString() + ' has no I/O Mappings (topics <-> processing modules)'
+      });
     }
 
     this.addSession(session);
@@ -69,13 +76,12 @@ class SessionManager extends EventEmitter {
     if (session instanceof Session) {
       this.sessions.push(session);
       session.addListener(Session.EVENTS.START_FAILURE, (pmList) => {
-        namida.logFailure(
-          'SessionManager',
+        let msg =
           'failure to start ' +
-            session.toString() +
-            ', list of PMs not running:\n' +
-            pmList.map((pm) => 'ProcessingModule "' + pm.name + '" (ID ' + pm.id + ')')
-        );
+          session.toString() +
+          ', list of PMs not running:\n' +
+          pmList.map((pm) => 'ProcessingModule "' + pm.name + '" (ID ' + pm.id + ')');
+        logger.error({ label: LOG_TAG, message: msg });
       });
     }
   }
@@ -113,7 +119,7 @@ class SessionManager extends EventEmitter {
 
   startSession(session) {
     session.on(Session.EVENTS.START_SUCCESS, () => {
-      namida.logSuccess('SessionManager', 'succesfully started ' + session.toString());
+      logger.info({ label: LOG_TAG, message: 'succesfully started ' + session.toString() });
       this.topicData.publish(DEFAULT_TOPICS.INFO_TOPICS.RUNNING_SESSION, {
         topic: DEFAULT_TOPICS.INFO_TOPICS.RUNNING_SESSION,
         type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),
@@ -121,7 +127,7 @@ class SessionManager extends EventEmitter {
       });
     });
     session.on(Session.EVENTS.START_FAILURE, () => {
-      namida.logFailure('SessionManager', 'failed to start ' + session.toString());
+      logger.error({ label: LOG_TAG, message: 'failed to start ' + session.toString() });
     });
 
     session.start();
@@ -134,12 +140,12 @@ class SessionManager extends EventEmitter {
 
       for (let session of this.sessions) {
         if (session.status === SessionStatus.RUNNING) {
-          sessionIds = sessionIds.filter(id => id !== session.id);
+          sessionIds = sessionIds.filter((id) => id !== session.id);
         } else {
           let onSessionStartSuccess = () => {
-            sessionIds = sessionIds.filter(id => id !== session.id);
+            sessionIds = sessionIds.filter((id) => id !== session.id);
             if (sessionIds.length === 0) {
-              namida.logSuccess('SessionManager', 'all sessions started');
+              logger.info({ label: LOG_TAG, message: 'all sessions started' });
               resolve();
             }
           };
@@ -147,10 +153,10 @@ class SessionManager extends EventEmitter {
           this.startSession(session);
         }
       }
-      
+
       setTimeout(() => {
         if (sessionIds.length > 0) {
-          namida.logFailure('SessionManager', 'failed to start all sessions, remaining: ' + sessionIds);
+          logger.error({ label: LOG_TAG, message: 'failed to start all sessions, remaining: ' + sessionIds });
           reject();
         }
       }, SessionManager.CONSTANTS.TIMEOUT_START_SESSION);
@@ -169,10 +175,10 @@ class SessionManager extends EventEmitter {
 
   stopSession(session) {
     session.on(Session.EVENTS.STOP_SUCCESS, () => {
-      namida.logSuccess('SessionManager', 'succesfully stopped ' + session.toString());
+      logger.info({ label: LOG_TAG, message: 'succesfully stopped ' + session.toString() });
     });
     session.on(Session.EVENTS.STOP_FAILURE, () => {
-      namida.logFailure('SessionManager', 'failed to stop ' + session.toString());
+      logger.error({ label: LOG_TAG, message: 'failed to stop ' + session.toString() });
     });
 
     session.stop();

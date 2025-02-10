@@ -1,6 +1,10 @@
-const { Client } = require('./client.js');
-const namida = require('@tum-far/namida');
 const { proto } = require('@tum-far/ubii-msg-formats');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
+
+const { Client } = require('./client.js');
+
+const logger = LoggingService.instance.logger;
+const LOG_TAG = '[UBII ClientManager]';
 
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();
@@ -121,8 +125,7 @@ class ClientManager {
         // => Re-registering is NOT an option: Reject the registration.
         let errorMessage = client.toString() + ' is already registered and active';
 
-        // Ouput the feedback on the server console.
-        namida.logFailure('ClientManager', errorMessage);
+        logger.error({ label: LOG_TAG, message: errorMessage });
 
         throw new Error(errorMessage);
       } else if (this.getClient(spec.id).name === spec.name) {
@@ -134,8 +137,7 @@ class ClientManager {
           spec.id +
           ' initialized because it is already registered but in standby or inactive.';
 
-        // Ouput the feedback on the server console.
-        namida.logWarn('ClientManager', warnMessage);
+        logger.warn({ label: LOG_TAG, message: warnMessage });
 
         // Prepare the reregistration.
         this.clients.delete(spec.id);
@@ -152,8 +154,7 @@ class ClientManager {
     // Update the client information.
     currentClient.updateInformation();
 
-    // Ouput the feedback on the server console.
-    namida.logSuccess('ClientManager', 'New ' + currentClient.toString() + ' registered');
+    logger.info({ label: LOG_TAG, message: 'New ' + currentClient.toString() + ' registered' });
 
     // Return the client
     return currentClient;

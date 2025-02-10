@@ -1,7 +1,7 @@
 /**
  * Time interval in ms for the sign of life check.
  */
-const SIGN_OF_LIFE_DELTA_TIME = 500;
+const SIGN_OF_LIFE_DELTA_TIME = 1000;
 /**
  * Time interval in ms for the remote pinging.
  */

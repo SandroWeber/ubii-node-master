@@ -1,8 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
 const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
-const namida = require('@tum-far/namida');
-const { ProcessingModuleManager, ConfigService } = require('@tum-far/ubii-node-nodejs');
+const { ProcessingModuleManager, ConfigService, LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const NetworkConnectionsManager = require('../network/networkConnectionsManager');
 const { ClientManager } = require('../clients/clientManager');
@@ -15,10 +14,17 @@ const TopicDataProxy = require('./topicDataProxy');
 
 const MASTER_NODE_CONSTANTS = require('./constants');
 
+const logger = LoggingService.instance.logger;
+const LOG_TAG = '[UBII MasterNode]';
+
 class MasterNode {
   constructor() {
     this.id = uuidv4();
-    namida.logSuccess('MasterNode', 'ID ' + this.id);
+    this.logger = logger;
+  }
+
+  init() {
+    logger.info({ label: LOG_TAG, message: 'ID ' + this.id });
 
     // Translators:
     this.topicDataTranslator = new ProtobufTranslator(MSG_TYPES.TOPIC_DATA);
@@ -83,15 +89,12 @@ class MasterNode {
       // Return reply.
       return this.serviceReplyTranslator.createBufferFromPayload(reply);
     } catch (error) {
-      let title = 'Service Request';
-      let message = 'processing failed with an error:';
       let stack = '' + (error.stack.toString() || error.toString());
-
-      namida.logFailure(title, message + '\n' + stack);
+      logger.error({ label: LOG_TAG, message: 'ServiceRequest processing failed with an error: ' + '\n' + stack });
 
       return this.serviceReplyTranslator.createBufferFromPayload({
         error: {
-          title: title,
+          title: LOG_TAG,
           message: message,
           stack: stack
         }
@@ -138,7 +141,7 @@ class MasterNode {
     let message = `processing failed with an error:`;
     let stack = '' + (error.stack.toString() || error.toString());
 
-    namida.logFailure(title, message + '\n' + stack);
+    logger.error({ label: LOG_TAG, message: message + '\n' + stack });
 
     return {
       error: {
@@ -151,7 +154,7 @@ class MasterNode {
 
   onTopicDataMessage(clientID, message) {
     if (!ClientManager.instance.verifyClient(clientID)) {
-      namida.logFailure('Topic data received from unregistered client with ID ' + clientID);
+      logger.error({ label: LOG_TAG, message: 'Topic data received from unregistered client with ID ' + clientID });
       return;
     }
 
@@ -162,11 +165,11 @@ class MasterNode {
       // Process message.
       this.processTopicDataMessage(topicDataMessage, clientID);
     } catch (error) {
-      let title = 'TopicData reception failed (Client ID ' + clientID + ')';
-      let message = 'error stack:';
       let stack = '' + (error.stack || error);
-
-      namida.logFailure(title, message + '\n' + stack);
+      logger.error({
+        label: LOG_TAG,
+        message: 'TopicData reception failed (Client ID ' + clientID + '), error stack:\n' + stack
+      });
 
       try {
         this.connectionsManager.send(
@@ -180,11 +183,11 @@ class MasterNode {
           })
         );
       } catch (error) {
-        title = 'TopicData error response sending failed (Client ID ' + clientID + ')';
-        message = 'error stack:';
         stack = '' + (error.stack || error);
-
-        namida.logFailure(title, message + '\n' + stack);
+        logger.error({
+          label: LOG_TAG,
+          message: 'TopicData error response sending failed (Client ID ' + clientID + '), error stack:\n' + stack
+        });
       }
     }
 
@@ -211,10 +214,6 @@ class MasterNode {
         if (!topicHasData) {
           client.publishedTopics.push(topic);
         } else {
-          namida.logFailure(
-            'TopicData message',
-            client.toString() + ' is not the original publisher of ' + topic
-          );
           return;
         }
       }*/
@@ -228,6 +227,11 @@ class MasterNode {
 
   publishRecord(record, clientId) {
     record.tReceived = Date.now();
+    !clientId &&
+      logger.warn({
+        label: LOG_TAG,
+        message: 'publishRecord() - no client ID: ' + clientId
+      });
     this.topicData.publish(record.topic, record, clientId);
   }
 

@@ -1,9 +1,9 @@
-const { Service } = require('../service.js');
-const namida = require('@tum-far/namida');
-
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
-const client = require('../../clients/client.js');
+
+const { Service } = require('../service.js');
 const FilterUtils = require('../../utils/filterUtils');
+
+const LOG_TAG = '[UBII ClientListService]';
 
 class ClientListService extends Service {
   constructor(clientManager) {

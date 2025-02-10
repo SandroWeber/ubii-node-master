@@ -1,10 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const shelljs = require('shelljs');
-
-const namida = require('@tum-far/namida/src/namida');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const { BASE_FOLDER_LOCAL_DB, BASE_FOLDER_ONLINE_DB } = require('./storageConstants');
+
+const logger = LoggingService.instance.logger;
 
 class StorageEntry {
   constructor(fileName, fileData) {
@@ -26,20 +27,18 @@ class FileHandler {
 
   readFile() {
     throw new Error(
-      'SpecificationHandler(' +
-        this.fileEnding +
-        ').readFile() must be overwritten, must return {key, value}'
+      'SpecificationHandler(' + this.fileEnding + ').readFile() must be overwritten, must return {key, value}'
     );
   }
 
   writeFile() {
-    throw new Error(
-      'SpecificationHandler(' + this.fileEnding + ').writeFile() must be overwritten'
-    );
+    throw new Error('SpecificationHandler(' + this.fileEnding + ').writeFile() must be overwritten');
   }
 }
 
 class Storage {
+  static LOG_TAG = '[UBII Storage]';
+
   constructor(subFolder, listFileHandlers) {
     this.fileHandlers = new Map();
     listFileHandlers.forEach((handler) => {
@@ -75,10 +74,10 @@ class Storage {
    */
   addFileHandler(handler) {
     if (this.fileHandlers.has(handler.fileEnding)) {
-      namida.logFailure(
-        this.toString(),
-        'can not add file handler for ' + handler.fileEnding + ', an entry already exists'
-      );
+      logger.error({
+        label: this.toString(),
+        message: 'can not add file handler for ' + handler.fileEnding + ', an entry already exists'
+      });
       return false;
     }
 
@@ -111,7 +110,10 @@ class Storage {
    */
   addEntry(key, entry) {
     if (this.hasEntry(key)) {
-      namida.logFailure(this.toString(), 'can not add entry "' + key + '", key already exists');
+      logger.error({
+        label: this.toString(),
+        message: 'can not add entry "' + key + '", key already exists'
+      });
       return false;
     }
 
@@ -140,10 +142,10 @@ class Storage {
    */
   updateEntry(key, newEntry) {
     if (!this.localEntries.has(key)) {
-      namida.logFailure(
-        this.toString(),
-        'could not update entry with key "' + newEntry.key + '", no such entry existing'
-      );
+      logger.error({
+        label: this.toString(),
+        message: 'could not update entry with key "' + newEntry.key + '", no such entry existing'
+      });
       return false;
     }
 
@@ -189,10 +191,10 @@ class Storage {
         }
       });
     } catch (error) {
-      namida.log(
-        this.toString(),
-        'error while reading ' + directoryPath + ':\n' + error.toString()
-      );
+      logger.info({
+        label: this.toString(),
+        message: 'error while reading ' + directoryPath + ':\n' + error.toString()
+      });
     }
   }
 
@@ -207,23 +209,19 @@ class Storage {
       let fileHandler = this.fileHandlers.get(fileEnding);
       let { key, value } = fileHandler.readFile(filepath);
       if (!this.isValidMapEntry(key, value)) {
-        namida.logFailure(
-          this.toString(),
-          'entry from file "' +
-            filepath +
-            '" is not valid: key exists = ' +
-            this.hasEntry(key) +
-            ', value = ' +
-            value
-        );
+        logger.error({
+          label: this.toString(),
+          message:
+            'entry from file "' + filepath + '" is not valid: key exists = ' + this.hasEntry(key) + ', value = ' + value
+        });
       } else {
         return { key, value };
       }
     } else {
-      namida.logFailure(
-        this.toString(),
-        'entry from file "' + filepath + '" can not be read, no known file ending ' + fileEnding
-      );
+      logger.error({
+        label: this.toString(),
+        message: 'entry from file "' + filepath + '" can not be read, no known file ending ' + fileEnding
+      });
     }
   }
 
@@ -233,10 +231,10 @@ class Storage {
    */
   writeEntryToFile(entry) {
     if (!entry.fileName) {
-      namida.logFailure(
-        this.toString(),
-        'could not save entry "' + entry.fileName + '" to file, no file name given'
-      );
+      logger.error({
+        label: this.toString(),
+        message: 'could not save entry "' + entry.fileName + '" to file, no file name given'
+      });
       return;
     }
 
@@ -274,7 +272,7 @@ class Storage {
   }
 
   toString() {
-    return 'Storage(' + this.fileEndings.toString() + ')';
+    return '[UBII Storage(' + this.fileEndings.toString() + ')]';
   }
 }
 

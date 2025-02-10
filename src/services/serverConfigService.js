@@ -1,9 +1,12 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 const NetworkConfigManager = require('@tum-far/ubii-node-nodejs/src/networking/networkConfigManager');
 const ConfigService = require('@tum-far/ubii-node-nodejs/src/config/configService');
-const namida = require('@tum-far/namida/src/namida');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const { Service } = require('./service.js');
+
+const logger = LoggingService.instance.logger;
+const LOG_TAG = '[UBII ServerConfigService]';
 
 class ServerConfigService extends Service {
   constructor(id, name, connectionManager) {
@@ -57,13 +60,13 @@ class ServerConfigService extends Service {
       ConfigService.instance.externalEndpoints.serviceHttpJson &&
       ConfigService.instance.externalEndpoints.serviceHttpJson.length > 0
         ? ConfigService.instance.externalEndpoints.serviceHttpJson
-        : ipAddress + ':' + ConfigService.instance.getPortServiceREST().toString() + '/services/json';
+        : ipAddress + ':' + ConfigService.instance.getPortServiceREST().toString() + '/ubii/services/json';
     this.endpointServiceHttpBinary =
       ConfigService.instance.externalEndpoints &&
       ConfigService.instance.externalEndpoints.serviceHttpBinary &&
       ConfigService.instance.externalEndpoints.serviceHttpBinary.length > 0
         ? ConfigService.instance.externalEndpoints.serviceHttpBinary
-        : ipAddress + ':' + ConfigService.instance.getPortServiceREST().toString() + '/services/binary';
+        : ipAddress + ':' + ConfigService.instance.getPortServiceREST().toString() + '/ubii/services/binary';
     this.endpointTopicdataZmq =
       ConfigService.instance.externalEndpoints &&
       ConfigService.instance.externalEndpoints.topicDataZmq &&
@@ -81,15 +84,15 @@ class ServerConfigService extends Service {
   }
 
   logEndpointsStatus() {
-    let message = 'external communication endpoints:';
+    let msg = 'external communication endpoints:';
 
-    message += '\n Service (HTTP, JSON): ' + this.endpointServiceHttpJson;
-    message += '\n Service (HTTP, binary): ' + this.endpointServiceHttpBinary;
-    message += '\n Service (ZMQ, binary): ' + this.endpointServiceZmq;
-    message += '\n TopicData (WS, binary): ' + this.endpointTopicdataWs;
-    message += '\n TopicData (ZMQ, binary): ' + this.endpointTopicdataZmq;
+    msg += '\n Service (HTTP, JSON): ' + this.endpointServiceHttpJson;
+    msg += '\n Service (HTTP, binary): ' + this.endpointServiceHttpBinary;
+    msg += '\n Service (ZMQ, binary): ' + this.endpointServiceZmq;
+    msg += '\n TopicData (WS, binary): ' + this.endpointTopicdataWs;
+    msg += '\n TopicData (ZMQ, binary): ' + this.endpointTopicdataZmq;
 
-    namida.logSuccess('ServerConfigService', message);
+    logger.info({ label: LOG_TAG, message: msg });
   }
 }
 

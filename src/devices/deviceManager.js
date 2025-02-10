@@ -1,7 +1,7 @@
 const EventEmitter = require('events');
 
-const namida = require('@tum-far/namida');
 const { proto, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const { Participant } = require('./../devices/participant.js');
 const { Watcher } = require('./../devices/watcher.js');
@@ -11,6 +11,9 @@ const FilterUtils = require('../utils/filterUtils.js');
 const Utils = require('../utils/utilities');
 
 const MASTER_NODE_CONSTANTS = require('../node/constants');
+
+const logger = LoggingService.instance.logger;
+const LOG_TAG = '[UBII DeviceManager]';
 
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();
@@ -238,22 +241,22 @@ class DeviceManager extends EventEmitter {
         deviceSpec.deviceType !== 'PARTICIPANT'
       ) {
         // -> REregistering is not an option: Reject the registration.
-        let message = 'The Device with ID ' + deviceID + ' is already registered as participant';
+        logger.error({
+          label: LOG_TAG,
+          message: 'The Device with ID ' + deviceID + ' is already registered as participant'
+        });
 
-        // Ouput the feedback on the server console.
-        namida.logFailure('DeviceManager', message);
-
-        throw new Error(message);
+        throw new Error(msg);
       } else {
         // -> REregistering is possible: Prepare the registration.
-        let message =
-          'Reregistration of Participant with ID ' +
-          deviceID +
-          ' initialized because it is already registered but the corresponding client was reregistered since ' +
-          'the last sign of life of this device.';
-
-        // Ouput the feedback on the server console.
-        namida.logWarn('DeviceManager', message);
+        logger.warn({
+          label: LOG_TAG,
+          message:
+            'Reregistration of Participant with ID ' +
+            deviceID +
+            ' initialized because it is already registered but the corresponding client was reregistered since ' +
+            'the last sign of life of this device.'
+        });
 
         // Prepare the reregistration.
         this.removeParticipant(deviceID);
@@ -270,22 +273,22 @@ class DeviceManager extends EventEmitter {
         deviceSpec.deviceType !== 'WATCHER'
       ) {
         // -> REregistering is not an option: Reject the registration.
-        let message = 'The Device with ID ' + deviceID + ' is already registered as watcher';
+        logger.error({
+          label: LOG_TAG,
+          message: 'The Device with ID ' + deviceID + ' is already registered as watcher'
+        });
 
-        // Ouput the feedback on the server console.
-        namida.logFailure('DeviceManager', message);
-
-        throw new Error(message);
+        throw new Error(msg);
       } else {
         // -> REregistering is possible: Prepare the registration.
-        let message =
-          'Reregistration of Watcher with ID ' +
-          deviceID +
-          ' initialized because it is already registered but the corresponding client was reregistered since ' +
-          'the last sign of life of this device.';
-
-        // Ouput the feedback on the server console.
-        namida.logWarn('DeviceManager', message);
+        logger.warn({
+          label: LOG_TAG,
+          message:
+            'Reregistration of Watcher with ID ' +
+            deviceID +
+            ' initialized because it is already registered but the corresponding client was reregistered since ' +
+            'the last sign of life of this device.'
+        });
 
         // Prepare the reregistration.
         this.removeParticipant(deviceID);
@@ -305,22 +308,23 @@ class DeviceManager extends EventEmitter {
       currentDevice = new Watcher(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
       this.registerWatcher(currentDevice);
     } else {
-      let message = 'device type not specified while trying to register';
-      namida.logFailure('DeviceManager', message);
+      logger.error({
+        label: LOG_TAG,
+        message: 'device type not specified while trying to register'
+      });
       throw new Error(message);
     }
 
-    // Update the feedback to the default registartion feedback.
-    let message = 'New Device with ID ' + currentDevice.id + ' registered';
-
-    // Ouput the feedback on the server console.
-    namida.logSuccess('DeviceManager', message);
+    logger.info({
+      label: LOG_TAG,
+      message: 'New Device with ID ' + currentDevice.id + ' registered'
+    });
 
     let deviceSpecs = currentDevice.toProtobuf();
     this.emit(DeviceManager.EVENTS.NEW_DEVICE, deviceSpecs);
     this.masterNode.publishRecord(
       {
-        topic: DEFAULT_TOPICS.INFO_TOPICS.NEW_DEVICE, //TODO: include in msg-formats constants
+        topic: DEFAULT_TOPICS.INFO_TOPICS.NEW_DEVICE,
         type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.DEVICE),
         device: deviceSpecs
       },

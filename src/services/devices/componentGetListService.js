@@ -1,13 +1,15 @@
 const { DEFAULT_TOPICS, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const { Service } = require('../service.js');
 const FilterUtils = require('../../utils/filterUtils');
 const { ClientManager } = require('../../clients/clientManager');
 const { DeviceManager } = require('../../devices/deviceManager');
-const namida = require('@tum-far/namida');
+
+const logger = LoggingService.instance.logger;
 
 class ComponentGetListService extends Service {
-  static LOG_TAG = "ComponentGetListService";
+  static LOG_TAG = '[UBII ComponentGetListService]';
 
   static DESCRIPTION =
     'Get list of available components. Optionally provide a ComponentList in request to filter by component profiles.';
@@ -26,7 +28,7 @@ class ComponentGetListService extends Service {
 
   reply(request) {
     if (request === undefined) {
-      namida.error(LOG_TAG, 'request == ' + request);
+      logger.error({ label: LOG_TAG, message: 'request == ' + request });
       return;
     }
 

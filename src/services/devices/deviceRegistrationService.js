@@ -1,20 +1,16 @@
-const namida = require('@tum-far/namida');
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const { Service } = require('../service.js');
-
 const { ClientManager } = require('../../clients/clientManager.js');
 
-
-const LOG_TAG = 'DeviceRegistrationService';
+const logger = LoggingService.instance.logger;
 
 class DeviceRegistrationService extends Service {
+  static LOG_TAG = 'DeviceRegistrationService';
+
   constructor(deviceManager) {
-    super(
-      DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION,
-      MSG_TYPES.DEVICE,
-      MSG_TYPES.DEVICE + ', ' + MSG_TYPES.ERROR
-    );
+    super(DEFAULT_TOPICS.SERVICES.DEVICE_REGISTRATION, MSG_TYPES.DEVICE, MSG_TYPES.DEVICE + ', ' + MSG_TYPES.ERROR);
 
     this.deviceManager = deviceManager;
   }
@@ -22,13 +18,13 @@ class DeviceRegistrationService extends Service {
   reply(deviceSpecs) {
     // Verify the device and act accordingly.
     if (!ClientManager.instance.verifyClient(deviceSpecs.clientId)) {
-      let message = `There is no Client registered with ID "${deviceSpecs.clientId}"`;
-      namida.logFailure(LOG_TAG, message);
+      let msg = `There is no Client registered with ID "${deviceSpecs.clientId}"`;
+      logger.error({ label: LOG_TAG, message: msg });
 
       return {
         error: {
           title: LOG_TAG,
-          message: message
+          message: msg
         }
       };
     }

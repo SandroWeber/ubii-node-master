@@ -1,9 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
-const namida = require('@tum-far/namida');
-
 const { Device } = require('./device.js');
-
-const { proto } = require('@tum-far/ubii-msg-formats');
 
 /**
  * Participants are representations of remote entities at the server that actively interact with the ubii system.
