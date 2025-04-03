@@ -19,11 +19,11 @@ class DeviceRegistrationService extends Service {
     // Verify the device and act accordingly.
     if (!ClientManager.instance.verifyClient(deviceSpecs.clientId)) {
       let msg = `There is no Client registered with ID "${deviceSpecs.clientId}"`;
-      logger.error({ label: LOG_TAG, message: msg });
+      logger.error({ label: this.LOG_TAG, message: msg });
 
       return {
         error: {
-          title: LOG_TAG,
+          title: this.LOG_TAG,
           message: msg
         }
       };
@@ -37,7 +37,7 @@ class DeviceRegistrationService extends Service {
       console.error(error);
       return {
         error: {
-          title: LOG_TAG,
+          title: this.LOG_TAG,
           message: error && error.toString(),
           stack: error.stack && error.stack.toString()
         }
@@ -50,7 +50,7 @@ class DeviceRegistrationService extends Service {
     } else {
       return {
         error: {
-          title: LOG_TAG,
+          title: this.LOG_TAG,
           message: 'device manager returned undefined'
         }
       };
