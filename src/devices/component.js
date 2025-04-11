@@ -9,12 +9,10 @@ const logger = LoggingService.instance.logger;
  * Devices are representations of remote entities at the server that interact with the ubii system.
  */
 class Component {
-  constructor(specs, client) {
+  constructor(specs) {
     specs && Object.assign(this, specs);
     this.id = uuidv4();
     this.topic = typeof this.topic === 'undefined' ? uuidv4() : this.topic;
-
-    this.client = client;
 
     this.conditions = [];
     for (const conditionId of this.notifyConditionIds) {

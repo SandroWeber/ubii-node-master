@@ -394,14 +394,18 @@ class Client {
 
   onNewDevice(deviceSpecs) {
     for (let newComponent of deviceSpecs.components) {
-      let subscriptions = this.getMatchingComponentSubscriptions(newComponent);
-      for (let sub of subscriptions) {
+      let componentSubs = this.getMatchingComponentSubscriptions(newComponent);
+      for (let sub of componentSubs) {
         let token = this.topicData.subscribeTopic(newComponent.topic, (record, publisherId) =>
           this.subscriptionCallback(record, publisherId)
         );
         sub.tokens.push(token);
       }
     }
+  }
+
+  onRemovedDevice(deviceSpecs) {
+    //TODO
   }
 
   /*removeTopicsOfRegisteredComponents() {

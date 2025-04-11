@@ -11,9 +11,9 @@ const FilterUtils = require('../utils/filterUtils.js');
 const Utils = require('../utils/utilities');
 
 const MASTER_NODE_CONSTANTS = require('../node/constants');
+const Component = require('./component.js');
 
 const logger = LoggingService.instance.logger;
-const LOG_TAG = '[UBII DeviceManager]';
 
 let _instance = null;
 const SINGLETON_ENFORCER = Symbol();
@@ -23,6 +23,8 @@ const SINGLETON_ENFORCER = Symbol();
  * The server node uses it to manages all entities that interact with the functionalities of the server.
  */
 class DeviceManager extends EventEmitter {
+  static DeviceManager.LOG_TAG = '[UBII DeviceManager]';
+
   constructor(enforcer) {
     super();
 
@@ -34,6 +36,7 @@ class DeviceManager extends EventEmitter {
     this.watchers = new Map();
     this.topicMuxers = new Map();
     this.topicDemuxers = new Map();
+    this.mapTopic2Component = new Map();
   }
 
   static get instance() {
@@ -242,7 +245,7 @@ class DeviceManager extends EventEmitter {
       ) {
         // -> REregistering is not an option: Reject the registration.
         logger.error({
-          label: LOG_TAG,
+          label: DeviceManager.LOG_TAG,
           message: 'The Device with ID ' + deviceID + ' is already registered as participant'
         });
 
@@ -250,7 +253,7 @@ class DeviceManager extends EventEmitter {
       } else {
         // -> REregistering is possible: Prepare the registration.
         logger.warn({
-          label: LOG_TAG,
+          label: DeviceManager.LOG_TAG,
           message:
             'Reregistration of Participant with ID ' +
             deviceID +
@@ -274,7 +277,7 @@ class DeviceManager extends EventEmitter {
       ) {
         // -> REregistering is not an option: Reject the registration.
         logger.error({
-          label: LOG_TAG,
+          label: DeviceManager.LOG_TAG,
           message: 'The Device with ID ' + deviceID + ' is already registered as watcher'
         });
 
@@ -282,7 +285,7 @@ class DeviceManager extends EventEmitter {
       } else {
         // -> REregistering is possible: Prepare the registration.
         logger.warn({
-          label: LOG_TAG,
+          label: DeviceManager.LOG_TAG,
           message:
             'Reregistration of Watcher with ID ' +
             deviceID +
@@ -309,14 +312,14 @@ class DeviceManager extends EventEmitter {
       this.registerWatcher(currentDevice);
     } else {
       logger.error({
-        label: LOG_TAG,
+        label: DeviceManager.LOG_TAG,
         message: 'device type not specified while trying to register'
       });
       throw new Error(message);
     }
 
     logger.info({
-      label: LOG_TAG,
+      label: DeviceManager.LOG_TAG,
       message: 'New Device with ID ' + currentDevice.id + ' registered'
     });
 
@@ -333,6 +336,15 @@ class DeviceManager extends EventEmitter {
 
     // Return the deviceSpecification payload.
     return currentDevice;
+  }
+
+  registerComponent(specs) {
+    if (this.mapTopic2Component.has(specs.topic)) return false;
+
+    let component = new Component(specs);
+    this.mapTopic2Component.set(specs.topic, component);
+
+    return component;
   }
 
   createTopicMuxerBySpecs(specs, topicDataBuffer = this.topicData) {
@@ -404,14 +416,15 @@ class DeviceManager extends EventEmitter {
   }
 
   getAllComponents() {
-    let componentList = [];
+    /*let componentList = [];
     for (const [deviceID, device] of this.participants) {
       for (const component of device.components) {
         componentList.push(component);
       }
     }
 
-    return componentList;
+    return componentList;*/
+    return this.mapTopic2Component.values();
   }
 
   getComponentsByProfile(profile) {
@@ -420,13 +433,14 @@ class DeviceManager extends EventEmitter {
   }
 
   getComponentByTopic(topic) {
-    for (const [deviceID, device] of this.participants) {
+    /*for (const [deviceID, device] of this.participants) {
       for (const component of device.components) {
         if (component.topic === topic) {
           return component;
         }
       }
-    }
+    }*/
+    return this.mapTopic2Component(topic);
   }
 
   getDevicesByClientId(clientId) {
