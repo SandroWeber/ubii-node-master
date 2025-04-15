@@ -1,25 +1,25 @@
 const { v4: uuidv4 } = require('uuid');
 const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
-const NotifyConditionManager = require('../conditions/notifyConditionManager');
-
 const logger = LoggingService.instance.logger;
 
 /**
- * Devices are representations of remote entities at the server that interact with the ubii system.
+ * Components are representations of data communication channels typically used to describe individual parts making up a device.
  */
 class Component {
   static LOG_TAG = '[UBII Component]';
 
-  constructor(specs) {
+  constructor(specs, notifyConditionsManager) {
     specs && Object.assign(this, specs);
     this.id = uuidv4();
     this.topic = typeof this.topic === 'undefined' ? uuidv4() : this.topic;
     this.notifyConditionIds = typeof this.notifyConditionIds === 'undefined' ? [] : this.notifyConditionIds;
 
+    this.notifyConditionsManager = notifyConditionsManager;
+
     this.conditions = [];
     for (const conditionId of this.notifyConditionIds) {
-      const condition = NotifyConditionManager.instance.getNotifyCondition({ id: conditionId });
+      const condition = this.notifyConditionsManager.getNotifyCondition({ id: conditionId });
       if (condition) {
         this.conditions.push(condition);
       } else {
@@ -42,7 +42,7 @@ class Component {
         message: `NotifyCondition with ID "${id}" is already attached.`
       });
     }
-    const condition = NotifyConditionManager.instance.getNotifyCondition({ id: id });
+    const condition = this.notifyConditionManager.getNotifyCondition({ id: id });
     if (condition) {
       this.conditions.push(condition);
       this.notifyConditionIds.push(condition.id);
@@ -67,14 +67,15 @@ class Component {
 
   toProtobuf() {
     return {
+      id: this.id,
+      name: this.name,
+      description: this.description,
+      tags: this.tags,
+      deviceId: this.deviceId,
+      clientId: this.clientId,
       topic: this.topic,
       messageFormat: this.messageFormat,
       ioType: this.ioType,
-      deviceId: this.deviceId,
-      tags: this.tags,
-      description: this.description,
-      id: this.id,
-      name: this.name,
       notifyConditionIds: this.notifyConditionIds
     };
   }

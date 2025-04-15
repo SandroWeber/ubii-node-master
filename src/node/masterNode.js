@@ -32,11 +32,11 @@ class MasterNode {
     this.serviceReplyTranslator = new ProtobufTranslator(MSG_TYPES.SERVICE_REPLY);
 
     // Topic Data Component:
-    this.topicData = new RuntimeTopicData();
-    this.topicDataProxy = new TopicDataProxy(this.topicData);
+    this.topicDataBuffer = new RuntimeTopicData();
+    this.topicDataProxy = new TopicDataProxy(this.topicDataBuffer);
     this.deviceManager = new DeviceManager();
 
-    NotifyConditionManager.instance.setUbiiNode(this);
+    this.notifyConditionManager = new NotifyConditionManager(this.topicDataBuffer, this.deviceManager);
 
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
@@ -54,23 +54,25 @@ class MasterNode {
     );
 
     // Client Manager Component:
-    ClientManager.instance.setDependencies(this.connectionsManager, this.topicData, this.deviceManager);
+    ClientManager.instance.setDependencies(this.connectionsManager, this.topicDataBuffer, this.deviceManager);
 
     // Device Manager Component:
-    this.deviceManager.setDependencies(this.topicData, this);
+    this.deviceManager.setDependencies(this.topicDataBuffer, this);
 
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicDataProxy);
 
     // Session manager component:
-    SessionManager.instance.setDependencies(this.id, this.topicData, this.processingModuleManager, this.deviceManager);
+    SessionManager.instance.setDependencies(this.id, this.topicDataBuffer, this.processingModuleManager, this.deviceManager);
 
     // Service Manager Component:
     ServiceManager.instance.setDependencies(
       this.id,
       this.connectionsManager,
       this.processingModuleManager,
-      this.topicData
+      this.topicDataBuffer,
+      this.deviceManager,
+      this.notifyConditionManager
     );
     ServiceManager.instance.addDefaultServices();
 
@@ -218,7 +220,7 @@ class MasterNode {
           return;
         }
       }*/
-      if (!client.publishedTopics.includes(topic) && !this.topicData.hasData(topic)) {
+      if (!client.publishedTopics.includes(topic) && !this.topicDataBuffer.hasData(topic)) {
         client.publishedTopics.push(topic);
       }
 
@@ -233,17 +235,23 @@ class MasterNode {
         label: LOG_TAG,
         message: 'publishRecord() - no client ID: ' + clientId
       });
-    this.topicData.publish(record.topic, record, clientId);
+    this.topicDataBuffer.publish(record.topic, record, clientId);
   }
 
   getDependency(depIdentifier) {
+    let dependency = undefined;
     if (depIdentifier === MASTER_NODE_CONSTANTS.TOPIC_DATA_BUFFER) {
-      return this.topicData;
+      dependency = this.topicDataBuffer;
     } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.DEVICES) {
-      return this.deviceManager;
+      returndependency = this.deviceManager;
     } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS) {
-      return ClientManager.instance;
+      dependency = ClientManager.instance;
     }
+    if (!dependency) {
+      logger.error({ label: LOG_TAG, message: `could not find dependency for "${depIdentifier}"` });
+    }
+
+    return dependency;
   }
 }
 

@@ -3,8 +3,6 @@ const EventEmitter = require('events');
 const { proto, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
-const { Participant } = require('./../devices/participant.js');
-const { Watcher } = require('./../devices/watcher.js');
 const { TopicMultiplexer } = require('./../devices/topicMultiplexer.js');
 const { TopicDemultiplexer } = require('./../devices/topicDemultiplexer.js');
 const FilterUtils = require('../utils/filterUtils.js');
@@ -15,9 +13,6 @@ const Component = require('./component.js');
 
 const logger = LoggingService.instance.logger;
 
-/*let _instance = null;
-const SINGLETON_ENFORCER = Symbol();*/
-
 /**
  * The DeviceManager manages Device objects. It is part of a server node.
  * The server node uses it to manages all entities that interact with the functionalities of the server.
@@ -25,33 +20,20 @@ const SINGLETON_ENFORCER = Symbol();*/
 class DeviceManager extends EventEmitter {
   static LOG_TAG = '[UBII DeviceManager]';
 
-  constructor(/*enforcer*/) {
+  constructor() {
     super();
 
-    /*if (enforcer !== SINGLETON_ENFORCER) {
-      throw new Error('Use ' + this.constructor.name + '.instance');
-    }*/
-
-    //this.participants = new Map();
-    //this.watchers = new Map();
     this.devices = new Map();
     this.topicMuxers = new Map();
     this.topicDemuxers = new Map();
     this.mapTopic2Component = new Map();
   }
 
-  /*static get instance() {
-    if (_instance == null) {
-      _instance = new DeviceManager(SINGLETON_ENFORCER);
-    }
-
-    return _instance;
-  }*/
-
-  setDependencies(topicDataBuffer, masterNode) {
-    this.topicData = topicDataBuffer;
+  setDependencies(masterNode) {
     this.masterNode = masterNode;
+    this.topicData = this.masterNode.getDependency(MASTER_NODE_CONSTANTS.TOPIC_DATA_BUFFER);
     this.clientManager = this.masterNode.getDependency(MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS);
+    this.notifyConditionsManager = this.masterNode.getDependency(MASTER_NODE_CONSTANTS.MANAGERS.NOTIFY_CONDITIONS);
   }
 
   hasDevice(id) {
@@ -66,6 +48,17 @@ class DeviceManager extends EventEmitter {
     return Array.from(this.devices.values());
   }
 
+  getDevicesByClientId(clientId) {
+    let devices = [];
+    for (const [deviceID, device] of this.devices) {
+      if (device.clientId === clientId) {
+        devices.push(device);
+      }
+    }
+
+    return devices;
+  }
+
   removeDevice(id) {
     if (this.hasDevice(id)) {
       this.getDevice(id).components.forEach((component) => {
@@ -76,16 +69,11 @@ class DeviceManager extends EventEmitter {
   }
 
   removeClientDevices(clientID) {
-    this.participants.forEach((participant) => {
-      if (participant.clientId === clientID) {
-        this.removeDevice(participant.id);
+    for (const device of this.devices) {
+      if (device.clientId === clientID) {
+        this.removeDevice(device.id);
       }
-    });
-    this.watchers.forEach((watcher) => {
-      if (watcher.clientId === clientID) {
-        this.removeDevice(watcher.id);
-      }
-    });
+    }
   }
 
   /**
@@ -238,7 +226,7 @@ class DeviceManager extends EventEmitter {
       return undefined;
     }
 
-    component = new Component(specs);
+    component = new Component(specs, this.notifyConditionsManager);
     this.mapTopic2Component.set(component.topic, component);
 
     return component;
@@ -310,17 +298,6 @@ class DeviceManager extends EventEmitter {
 
   getTopicDemuxList() {
     return Array.from(this.topicDemuxers.values());
-  }
-
-  getDevicesByClientId(clientId) {
-    let devices = [];
-    for (const [deviceID, device] of this.participants) {
-      if (device.clientId === clientId) {
-        devices.push(device);
-      }
-    }
-
-    return devices;
   }
 }
 

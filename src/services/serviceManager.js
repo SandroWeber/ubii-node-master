@@ -1,4 +1,5 @@
 const { LoggingService } = require('@tum-far/ubii-node-nodejs');
+const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { ClientRegistrationService } = require('./clients/clientRegistrationService.js');
 const { ClientDeregistrationService } = require('./clients/clientDeregistrationService.js');
@@ -26,12 +27,12 @@ const { SessionRuntimeStartService } = require('./sessions/sessionRuntimeStartSe
 const { SessionRuntimeStopService } = require('./sessions/sessionRuntimeStopService');
 const { NetworkInfoService } = require('./networkInfo/networkInfoService.js');
 const ServiceNotifyConditionAdd = require('./conditions/serviceNotifyConditionAdd.js');
+const ServiceNotifyConditionGetList = require('./conditions/serviceNotifyConditionGetList.js');
+const ServiceNotifyConditionRemove = require('./conditions/serviceNotifyConditionRemove.js');
 
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
-
-const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const logger = LoggingService.instance.logger;
 const LOG_TAG = '[UBII ServiceManager]';
@@ -58,12 +59,13 @@ class ServiceManager {
     return _instance;
   }
 
-  setDependencies(masterNodeID, connectionsManager, processingModuleManager, topicData, deviceManager) {
+  setDependencies(masterNodeID, connectionsManager, processingModuleManager, topicData, deviceManager, notifyConditionsManager) {
     this.masterNodeID = masterNodeID;
     this.connectionsManager = connectionsManager;
     this.processingModuleManager = processingModuleManager;
     this.topicData = topicData;
     this.deviceManager = deviceManager;
+    this.notifyConditionsManager = notifyConditionsManager;
   }
 
   addDefaultServices() {
@@ -97,7 +99,9 @@ class ServiceManager {
     this.addService(new SessionRuntimeStartService(SessionManager.instance));
     this.addService(new SessionRuntimeStopService(SessionManager.instance));
     /* condition services */
-    this.addService(new ServiceNotifyConditionAdd());
+    this.addService(new ServiceNotifyConditionAdd(this.notifyConditionsManager));
+    this.addService(new ServiceNotifyConditionGetList(this.notifyConditionsManager));
+    this.addService(new ServiceNotifyConditionRemove(this.notifyConditionsManager));
 
     /* network statistics */
     this.addService(new NetworkInfoService(ClientManager.instance));
