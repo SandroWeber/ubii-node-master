@@ -36,10 +36,11 @@ class SessionManager extends EventEmitter {
     return _instance;
   }
 
-  setDependencies(masterNodeID, topicData, processingModuleManager) {
+  setDependencies(masterNodeID, topicData, processingModuleManager, deviceManager) {
     this.masterNodeID = masterNodeID;
     this.topicData = topicData;
     this.processingModuleManager = processingModuleManager;
+    this.deviceManager = deviceManager;
 
     return this;
   }
@@ -50,7 +51,7 @@ class SessionManager extends EventEmitter {
       throw new Errror('Session with ID ' + specs.id + ' already exists.');
     }
 
-    let session = new Session(specs, this.masterNodeID, this.topicData, this.processingModuleManager);
+    let session = new Session(specs, this.masterNodeID, this.topicData, this.processingModuleManager, this.deviceManager);
     if (!session.ioMappings || session.ioMappings.length === 0) {
       logger.warn({
         label: LOG_TAG,

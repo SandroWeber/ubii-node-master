@@ -15,22 +15,22 @@ const Component = require('./component.js');
 
 const logger = LoggingService.instance.logger;
 
-let _instance = null;
-const SINGLETON_ENFORCER = Symbol();
+/*let _instance = null;
+const SINGLETON_ENFORCER = Symbol();*/
 
 /**
  * The DeviceManager manages Device objects. It is part of a server node.
  * The server node uses it to manages all entities that interact with the functionalities of the server.
  */
 class DeviceManager extends EventEmitter {
-  static DeviceManager.LOG_TAG = '[UBII DeviceManager]';
+  static LOG_TAG = '[UBII DeviceManager]';
 
-  constructor(enforcer) {
+  constructor(/*enforcer*/) {
     super();
 
-    if (enforcer !== SINGLETON_ENFORCER) {
+    /*if (enforcer !== SINGLETON_ENFORCER) {
       throw new Error('Use ' + this.constructor.name + '.instance');
-    }
+    }*/
 
     this.participants = new Map();
     this.watchers = new Map();
@@ -39,13 +39,13 @@ class DeviceManager extends EventEmitter {
     this.mapTopic2Component = new Map();
   }
 
-  static get instance() {
+  /*static get instance() {
     if (_instance == null) {
       _instance = new DeviceManager(SINGLETON_ENFORCER);
     }
 
     return _instance;
-  }
+  }*/
 
   setDependencies(topicDataBuffer, masterNode) {
     this.topicData = topicDataBuffer;
@@ -199,7 +199,7 @@ class DeviceManager extends EventEmitter {
    * Register the passed device as watcher and initializes the behavior of the watcher.
    * @param {Object} device
    */
-  registerWatcher(device) {
+  addWatcher(device) {
     // Register the watcher.
     this.addWatcher(device);
 
@@ -209,19 +209,6 @@ class DeviceManager extends EventEmitter {
     // Subscribe the watcher to all current and future topics.
     // (because watchers should get notified about any changes in the topic data)
     device.subscribeAll();
-  }
-
-  /**
-   * Verify the specified watcher.
-   * @param {String} deviceIdentifier Universally unique identifier of a Device.
-   * @returns Returns true if the specified device is a verfied watcher, returns false otherwise.
-   */
-  verifyWatcher(deviceIdentifier) {
-    if (!this.hasWatcher(deviceIdentifier)) {
-      return false;
-    } else {
-      return true;
-    }
   }
 
   // Message and request process methods:
@@ -300,16 +287,16 @@ class DeviceManager extends EventEmitter {
       }
     }
 
-    let currentDevice = {};
+    let newDevice;
     // Handle the registration of a participant.
     if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
-      currentDevice = new Participant(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
-      this.addParticipant(currentDevice);
+      newDevice = new Participant(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
+      this.addParticipant(newDevice);
     }
     // Handle the registration of a watcher.
     else if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
-      currentDevice = new Watcher(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
-      this.registerWatcher(currentDevice);
+      newDevice = new Watcher(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
+      this.addWatcher(newDevice);
     } else {
       logger.error({
         label: DeviceManager.LOG_TAG,
@@ -318,12 +305,20 @@ class DeviceManager extends EventEmitter {
       throw new Error(message);
     }
 
+    for (let componentSpec of deviceSpec.components) {
+      let component = this.getComponent({ topic: componentSpec.topic });
+      if (!component) {
+        component = this.registerComponentSpecs(componentSpec);
+      }
+      newDevice.addComponent(component);
+    }
+
     logger.info({
       label: DeviceManager.LOG_TAG,
-      message: 'New Device with ID ' + currentDevice.id + ' registered'
+      message: 'New Device "' + newDevice.toString() + '" registered'
     });
 
-    let deviceSpecs = currentDevice.toProtobuf();
+    let deviceSpecs = newDevice.toProtobuf();
     this.emit(DeviceManager.EVENTS.NEW_DEVICE, deviceSpecs);
     this.masterNode.publishRecord(
       {
@@ -335,14 +330,37 @@ class DeviceManager extends EventEmitter {
     );
 
     // Return the deviceSpecification payload.
-    return currentDevice;
+    return newDevice;
   }
 
-  registerComponent(specs) {
-    if (this.mapTopic2Component.has(specs.topic)) return false;
+  getComponent({ id, topic }) {
+    if (topic) {
+      return this.mapTopic2Component.get(topic);
+    } else if (id) {
+      return this.getAllComponents().find((component) => component.id === id);
+    }
+  }
 
-    let component = new Component(specs);
-    this.mapTopic2Component.set(specs.topic, component);
+  getAllComponents() {
+    return [...this.mapTopic2Component.values()];
+  }
+
+  registerComponentSpecs(specs) {
+    let component = this.getComponent({ topic: specs.topic });
+    if (component) {
+      logger.warn(
+        this.LOG_TAG + ' registerComponentSpecs() - component with topic "' + specs.topic + '" already exists'
+      );
+      return undefined;
+    }
+    component = this.getComponent({ id: specs.id });
+    if (component) {
+      logger.warn(this.LOG_TAG + ' registerComponentSpecs() - component with ID "' + specs.id + '" already exists');
+      return undefined;
+    }
+
+    component = new Component(specs);
+    this.mapTopic2Component.set(component.topic, component);
 
     return component;
   }
@@ -415,18 +433,6 @@ class DeviceManager extends EventEmitter {
     return Array.from(this.topicDemuxers.values());
   }
 
-  getAllComponents() {
-    /*let componentList = [];
-    for (const [deviceID, device] of this.participants) {
-      for (const component of device.components) {
-        componentList.push(component);
-      }
-    }
-
-    return componentList;*/
-    return this.mapTopic2Component.values();
-  }
-
   getComponentsByProfile(profile) {
     const components = this.getAllComponents();
     return FilterUtils.filterAll([profile], components);
@@ -459,6 +465,4 @@ DeviceManager.EVENTS = Object.freeze({
   NEW_DEVICE: 'NEW_DEVICE'
 });
 
-module.exports = {
-  DeviceManager: DeviceManager
-};
+module.exports = DeviceManager;

@@ -3,7 +3,7 @@ const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-form
 const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const latency = require('../network/latency');
-const { DeviceManager } = require('../devices/deviceManager');
+const DeviceManager = require('../devices/deviceManager');
 const FilterUtils = require('../utils/filterUtils');
 const {
   TIME_UNTIL_PING,
@@ -15,7 +15,7 @@ const {
 const logger = LoggingService.instance.logger;
 
 class Client {
-  constructor(specs = {}, server, topicData, clientManager) {
+  constructor(specs = {}, server, topicData, clientManager, deviceManager) {
     // take over specs
     specs && Object.assign(this, specs);
     // new instance is getting new ID
@@ -26,6 +26,7 @@ class Client {
     this.server = server;
     this.topicData = topicData;
     this.clientManager = clientManager;
+    this.deviceManager = deviceManager;
 
     this.state = proto.ubii.clients.Client.State.ACTIVE;
     this.registrationDate = new Date();
@@ -38,7 +39,7 @@ class Client {
     this.publishedTopics = [];
     this.latency = 0;
 
-    DeviceManager.instance.on(DeviceManager.EVENTS.NEW_DEVICE, (deviceSpecs) => {
+    this.deviceManager.on(DeviceManager.EVENTS.NEW_DEVICE, (deviceSpecs) => {
       this.onNewDevice(deviceSpecs);
     });
   }
@@ -225,7 +226,7 @@ class Client {
         message:
           'subscriptionCallback() - topic "' + record.topic + '" has no info on publisher ID(' + publisherId + ')'
       });
-    let component = DeviceManager.instance.getComponentByTopic(record.topic);
+    let component = this.deviceManager.getComponentByTopic(record.topic);
     if (component && component.hasNotifyConditions()) {
       const clientProfilePub = this.clientManager.getClient(publisherId)?.toProtobuf();
       const clientProfileSub = this.toProtobuf();
@@ -383,7 +384,7 @@ class Client {
     };
     this.componentSubscriptions.set(componentProfile, subscription);
 
-    let matchingComponents = DeviceManager.instance.getComponentsByProfile(componentProfile);
+    let matchingComponents = this.deviceManager.getComponentsByProfile(componentProfile);
     for (let component of matchingComponents) {
       let token = this.topicData.subscribeTopic(component.topic, (record, publisherId) =>
         this.subscriptionCallback(record, publisherId)
@@ -409,7 +410,7 @@ class Client {
   }
 
   /*removeTopicsOfRegisteredComponents() {
-    for (const device of DeviceManager.instance.getDevicesByClientId(this.id)) {
+    for (const device of this.deviceManager.getDevicesByClientId(this.id)) {
       for (const component of device.components) {
         this.topicData.remove(component.topic);
       }

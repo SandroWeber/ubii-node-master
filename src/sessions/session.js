@@ -6,12 +6,11 @@ const SessionStatus = proto.ubii.sessions.SessionStatus;
 const { ProcessingModuleManager, LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const { ClientManager } = require('../clients/clientManager');
-const { DeviceManager } = require('../devices/deviceManager');
 
 const logger = LoggingService.instance.logger;
 
 class Session extends EventEmitter {
-  constructor(specs = {}, masterNodeID, topicData, processingModuleManager) {
+  constructor(specs = {}, masterNodeID, topicData, processingModuleManager, deviceManager) {
     super();
 
     // take over specs
@@ -24,6 +23,7 @@ class Session extends EventEmitter {
     this.masterNodeID = masterNodeID;
     this.topicData = topicData;
     this.processingModuleManager = processingModuleManager;
+    this.deviceManager = deviceManager;
 
     this.lockstepPMs = new Map();
     this.localPMs = [];
@@ -311,7 +311,7 @@ class Session extends EventEmitter {
             }
             // topic muxer input
             else if (typeof topicSource === 'object') {
-              let records = DeviceManager.instance.getTopicMux(topicSource.id).get();
+              let records = this.deviceManager.getTopicMux(topicSource.id).get();
               lockstepProcessingRequest.records.push(...records);
             }
           });

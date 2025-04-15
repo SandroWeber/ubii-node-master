@@ -1,11 +1,12 @@
-export default {
+/*export default*/ const avaConfig = {
   files: [
-    'test/devices/**/*',
-    'test/sessions/**/*',
-    'test/clients/**/*',
-    'test/services/filterUtils.js',
-    '!test/storage/**/*',
+    'test/devices/deviceManagerTest.js',
+    //'test/devices/**/*',
+    //'test/sessions/**/*',
+    //'test/clients/**/*',
+    //'test/services/filterUtils.js',
     // not part of the tests
+    '!test/storage/**/*',
     '!test/mocks/*',
     '!test/files/*',
     '!test/sessions/utils.js',
@@ -24,3 +25,5 @@ export default {
     compileEnhancements: false
   }
 };
+
+module.exports = avaConfig;

@@ -7,7 +7,7 @@ import { TopicDataMock, createDeviceSpecificationMock } from '../mocks/serverMoc
 import { ClientMock } from '../mocks/clientMock';
 import { ClientManagerMock } from '../mocks/clientManagerMock';
 
-(function () {
+//(function () {
   // Helpers:
 
   let addDummyEntriesToDeviceManager = function (context) {
@@ -122,9 +122,7 @@ import { ClientManagerMock } from '../mocks/clientManagerMock';
     );
     t.context.deviceManager.watchers.set('11111111-1111-1111-1111-111111111111', dummy);
 
-    let returnedWatcher = t.context.deviceManager.getWatcher(
-      '11111111-1111-1111-1111-111111111111'
-    );
+    let returnedWatcher = t.context.deviceManager.getWatcher('11111111-1111-1111-1111-111111111111');
 
     t.deepEqual(dummy, returnedWatcher);
   });
@@ -167,9 +165,7 @@ import { ClientManagerMock } from '../mocks/clientManagerMock';
 
       t.true(t.context.deviceManager.hasWatcher('11111111-1111-1111-1111-111111111111'));
 
-      let returnedWatcher = t.context.deviceManager.getWatcher(
-        '11111111-1111-1111-1111-111111111111'
-      );
+      let returnedWatcher = t.context.deviceManager.getWatcher('11111111-1111-1111-1111-111111111111');
 
       t.deepEqual(dummyWatcher, returnedWatcher);
 
@@ -189,4 +185,15 @@ import { ClientManagerMock } from '../mocks/clientManagerMock';
     t.is(result.error, undefined);
     t.is(result.id, 'uniqueId');
   });
-})();
+
+  test.only('registerComponentSpecs', (t) => {
+    const deviceManager = t.context.deviceManager;
+    let componentSpecs = {
+      name: 'my component'
+    };
+    let result = deviceManager.registerComponentSpecs(componentSpecs);
+
+    t.is(result.error, undefined);
+    t.is(result.id, 'uniqueId');
+  });
+//})();

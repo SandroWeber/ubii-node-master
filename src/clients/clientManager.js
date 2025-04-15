@@ -31,9 +31,10 @@ class ClientManager {
    * @param {NetworkConnectionsManager} connections
    * @param {RuntimeTopicData} topicdata
    */
-  setDependencies(connections, topicdata) {
+  setDependencies(connections, topicdata, deviceManager) {
     this.server = connections;
     this.topicData = topicdata;
+    this.deviceManager = deviceManager;
 
     return this;
   }
@@ -148,7 +149,7 @@ class ClientManager {
     // No client ID, normal registration steps:
 
     // Create a new client based on the client specification and register it.
-    let currentClient = new Client(spec, this.server, this.topicData, this);
+    let currentClient = new Client(spec, this.server, this.topicData, this, this.deviceManager);
     this.registerClient(currentClient);
 
     // Update the client information.

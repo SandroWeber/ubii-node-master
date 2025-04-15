@@ -58,11 +58,12 @@ class ServiceManager {
     return _instance;
   }
 
-  setDependencies(masterNodeID, connectionsManager, processingModuleManager, topicData) {
+  setDependencies(masterNodeID, connectionsManager, processingModuleManager, topicData, deviceManager) {
     this.masterNodeID = masterNodeID;
     this.connectionsManager = connectionsManager;
     this.processingModuleManager = processingModuleManager;
     this.topicData = topicData;
+    this.deviceManager = deviceManager;
   }
 
   addDefaultServices() {
@@ -73,13 +74,13 @@ class ServiceManager {
     this.addService(new ServiceListService(this));
     /* client services */
     this.addService(new ClientRegistrationService(ClientManager.instance));
-    this.addService(new ClientDeregistrationService(ClientManager.instance, DeviceManager.instance));
+    this.addService(new ClientDeregistrationService(ClientManager.instance, this.deviceManager));
     this.addService(new ClientListService(ClientManager.instance));
     /* device services */
-    this.addService(new DeviceRegistrationService(DeviceManager.instance));
-    this.addService(new DeviceDeregistrationService(DeviceManager.instance));
-    this.addService(new DeviceGetListService(DeviceManager.instance, ClientManager.instance));
-    this.addService(new ComponentGetListService());
+    this.addService(new DeviceRegistrationService(this.deviceManager));
+    this.addService(new DeviceDeregistrationService(this.deviceManager));
+    this.addService(new DeviceGetListService(this.deviceManager, ClientManager.instance));
+    this.addService(new ComponentGetListService(this.deviceManager));
     /* processing module services */
     this.addService(new ProcessingModuleDatabaseGetService());
     this.addService(new ProcessingModuleDatabaseGetListService(ClientManager.instance));

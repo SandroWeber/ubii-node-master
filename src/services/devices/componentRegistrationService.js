@@ -10,15 +10,19 @@ class ComponentRegistrationService extends Service {
   static LOG_TAG = 'ComponentRegistrationService';
 
   constructor(deviceManager) {
-    super(DEFAULT_TOPICS.SERVICES.COMPONENT_REGISTRATION, MSG_TYPES.COMPONENT, MSG_TYPES.COMPONENT + ', ' + MSG_TYPES.ERROR);
+    super(
+      DEFAULT_TOPICS.SERVICES.COMPONENT_REGISTRATION,
+      MSG_TYPES.COMPONENT,
+      MSG_TYPES.COMPONENT + ', ' + MSG_TYPES.ERROR
+    );
 
     this.deviceManager = deviceManager;
   }
 
   reply(specs) {
     // Verify the device and act accordingly.
-    if (!ClientManager.instance.verifyClient(deviceSpecs.clientId)) {
-      let msg = `There is no Client registered with ID "${deviceSpecs.clientId}"`;
+    if (!ClientManager.instance.verifyClient(specs.clientId)) {
+      let msg = `There is no Client registered with ID "${specs.clientId}"`;
       logger.error({ label: this.LOG_TAG, message: msg });
 
       return {
@@ -30,9 +34,9 @@ class ComponentRegistrationService extends Service {
     }
 
     // Process the registration of the sepcified device at the device manager
-    let device = undefined;
+    let component = undefined;
     try {
-      device = this.deviceManager.registerDeviceSpecs(deviceSpecs);
+      component = this.deviceManager.registerComponentSpecs(specs);
     } catch (error) {
       console.error(error);
       return {
@@ -44,14 +48,16 @@ class ComponentRegistrationService extends Service {
       };
     }
 
-    if (device !== undefined) {
-      let specs = device.toProtobuf();
-      return { device: specs };
+    if (component !== undefined) {
+      let specs = component.toProtobuf();
+      return { component: specs };
     } else {
+      errorMsg = 'deivce manager returned undefuned when trying to register component';
+      logger.error({ label: this.LOG_TAG, message: errorMsg });
       return {
         error: {
           title: this.LOG_TAG,
-          message: 'device manager returned undefined'
+          message: errorMsg
         }
       };
     }

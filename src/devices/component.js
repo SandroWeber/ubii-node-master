@@ -9,24 +9,49 @@ const logger = LoggingService.instance.logger;
  * Devices are representations of remote entities at the server that interact with the ubii system.
  */
 class Component {
+  static LOG_TAG = '[UBII Component]';
+
   constructor(specs) {
     specs && Object.assign(this, specs);
     this.id = uuidv4();
     this.topic = typeof this.topic === 'undefined' ? uuidv4() : this.topic;
+    this.notifyConditionIds = typeof this.notifyConditionIds === 'undefined' ? [] : this.notifyConditionIds;
 
     this.conditions = [];
     for (const conditionId of this.notifyConditionIds) {
-      let condition = NotifyConditionManager.instance.getNotifyCondition({ id: conditionId });
+      const condition = NotifyConditionManager.instance.getNotifyCondition({ id: conditionId });
       if (condition) {
         this.conditions.push(condition);
       } else {
-        logger.error({ label: this.toString(), message: `could not find NotifyCondition with ID "${conditionId}"` });
+        logger.error({
+          label: Component.LOG_TAG + ' ' + this.toString(),
+          message: `could not find NotifyCondition with ID "${conditionId}"`
+        });
       }
     }
   }
 
   hasNotifyConditions() {
     return this.conditions.length > 0;
+  }
+
+  attachNotifyCondition(id) {
+    if (this.notifyConditionIds.some((existingId) => existingId === id)) {
+      logger.warn({
+        label: Component.LOG_TAG + ' ' + this.toString(),
+        message: `NotifyCondition with ID "${id}" is already attached.`
+      });
+    }
+    const condition = NotifyConditionManager.instance.getNotifyCondition({ id: id });
+    if (condition) {
+      this.conditions.push(condition);
+      this.notifyConditionIds.push(condition.id);
+    } else {
+      logger.error({
+        label: Component.LOG_TAG + ' ' + this.toString(),
+        message: `could not find NotifyCondition with ID "${conditionId}"`
+      });
+    }
   }
 
   checkNotifyConditions(profilePublisher, profileSubscriber) {
@@ -55,7 +80,7 @@ class Component {
   }
 
   toString() {
-    return '[UBII Component "' + this.name + '" (' + this.id + ')]';
+    return this.name + ' (' + this.id + ')';
   }
 }
 

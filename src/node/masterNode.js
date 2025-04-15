@@ -5,7 +5,7 @@ const { ProcessingModuleManager, ConfigService, LoggingService } = require('@tum
 
 const NetworkConnectionsManager = require('../network/networkConnectionsManager');
 const { ClientManager } = require('../clients/clientManager');
-const { DeviceManager } = require('../devices/deviceManager');
+const DeviceManager = require('../devices/deviceManager');
 const { ServiceManager } = require('../services/serviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
 const { Profiler } = require('../profiling/profiler');
@@ -34,6 +34,7 @@ class MasterNode {
     // Topic Data Component:
     this.topicData = new RuntimeTopicData();
     this.topicDataProxy = new TopicDataProxy(this.topicData);
+    this.deviceManager = new DeviceManager();
 
     NotifyConditionManager.instance.setUbiiNode(this);
 
@@ -53,16 +54,16 @@ class MasterNode {
     );
 
     // Client Manager Component:
-    ClientManager.instance.setDependencies(this.connectionsManager, this.topicData);
+    ClientManager.instance.setDependencies(this.connectionsManager, this.topicData, this.deviceManager);
 
     // Device Manager Component:
-    DeviceManager.instance.setDependencies(this.topicData, this);
+    this.deviceManager.setDependencies(this.topicData, this);
 
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicDataProxy);
 
     // Session manager component:
-    SessionManager.instance.setDependencies(this.id, this.topicData, this.processingModuleManager);
+    SessionManager.instance.setDependencies(this.id, this.topicData, this.processingModuleManager, this.deviceManager);
 
     // Service Manager Component:
     ServiceManager.instance.setDependencies(
@@ -239,7 +240,7 @@ class MasterNode {
     if (depIdentifier === MASTER_NODE_CONSTANTS.TOPIC_DATA_BUFFER) {
       return this.topicData;
     } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.DEVICES) {
-      return DeviceManager.instance;
+      return this.deviceManager;
     } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS) {
       return ClientManager.instance;
     }

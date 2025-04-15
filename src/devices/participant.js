@@ -13,19 +13,6 @@ class Participant extends Device {
   }
 
   /**
-   * Publishes the specified information to the topicData
-   * @param {*} topic
-   * @param {*} type
-   * @param {*} value
-   */
-  publish(topic, type, value) {
-    this.topicData.publish(topic, {
-      type: type,
-      value: value
-    });
-  }
-
-  /**
    * Deactivate the client: clear all intervalls, unsubsribe from all topics, ...
    * You should call this method before clearing all references to a client.
    */
