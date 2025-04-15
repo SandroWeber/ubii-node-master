@@ -421,7 +421,7 @@ class Client {
     return {
       id: this.id,
       name: this.name,
-      devices: this.devices,
+      devices: this.devices.map(device => device.toProtobuf()),
       tags: this.tags,
       description: this.description,
       processingModules: this.processingModules,

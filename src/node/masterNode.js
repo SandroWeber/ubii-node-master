@@ -20,7 +20,6 @@ const LOG_TAG = '[UBII MasterNode]';
 class MasterNode {
   constructor() {
     this.id = uuidv4();
-    this.logger = logger;
   }
 
   init() {

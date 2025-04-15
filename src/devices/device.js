@@ -78,6 +78,4 @@ class Device {
   }
 }
 
-module.exports = {
-  Device: Device
-};
+module.exports = Device;

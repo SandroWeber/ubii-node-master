@@ -3,8 +3,10 @@ const EventEmitter = require('events');
 const { proto, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
-const { TopicMultiplexer } = require('./../devices/topicMultiplexer.js');
-const { TopicDemultiplexer } = require('./../devices/topicDemultiplexer.js');
+const Device = require('./device.js');
+const { TopicMultiplexer } = require('./topicMultiplexer.js');
+const { TopicMultiplexer } = require('./topicMultiplexer.js');
+const { TopicDemultiplexer } = require('./topicDemultiplexer.js');
 const FilterUtils = require('../utils/filterUtils.js');
 const Utils = require('../utils/utilities');
 
@@ -59,6 +61,19 @@ class DeviceManager extends EventEmitter {
     return devices;
   }
 
+  /**
+   * Add the specified device.
+   * @param {Object} device
+   */
+  addDevice(device) {
+    this.devices.set(device.id, device);
+    // add device to client specs
+    let client = this.clientManager.getClient(device.clientId);
+    if (client) {
+      client.devices.push(device);
+    }
+  }
+
   removeDevice(id) {
     if (this.hasDevice(id)) {
       this.getDevice(id).components.forEach((component) => {
@@ -89,14 +104,11 @@ class DeviceManager extends EventEmitter {
     // Check if the device is already registered as participant...
     if (deviceID && this.hasDevice(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
-      if (
-        this.clientManager.getClient(clientID).registrationDate < this.getDevice(deviceID).lastSignOfLife ||
-        registeringSpec.deviceType !== 'PARTICIPANT'
-      ) {
+      if (this.clientManager.getClient(clientID).registrationDate < this.getDevice(deviceID).lastSignOfLife) {
         // -> REregistering is not an option: Reject the registration.
         logger.error({
           label: DeviceManager.LOG_TAG,
-          message: 'The Device with ID ' + deviceID + ' is already registered as participant'
+          message: 'The Device with ID ' + deviceID + ' is already registered'
         });
 
         throw new Error(msg);
@@ -105,69 +117,18 @@ class DeviceManager extends EventEmitter {
         logger.warn({
           label: DeviceManager.LOG_TAG,
           message:
-            'Reregistration of Participant with ID ' +
-            deviceID +
-            ' initialized because it is already registered but the corresponding client was reregistered since ' +
-            'the last sign of life of this device.'
+            `Reregistration of device with ID ${deviceID} initialized because it is already registered but the corresponding client was reregistered since the last sign of life of this device.`
         });
 
         // Prepare the reregistration.
-        this.removeParticipant(deviceID);
+        this.removeDevice(deviceID);
 
         // Continue with the normal registration process...
       }
     }
 
-    // ... or watcher.
-    if (deviceID && this.hasWatcher(deviceID)) {
-      // ... if so, check the state of the registered client if reregistering is possible.
-      if (
-        this.clientManager.getClient(clientID).registrationDate < this.getWatcher(deviceID).lastSignOfLife ||
-        registeringSpec.deviceType !== 'WATCHER'
-      ) {
-        // -> REregistering is not an option: Reject the registration.
-        logger.error({
-          label: DeviceManager.LOG_TAG,
-          message: 'The Device with ID ' + deviceID + ' is already registered as watcher'
-        });
-
-        throw new Error(msg);
-      } else {
-        // -> REregistering is possible: Prepare the registration.
-        logger.warn({
-          label: DeviceManager.LOG_TAG,
-          message:
-            'Reregistration of Watcher with ID ' +
-            deviceID +
-            ' initialized because it is already registered but the corresponding client was reregistered since ' +
-            'the last sign of life of this device.'
-        });
-
-        // Prepare the reregistration.
-        this.removeParticipant(deviceID);
-
-        // Continue with the normal registration process...
-      }
-    }
-
-    let newDevice;
-    // Handle the registration of a participant.
-    if (registeringSpec.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
-      newDevice = new Participant(registeringSpec, this.clientManager.getClient(clientID), this.topicData);
-      this.addParticipant(newDevice);
-    }
-    // Handle the registration of a watcher.
-    else if (registeringSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
-      newDevice = new Watcher(registeringSpec, this.clientManager.getClient(clientID), this.topicData);
-      this.addWatcher(newDevice);
-    } else {
-      const message = 'device type not specified while trying to register';
-      logger.error({
-        label: DeviceManager.LOG_TAG,
-        message: message
-      });
-      throw new Error(message);
-    }
+    let newDevice = new Device(registeringSpec, this.clientManager.getClient(clientID));
+    this.addDevice(newDevice);
 
     for (let componentSpec of registeringSpec.components) {
       let component = this.getComponent({ topic: componentSpec.topic });
