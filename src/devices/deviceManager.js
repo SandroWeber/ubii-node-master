@@ -32,8 +32,9 @@ class DeviceManager extends EventEmitter {
       throw new Error('Use ' + this.constructor.name + '.instance');
     }*/
 
-    this.participants = new Map();
-    this.watchers = new Map();
+    //this.participants = new Map();
+    //this.watchers = new Map();
+    this.devices = new Map();
     this.topicMuxers = new Map();
     this.topicDemuxers = new Map();
     this.mapTopic2Component = new Map();
@@ -53,22 +54,24 @@ class DeviceManager extends EventEmitter {
     this.clientManager = this.masterNode.getDependency(MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS);
   }
 
+  hasDevice(id) {
+    return this.devices.has(id);
+  }
+
   getDevice(id) {
-    if (this.hasParticipant(id)) {
-      return this.getParticipant(id);
-    } else if (this.hasWatcher(id)) {
-      return this.getWatcher(id);
-    }
+    return this.devices.get(id);
+  }
+
+  getAllDevices() {
+    return Array.from(this.devices.values());
   }
 
   removeDevice(id) {
-    if (this.hasParticipant(id)) {
-      this.getParticipant(id).components.forEach((component) => {
+    if (this.hasDevice(id)) {
+      this.getDevice(id).components.forEach((component) => {
         this.topicData.remove(component.topic);
       });
-      this.removeParticipant(id);
-    } else if (this.hasWatcher(id)) {
-      this.removeWatcher(id);
+      this.removeDevice(id);
     }
   }
 
@@ -85,150 +88,22 @@ class DeviceManager extends EventEmitter {
     });
   }
 
-  // Participants utilities:
-
-  /**
-   * Get the participant with the specified identifier.
-   * @param {String} id Universally unique identifier of a Device.
-   * @returns Device object with the specified identifier.
-   */
-  getParticipant(id) {
-    return this.participants.get(id);
-  }
-
-  /**
-   * Get a list of all participants.
-   * @returns {array} The list of participants.
-   */
-  getAllParticipants() {
-    return Array.from(this.participants.values());
-  }
-
-  /**
-   * Is there a participant with the specified identifier in the participants map?
-   * @param {String} id Universally unique identifier of a Device.
-   * @returns Boolean indicating if there is a participant with the specified identifier.
-   */
-  hasParticipant(id) {
-    return this.participants.has(id);
-  }
-
-  /**
-   * Add the specified participant to the participants map.
-   * @param {Object} device
-   */
-  addParticipant(device) {
-    this.participants.set(device.id, device);
-    // add device to client specs
-    let client = this.clientManager.getClient(device.clientId);
-    if (client) {
-      client.devices.push(device.toProtobuf());
-    }
-  }
-
-  /**
-   * Remove the participant with the specified identiier from the participants map.
-   * @param {String} id Universally unique identifier of a Device.
-   */
-  removeParticipant(id) {
-    let participant = this.getParticipant(id);
-    let client = this.clientManager.getClient(participant.clientId);
-    if (client) {
-      // remove device from client specs
-      let index = client.devices.findIndex((device) => device.id === id);
-      if (index > -1) {
-        client.devices.splice(index, 1);
-      }
-    }
-    // deactivate and remove participant
-    participant.deactivate();
-    this.participants.delete(id);
-  }
-
-  /**
-   * Verify the specified participant.
-   * @param {String} id Universally unique identifier of a Device.
-   * @returns Returns true if the specified client is a verfied client, returns false otherwise.
-   */
-  verifyParticipant(id) {
-    if (!this.hasParticipant(id)) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  // Watchers utilities:
-
-  /**
-   * Get the watcher with the specified identifier.
-   * @param {String} id Universally unique identifier of a Device.
-   * @returns Watcher object with the specified identifier.
-   */
-  getWatcher(id) {
-    return this.watchers.get(id);
-  }
-
-  /**
-   * Is there a watcher with the specified identifier in the watchers map?
-   * @param {String} id Universally unique identifier of a Device.
-   * @returns Boolean indicating if there is a watcher with the specified identifier.
-   */
-  hasWatcher(id) {
-    return this.watchers.has(id);
-  }
-
-  /**
-   * Add the specified watcher to the watchers map.
-   * @param {Object} watcher
-   */
-  addWatcher(watcher) {
-    this.watchers.set(watcher.id, watcher);
-  }
-
-  /**
-   * Remove the watcher with the specified id from the watchers map.
-   * @param {String} deviceIdentifier Universally unique identifier of a Device.
-   */
-  removeWatcher(deviceIdentifier) {
-    this.getWatcher(deviceIdentifier).deactivate();
-    this.watchers.delete(deviceIdentifier);
-  }
-
-  /**
-   * Register the passed device as watcher and initializes the behavior of the watcher.
-   * @param {Object} device
-   */
-  addWatcher(device) {
-    // Register the watcher.
-    this.addWatcher(device);
-
-    // Initially introduce all topics currently available in the topic data to new watchers.
-    device.introduceTopicDataToRemote();
-
-    // Subscribe the watcher to all current and future topics.
-    // (because watchers should get notified about any changes in the topic data)
-    device.subscribeAll();
-  }
-
-  // Message and request process methods:
-
   /**
    * Process the registration of the specified device at the device manager.
-   * @param {Object} deviceSpec
+   * @param {Object} registeringSpec
    * @returns Returns the payload of the process result. This can be the device specification or an error.
    */
-  registerDeviceSpecs(deviceSpec) {
+  registerDeviceSpecs(registeringSpec) {
     // Prepare some variables.
-    let deviceID = deviceSpec.id;
-    let clientID = deviceSpec.clientId;
+    let deviceID = registeringSpec.id;
+    let clientID = registeringSpec.clientId;
 
     // Check if the device is already registered as participant...
-    if (deviceID && this.hasParticipant(deviceID)) {
+    if (deviceID && this.hasDevice(deviceID)) {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (
-        this.clientManager.getClient(clientID).registrationDate < this.getParticipant(deviceID).lastSignOfLife ||
-        deviceSpec.deviceType !== 'PARTICIPANT'
+        this.clientManager.getClient(clientID).registrationDate < this.getDevice(deviceID).lastSignOfLife ||
+        registeringSpec.deviceType !== 'PARTICIPANT'
       ) {
         // -> REregistering is not an option: Reject the registration.
         logger.error({
@@ -260,7 +135,7 @@ class DeviceManager extends EventEmitter {
       // ... if so, check the state of the registered client if reregistering is possible.
       if (
         this.clientManager.getClient(clientID).registrationDate < this.getWatcher(deviceID).lastSignOfLife ||
-        deviceSpec.deviceType !== 'WATCHER'
+        registeringSpec.deviceType !== 'WATCHER'
       ) {
         // -> REregistering is not an option: Reject the registration.
         logger.error({
@@ -289,23 +164,24 @@ class DeviceManager extends EventEmitter {
 
     let newDevice;
     // Handle the registration of a participant.
-    if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
-      newDevice = new Participant(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
+    if (registeringSpec.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
+      newDevice = new Participant(registeringSpec, this.clientManager.getClient(clientID), this.topicData);
       this.addParticipant(newDevice);
     }
     // Handle the registration of a watcher.
-    else if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
-      newDevice = new Watcher(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
+    else if (registeringSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
+      newDevice = new Watcher(registeringSpec, this.clientManager.getClient(clientID), this.topicData);
       this.addWatcher(newDevice);
     } else {
+      const message = 'device type not specified while trying to register';
       logger.error({
         label: DeviceManager.LOG_TAG,
-        message: 'device type not specified while trying to register'
+        message: message
       });
       throw new Error(message);
     }
 
-    for (let componentSpec of deviceSpec.components) {
+    for (let componentSpec of registeringSpec.components) {
       let component = this.getComponent({ topic: componentSpec.topic });
       if (!component) {
         component = this.registerComponentSpecs(componentSpec);
@@ -333,11 +209,14 @@ class DeviceManager extends EventEmitter {
     return newDevice;
   }
 
-  getComponent({ id, topic }) {
-    if (topic) {
-      return this.mapTopic2Component.get(topic);
-    } else if (id) {
-      return this.getAllComponents().find((component) => component.id === id);
+  getComponent(profile) {
+    if (profile.topic) {
+      return this.mapTopic2Component.get(profile.topic);
+    } else if (profile.id) {
+      return this.getAllComponents().find((component) => component.id === profile.id);
+    } else {
+      const components = this.getAllComponents();
+      return FilterUtils.filterAll([profile], components);
     }
   }
 
@@ -431,22 +310,6 @@ class DeviceManager extends EventEmitter {
 
   getTopicDemuxList() {
     return Array.from(this.topicDemuxers.values());
-  }
-
-  getComponentsByProfile(profile) {
-    const components = this.getAllComponents();
-    return FilterUtils.filterAll([profile], components);
-  }
-
-  getComponentByTopic(topic) {
-    /*for (const [deviceID, device] of this.participants) {
-      for (const component of device.components) {
-        if (component.topic === topic) {
-          return component;
-        }
-      }
-    }*/
-    return this.mapTopic2Component(topic);
   }
 
   getDevicesByClientId(clientId) {

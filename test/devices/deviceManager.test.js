@@ -45,11 +45,28 @@ test('registerComponentSpecs() - existing id', () => {
 
 test('registerDeviceSpecs()', () => {
   let deviceManager = new DeviceManager();
-  let componentSpec = {
+  let deviceSpec = {
     name: 'my test component'
   };
-  let component = deviceManager.registerComponentSpecs(componentSpec);
-  let component2 = deviceManager.registerComponentSpecs(componentSpec);
-  expect(component.id).not.toBe(component2.id);
-  expect(component.topic).not.toBe(component2.topic);
+  let device = deviceManager.registerDeviceSpecs(deviceSpec);
+  let device2 = deviceManager.registerDeviceSpecs(deviceSpec);
+  expect(device.id).not.toBe(device2.id);
+});
+
+test('registerDeviceSpecs() - existing id', () => {
+  let deviceManager = new DeviceManager();
+  let deviceSpec = {
+    name: 'my test component'
+  };
+  let device = deviceManager.registerDeviceSpecs(deviceSpec);
+  expect(deviceManager.registerDeviceSpecs({ id: device.id })).not.toBeDefined();
+  expect(deviceManager.getAllDevices().length).toBe(1);
+});
+
+test('DeviceManager.EVENTS.NEW_DEVICE', () => {
+  let deviceManager = new DeviceManager();
+  let eventCallback = jest.fn();
+  deviceManager.on(DeviceManager.EVENTS.NEW_DEVICE, eventCallback);
+  deviceManager.emit(DeviceManager.EVENTS.NEW_DEVICE, {});
+  expect(eventCallback).toHaveBeenCalled();
 });
