@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const { RuntimeTopicData } = require('@tum-far/ubii-topic-data');
-const { ProtobufTranslator, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
+const { ProtobufTranslator, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 const { ProcessingModuleManager, ConfigService, LoggingService } = require('@tum-far/ubii-node-nodejs');
 
 const NetworkConnectionsManager = require('../network/networkConnectionsManager');
@@ -11,6 +11,7 @@ const { SessionManager } = require('../sessions/sessionManager');
 const { Profiler } = require('../profiling/profiler');
 const NotifyConditionManager = require('../conditions/notifyConditionManager');
 const TopicDataProxy = require('./topicDataProxy');
+const Utils = require('../utils/utilities');
 
 const MASTER_NODE_CONSTANTS = require('./constants');
 
@@ -20,6 +21,7 @@ const LOG_TAG = '[UBII MasterNode]';
 class MasterNode {
   constructor() {
     this.id = uuidv4();
+    this.logger = logger;
   }
 
   init() {
@@ -34,6 +36,7 @@ class MasterNode {
     this.topicDataBuffer = new RuntimeTopicData();
     this.topicDataProxy = new TopicDataProxy(this.topicDataBuffer);
     this.deviceManager = new DeviceManager();
+    this.deviceManager.on(DeviceManager.EVENTS.NEW_DEVICE, (deviceSpecs) => this.onNewDevice(deviceSpecs));
 
     this.notifyConditionManager = new NotifyConditionManager(this.topicDataBuffer, this.deviceManager);
 
@@ -56,13 +59,18 @@ class MasterNode {
     ClientManager.instance.setDependencies(this.connectionsManager, this.topicDataBuffer, this.deviceManager);
 
     // Device Manager Component:
-    this.deviceManager.setDependencies(this.topicDataBuffer, this);
+    this.deviceManager.setDependencies(this);
 
     // PM Manager Component:
     this.processingModuleManager = new ProcessingModuleManager(this.id, this.topicDataProxy);
 
     // Session manager component:
-    SessionManager.instance.setDependencies(this.id, this.topicDataBuffer, this.processingModuleManager, this.deviceManager);
+    SessionManager.instance.setDependencies(
+      this.id,
+      this.topicDataBuffer,
+      this.processingModuleManager,
+      this.deviceManager
+    );
 
     // Service Manager Component:
     ServiceManager.instance.setDependencies(
@@ -227,14 +235,14 @@ class MasterNode {
     });
   }
 
-  publishRecord(record, clientId) {
+  publishRecord(record, nodeId) {
     record.tReceived = Date.now();
-    !clientId &&
+    !nodeId &&
       logger.warn({
         label: LOG_TAG,
-        message: 'publishRecord() - no client ID: ' + clientId
+        message: 'publishRecord() - no client ID: ' + nodeId
       });
-    this.topicDataBuffer.publish(record.topic, record, clientId);
+    this.topicDataBuffer.publish(record.topic, record, nodeId);
   }
 
   getDependency(depIdentifier) {
@@ -251,6 +259,17 @@ class MasterNode {
     }
 
     return dependency;
+  }
+
+  onNewDevice(specs) {
+    this.publishRecord(
+      {
+        topic: DEFAULT_TOPICS.INFO_TOPICS.NEW_DEVICE,
+        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.DEVICE),
+        device: specs
+      },
+      this.id
+    );
   }
 }
 

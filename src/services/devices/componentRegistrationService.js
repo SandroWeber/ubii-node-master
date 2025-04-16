@@ -33,6 +33,8 @@ class ComponentRegistrationService extends Service {
       };
     }
 
+    /*console.info(ComponentRegistrationService.LOG_TAG);
+    console.info(specs);*/
     // Process the registration of the sepcified device at the device manager
     let component = undefined;
     try {

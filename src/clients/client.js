@@ -226,7 +226,7 @@ class Client {
         message:
           'subscriptionCallback() - topic "' + record.topic + '" has no info on publisher ID(' + publisherId + ')'
       });
-    let component = this.deviceManager.getComponentByTopic(record.topic);
+    let component = this.deviceManager.getComponent({ topic: record.topic });
     if (component && component.hasNotifyConditions()) {
       const clientProfilePub = this.clientManager.getClient(publisherId)?.toProtobuf();
       const clientProfileSub = this.toProtobuf();
@@ -421,7 +421,7 @@ class Client {
     return {
       id: this.id,
       name: this.name,
-      devices: this.devices.map(device => device.toProtobuf()),
+      devices: this.devices.map((device) => device.toProtobuf()),
       tags: this.tags,
       description: this.description,
       processingModules: this.processingModules,

@@ -47,14 +47,14 @@ class SessionManager extends EventEmitter {
 
   createSession(specs = {}) {
     if (specs.id && this.getSession(specs.id)) {
-      logger.error({ label: LOG_TAG, message: 'Session ID already exists: ' + specs.id });
+      logger.error({ label: SessionManager.LOG_TAG, message: 'Session ID already exists: ' + specs.id });
       throw new Errror('Session with ID ' + specs.id + ' already exists.');
     }
 
     let session = new Session(specs, this.masterNodeID, this.topicData, this.processingModuleManager, this.deviceManager);
     if (!session.ioMappings || session.ioMappings.length === 0) {
       logger.warn({
-        label: LOG_TAG,
+        label: SessionManager.LOG_TAG,
         message: session.toString() + ' has no I/O Mappings (topics <-> processing modules)'
       });
     }
@@ -82,7 +82,7 @@ class SessionManager extends EventEmitter {
           session.toString() +
           ', list of PMs not running:\n' +
           pmList.map((pm) => 'ProcessingModule "' + pm.name + '" (ID ' + pm.id + ')');
-        logger.error({ label: LOG_TAG, message: msg });
+        logger.error({ label: SessionManager.LOG_TAG, message: msg });
       });
     }
   }
@@ -120,7 +120,7 @@ class SessionManager extends EventEmitter {
 
   startSession(session) {
     session.on(Session.EVENTS.START_SUCCESS, () => {
-      logger.info({ label: LOG_TAG, message: 'succesfully started ' + session.toString() });
+      logger.info({ label: SessionManager.LOG_TAG, message: 'succesfully started ' + session.toString() });
       this.topicData.publish(DEFAULT_TOPICS.INFO_TOPICS.RUNNING_SESSION, {
         topic: DEFAULT_TOPICS.INFO_TOPICS.RUNNING_SESSION,
         type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.SESSION),
@@ -128,7 +128,7 @@ class SessionManager extends EventEmitter {
       });
     });
     session.on(Session.EVENTS.START_FAILURE, () => {
-      logger.error({ label: LOG_TAG, message: 'failed to start ' + session.toString() });
+      logger.error({ label: SessionManager.LOG_TAG, message: 'failed to start ' + session.toString() });
     });
 
     session.start();
@@ -146,7 +146,7 @@ class SessionManager extends EventEmitter {
           let onSessionStartSuccess = () => {
             sessionIds = sessionIds.filter((id) => id !== session.id);
             if (sessionIds.length === 0) {
-              logger.info({ label: LOG_TAG, message: 'all sessions started' });
+              logger.info({ label: SessionManager.LOG_TAG, message: 'all sessions started' });
               resolve();
             }
           };
@@ -157,7 +157,7 @@ class SessionManager extends EventEmitter {
 
       setTimeout(() => {
         if (sessionIds.length > 0) {
-          logger.error({ label: LOG_TAG, message: 'failed to start all sessions, remaining: ' + sessionIds });
+          logger.error({ label: SessionManager.LOG_TAG, message: 'failed to start all sessions, remaining: ' + sessionIds });
           reject();
         }
       }, SessionManager.CONSTANTS.TIMEOUT_START_SESSION);
@@ -176,10 +176,10 @@ class SessionManager extends EventEmitter {
 
   stopSession(session) {
     session.on(Session.EVENTS.STOP_SUCCESS, () => {
-      logger.info({ label: LOG_TAG, message: 'succesfully stopped ' + session.toString() });
+      logger.info({ label: SessionManager.LOG_TAG, message: 'succesfully stopped ' + session.toString() });
     });
     session.on(Session.EVENTS.STOP_FAILURE, () => {
-      logger.error({ label: LOG_TAG, message: 'failed to stop ' + session.toString() });
+      logger.error({ label: SessionManager.LOG_TAG, message: 'failed to stop ' + session.toString() });
     });
 
     session.stop();

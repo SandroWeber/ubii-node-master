@@ -1,8 +1,10 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
+const { Service } = require('../service.js');
+
 const LOG_TAG = 'ServiceNotifyConditionRemove';
 
-class ServiceNotifyConditionRemove {
+class ServiceNotifyConditionRemove extends Service {
   constructor(notifyConditionsManager) {
     super(
       DEFAULT_TOPICS.SERVICES.NOTIFY_CONDITION_REMOVE,

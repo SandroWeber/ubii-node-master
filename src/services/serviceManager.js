@@ -33,6 +33,7 @@ const ServiceNotifyConditionRemove = require('./conditions/serviceNotifyConditio
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
+const { ComponentRegistrationService } = require('./devices/componentRegistrationService.js');
 
 const logger = LoggingService.instance.logger;
 const LOG_TAG = '[UBII ServiceManager]';
@@ -59,7 +60,14 @@ class ServiceManager {
     return _instance;
   }
 
-  setDependencies(masterNodeID, connectionsManager, processingModuleManager, topicData, deviceManager, notifyConditionsManager) {
+  setDependencies(
+    masterNodeID,
+    connectionsManager,
+    processingModuleManager,
+    topicData,
+    deviceManager,
+    notifyConditionsManager
+  ) {
     this.masterNodeID = masterNodeID;
     this.connectionsManager = connectionsManager;
     this.processingModuleManager = processingModuleManager;
@@ -83,6 +91,7 @@ class ServiceManager {
     this.addService(new DeviceDeregistrationService(this.deviceManager));
     this.addService(new DeviceGetListService(this.deviceManager, ClientManager.instance));
     this.addService(new ComponentGetListService(this.deviceManager));
+    this.addService(new ComponentRegistrationService(this.deviceManager));
     /* processing module services */
     this.addService(new ProcessingModuleDatabaseGetService());
     this.addService(new ProcessingModuleDatabaseGetListService(ClientManager.instance));

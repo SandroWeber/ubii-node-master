@@ -11,19 +11,10 @@ const logger = LoggingService.instance.logger;
 class Device {
   static LOG_TAG = '[UBII Device]';
 
-  constructor(specs, client) {
-    if (new.target === Device) {
-      throw new TypeError('Cannot construct Device instances directly');
-    }
-
+  constructor(specs) {
     specs && Object.assign(this, specs);
     this.id = uuidv4();
     this.components = [];
-    specs.components &&
-      specs.components.forEach((spec) => {
-        spec.deviceId = this.id;
-        this.components.push(new Component(spec, client));
-      });
   }
 
   addComponent(component) {
@@ -33,8 +24,10 @@ class Device {
       return;
     }
 
-    if (component.deviceId !== this.id) {
-      logger.warn(Device.LOG_TAG + ' ' + this.toString() + ' - trying to add component that already has a device ID assigned');
+    if (component.deviceId && component.deviceId !== this.id) {
+      logger.warn(
+        Device.LOG_TAG + ' ' + this.toString() + ' - trying to add component that already has a device ID assigned'
+      );
       logger.warn(component);
       return;
     }
@@ -74,7 +67,7 @@ class Device {
   }
 
   toString() {
-    return this.name + '(ID ' + this.id + ')';
+    return this.name + ' (ID ' + this.id + ')';
   }
 }
 

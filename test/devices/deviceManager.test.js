@@ -1,15 +1,10 @@
 const DeviceManager = require('../../src/devices/deviceManager');
+/*const MasterNode = require('../../src/node/masterNode');
+jest.mock('../../src/node/masterNode');*/
 
-test('registerComponentSpecs()', () => {
-  let deviceManager = new DeviceManager();
-  let componentSpec = {
-    name: 'my test component'
-  };
-  let component = deviceManager.registerComponentSpecs(componentSpec);
-  let component2 = deviceManager.registerComponentSpecs(componentSpec);
-  expect(component.id).not.toBe(component2.id);
-  expect(component.topic).not.toBe(component2.topic);
-});
+/*beforeEach(() => {
+  MasterNode.mockClear();
+});*/
 
 test('getAllComponents()', () => {
   let deviceManager = new DeviceManager();
@@ -21,6 +16,17 @@ test('getAllComponents()', () => {
   deviceManager.registerComponentSpecs(componentSpec);
   deviceManager.registerComponentSpecs(componentSpec);
   expect(deviceManager.getAllComponents().length).toBe(3);
+});
+
+test('registerComponentSpecs()', () => {
+  let deviceManager = new DeviceManager();
+  let componentSpec = {
+    name: 'my test component'
+  };
+  let component = deviceManager.registerComponentSpecs(componentSpec);
+  let component2 = deviceManager.registerComponentSpecs(componentSpec);
+  expect(component.id).not.toBe(component2.id);
+  expect(component.topic).not.toBe(component2.topic);
 });
 
 test('registerComponentSpecs() - existing topic', () => {
@@ -59,7 +65,7 @@ test('registerDeviceSpecs() - existing id', () => {
     name: 'my test component'
   };
   let device = deviceManager.registerDeviceSpecs(deviceSpec);
-  expect(deviceManager.registerDeviceSpecs({ id: device.id })).not.toBeDefined();
+  expect(deviceManager.registerDeviceSpecs({ id: device.id })).toThrow();
   expect(deviceManager.getAllDevices().length).toBe(1);
 });
 
