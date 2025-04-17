@@ -253,6 +253,8 @@ class MasterNode {
       returndependency = this.deviceManager;
     } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS) {
       dependency = ClientManager.instance;
+    } else if (depIdentifier === MASTER_NODE_CONSTANTS.MANAGERS.NOTIFY_CONDITIONS) {
+      dependency = this.notifyConditionManager;
     }
     if (!dependency) {
       logger.error({ label: LOG_TAG, message: `could not find dependency for "${depIdentifier}"` });

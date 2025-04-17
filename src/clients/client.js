@@ -231,6 +231,10 @@ class Client {
       const clientProfilePub = this.clientManager.getClient(publisherId)?.toProtobuf();
       const clientProfileSub = this.toProtobuf();
 
+      console.info(
+        'subscriptionCallback() checkNotifyConditions(): ' +
+          component.checkNotifyConditions(clientProfilePub, clientProfileSub)
+      );
       if (
         clientProfilePub &&
         clientProfileSub &&
