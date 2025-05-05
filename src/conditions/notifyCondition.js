@@ -28,7 +28,7 @@ let getTopicDataRecord = (topicDataSource, clientProfile) => {
       }
       matchingComponents = FilterUtils.filterAll([topicDataSource.component], matchingComponents);
     } else {
-      matchingComponents = globalDeviceManager.getComponentsByProfile(topicDataSource.component);
+      matchingComponents = globalDeviceManager.getComponents(topicDataSource.component);
     }
 
     if (matchingComponents.length === 1) {

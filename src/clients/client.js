@@ -388,7 +388,7 @@ class Client {
     };
     this.componentSubscriptions.set(componentProfile, subscription);
 
-    let matchingComponents = this.deviceManager.getComponentsByProfile(componentProfile);
+    let matchingComponents = this.deviceManager.getComponents(componentProfile);
     for (let component of matchingComponents) {
       let token = this.topicData.subscribeTopic(component.topic, (record, publisherId) =>
         this.subscriptionCallback(record, publisherId)
