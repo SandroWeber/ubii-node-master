@@ -55,17 +55,6 @@ class DeviceManager extends EventEmitter {
     return Array.from(this.devices.values());
   }
 
-  getDevicesByClientId(clientId) {
-    let devices = [];
-    for (const [deviceID, device] of this.devices) {
-      if (device.clientId === clientId) {
-        devices.push(device);
-      }
-    }
-
-    return devices;
-  }
-
   /**
    * Create a device object based on the provided specifications.
    * @param {ubii.devices.Device} specs The protobuf description of the device.

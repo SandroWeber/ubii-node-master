@@ -23,7 +23,6 @@ class Component {
     if (!this.notifyConditionsManager) throw new Error(Component.LOG_TAG + ' can not access NotifyConditionsManager!');
 
     this.conditions = [];
-    console.info(this.notifyConditionIds);
     for (const conditionId of this.notifyConditionIds) {
       const condition = this.notifyConditionsManager.getNotifyCondition({ id: conditionId });
       if (condition) {
@@ -33,12 +32,6 @@ class Component {
           label: Component.LOG_TAG + ' ' + this.toString(),
           message: `
           Could not find NotifyCondition with ID "${conditionId}", pushed artificial condition that always evaluates to false to avoid unwanted propagation.`
-        });
-        this.conditions.push({
-          evaluate: () => {
-            console.info('artificial condition evaluate()');
-            return false;
-          }
         });
       }
     }

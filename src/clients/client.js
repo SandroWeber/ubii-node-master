@@ -101,7 +101,7 @@ class Client {
     this.stopLifeMonitoring();
     this.unsubscribeAll();
     this.deletePublishedTopics();
-    //this.removeTopicsOfRegisteredComponents();
+    this.removeTopicsOfRegisteredComponents();
   }
 
   /**
@@ -231,10 +231,6 @@ class Client {
       const clientProfilePub = this.clientManager.getClient(publisherId)?.toProtobuf();
       const clientProfileSub = this.toProtobuf();
 
-      console.info(
-        'subscriptionCallback() checkNotifyConditions(): ' +
-          component.checkNotifyConditions(clientProfilePub, clientProfileSub)
-      );
       if (
         clientProfilePub &&
         clientProfileSub &&
@@ -413,13 +409,13 @@ class Client {
     //TODO
   }
 
-  /*removeTopicsOfRegisteredComponents() {
-    for (const device of this.deviceManager.getDevicesByClientId(this.id)) {
+  removeTopicsOfRegisteredComponents() {
+    for (const device of this.deviceManager.getDevices({ clientId: this.id })) {
       for (const component of device.components) {
         this.topicData.remove(component.topic);
       }
     }
-  }*/
+  }
 
   toProtobuf() {
     return {
