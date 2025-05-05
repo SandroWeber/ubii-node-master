@@ -6,24 +6,11 @@ const MASTER_NODE_CONSTANTS = require('../node/constants');
 const logger = LoggingService.instance.logger;
 const LOG_TAG = '[UBII NotifyConditionManager]';
 
-let _instance = null;
-const SINGLETON_ENFORCER = Symbol();
-
 class NotifyConditionManager {
-  constructor(enforcer) {
-    if (enforcer !== SINGLETON_ENFORCER) {
-      throw new Error('Use ' + this.constructor.name + '.instance');
-    }
-
+  constructor(topicDataBuffer, deviceManager) {
     this.notifyConditions = new Map();
-  }
-
-  static get instance() {
-    if (_instance == null) {
-      _instance = new NotifyConditionManager(SINGLETON_ENFORCER);
-    }
-
-    return _instance;
+    this.topicDataBuffer = topicDataBuffer;
+    this.deviceManager = deviceManager;
   }
 
   setUbiiNode(ubiiNode) {

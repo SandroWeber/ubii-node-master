@@ -5,9 +5,7 @@ const { MasterNode } = require('./node/masterNode');
 const { Client } = require('./clients/client');
 const { ClientManager } = require('./clients/clientManager');
 
-const { DeviceManager } = require('./devices/deviceManager');
-const { Watcher } = require('./devices/watcher');
-const { Participant } = require('./devices/participant');
+const DeviceManager = require('./devices/deviceManager');
 const { TopicMultiplexer } = require('./devices/topicMultiplexer');
 const { TopicDemultiplexer } = require('./devices/topicDemultiplexer');
 
@@ -24,8 +22,6 @@ module.exports = {
   Client,
   ClientManager,
   DeviceManager,
-  Watcher,
-  Participant,
   TopicMultiplexer,
   TopicDemultiplexer,
   Session,

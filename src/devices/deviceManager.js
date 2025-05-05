@@ -1,338 +1,205 @@
 const EventEmitter = require('events');
 
-const { proto, MSG_TYPES, DEFAULT_TOPICS } = require('@tum-far/ubii-msg-formats');
 const { LoggingService } = require('@tum-far/ubii-node-nodejs');
 
-const { Participant } = require('./../devices/participant.js');
-const { Watcher } = require('./../devices/watcher.js');
-const { TopicMultiplexer } = require('./../devices/topicMultiplexer.js');
-const { TopicDemultiplexer } = require('./../devices/topicDemultiplexer.js');
+const Device = require('./device.js');
+const { TopicMultiplexer } = require('./topicMultiplexer.js');
+const { TopicDemultiplexer } = require('./topicDemultiplexer.js');
 const FilterUtils = require('../utils/filterUtils.js');
-const Utils = require('../utils/utilities');
 
 const MASTER_NODE_CONSTANTS = require('../node/constants');
+const Component = require('./component.js');
 
 const logger = LoggingService.instance.logger;
-const LOG_TAG = '[UBII DeviceManager]';
-
-let _instance = null;
-const SINGLETON_ENFORCER = Symbol();
 
 /**
  * The DeviceManager manages Device objects. It is part of a server node.
  * The server node uses it to manages all entities that interact with the functionalities of the server.
  */
 class DeviceManager extends EventEmitter {
-  constructor(enforcer) {
+  static LOG_TAG = '[UBII DeviceManager]';
+
+  constructor() {
     super();
 
-    if (enforcer !== SINGLETON_ENFORCER) {
-      throw new Error('Use ' + this.constructor.name + '.instance');
-    }
-
-    this.participants = new Map();
-    this.watchers = new Map();
+    this.devices = new Map();
     this.topicMuxers = new Map();
     this.topicDemuxers = new Map();
+    this.mapTopic2Component = new Map();
   }
 
-  static get instance() {
-    if (_instance == null) {
-      _instance = new DeviceManager(SINGLETON_ENFORCER);
-    }
-
-    return _instance;
+  setDependencies(masterNode) {
+    this.topicData = masterNode.getDependency(MASTER_NODE_CONSTANTS.TOPIC_DATA_BUFFER);
+    this.clientManager = masterNode.getDependency(MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS);
+    this.notifyConditionsManager = masterNode.getDependency(MASTER_NODE_CONSTANTS.MANAGERS.NOTIFY_CONDITIONS);
   }
 
-  setDependencies(topicDataBuffer, masterNode) {
-    this.topicData = topicDataBuffer;
-    this.masterNode = masterNode;
-    this.clientManager = this.masterNode.getDependency(MASTER_NODE_CONSTANTS.MANAGERS.CLIENTS);
+  hasDevice(id) {
+    return this.devices.has(id);
   }
 
   getDevice(id) {
-    if (this.hasParticipant(id)) {
-      return this.getParticipant(id);
-    } else if (this.hasWatcher(id)) {
-      return this.getWatcher(id);
+    this.devices.get(id);
+  }
+
+  getDevices(profile) {
+    if (profile.id) {
+      return [this.devices.get(id)];
+    } else {
+      const devices = this.getAllDevices();
+      return FilterUtils.filterAll([profile], devices);
     }
+  }
+
+  getAllDevices() {
+    return Array.from(this.devices.values());
+  }
+
+  /**
+   * Create a device object based on the provided specifications.
+   * @param {ubii.devices.Device} specs The protobuf description of the device.
+   * @returns The created device.
+   */
+  createDevice(specs) {
+    let device = new Device(specs);
+
+    for (let componentSpec of specs.components) {
+      let component = this.getComponent({ topic: componentSpec.topic });
+      if (!component) {
+        component = this.registerComponentSpecs(componentSpec);
+      }
+      device.addComponent(component);
+    }
+    // add device to client specs
+    if (device.clientId) {
+      let client = this.clientManager.getClient(device.clientId);
+      if (client) {
+        client.devices.push(device);
+      } else {
+        logger.error({
+          label: DeviceManager.LOG_TAG,
+          message: `client with ID ${device.clientId} does not exist, can not create device.`
+        });
+      }
+    }
+
+    this.devices.set(device.id, device);
+
+    return device;
   }
 
   removeDevice(id) {
-    if (this.hasParticipant(id)) {
-      this.getParticipant(id).components.forEach((component) => {
-        this.topicData.remove(component.topic);
-      });
-      this.removeParticipant(id);
-    } else if (this.hasWatcher(id)) {
-      this.removeWatcher(id);
-    }
+    this.devices.delete(id);
   }
-
-  removeClientDevices(clientID) {
-    this.participants.forEach((participant) => {
-      if (participant.clientId === clientID) {
-        this.removeDevice(participant.id);
-      }
-    });
-    this.watchers.forEach((watcher) => {
-      if (watcher.clientId === clientID) {
-        this.removeDevice(watcher.id);
-      }
-    });
-  }
-
-  // Participants utilities:
-
-  /**
-   * Get the participant with the specified identifier.
-   * @param {String} id Universally unique identifier of a Device.
-   * @returns Device object with the specified identifier.
-   */
-  getParticipant(id) {
-    return this.participants.get(id);
-  }
-
-  /**
-   * Get a list of all participants.
-   * @returns {array} The list of participants.
-   */
-  getAllParticipants() {
-    return Array.from(this.participants.values());
-  }
-
-  /**
-   * Is there a participant with the specified identifier in the participants map?
-   * @param {String} id Universally unique identifier of a Device.
-   * @returns Boolean indicating if there is a participant with the specified identifier.
-   */
-  hasParticipant(id) {
-    return this.participants.has(id);
-  }
-
-  /**
-   * Add the specified participant to the participants map.
-   * @param {Object} device
-   */
-  addParticipant(device) {
-    this.participants.set(device.id, device);
-    // add device to client specs
-    let client = this.clientManager.getClient(device.clientId);
-    if (client) {
-      client.devices.push(device.toProtobuf());
-    }
-  }
-
-  /**
-   * Remove the participant with the specified identiier from the participants map.
-   * @param {String} id Universally unique identifier of a Device.
-   */
-  removeParticipant(id) {
-    let participant = this.getParticipant(id);
-    let client = this.clientManager.getClient(participant.clientId);
-    if (client) {
-      // remove device from client specs
-      let index = client.devices.findIndex((device) => device.id === id);
-      if (index > -1) {
-        client.devices.splice(index, 1);
-      }
-    }
-    // deactivate and remove participant
-    participant.deactivate();
-    this.participants.delete(id);
-  }
-
-  /**
-   * Verify the specified participant.
-   * @param {String} id Universally unique identifier of a Device.
-   * @returns Returns true if the specified client is a verfied client, returns false otherwise.
-   */
-  verifyParticipant(id) {
-    if (!this.hasParticipant(id)) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  // Watchers utilities:
-
-  /**
-   * Get the watcher with the specified identifier.
-   * @param {String} id Universally unique identifier of a Device.
-   * @returns Watcher object with the specified identifier.
-   */
-  getWatcher(id) {
-    return this.watchers.get(id);
-  }
-
-  /**
-   * Is there a watcher with the specified identifier in the watchers map?
-   * @param {String} id Universally unique identifier of a Device.
-   * @returns Boolean indicating if there is a watcher with the specified identifier.
-   */
-  hasWatcher(id) {
-    return this.watchers.has(id);
-  }
-
-  /**
-   * Add the specified watcher to the watchers map.
-   * @param {Object} watcher
-   */
-  addWatcher(watcher) {
-    this.watchers.set(watcher.id, watcher);
-  }
-
-  /**
-   * Remove the watcher with the specified id from the watchers map.
-   * @param {String} deviceIdentifier Universally unique identifier of a Device.
-   */
-  removeWatcher(deviceIdentifier) {
-    this.getWatcher(deviceIdentifier).deactivate();
-    this.watchers.delete(deviceIdentifier);
-  }
-
-  /**
-   * Register the passed device as watcher and initializes the behavior of the watcher.
-   * @param {Object} device
-   */
-  registerWatcher(device) {
-    // Register the watcher.
-    this.addWatcher(device);
-
-    // Initially introduce all topics currently available in the topic data to new watchers.
-    device.introduceTopicDataToRemote();
-
-    // Subscribe the watcher to all current and future topics.
-    // (because watchers should get notified about any changes in the topic data)
-    device.subscribeAll();
-  }
-
-  /**
-   * Verify the specified watcher.
-   * @param {String} deviceIdentifier Universally unique identifier of a Device.
-   * @returns Returns true if the specified device is a verfied watcher, returns false otherwise.
-   */
-  verifyWatcher(deviceIdentifier) {
-    if (!this.hasWatcher(deviceIdentifier)) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  // Message and request process methods:
 
   /**
    * Process the registration of the specified device at the device manager.
-   * @param {Object} deviceSpec
-   * @returns Returns the payload of the process result. This can be the device specification or an error.
+   * @param {Object} specs
+   * @returns On success returns the specifications of the created device.
    */
-  registerDeviceSpecs(deviceSpec) {
-    // Prepare some variables.
-    let deviceID = deviceSpec.id;
-    let clientID = deviceSpec.clientId;
-
-    // Check if the device is already registered as participant...
-    if (deviceID && this.hasParticipant(deviceID)) {
-      // ... if so, check the state of the registered client if reregistering is possible.
-      if (
-        this.clientManager.getClient(clientID).registrationDate < this.getParticipant(deviceID).lastSignOfLife ||
-        deviceSpec.deviceType !== 'PARTICIPANT'
-      ) {
-        // -> REregistering is not an option: Reject the registration.
-        logger.error({
-          label: LOG_TAG,
-          message: 'The Device with ID ' + deviceID + ' is already registered as participant'
-        });
-
-        throw new Error(msg);
-      } else {
-        // -> REregistering is possible: Prepare the registration.
-        logger.warn({
-          label: LOG_TAG,
-          message:
-            'Reregistration of Participant with ID ' +
-            deviceID +
-            ' initialized because it is already registered but the corresponding client was reregistered since ' +
-            'the last sign of life of this device.'
-        });
-
-        // Prepare the reregistration.
-        this.removeParticipant(deviceID);
-
-        // Continue with the normal registration process...
-      }
-    }
-
-    // ... or watcher.
-    if (deviceID && this.hasWatcher(deviceID)) {
-      // ... if so, check the state of the registered client if reregistering is possible.
-      if (
-        this.clientManager.getClient(clientID).registrationDate < this.getWatcher(deviceID).lastSignOfLife ||
-        deviceSpec.deviceType !== 'WATCHER'
-      ) {
-        // -> REregistering is not an option: Reject the registration.
-        logger.error({
-          label: LOG_TAG,
-          message: 'The Device with ID ' + deviceID + ' is already registered as watcher'
-        });
-
-        throw new Error(msg);
-      } else {
-        // -> REregistering is possible: Prepare the registration.
-        logger.warn({
-          label: LOG_TAG,
-          message:
-            'Reregistration of Watcher with ID ' +
-            deviceID +
-            ' initialized because it is already registered but the corresponding client was reregistered since ' +
-            'the last sign of life of this device.'
-        });
-
-        // Prepare the reregistration.
-        this.removeParticipant(deviceID);
-
-        // Continue with the normal registration process...
-      }
-    }
-
-    let currentDevice = {};
-    // Handle the registration of a participant.
-    if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.PARTICIPANT) {
-      currentDevice = new Participant(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
-      this.addParticipant(currentDevice);
-    }
-    // Handle the registration of a watcher.
-    else if (deviceSpec.deviceType === proto.ubii.devices.Device.DeviceType.WATCHER) {
-      currentDevice = new Watcher(deviceSpec, this.clientManager.getClient(clientID), this.topicData);
-      this.registerWatcher(currentDevice);
-    } else {
+  registerDeviceSpecs(specs) {
+    let deviceID = specs.id;
+    if (deviceID && this.hasDevice(deviceID)) {
+      const msg = 'The Device with ID ' + deviceID + ' is already registered';
       logger.error({
-        label: LOG_TAG,
-        message: 'device type not specified while trying to register'
+        label: DeviceManager.LOG_TAG,
+        message: msg
       });
-      throw new Error(message);
+
+      throw new Error(msg);
     }
+
+    if (!specs.clientId || !this.clientManager.hasClient(specs.clientId)) {
+      const msg = `Trying to register device without clientId or existing client: clientId = ${
+        specs.clientId
+      }, client existing =  ${this.clientManager.hasClient(specs.clientId)}`;
+      logger.error({
+        label: DeviceManager.LOG_TAG,
+        message: msg
+      });
+
+      throw new Error(msg);
+    }
+
+    let device = this.createDevice(specs);
 
     logger.info({
-      label: LOG_TAG,
-      message: 'New Device with ID ' + currentDevice.id + ' registered'
+      label: DeviceManager.LOG_TAG,
+      message: 'New Device "' + device.toString() + '" registered'
     });
 
-    let deviceSpecs = currentDevice.toProtobuf();
-    this.emit(DeviceManager.EVENTS.NEW_DEVICE, deviceSpecs);
-    this.masterNode.publishRecord(
-      {
-        topic: DEFAULT_TOPICS.INFO_TOPICS.NEW_DEVICE,
-        type: Utils.getTopicDataTypeFromMessageFormat(MSG_TYPES.DEVICE),
-        device: deviceSpecs
-      },
-      this.masterNode.id
-    );
+    let deviceSpecs = device.toProtobuf();
+    this.emit(DeviceManager.EVENTS.DEVICE_NEW, deviceSpecs);
 
-    // Return the deviceSpecification payload.
-    return currentDevice;
+    return deviceSpecs;
+  }
+
+  getComponent({ id, topic }) {
+    if (topic) {
+      return this.mapTopic2Component.get(topic);
+    } else if (id) {
+      return this.getAllComponents().find((component) => component.id === id);
+    }
+  }
+
+  getComponents(profile) {
+    let components = [];
+    if (profile.topic) {
+      components.push(this.mapTopic2Component.get(profile.topic));
+    } else {
+      const components = this.getAllComponents();
+      components.push(...FilterUtils.filterAll([profile], components));
+    }
+
+    return components;
+  }
+
+  getAllComponents() {
+    return [...this.mapTopic2Component.values()];
+  }
+
+  registerComponentSpecs(specs) {
+    let component = this.getComponent({ topic: specs.topic });
+    if (component) {
+      logger.warn(
+        this.LOG_TAG + ' registerComponentSpecs() - component with topic "' + specs.topic + '" already exists'
+      );
+      return undefined;
+    }
+    component = this.getComponent({ id: specs.id });
+    if (component) {
+      logger.warn(this.LOG_TAG + ' registerComponentSpecs() - component with ID "' + specs.id + '" already exists');
+      return undefined;
+    }
+
+    component = new Component(specs, this.notifyConditionsManager);
+    this.mapTopic2Component.set(component.topic, component);
+
+    return component;
+  }
+
+  removeComponents(profile) {
+    let components = this.getComponents(profile);
+    for (let component of components) {
+      let devices = this.getDevices({ components: [component] });
+      for (let device of devices) {
+        device.removeComponent(component);
+      }
+      this.topicData.remove(component.topic);
+      this.mapTopic2Component.delete(profile.topic);
+    }
+  }
+
+  onClientRemoved(clientProfile) {
+    let ownedComponents = this.getComponents({ clientId: clientProfile.id });
+    for (let component of ownedComponents) {
+      this.removeComponents(component);
+    }
+
+    let ownedDevices = this.getDevices({ clientId: clientProfile.id });
+    for (let device of ownedDevices) {
+      this.removeDevice(device.id);
+    }
   }
 
   createTopicMuxerBySpecs(specs, topicDataBuffer = this.topicData) {
@@ -402,49 +269,13 @@ class DeviceManager extends EventEmitter {
   getTopicDemuxList() {
     return Array.from(this.topicDemuxers.values());
   }
-
-  getAllComponents() {
-    let componentList = [];
-    for (const [deviceID, device] of this.participants) {
-      for (const component of device.components) {
-        componentList.push(component);
-      }
-    }
-
-    return componentList;
-  }
-
-  getComponentsByProfile(profile) {
-    const components = this.getAllComponents();
-    return FilterUtils.filterAll([profile], components);
-  }
-
-  getComponentByTopic(topic) {
-    for (const [deviceID, device] of this.participants) {
-      for (const component of device.components) {
-        if (component.topic === topic) {
-          return component;
-        }
-      }
-    }
-  }
-
-  getDevicesByClientId(clientId) {
-    let devices = [];
-    for (const [deviceID, device] of this.participants) {
-      if (device.clientId === clientId) {
-        devices.push(device);
-      }
-    }
-
-    return devices;
-  }
 }
 
 DeviceManager.EVENTS = Object.freeze({
-  NEW_DEVICE: 'NEW_DEVICE'
+  DEVICE_NEW: 'DEVICE_NEW',
+  DEVICE_REMOVED: 'DEVICE_REMOVED',
+  COMPONENT_NEW: 'COMPONENT_NEW',
+  COMPONENT_REMOVED: 'COMPONENT_REMOVED'
 });
 
-module.exports = {
-  DeviceManager: DeviceManager
-};
+module.exports = DeviceManager;

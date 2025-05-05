@@ -5,15 +5,19 @@ const FilterUtils = require('../../utils/filterUtils');
 
 class DeviceGetListService extends Service {
   constructor(deviceManager, clientManager) {
-    super(DEFAULT_TOPICS.SERVICES.DEVICE_GET_LIST, 'none, ' + MSG_TYPES.DEVICE_LIST, MSG_TYPES.DEVICE_LIST + ', ' + MSG_TYPES.ERROR);
+    super(
+      DEFAULT_TOPICS.SERVICES.DEVICE_GET_LIST,
+      'none, ' + MSG_TYPES.DEVICE_LIST,
+      MSG_TYPES.DEVICE_LIST + ', ' + MSG_TYPES.ERROR
+    );
 
     this.deviceManager = deviceManager;
     this.clientManager = clientManager;
   }
 
   reply(request) {
-    let devices = this.deviceManager
-      .getAllParticipants()
+    let devices = this.deviceManager.getAllDevices();
+    devices = devices
       .filter(
         (device) => this.clientManager.getClient(device.clientId).state !== proto.ubii.clients.Client.State.UNAVAILABLE
       )

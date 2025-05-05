@@ -15,42 +15,41 @@ class DeviceRegistrationService extends Service {
     this.deviceManager = deviceManager;
   }
 
-  reply(deviceSpecs) {
+  reply(requestedDeviceSpecs) {
     // Verify the device and act accordingly.
-    if (!ClientManager.instance.verifyClient(deviceSpecs.clientId)) {
-      let msg = `There is no Client registered with ID "${deviceSpecs.clientId}"`;
+    if (!ClientManager.instance.verifyClient(requestedDeviceSpecs.clientId)) {
+      let msg = `There is no Client registered with ID "${requestedDeviceSpecs.clientId}"`;
       logger.error({ label: LOG_TAG, message: msg });
 
       return {
         error: {
-          title: LOG_TAG,
+          title: DeviceRegistrationService.LOG_TAG,
           message: msg
         }
       };
     }
 
     // Process the registration of the sepcified device at the device manager
-    let device = undefined;
+    let deviceSpecs = undefined;
     try {
-      device = this.deviceManager.registerDeviceSpecs(deviceSpecs);
+      deviceSpecs = this.deviceManager.registerDeviceSpecs(requestedDeviceSpecs);
     } catch (error) {
       console.error(error);
       return {
         error: {
-          title: LOG_TAG,
+          title: DeviceRegistrationService.LOG_TAG,
           message: error && error.toString(),
           stack: error.stack && error.stack.toString()
         }
       };
     }
 
-    if (device !== undefined) {
-      let specs = device.toProtobuf();
-      return { device: specs };
+    if (deviceSpecs !== undefined) {
+      return { device: deviceSpecs };
     } else {
       return {
         error: {
-          title: LOG_TAG,
+          title: DeviceRegistrationService.LOG_TAG,
           message: 'device manager returned undefined'
         }
       };

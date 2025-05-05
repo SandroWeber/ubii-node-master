@@ -1,22 +1,23 @@
 const { DEFAULT_TOPICS, MSG_TYPES } = require('@tum-far/ubii-msg-formats');
 
 const { Service } = require('../service.js');
-const NotifyConditionManager = require('../../conditions/notifyConditionManager');
 
 const LOG_TAG = 'ServiceNotifyConditionAdd';
 
 class ServiceNotifyConditionGetList extends Service {
-  constructor() {
+  constructor(notifyConditionsManager) {
     super(
       DEFAULT_TOPICS.SERVICES.NOTIFY_CONDITION_GET_LIST,
       MSG_TYPES.NOTIFY_CONDITION,
       MSG_TYPES.NOTIFY_CONDITION + ', ' + MSG_TYPES.ERROR
     );
+
+    this.notifyConditionsManager = notifyConditionsManager;
   }
 
   reply(notifyConditionSpec) {
     try {
-      let condition = NotifyConditionManager.instance.createNotifyCondition(notifyConditionSpec);
+      let condition = this.notifyConditionsManager.createNotifyCondition(notifyConditionSpec);
       return {
         notifyCondition: condition.toProtobuf()
       };

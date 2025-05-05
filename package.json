@@ -22,25 +22,28 @@
   "scripts": {
     "start": "node scripts/startUbiiMasterNode.js",
     "start-profiling": "node --inspect scripts/startUbiiMasterNode.js",
-    "test": "ava"
+    "test-ava": "ava",
+    "test": "jest",
+    "test-silent": "jest --silent"
   },
   "keywords": [
     ""
   ],
   "devDependencies": {
     "@ava/babel": "1.0.1",
-    "ava": "6.2.0",
+    "ava": "5.3.1",
     "selfsigned": "2.0.0",
     "sinon": "19.0.2",
     "yargs": "15.4.0"
   },
   "dependencies": {
     "@tum-far/ubii-database": "0.1.1",
-    "@tum-far/ubii-msg-formats": "0.16.6",
+    "@tum-far/ubii-msg-formats": "0.16.9",
     "@tum-far/ubii-node-nodejs": "0.4.7",
     "@tum-far/ubii-topic-data": "0.4.9",
     "body-parser": "1.20.3",
     "express": "4.21.2",
+    "jest": "29.7.0",
     "printf": "0.6.1",
     "shelljs": "0.8.5",
     "uuid": "8.3.2",

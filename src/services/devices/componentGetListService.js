@@ -15,7 +15,7 @@ class ComponentGetListService extends Service {
     'Get list of available components. Optionally provide a ComponentList in request to filter by component profiles.';
   static TAGS = ['component', 'components', 'ubii.devices.ComponentList', 'get', 'filter'];
 
-  constructor() {
+  constructor(deviceManager) {
     super(
       DEFAULT_TOPICS.SERVICES.COMPONENT_GET_LIST,
       MSG_TYPES.COMPONENT_LIST,
@@ -24,6 +24,7 @@ class ComponentGetListService extends Service {
 
     this.description = ComponentGetListService.DESCRIPTION;
     this.tags = ComponentGetListService.TAGS;
+    this.deviceManager = deviceManager;
   }
 
   reply(request) {
@@ -32,7 +33,7 @@ class ComponentGetListService extends Service {
       return;
     }
 
-    let devices = DeviceManager.instance
+    let devices = this.deviceManager
       .getAllParticipants()
       .filter(
         (device) =>

@@ -22,13 +22,15 @@ let getTopicDataRecord = (topicDataSource, clientProfile) => {
   } else if (topicDataSource.type === 'component' || topicDataSource.component) {
     let matchingComponents = [];
     if (clientProfile) {
-      const devices = globalDeviceManager.getDevicesByClientId(clientProfile.id).map((device) => device.toProtobuf());
+      const devices = globalDeviceManager
+        .getDevices({ clientId: clientProfile.id })
+        .map((device) => device.toProtobuf());
       for (const device of devices) {
         matchingComponents.push(...device.components);
       }
       matchingComponents = FilterUtils.filterAll([topicDataSource.component], matchingComponents);
     } else {
-      matchingComponents = globalDeviceManager.getComponentsByProfile(topicDataSource.component);
+      matchingComponents = globalDeviceManager.getComponents(topicDataSource.component);
     }
 
     if (matchingComponents.length === 1) {
