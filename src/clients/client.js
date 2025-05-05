@@ -39,7 +39,7 @@ class Client {
     this.publishedTopics = [];
     this.latency = 0;
 
-    this.deviceManager.on(DeviceManager.EVENTS.NEW_DEVICE, (deviceSpecs) => {
+    this.deviceManager.on(DeviceManager.EVENTS.DEVICE_NEW, (deviceSpecs) => {
       this.onNewDevice(deviceSpecs);
     });
   }
@@ -101,8 +101,13 @@ class Client {
     this.stopLifeMonitoring();
     this.unsubscribeAll();
     this.deletePublishedTopics();
-    this.removeTopicsOfRegisteredComponents();
   }
+
+  removeComponents() {
+    this.deviceManager.getComponents({ clientId: this.id });
+  }
+
+  removeDevices() {}
 
   /**
    * Start the life monitoring process with state tracking and remote pinging.
@@ -407,14 +412,6 @@ class Client {
 
   onRemovedDevice(deviceSpecs) {
     //TODO
-  }
-
-  removeTopicsOfRegisteredComponents() {
-    for (const device of this.deviceManager.getDevices({ clientId: this.id })) {
-      for (const component of device.components) {
-        this.topicData.remove(component.topic);
-      }
-    }
   }
 
   toProtobuf() {

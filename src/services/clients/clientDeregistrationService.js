@@ -20,7 +20,7 @@ class ClientDeregistrationService extends Service {
     let clientString = client.toString();
 
     try {
-      this.deviceManager.removeClientDevices(client.id);
+      this.deviceManager.onClientRemoved(client.id);
       this.clientManager.removeClient(client.id);
     } catch (error) {
       logger.error({ label: LOG_TAG, message: 'ClientDeregistrationService ERROR' + error.toString() });

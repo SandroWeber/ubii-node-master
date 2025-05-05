@@ -16,8 +16,8 @@ class DeviceGetListService extends Service {
   }
 
   reply(request) {
-    let devices = this.deviceManager
-      .getAllDevices()
+    let devices = this.deviceManager.getAllDevices();
+    devices = devices
       .filter(
         (device) => this.clientManager.getClient(device.clientId).state !== proto.ubii.clients.Client.State.UNAVAILABLE
       )
@@ -25,6 +25,7 @@ class DeviceGetListService extends Service {
     if (request && request.elements) {
       devices = FilterUtils.filterAll(request.elements, devices);
     }
+    console.info(devices);
 
     return { deviceList: { elements: devices } };
   }

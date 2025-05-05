@@ -89,20 +89,7 @@ class DeviceManager extends EventEmitter {
   }
 
   removeDevice(id) {
-    if (this.hasDevice(id)) {
-      this.getDevice(id).components.forEach((component) => {
-        this.topicData.remove(component.topic);
-      });
-      this.removeDevice(id);
-    }
-  }
-
-  removeClientDevices(clientID) {
-    for (const device of this.devices) {
-      if (device.clientId === clientID) {
-        this.removeDevice(device.id);
-      }
-    }
+    this.devices.delete(id);
   }
 
   /**
@@ -142,7 +129,7 @@ class DeviceManager extends EventEmitter {
     });
 
     let deviceSpecs = device.toProtobuf();
-    this.emit(DeviceManager.EVENTS.NEW_DEVICE, deviceSpecs);
+    this.emit(DeviceManager.EVENTS.DEVICE_NEW, deviceSpecs);
 
     return deviceSpecs;
   }
@@ -189,6 +176,30 @@ class DeviceManager extends EventEmitter {
     this.mapTopic2Component.set(component.topic, component);
 
     return component;
+  }
+
+  removeComponents(profile) {
+    let components = this.getComponents(profile);
+    for (let component of components) {
+      let devices = this.getDevices({ components: [component] });
+      for (let device of devices) {
+        device.removeComponent(component);
+      }
+      this.topicData.remove(component.topic);
+      this.mapTopic2Component.delete(profile.topic);
+    }
+  }
+
+  onClientRemoved(clientProfile) {
+    let ownedComponents = this.getComponents({ clientId: clientProfile.id });
+    for (let component of ownedComponents) {
+      this.removeComponents(component);
+    }
+
+    let ownedDevices = this.getDevices({ clientId: clientProfile.id });
+    for (let device of ownedDevices) {
+      this.removeDevice(device.id);
+    }
   }
 
   createTopicMuxerBySpecs(specs, topicDataBuffer = this.topicData) {
@@ -261,7 +272,10 @@ class DeviceManager extends EventEmitter {
 }
 
 DeviceManager.EVENTS = Object.freeze({
-  NEW_DEVICE: 'NEW_DEVICE'
+  DEVICE_NEW: 'DEVICE_NEW',
+  DEVICE_REMOVED: 'DEVICE_REMOVED',
+  COMPONENT_NEW: 'COMPONENT_NEW',
+  COMPONENT_REMOVED: 'COMPONENT_REMOVED'
 });
 
 module.exports = DeviceManager;
