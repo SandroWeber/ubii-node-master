@@ -40,9 +40,9 @@ let getTopicDataRecord = (topicDataSource, clientProfile) => {
         label: LOG_TAG,
         message:
           'getTopicDataRecord() specified source as component, but multiple components match\n' +
-          'requested profile:' +
+          'requested profile:\n' +
           topicDataSource.component +
-          'matching profiles:' +
+          'matching profiles:\n' +
           matchingComponents
       });
     }

@@ -23,11 +23,11 @@ class ComponentRegistrationService extends Service {
     // Verify the device and act accordingly.
     if (!ClientManager.instance.verifyClient(specs.clientId)) {
       let msg = `There is no Client registered with ID "${specs.clientId}"`;
-      logger.error({ label: this.LOG_TAG, message: msg });
+      logger.error({ label: ComponentRegistrationService.LOG_TAG, message: msg });
 
       return {
         error: {
-          title: this.LOG_TAG,
+          title: ComponentRegistrationService.LOG_TAG,
           message: msg
         }
       };
@@ -41,7 +41,7 @@ class ComponentRegistrationService extends Service {
       console.error(error);
       return {
         error: {
-          title: this.LOG_TAG,
+          title: ComponentRegistrationService.LOG_TAG,
           message: error && error.toString(),
           stack: error.stack && error.stack.toString()
         }
@@ -52,11 +52,11 @@ class ComponentRegistrationService extends Service {
       let specs = component.toProtobuf();
       return { component: specs };
     } else {
-      errorMsg = 'deivce manager returned undefuned when trying to register component';
-      logger.error({ label: this.LOG_TAG, message: errorMsg });
+      errorMsg = 'Device manager returned undefined when trying to register component';
+      logger.error({ label: ComponentRegistrationService.LOG_TAG, message: errorMsg });
       return {
         error: {
-          title: this.LOG_TAG,
+          title: ComponentRegistrationService.LOG_TAG,
           message: errorMsg
         }
       };

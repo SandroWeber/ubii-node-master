@@ -34,7 +34,7 @@ class ComponentGetListService extends Service {
     }
 
     let devices = this.deviceManager
-      .getAllParticipants()
+      .getAllDevices()
       .filter(
         (device) =>
           ClientManager.instance.getClient(device.clientId).state !== proto.ubii.clients.Client.State.UNAVAILABLE
