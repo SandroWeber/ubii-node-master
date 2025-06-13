@@ -19,7 +19,7 @@ class DeviceRegistrationService extends Service {
     // Verify the device and act accordingly.
     if (!ClientManager.instance.verifyClient(requestedDeviceSpecs.clientId)) {
       let msg = `There is no Client registered with ID "${requestedDeviceSpecs.clientId}"`;
-      logger.error({ label: LOG_TAG, message: msg });
+      logger.error({ label: DeviceRegistrationService.LOG_TAG, message: msg });
 
       return {
         error: {
