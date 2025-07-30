@@ -30,6 +30,11 @@ const ServiceNotifyConditionAdd = require('./conditions/serviceNotifyConditionAd
 const ServiceNotifyConditionGetList = require('./conditions/serviceNotifyConditionGetList.js');
 const ServiceNotifyConditionRemove = require('./conditions/serviceNotifyConditionRemove.js');
 
+/* location services */
+const { LocationUpdateService } = require('./location/locationUpdateService.js');
+const { LocationSubscriptionService } = require('./location/locationSubscriptionService.js');
+const { ProximityService } = require('./location/proximityService.js');
+
 const { ClientManager } = require('../clients/clientManager');
 const { DeviceManager } = require('../devices/deviceManager');
 const { SessionManager } = require('../sessions/sessionManager');
@@ -111,6 +116,11 @@ class ServiceManager {
     this.addService(new ServiceNotifyConditionAdd(this.notifyConditionsManager));
     this.addService(new ServiceNotifyConditionGetList(this.notifyConditionsManager));
     this.addService(new ServiceNotifyConditionRemove(this.notifyConditionsManager));
+
+    /* location services */
+    this.addService(new LocationUpdateService());
+    this.addService(new LocationSubscriptionService());
+    this.addService(new ProximityService());
 
     /* network statistics */
     this.addService(new NetworkInfoService(ClientManager.instance));

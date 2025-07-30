@@ -43,10 +43,10 @@ class MasterNode {
     // network connections manager
     this.connectionsManager = NetworkConnectionsManager.instance;
     this.connectionsManager.openConnections();
-    this.connectionsManager.setServiceRouteHTTP('/services/json', (...params) =>
+    this.connectionsManager.setServiceRouteHTTP('/ubii/services/json', (...params) =>
       this.onServiceMessageRestJson(...params)
     );
-    this.connectionsManager.setServiceRouteHTTP('/services/binary', (...params) =>
+    this.connectionsManager.setServiceRouteHTTP('/ubii/services/binary', (...params) =>
       this.onServiceMessageRestBinary(...params)
     );
     this.connectionsManager.setCallbackServiceMessageZMQ((...params) => this.onServiceMessageZMQ(...params));
