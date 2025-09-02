@@ -1,5 +1,6 @@
 /*export default*/ const avaConfig = {
   files: [
+    'test/integration/**/*.js',
     'test/devices/deviceManagerTest.js',
     //'test/devices/**/*',
     //'test/sessions/**/*',

@@ -1,0 +1,178 @@
+{
+  "munich_center": {
+    "latitude": 48.148598,
+    "longitude": 11.567499,
+    "description": "Munich city center"
+  },
+  "nearby_points": [
+    {
+      "latitude": 48.148598,
+      "longitude": 11.568499,
+      "distance": 100,
+      "description": "100m east of center"
+    },
+    {
+      "latitude": 48.148598,
+      "longitude": 11.569499,
+      "distance": 200,
+      "description": "200m east of center"
+    },
+    {
+      "latitude": 48.149598,
+      "longitude": 11.567499,
+      "distance": 100,
+      "description": "100m north of center"
+    },
+    {
+      "latitude": 48.150598,
+      "longitude": 11.567499,
+      "distance": 200,
+      "description": "200m north of center"
+    },
+    {
+      "latitude": 48.148598,
+      "longitude": 11.566499,
+      "distance": 100,
+      "description": "100m west of center"
+    },
+    {
+      "latitude": 48.148598,
+      "longitude": 11.565499,
+      "distance": 200,
+      "description": "200m west of center"
+    },
+    {
+      "latitude": 48.147598,
+      "longitude": 11.567499,
+      "distance": 100,
+      "description": "100m south of center"
+    },
+    {
+      "latitude": 48.146598,
+      "longitude": 11.567499,
+      "distance": 200,
+      "description": "200m south of center"
+    }
+  ],
+  "far_points": [
+    {
+      "latitude": 48.218598,
+      "longitude": 11.567499,
+      "distance": 8000,
+      "description": "8km north of center"
+    },
+    {
+      "latitude": 48.078598,
+      "longitude": 11.567499,
+      "distance": 8000,
+      "description": "8km south of center"
+    },
+    {
+      "latitude": 48.148598,
+      "longitude": 11.647499,
+      "distance": 8000,
+      "description": "8km east of center"
+    },
+    {
+      "latitude": 48.148598,
+      "longitude": 11.487499,
+      "distance": 8000,
+      "description": "8km west of center"
+    }
+  ],
+  "edge_cases": [
+    {
+      "latitude": 90.0,
+      "longitude": 0.0,
+      "description": "North Pole"
+    },
+    {
+      "latitude": -90.0,
+      "longitude": 0.0,
+      "description": "South Pole"
+    },
+    {
+      "latitude": 48.148598,
+      "longitude": 179.9,
+      "description": "Near International Date Line"
+    },
+    {
+      "latitude": 48.148598,
+      "longitude": -179.9,
+      "description": "Near International Date Line (negative)"
+    },
+    {
+      "latitude": 0.1,
+      "longitude": 11.567499,
+      "description": "Near Equator"
+    },
+    {
+      "latitude": -0.1,
+      "longitude": 11.567499,
+      "description": "Near Equator (negative)"
+    }
+  ],
+  "test_scenarios": {
+    "munich_setup": {
+      "publisher": {
+        "id": "publisher-munich",
+        "latitude": 48.148598,
+        "longitude": 11.567499
+      },
+      "nearby_devices": [
+        {
+          "id": "device-near-1",
+          "latitude": 48.148598,
+          "longitude": 11.568499,
+          "distance": 100
+        },
+        {
+          "id": "device-near-2",
+          "latitude": 48.149598,
+          "longitude": 11.567499,
+          "distance": 100
+        },
+        {
+          "id": "device-near-3",
+          "latitude": 48.148598,
+          "longitude": 11.569499,
+          "distance": 200
+        }
+      ],
+      "far_devices": [
+        {
+          "id": "device-far-1",
+          "latitude": 48.218598,
+          "longitude": 11.567499,
+          "distance": 8000
+        },
+        {
+          "id": "device-far-2",
+          "latitude": 48.078598,
+          "longitude": 11.567499,
+          "distance": 8000
+        }
+      ],
+      "fixed_subscribers": [
+        {
+          "id": "fixed-sub-1",
+          "latitude": 48.148598,
+          "longitude": 11.567999,
+          "max_distance": 50
+        },
+        {
+          "id": "fixed-sub-2",
+          "latitude": 48.148598,
+          "longitude": 11.568499,
+          "max_distance": 200
+        },
+        {
+          "id": "fixed-sub-3",
+          "latitude": 48.218598,
+          "longitude": 11.567499,
+          "max_distance": 200
+        }
+      ]
+    }
+  }
+}
