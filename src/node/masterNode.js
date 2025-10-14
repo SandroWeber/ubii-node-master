@@ -12,6 +12,7 @@ const { Profiler } = require('../profiling/profiler');
 const NotifyConditionManager = require('../conditions/notifyConditionManager');
 const TopicDataProxy = require('./topicDataProxy');
 const Utils = require('../utils/utilities');
+const SmpcOrchestrator = require('./smpcOrchestrator');
 
 const MASTER_NODE_CONSTANTS = require('./constants');
 
@@ -54,6 +55,34 @@ class MasterNode {
     this.connectionsManager.setCallbackOnTopicDataZMQ((envelope, message) =>
       this.onTopicDataMessage(envelope.toString(), message)
     );
+  
+this.smpcOrchestrator = new SmpcOrchestrator(
+  this.connectionsManager,
+  this.topicDataTranslator,
+  this.topicDataBuffer,
+  { simulate: false, simulateDelay: 250, timeout: 10000 }
+);
+global.globalSmpcOrchestrator = this.smpcOrchestrator;
+
+logger.info({ label: LOG_TAG, message: 'SMPC orchestrator initialized (simulate=' + !!this.smpcOrchestrator.options.simulate + ')' });
+
+this.connectionsManager.setServiceRouteHTTP('/smpc/run', (request, response) => {
+  try {
+    const body = request.body || {};
+    const { publisherId, subscriberId } = body;
+    if (!publisherId || !subscriberId) {
+      response.status(400).json({ ok: false, error: 'publisherId and subscriberId required' });
+      return;
+    }
+    this.smpcOrchestrator
+      .runProximityProtocol({ publisherId, subscriberId })
+      .then((allowed) => response.json({ ok: true, allowed }))
+      .catch((err) => response.status(500).json({ ok: false, error: err.message || String(err) }));
+  } catch (err) {
+    response.status(500).json({ ok: false, error: err.message || String(err) });
+  }
+});
+
 
     // Client Manager Component:
     ClientManager.instance.setDependencies(this.connectionsManager, this.topicDataBuffer, this.deviceManager);
