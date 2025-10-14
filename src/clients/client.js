@@ -1,7 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const { ProtobufTranslator, MSG_TYPES, proto } = require('@tum-far/ubii-msg-formats');
 const { LoggingService } = require('@tum-far/ubii-node-nodejs');
-
 const latency = require('../network/latency');
 const DeviceManager = require('../devices/deviceManager');
 const FilterUtils = require('../utils/filterUtils');
@@ -18,6 +17,11 @@ class Client {
   constructor(specs = {}, server, topicData, clientManager, deviceManager) {
     // take over specs
     specs && Object.assign(this, specs);
+    console.log('[Client CONSTRUCTOR] Specs received:', specs);
+
+    // ensure metadataJson from registration is preserved
+this.metadataJson = specs.metadataJson || this.metadataJson;
+
     // new instance is getting new ID
     this.id = uuidv4();
     this.devices = this.devices ? this.devices : [];
@@ -224,46 +228,71 @@ class Client {
     return true;
   }
 
-  subscriptionCallback(record, publisherId) {
-    if (!publisherId)
-      logger.warn({
-        label: this.toString(),
-        message:
-          'subscriptionCallback() - topic "' + record.topic + '" has no info on publisher ID(' + publisherId + ')'
-      });
-    let component = this.deviceManager.getComponent({ topic: record.topic });
-    if (component && component.hasNotifyConditions()) {
+ subscriptionCallback(record, publisherId) {
+  if (!publisherId)
+    logger.warn({
+      label: this.toString(),
+      message:
+        'subscriptionCallback() - topic "' + record.topic + '" has no info on publisher ID(' + publisherId + ')'
+    });
+
+  const component = this.deviceManager.getComponent({ topic: record.topic });
+
+  const handleRecordAsync = async () => {
+    if (component && component.hasNotifyConditions() && component.conditions && component.conditions.length > 0) {
       const clientProfilePub = this.clientManager.getClient(publisherId)?.toProtobuf();
       const clientProfileSub = this.toProtobuf();
 
-      if (
-        clientProfilePub &&
-        clientProfileSub &&
-        !component.checkNotifyConditions(clientProfilePub, clientProfileSub)
-      ) {
+      if (!clientProfilePub || !clientProfileSub) {
+        logger.warn({
+          label: this.toString(),
+          message: `subscriptionCallback() - missing client profile for pub (${publisherId}) or sub (${this.id})`
+        });
         return;
       }
-    }
 
-    //TODO: define tolerable delay between received and subscription callback, integrate with profiler
+      for (const condition of component.conditions) {
+        try {
+          const maybePromiseOrBool = condition.evaluate(clientProfilePub, clientProfileSub);
+          const allowed =
+            maybePromiseOrBool && typeof maybePromiseOrBool.then === 'function'
+              ? await maybePromiseOrBool
+              : maybePromiseOrBool;
+
+          if (!allowed) {
+            return;
+          }
+        } catch (err) {
+          logger.error({
+            label: this.toString(),
+            message: `subscriptionCallback() - notify condition error: ${err && err.stack ? err.stack : err}`
+          });
+          return;
+        }
+      }
+    }
     if (record.tReceived) {
       let delay = Date.now() - record.tReceived;
       if (delay > 10) {
         logger.warn({ label: this.toString(), message: 'sub callback delay >10ms' });
       }
     }
-
-    let payload = {
-      topicDataRecord: record
-    };
-
+    const payload = { topicDataRecord: record };
     try {
-      let buffer = this.topicDataTranslator.createBufferFromPayload(payload);
+      const buffer = this.topicDataTranslator.createBufferFromPayload(payload);
       this.sendMessageToRemote(buffer);
     } catch (error) {
       console.error(error);
     }
-  }
+  };
+  handleRecordAsync().catch((err) => {
+    logger.error({
+      label: this.toString(),
+      message: `subscriptionCallback async handler failed: ${err && err.stack ? err.stack : err}`
+    });
+  });
+}
+
 
   /**
    * Internally unsubscribes from a topic at the topicData.
