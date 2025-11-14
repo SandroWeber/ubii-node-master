@@ -1,0 +1,266 @@
+{
+  "movement_scenarios": {
+    "approach": {
+      "description": "Device approaches from outside to inside the subscription range",
+      "start_position": {
+        "latitude": 48.148598,
+        "longitude": 11.569499,
+        "distance": 200
+      },
+      "end_position": {
+        "latitude": 48.148598,
+        "longitude": 11.568499,
+        "distance": 100
+      },
+      "path": [
+        {
+          "step": 0,
+          "latitude": 48.148598,
+          "longitude": 11.569499,
+          "distance": 200,
+          "expected_included": false
+        },
+        {
+          "step": 1,
+          "latitude": 48.148598,
+          "longitude": 11.569249,
+          "distance": 175,
+          "expected_included": false
+        },
+        {
+          "step": 2,
+          "latitude": 48.148598,
+          "longitude": 11.568999,
+          "distance": 150,
+          "expected_included": false
+        },
+        {
+          "step": 3,
+          "latitude": 48.148598,
+          "longitude": 11.568749,
+          "distance": 125,
+          "expected_included": true
+        },
+        {
+          "step": 4,
+          "latitude": 48.148598,
+          "longitude": 11.568499,
+          "distance": 100,
+          "expected_included": true
+        }
+      ]
+    },
+    "leave": {
+      "description": "Device leaves from inside to outside the subscription range",
+      "start_position": {
+        "latitude": 48.148598,
+        "longitude": 11.568499,
+        "distance": 100
+      },
+      "end_position": {
+        "latitude": 48.148598,
+        "longitude": 11.569499,
+        "distance": 200
+      },
+      "path": [
+        {
+          "step": 0,
+          "latitude": 48.148598,
+          "longitude": 11.568499,
+          "distance": 100,
+          "expected_included": true
+        },
+        {
+          "step": 1,
+          "latitude": 48.148598,
+          "longitude": 11.568749,
+          "distance": 125,
+          "expected_included": true
+        },
+        {
+          "step": 2,
+          "latitude": 48.148598,
+          "longitude": 11.568999,
+          "distance": 150,
+          "expected_included": false
+        },
+        {
+          "step": 3,
+          "latitude": 48.148598,
+          "longitude": 11.569249,
+          "distance": 175,
+          "expected_included": false
+        },
+        {
+          "step": 4,
+          "latitude": 48.148598,
+          "longitude": 11.569499,
+          "distance": 200,
+          "expected_included": false
+        }
+      ]
+    },
+    "circular": {
+      "description": "Device moves in a circular pattern crossing the boundary multiple times",
+      "center": {
+        "latitude": 48.148598,
+        "longitude": 11.567499
+      },
+      "radius": 150,
+      "path": [
+        {
+          "step": 0,
+          "latitude": 48.148598,
+          "longitude": 11.568999,
+          "distance": 150,
+          "expected_included": false,
+          "angle": 0
+        },
+        {
+          "step": 1,
+          "latitude": 48.149748,
+          "longitude": 11.568499,
+          "distance": 150,
+          "expected_included": false,
+          "angle": 45
+        },
+        {
+          "step": 2,
+          "latitude": 48.149748,
+          "longitude": 11.566499,
+          "distance": 150,
+          "expected_included": false,
+          "angle": 90
+        },
+        {
+          "step": 3,
+          "latitude": 48.148598,
+          "longitude": 11.565999,
+          "distance": 150,
+          "expected_included": false,
+          "angle": 135
+        },
+        {
+          "step": 4,
+          "latitude": 48.147448,
+          "longitude": 11.566499,
+          "distance": 150,
+          "expected_included": false,
+          "angle": 180
+        },
+        {
+          "step": 5,
+          "latitude": 48.147448,
+          "longitude": 11.568499,
+          "distance": 150,
+          "expected_included": false,
+          "angle": 225
+        },
+        {
+          "step": 6,
+          "latitude": 48.148598,
+          "longitude": 11.568999,
+          "distance": 150,
+          "expected_included": false,
+          "angle": 270
+        },
+        {
+          "step": 7,
+          "latitude": 48.149748,
+          "longitude": 11.568499,
+          "distance": 150,
+          "expected_included": false,
+          "angle": 315
+        }
+      ]
+    },
+    "oscillate": {
+      "description": "Device oscillates across the boundary",
+      "path": [
+        {
+          "step": 0,
+          "latitude": 48.148598,
+          "longitude": 11.568499,
+          "distance": 100,
+          "expected_included": true
+        },
+        {
+          "step": 1,
+          "latitude": 48.148598,
+          "longitude": 11.568749,
+          "distance": 125,
+          "expected_included": true
+        },
+        {
+          "step": 2,
+          "latitude": 48.148598,
+          "longitude": 11.568999,
+          "distance": 150,
+          "expected_included": false
+        },
+        {
+          "step": 3,
+          "latitude": 48.148598,
+          "longitude": 11.568749,
+          "distance": 125,
+          "expected_included": true
+        },
+        {
+          "step": 4,
+          "latitude": 48.148598,
+          "longitude": 11.568499,
+          "distance": 100,
+          "expected_included": true
+        },
+        {
+          "step": 5,
+          "latitude": 48.148598,
+          "longitude": 11.568249,
+          "distance": 75,
+          "expected_included": true
+        },
+        {
+          "step": 6,
+          "latitude": 48.148598,
+          "longitude": 11.567999,
+          "distance": 50,
+          "expected_included": true
+        },
+        {
+          "step": 7,
+          "latitude": 48.148598,
+          "longitude": 11.568249,
+          "distance": 75,
+          "expected_included": true
+        }
+      ]
+    }
+  },
+  "performance_paths": {
+    "high_frequency": {
+      "description": "High-frequency location updates for performance testing",
+      "duration_ms": 30000,
+      "update_interval_ms": 50,
+      "path_type": "random_walk",
+      "center": {
+        "latitude": 48.148598,
+        "longitude": 11.567499
+      },
+      "max_radius": 500,
+      "seed": 12345
+    },
+    "stress_test": {
+      "description": "Stress test with many devices moving simultaneously",
+      "num_devices": 100,
+      "duration_ms": 60000,
+      "update_interval_ms": 100,
+      "path_type": "random_walk",
+      "center": {
+        "latitude": 48.148598,
+        "longitude": 11.567499
+      },
+      "max_radius": 1000,
+      "seed": 67890
+    }
+  }
+}
